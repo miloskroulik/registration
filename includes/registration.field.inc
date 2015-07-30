@@ -9,38 +9,43 @@
  * Implements hook_field_info().
  */
 function registration_field_info() {
-  return array(
-    'registration' => array(
-      'label' => t('Registration'),
-      'description' => t('Enables registrations of a selected type for an entity.'),
-      'settings' => array(),
-      'instance_settings' => array(
-        'default_registration_settings' => array(
-          'status' => 0,
-          'capacity' => 0,
-          'scheduling' => array(
-            'open' => NULL,
-            'close' => NULL,
-          ),
-          'reminder' => array(
-            'send_reminder' => 0,
-            'reminder_settings' => array(
-              'reminder_date' => NULL,
-              'reminder_template' => NULL,
-            ),
-          ),
-          'settings' => array(
-            'maximum_spaces' => 1,
-            'multiple_registrations' => -1,
-            'from_address' => variable_get('site_mail', ini_get('sendmail_from')),
-          ),
-        ),
-      ),
-      'default_widget' => 'registration_select',
-      'default_formatter' => 'registration_default',
-      'no_ui' => FALSE,
-    ),
-  );
+  // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// return array(
+//     'registration' => array(
+//       'label' => t('Registration'),
+//       'description' => t('Enables registrations of a selected type for an entity.'),
+//       'settings' => array(),
+//       'instance_settings' => array(
+//         'default_registration_settings' => array(
+//           'status' => 0,
+//           'capacity' => 0,
+//           'scheduling' => array(
+//             'open' => NULL,
+//             'close' => NULL,
+//           ),
+//           'reminder' => array(
+//             'send_reminder' => 0,
+//             'reminder_settings' => array(
+//               'reminder_date' => NULL,
+//               'reminder_template' => NULL,
+//             ),
+//           ),
+//           'settings' => array(
+//             'maximum_spaces' => 1,
+//             'multiple_registrations' => -1,
+//             'from_address' => variable_get('site_mail', ini_get('sendmail_from')),
+//           ),
+//         ),
+//       ),
+//       'default_widget' => 'registration_select',
+//       'default_formatter' => 'registration_default',
+//       'no_ui' => FALSE,
+//     ),
+//   );
+
 }
 
 /**
@@ -94,22 +99,9 @@ function registration_field_instance_settings_form($field, $instance) {
   return $form;
 }
 
-/**
- * Implements hook_field_validate().
- */
-function registration_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
 
-}
 
-/**
- * Implements hook_field_is_empty().
- */
-function registration_field_is_empty($item, $field) {
-  if (empty($item['registration_type']) && (string) $item['registration_type'] !== '') {
-    return TRUE;
-  }
-  return FALSE;
-}
+
 
 /**
  * Implements hook_field_widget_info().
@@ -170,41 +162,7 @@ function registration_field_formatter_info() {
   );
 }
 
-/**
- * Implements hook_field_formatter_settings_form().
- */
-function registration_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
-  $display = $instance['display'][$view_mode];
-  $settings = $display['settings'];
 
-  $element = array();
-
-  if ($display['type'] == 'registration_link') {
-    $element['label'] = array(
-      '#title' => t('Label'),
-      '#type' => 'textfield',
-      '#size' => 20,
-      '#default_value' => $settings['label'],
-      '#required' => FALSE,
-      '#description' => t("Optional label to use when displaying the registration title or link. Leave blank to use the parent event's label."),
-    );
-
-    // Store a key so we can store/retrieve translated strings for this field
-    // formatter instance.
-    $element['i18n_string_key'] = array('#type' => 'value', '#value' => implode(':', array(
-      $instance['entity_type'],
-      $instance['bundle'],
-      $view_mode,
-      $instance['field_name'],
-    )));
-  }
-
-  // Since we have translatable strings, we'll need to register them when the
-  // form is submitted.
-  $element['#process'][] = 'registration_field_formatter_settings_form_process';
-
-  return $element;
-}
 
 /**
  * Form element process handler for registration_field_formatter_settings_form().
@@ -225,71 +183,9 @@ function registration_field_formatter_settings_form_process($element, &$form_sta
   return $element;
 }
 
-/**
- * Implements hook_field_formatter_settings_summary().
- */
-function registration_field_formatter_settings_summary($field, $instance, $view_mode) {
-  $display = $instance['display'][$view_mode];
-  $settings = $display['settings'];
 
-  $summary = '';
 
-  if ($display['type'] == 'registration_link') {
-    if (!empty($settings['label'])) {
-      $summary = t('Registration label: @label.', array('@label' => $settings['label']));
-    }
-    else {
-      $summary = t('Registration label: Parent label.');
-    }
-  }
 
-  return $summary;
-}
-
-/**
- * Implements hook_field_formatter_view().
- */
-function registration_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  $element = array();
-
-  // we know we should only have a single item
-  if (isset($items[0]['registration_type']) && !empty($items[0]['registration_type'])) {
-    $reg_type = registration_type_load($items[0]['registration_type']);
-    $settings = $display['settings'];
-    $label = !empty($settings['label']) ? _registration_translate($settings['i18n_string_key'] . ':label', $settings['label']) : $reg_type->label;
-
-    switch ($display['type']) {
-      case 'registration_link':
-        // Enable registration link if accessible.
-        if (registration_register_page_access($entity_type, $entity)) {
-          $uri = entity_uri($entity_type, $entity);
-          $element[0] = array(
-            '#markup' => theme('registration_link',
-              array(
-                'label' => $label,
-                'path' => $uri['path'] . '/register'
-              )
-            )
-          );
-        }
-        break;
-      case 'registration_form':
-        // Enable registration link if accessible.
-        list($entity_id) = entity_extract_ids($entity_type, $entity);
-        if (registration_register_page_access($entity_type, $entity) && registration_status($entity_type, $entity_id)) {
-          $registration = entity_get_controller('registration')->create(array(
-            'entity_type' => $entity_type,
-            'entity_id' => $entity_id,
-            'type' => $reg_type->name,
-          ));
-          $element[0] = drupal_get_form('registration_form', $registration);
-        }
-        break;
-    }
-  }
-
-  return $element;
-}
 
 /**
  * Implements hook_form_FORM_ID_alter().

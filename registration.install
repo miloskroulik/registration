@@ -357,32 +357,7 @@ function registration_schema() {
   return $schema;
 }
 
-/**
- * Implements hook_field_schema().
- */
-function registration_field_schema($field) {
-  $columns = array(
-    'registration_type' => array(
-      'type' => 'varchar',
-      'length' => 32,
-      'not null' => FALSE,
-    ),
-  );
-  $indexes = array(
-    'registration_type' => array('registration_type'),
-  );
-  $foreign_keys = array(
-    'registration_type' => array(
-      'table' => 'registration_type',
-      'columns' => array('registration_type' => 'name'),
-    ),
-  );
-  return array(
-    'columns' => $columns,
-    'indexes' => $indexes,
-    'foreign keys' => $foreign_keys,
-  );
-}
+
 
 /**
  * Implements hook_install().
@@ -429,8 +404,7 @@ function registration_install() {
   );
 
   foreach ($states as $state_name => $state_label) {
-    $registration_state = entity_create('registration_state',
-      array(
+    $registration_state = \Drupal::entityManager()->getStorage('registration_state')->create(array(
         'name' => $state_name,
         'label' => $state_label['label'],
         'description' => $state_label['description'],
@@ -439,8 +413,7 @@ function registration_install() {
         'held' => $state_label['held'],
         'show_on_form' => $state_label['show_on_form'],
         'weight' => $state_label['weight'],
-      )
-    );
+      ));
     $registration_state->save();
   }
 }
@@ -561,14 +534,14 @@ function registration_update_7104(&$sandbox) {
     $settings['maximum_capacity'] = $new_value;
     unset($settings['multiple_slots']);
     try {
-      field_update_instance($instance);
+      $instance->save();
     }
     catch (FieldException $e) {
       throw new DrupalUpdateException($e->getMessage());
     }
   }
 
-  $t = get_t();
+  $t = 't';
   return $t('Registrations settings have been updated.');
 }
 
@@ -613,7 +586,7 @@ function registration_update_7107() {
   foreach (registration_get_registration_instances() as $instance) {
     if (!isset($instance['settings']['register_tab'])) {
       $instance['settings']['register_tab'] = 1;
-      field_update_instance($instance);
+      $instance->save();
     }
   }
 }
