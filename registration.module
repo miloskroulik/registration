@@ -151,7 +151,7 @@ function registration_entity_info_alter(&$entity_info) {
  * This implementation of hook_menu() cannot be automatically converted because
  * it contains logic (i.e., branching statements, function calls, object
  * instantiation, etc.) You will need to convert it manually. Sorry!
- * 
+ *
  * For more information on how to convert hook_menu() to Drupal 8's new routing
  * and linking systems, see https://api.drupal.org/api/drupal/core%21includes%21menu.inc/group/menu/8
  */
@@ -410,7 +410,7 @@ function registration_user_cancel($edit, $account, $method) {
  * Implements hook_user_delete().
  */
 function registration_user_delete(\Drupal\user\UserInterface $account) {
-  if (isset($account->id())) {
+  if ($account->id() != NULL) {
     $query = new EntityFieldQuery();
     $result = $query
       ->entityCondition('entity_type', 'registration')
