@@ -1,10 +1,37 @@
 <?php
 namespace Drupal\registration;
 
+use Drupal\Core\Entity\Annotation\ContentEntityType;
+use Drupal\Core\Entity\Entity;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\migrate\Plugin\migrate\destination\EntityContentBase;
+
 /**
- * Main class for Registration entities.
+ * Defines the Registration entity.
+ *
+ * @ingroup registration
+ *
+ * @ContentEntityType(
+ *   id = "registration",
+ *   label = @Translation("Registration"),
+ *   fieldable = TRUE,
+ *   handlers = {
+ *     "list_builder" = "Drupal\registration\Controller\MailchimpSignupListBuilder",
+ *     "form" = {
+ *       "add" = "Drupal\registration\Form\RegistrationForm",
+ *       "edit" = "Drupal\registration\Form\RegistrationForm",
+ *       "delete" = "Drupal\registration\Form\RegistrationDeleteForm"
+ *     }
+ *   },
+ *   config_prefix = "registration",
+ *   admin_permission = "administer registrations",
+ *   entity_keys = {
+ *     "id" = "registration_id",
+ *     "bundle" = "type",
+ *   },
+ * )
  */
-class Registration extends Entity {
+class Registration extends EntityContentBase implements RegistrationInterface {
 
   public
     $registration_id,
@@ -22,7 +49,7 @@ class Registration extends Entity {
   /**
    * Specifies the default label, which is picked up by label() by default.
    */
-  protected function defaultLabel() {
+  protected function label() {
     $wrapper = entity_metadata_wrapper('registration', $this);
     $host = $wrapper->entity->value();
     if ($host) {
