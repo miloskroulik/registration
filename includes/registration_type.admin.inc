@@ -227,6 +227,12 @@ function registration_type_form_submit(&$form, &$form_state) {
   }
 
   $registration_type = entity_ui_form_submit_build_entity($form, $form_state);
+  foreach (element_children($form['data']) as $data_property) {
+    if (isset($registration_type->$data_property)) {
+      $registration_type->data[$data_property] = $registration_type->$data_property;
+      unset($registration_type->$data_property);
+    }
+  }
   $registration_type->save();
   menu_rebuild();
   $form_state['redirect'] = 'admin/structure/registration/registration_types';
