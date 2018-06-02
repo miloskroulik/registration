@@ -901,7 +901,7 @@ function registration_entity_settings_form_submit($form, &$form_state) {
 }
 
 /**
- * Helper to convert registration entity settings form values into a fields.
+ * Helper to convert registration entity settings form values into fields.
  *
  * @param $values
  *
@@ -917,9 +917,13 @@ function registration_convert_form_settings($values) {
     'settings' => $values['settings'],
     'open' => NULL,
     'close' => NULL,
-    'open_date_token' => $values['scheduling']['open_date_token'],
-    'close_date_token' => $values['scheduling']['close_date_token'],
   );
+  if (module_exists('token')) {
+    $open_token = isset($values['scheduling']['open_date_token']) ? $values['scheduling']['open_date_token'] : '';
+    $close_token = isset($values['scheduling']['close_date_token']) ? $values['scheduling']['close_date_token'] : '';
+    $fields['open_date_token'] = $open_token;
+    $fields['close_date_token'] = $close_token;
+  }
 
   $date_fields = array(
     array(
