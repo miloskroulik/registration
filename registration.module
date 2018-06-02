@@ -936,8 +936,9 @@ function theme_registration_link($variables) {
   $output = '';
   $registration_label = $variables['label'];
   $registration_path = $variables['path'];
+  $registration_options = isset($variables['options']) ? $variables['options'] : array();
 
-  $output .= l($registration_label, $registration_path);
+  $output .= l($registration_label, $registration_path, $registration_options);
 
   return $output;
 }
