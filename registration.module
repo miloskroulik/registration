@@ -1065,7 +1065,7 @@ function registration_send_broadcast($entity_type, $entity_id, $subject, $messag
       $result = drupal_mail('registration', 'broadcast',
         $registrant_mail, $language, $params, $from
       );
-      if ($result['result']) {
+      if ($result['result'] !== FALSE) {
         $success_count++;
       }
       else {
