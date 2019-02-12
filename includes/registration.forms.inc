@@ -360,6 +360,10 @@ function registration_form_submit($form, &$form_state) {
         }
       }
     }
+    // Make sure to Start a Session and save the registration info so we
+    // can check it for anonymous user access.
+    drupal_session_start();
+    $_SESSION['registration_ids'][$registration->identifier()] = $wrapper->anon_access_hash->value();
   }
   else {
     drupal_set_message(t('There was a problem submitting your registration.'));
