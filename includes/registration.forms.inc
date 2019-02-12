@@ -469,7 +469,7 @@ function registration_registrations_broadcast_form($form, &$form_state, $entity_
   // Add token support:
   if (module_exists('token')) {
     $form['token_tree'] = array(
-      '#theme' => 'token_tree',
+      '#theme' => 'token_tree_link',
       '#token_types' => array(
         $entity_type,
         'registration',
@@ -720,7 +720,7 @@ function registration_entity_settings_form($form, &$form_state, $settings, $enti
   // Add token support:
   if (module_exists('token')) {
     $form['reminder']['reminder_settings']['token_tree'] = array(
-      '#theme' => 'token_tree',
+      '#theme' => 'token_tree_link',
       '#token_types' => array(
         $entity_type,
         'registration',
