@@ -150,8 +150,8 @@ function registration_form($form, &$form_state, Registration $registration, $new
   $states = registration_get_states_options(array('show_on_form' => TRUE));
 
   // Ensure default state is in options or it won't be set.
-  if (!in_array($default_state->label, $states)) {
-    $states[$default_state->name] = $default_state->label;
+  if (!isset($states[$default_state->name])) {
+    $states[$default_state->name] = t('@state', array('@state' => entity_label('registration_state', $default_state)));
   }
 
   $form['state'] = array(
