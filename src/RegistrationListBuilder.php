@@ -30,7 +30,7 @@ class RegistrationListBuilder extends EntityListBuilder {
 
     $row['title'] = 'TBD';
     $row['type'] = $registration_type->label();
-    $row['status'] = 'TBD';//$entity->isPublished() ? $this->t('Published') : $this->t('Unpublished');
+    $row['status'] = $entity->getState()->label();
 
     return $row + parent::buildRow($entity);
   }

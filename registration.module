@@ -5,6 +5,8 @@
  * Provides user regigistration for events.
  */
 
+use Drupal\Core\Render\Element;
+
 /**
  * Implements hook_theme().
  */

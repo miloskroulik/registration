@@ -3,3 +3,9 @@ entity.registration_type.add_form:
   title: 'Add registration type'
   appears_on:
     - entity.registration_type.collection
+
+entity.registration.add_page:
+  route_name: entity.registration.add_page
+  title: 'Add registration'
+  appears_on:
+    - entity.registration.collection

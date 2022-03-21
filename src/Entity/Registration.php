@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\registration\RegistrationState;
 
 /**
  * Defines the registration entity class.
@@ -37,7 +38,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm"
  *     },
  *     "route_provider" = {
- *       "default" = "Drupal\Core\Entity\Routing\DefaultHtmlRouteProvider"
+ *       "default" = "Drupal\entity\Routing\AdminHtmlRouteProvider"
  *     }
  *   },
  *   admin_permission = "administer registration",
@@ -78,6 +79,19 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   public function setCreatedTime(int $timestamp): RegistrationInterface {
     $this->set('created', $timestamp);
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getState(): RegistrationState {
+    $workflow = $this->type->entity->getWorkflow();
+    if ($this->isNew()) {
+      return $workflow->getTypePlugin()->getState($this->type->entity->getDefaultState());
+    }
+    else {
+      return $workflow->getTypePlugin()->getState($this->state->first()->value);
+    }
   }
 
   /**
@@ -134,15 +148,18 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['state'] = BaseFieldDefinition::create('state')
+    $fields['state'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Status'))
       ->setDescription(t('The registration status.'))
       ->setRequired(TRUE)
       ->setSetting('max_length', 255)
-      ->setSetting('workflow', 'registration_default')
+      ->setDisplayOptions('form', [
+        'type' => 'registration_state_default',
+        'weight' => 10,
+      ])
       ->setDisplayOptions('view', [
         'label' => 'hidden',
-        'type' => 'list_default',
+        'type' => 'registration_state',
         'weight' => 0,
       ])
       ->setDisplayConfigurable('form', TRUE)
