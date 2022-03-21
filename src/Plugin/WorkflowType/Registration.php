@@ -1,0 +1,186 @@
+<?php
+
+namespace Drupal\registration\Plugin\WorkflowType;
+
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\registration\RegistrationState;
+use Drupal\workflows\Plugin\WorkflowTypeBase;
+use Drupal\workflows\StateInterface;
+use Drupal\workflows\WorkflowInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Attaches workflows to registrations.
+ *
+ * @WorkflowType(
+ *   id = "registration",
+ *   label = @Translation("Registration"),
+ *   required_states = {
+ *     "pending",
+ *     "complete",
+ *     "canceled",
+ *   },
+ *   forms = {
+ *     "configure" = "\Drupal\registration\Form\RegistrationWorkflowForm",
+ *     "state" = "\Drupal\registration\Form\RegistrationStateForm"
+ *   },
+ * )
+ */
+class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected EntityTypeManagerInterface $entityTypeManager;
+
+  /**
+   * Constructs a ContentModeration object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getState($state_id): RegistrationState {
+    $state = parent::getState($state_id);
+    $properties = [
+      'description',
+      'active',
+      'held',
+      'show_on_form',
+    ];
+    $use_properties = TRUE;
+    foreach ($properties as $property) {
+      if (!isset($this->configuration['states'][$state->id()][$property])) {
+        $use_properties = FALSE;
+        break;
+      }
+    }
+    if ($use_properties) {
+      $state = new RegistrationState($state, $this->configuration['states'][$state->id()]['description'], $this->configuration['states'][$state->id()]['active'], $this->configuration['states'][$state->id()]['held'], $this->configuration['states'][$state->id()]['show_on_form']);
+    }
+    else {
+      $state = new RegistrationState($state);
+    }
+    return $state;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function workflowHasData(WorkflowInterface $workflow): bool {
+    return (bool) $this->entityTypeManager
+      ->getStorage('registration_state')
+      ->getQuery()
+      ->condition('workflow', $workflow->id())
+      ->count()
+      ->accessCheck(FALSE)
+      ->range(0, 1)
+      ->execute();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function workflowStateHasData(WorkflowInterface $workflow, StateInterface $state): bool {
+    return (bool) $this->entityTypeManager
+      ->getStorage('registration_state')
+      ->getQuery()
+      ->condition('workflow', $workflow->id())
+      ->condition('registration_state', $state->id())
+      ->count()
+      ->accessCheck(FALSE)
+      ->range(0, 1)
+      ->execute();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration(): array {
+    return [
+      'states' => [
+        'pending' => [
+          'label' => 'Pending',
+          'description' => 'Registration is pending.',
+          'active' => FALSE,
+          'held' => FALSE,
+          'show_on_form' => FALSE,
+          'weight' => 0,
+        ],
+        'complete' => [
+          'label' => 'Complete',
+          'description' => 'Registration has been completed.',
+          'active' => TRUE,
+          'held' => FALSE,
+          'show_on_form' => FALSE,
+          'weight' => 1,
+        ],
+        'canceled' => [
+          'label' => 'Canceled',
+          'description' => 'Registration has been canceled.',
+          'active' => FALSE,
+          'held' => FALSE,
+          'show_on_form' => FALSE,
+          'weight' => 2,
+        ],
+      ],
+      'transitions' => [
+        'complete' => [
+          'label' => 'Complete',
+          'to' => 'complete',
+          'weight' => 0,
+          'from' => [
+            'pending',
+          ],
+        ],
+        'cancel' => [
+          'label' => 'Cancel',
+          'to' => 'canceled',
+          'weight' => 1,
+          'from' => [
+            'pending',
+          ],
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfiguration(): array {
+    $configuration = parent::getConfiguration();
+    // Ensure that states are ordered consistently.
+    ksort($configuration['states']);
+    return $configuration;
+  }
+
+}

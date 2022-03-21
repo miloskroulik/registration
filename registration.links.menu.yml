@@ -1,0 +1,11 @@
+registration.configuration:
+  title: 'Registration'
+  route_name: 'registration.configuration'
+  parent: system.admin_structure
+  description: 'Manage your registration states and types.'
+
+entity.registration_type.collection:
+  title: 'Registration types'
+  route_name: entity.registration_type.collection
+  parent: registration.configuration
+  description: 'Manage fields, form and display settings for your registration types.'

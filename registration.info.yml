@@ -1,0 +1,10 @@
+name: Entity Registration
+type: module
+description: 'Provides user registration for events.'
+package: Registration
+core_version_requirement: ^8.9 || ^9
+configure: registration.configuration
+dependencies:
+  - drupal:datetime
+  - drupal:user
+  - drupal:workflows

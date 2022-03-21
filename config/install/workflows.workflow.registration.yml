@@ -1,0 +1,45 @@
+uuid: 2426ca72-8d31-4800-bb68-a7db7a4f45d1
+langcode: en
+status: true
+dependencies:
+  module:
+    - registration
+id: registration
+label: Registration
+type: registration
+type_settings:
+  states:
+    canceled:
+      label: Canceled
+      description: 'Registration has been canceled.'
+      active: false
+      held: false
+      show_on_form: false
+      weight: 2
+    complete:
+      description: 'Registration has been completed.'
+      active: 1
+      held: 0
+      show_on_form: 0
+      label: Complete
+      weight: 1
+    pending:
+      label: Pending
+      description: 'Registration is pending.'
+      active: false
+      held: false
+      show_on_form: false
+      weight: 0
+  transitions:
+    complete:
+      label: Complete
+      to: complete
+      weight: 0
+      from:
+        - pending
+    cancel:
+      label: Cancel
+      to: canceled
+      weight: 1
+      from:
+        - pending

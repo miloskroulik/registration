@@ -1,0 +1,12 @@
+administer registration types:
+  title: 'Administer registration types'
+  description: 'Manage registration types, fields and display settings.'
+  restrict access: true
+administer registration states:
+  title: 'Administer registration states'
+  description: 'Manage available registration states.'
+  restrict access: true
+administer registration:
+  title: 'Administer registrations'
+  description: 'View, edit, delete and manage all registrations, regardless of type.'
+  restrict access: true
