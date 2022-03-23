@@ -16,7 +16,7 @@ class RegistrationWorkflowForm extends WorkflowTypeConfigureFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $workflow_type_configuration = $this->workflowType->getConfiguration();
     $form['workflow_settings'] = [
       '#type' => 'details',
@@ -28,8 +28,8 @@ class RegistrationWorkflowForm extends WorkflowTypeConfigureFormBase {
       '#type' => 'select',
       '#required' => TRUE,
       '#options' => array_map([State::class, 'labelCallback'], $this->workflowType->getStates()),
-      '#description' => $this->t('Select the state that new registrations will be assigned.'),
-      '#default_value' => $workflow_type_configuration['default_moderation_state'] ?? 'pending',
+      '#description' => $this->t('Select the default state for new registration types.'),
+      '#default_value' => $workflow_type_configuration['default_registration_state'] ?? 'pending',
     ];
     return $form;
   }

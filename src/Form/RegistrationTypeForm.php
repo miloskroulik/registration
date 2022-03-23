@@ -14,7 +14,7 @@ class RegistrationTypeForm extends BundleEntityFormBase {
    */
   public function form(array $form, FormStateInterface $form_state): array {
     $form = parent::form($form, $form_state);
-    $state_options = $this->getStateOptions();
+    $state_options = $this->getStateOptions($form_state);
 
     /** @var \Drupal\registration\Entity\RegistrationTypeInterface $registration_type */
     $registration_type = $this->entity;
@@ -42,22 +42,28 @@ class RegistrationTypeForm extends BundleEntityFormBase {
       '#required' => TRUE,
       '#options' => $this->getWorkflowOptions(),
       '#default_value' => $registration_type->getWorkflowId(),
-      '#description' => $this->t('Used by all registrations of this type.'),
+      '#description' => $this->t('The workflow used by all registrations of this type.'),
+      '#ajax' => [
+        'event' => 'change',
+        'callback' => '::ajaxRefresh',
+        'wrapper' => 'workflow-data',
+      ],
     ];
-    $form['default_state'] = [
+    $form['workflow_data']['default_state'] = [
+      '#prefix' => '<div id="workflow-data">',
       '#type' => 'select',
       '#title' => $this->t('Default state'),
       '#required' => TRUE,
       '#options' => $state_options,
-      '#description' => $this->t('The default state for registrations of this type.'),
+      '#description' => $this->t('The default state for new registrations of this type.'),
       '#default_value' => $registration_type->getDefaultState(),
     ];
 
-    $form['held'] = [
+    $form['workflow_data']['held'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Held registration settings'),
     ];
-    $form['held']['held_expire'] = [
+    $form['workflow_data']['held']['held_expire'] = [
       '#type' => 'number',
       '#title' => $this->t('Hold expiration hours'),
       '#min' => 0,
@@ -66,16 +72,32 @@ class RegistrationTypeForm extends BundleEntityFormBase {
       '#description' => $this->t('The minimum number of hours a registration can remain held before it is taken out of held state and no longer counts against capacity. For no limit, use 0 (default is 1).<br><strong>Note</strong>: registrations are removed from held state by cron, so the number of hours specified is the minimum amount of time a registration will be held for; it can be held for longer depending on when the next cron run is after the minimum amount of time has elapsed.'),
       '#default_value' => $registration_type->getHeldExpirationTime(),
     ];
-    $form['held']['held_expire_state'] = [
+    $form['workflow_data']['held']['held_expire_state'] = [
       '#type' => 'select',
       '#title' => $this->t('Hold expiration state'),
       '#options' => $state_options,
       '#required' => FALSE,
       '#description' => $this->t('The state a registration will be put into when its hold expires.'),
       '#default_value' => $registration_type->getHeldExpirationState(),
+      '#suffix' => '</div>',
     ];
 
     return $form;
+  }
+
+  /**
+   * AJAX callback for the registration type form.
+   *
+   * @param array $form
+   *   The form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return array
+   *   The part of the form to update.
+   */
+  public function ajaxRefresh(array $form, FormStateInterface $form_state): array {
+    return $form['workflow_data'];
   }
 
   /**
@@ -89,9 +111,9 @@ class RegistrationTypeForm extends BundleEntityFormBase {
     /** @var \Drupal\registration\Entity\RegistrationTypeInterface $registration_type */
     $registration_type = $this->entity;
     $registration_type->setWorkflowId($values['workflow']);
-    $registration_type->setDefaultState($values['default_state']);
-    $registration_type->setHeldExpirationTime($values['held']['held_expire']);
-    $registration_type->setHeldExpirationState($values['held']['held_expire_state']);
+    $registration_type->setDefaultState($values['workflow_data']['default_state']);
+    $registration_type->setHeldExpirationTime($values['workflow_data']['held']['held_expire']);
+    $registration_type->setHeldExpirationState($values['workflow_data']['held']['held_expire_state']);
     $registration_type->save();
 
     $this->messenger()->addMessage($this->t('The registration type %label has been successfully saved.', ['%label' => $this->entity->label()]));
@@ -101,12 +123,23 @@ class RegistrationTypeForm extends BundleEntityFormBase {
   /**
    * Gets the available registration state options.
    *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
    * @return array
    *   The states as an options array of labels keyed by ID.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  protected function getStateOptions(): array {
+  protected function getStateOptions(FormStateInterface $form_state): array {
     $options = [];
-    $workflow = $this->entity->getWorkflow();
+    if ($form_state->getValue('workflow')) {
+      $workflow = $this->entityTypeManager->getStorage('workflow')->load($form_state->getValue('workflow'));
+    }
+    else {
+      $workflow = $this->entity->getWorkflow();
+    }
     $states = $workflow ? $workflow->getTypePlugin()->getStates() : [];
     foreach ($states as $id => $state) {
       $options[$id] = $state->label();

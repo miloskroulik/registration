@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Form;
 
+use Drupal;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
@@ -31,7 +32,7 @@ class RegistrationForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $form_state) {
+  public function form(array $form, FormStateInterface $form_state): array {
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->entity;
     $form = parent::form($form, $form_state);
@@ -71,13 +72,14 @@ class RegistrationForm extends ContentEntityForm {
         ],
         '#markup' => '<h4 class="label inline">' . $this->t('Last saved') . '</h4> ' . $last_saved,
       ],
-      /*'author' => [
+      'author' => [
         '#type' => 'item',
+        '#access' => $registration->getAuthorDisplayName(),
         '#wrapper_attributes' => [
           'class' => ['author', 'container-inline'],
         ],
-        '#markup' => '<h4 class="label inline">' . $this->t('Author') . '</h4> ' . $product->getOwner()->getDisplayName(),
-      ],*/
+        '#markup' => '<h4 class="label inline">' . $this->t('Author') . '</h4> ' . $registration->getAuthorDisplayName(),
+      ],
     ];
     $form['advanced'] = [
       '#type' => 'container',
@@ -112,8 +114,11 @@ class RegistrationForm extends ContentEntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->getEntity();
+    if ($registration->isNew()) {
+      $registration->set('author_uid', Drupal::currentUser()->id());
+    }
     $registration->save();
-    $this->messenger()->addMessage($this->t('The registration has been successfully saved.', ['%label' => $registration->label()]));
+    $this->messenger()->addMessage($this->t('%label has been successfully saved.', ['%label' => $registration->label()]));
     $form_state->setRedirect('entity.registration.canonical', ['registration' => $registration->id()]);
   }
 

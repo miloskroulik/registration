@@ -45,17 +45,17 @@ use Drupal\workflows\WorkflowInterface;
  *   config_export = {
  *     "id",
  *     "label",
- *     "workflow",
+ *     "workflow_id",
  *     "defaultState",
  *     "heldExpireTime",
  *     "heldExpireState"
  *   },
  *   links = {
- *     "add-form" = "/admin/structure/registration/registration-types/add",
- *     "edit-form" = "/admin/structure/registration/registration-types/{registration_type}/edit",
- *     "duplicate-form" = "/admin/structure/registration/registration-types/{registration_type}/duplicate",
- *     "delete-form" = "/admin/structure/registration/registration-types/{registration_type}/delete",
- *     "collection" = "/admin/structure/registration/registration-types"
+ *     "add-form" = "/admin/structure/registration-types/add",
+ *     "edit-form" = "/admin/structure/registration-types/{registration_type}/edit",
+ *     "duplicate-form" = "/admin/structure/registration-types/{registration_type}/duplicate",
+ *     "delete-form" = "/admin/structure/registration-types/{registration_type}/delete",
+ *     "collection" = "/admin/structure/registration-types"
  *   }
  * )
  */
@@ -66,7 +66,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
    *
    * @var string
    */
-  protected string $workflow = 'registration';
+  protected string $workflow_id = 'registration';
 
   /**
    * The default registration state.
@@ -95,7 +95,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
    * {@inheritdoc}
    */
   public function getWorkflowId(): string {
-    return $this->workflow;
+    return $this->workflow_id;
   }
 
   /**
@@ -110,7 +110,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
    * {@inheritdoc}
    */
   public function setWorkflowId($workflow_id): static {
-    $this->workflow = $workflow_id;
+    $this->workflow_id = $workflow_id;
     return $this;
   }
 
@@ -118,7 +118,15 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
    * {@inheritdoc}
    */
   public function getDefaultState(): string {
-    return $this->defaultState;
+    if ($this->isNew()) {
+      // Default new registration types to the global default for the workflow.
+      $workflow = $this->getWorkflow();
+      $configuration = $workflow->getTypePlugin()->getConfiguration();
+      return $configuration['default_registration_state'];
+    }
+    else {
+      return $this->defaultState;
+    }
   }
 
   /**

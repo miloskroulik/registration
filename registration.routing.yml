@@ -1,7 +1,0 @@
-registration.configuration:
-  path: '/admin/structure/registration'
-  defaults:
-    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
-    _title: 'Registration'
-  requirements:
-    _permission: 'administer registrations'

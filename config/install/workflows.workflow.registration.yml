@@ -43,3 +43,4 @@ type_settings:
       weight: 1
       from:
         - pending
+  default_registration_state: pending

@@ -2,12 +2,14 @@
 
 namespace Drupal\registration\Entity;
 
+use Drupal;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\registration\RegistrationState;
+use Drupal\workflows\StateInterface;
+use Drupal\workflows\WorkflowInterface;
 
 /**
  * Defines the registration entity class.
@@ -56,7 +58,7 @@ use Drupal\registration\RegistrationState;
  *     "add-form" = "/registration/add/{registration_type}",
  *     "edit-form" = "/registration/{registration}/edit",
  *     "delete-form" = "/registration/{registration}/delete",
- *     "collection" = "/admin/structure/registrations"
+ *     "collection" = "/admin/people/registrations"
  *   },
  *   bundle_entity_type = "registration_type",
  *   field_ui_base_route = "entity.registration_type.edit_form"
@@ -65,6 +67,54 @@ use Drupal\registration\RegistrationState;
 class Registration extends ContentEntityBase implements RegistrationInterface {
 
   use EntityChangedTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function label():string {
+    if (!$this->isNew()) {
+      return (string) t('Registration #@id', ['@id' => $this->id()]);
+    }
+    return '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAuthorDisplayName(): string|null {
+    if (!$this->isNew()) {
+      $user = $this->entityTypeManager->getStorage('user')->load($this->author_uid);
+      if ($user) {
+        return $user->getDisplayName();
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getWorkflow(): WorkflowInterface {
+    if ($this->isNew() || $this->get('workflow')->isEmpty()) {
+      return $this->type->entity->getWorkflow();
+    }
+    else {
+      return $this->workflow->entity;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getState(): StateInterface {
+    $workflow = $this->getWorkflow();
+    if ($this->isNew() || $this->get('state')->isEmpty()) {
+      return $workflow->getTypePlugin()->getState($this->type->entity->getDefaultState());
+    }
+    else {
+      return $workflow->getTypePlugin()->getState($this->get('state')->first()->value);
+    }
+  }
 
   /**
    * {@inheritdoc}
@@ -84,21 +134,18 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getState(): RegistrationState {
-    $workflow = $this->type->entity->getWorkflow();
-    if ($this->isNew()) {
-      return $workflow->getTypePlugin()->getState($this->type->entity->getDefaultState());
-    }
-    else {
-      return $workflow->getTypePlugin()->getState($this->state->first()->value);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
+
+    if ($this->get('workflow')->isEmpty()) {
+      $this->set('workflow', $this->type->entity->getWorkflowId());
+    }
+    if ($this->get('state')->isEmpty()) {
+      $this->set('state', $this->getState()->id());
+    }
+    if ($this->get('author_uid')->isEmpty()) {
+      $this->set('author_uid', Drupal::service('current_user')->id());
+    }
   }
 
   /**
@@ -114,12 +161,34 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {
     $fields = parent::baseFieldDefinitions($entity_type);
 
+    $fields['workflow'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Workflow'))
+      ->setDescription(t('The workflow the registration is in.'))
+      ->setSetting('target_type', 'workflow')
+      ->setRequired(TRUE);
+
+    $fields['entity_type_id'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Entity type ID'))
+      ->setDescription(t('The ID of the entity type this registration is attached to.'))
+      ->setSetting('max_length', EntityTypeInterface::ID_MAX_LENGTH);
+
+    $fields['entity_id'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Entity ID'))
+      ->setDescription(t('The ID of the entity this registration is attached to.'))
+      ->setSetting('unsigned', TRUE);
+
     $fields['anon_mail'] = BaseFieldDefinition::create('email')
       ->setLabel(t('Anonymous email'))
       ->setDescription(t('The email address for anonymous registrations.'))
       ->setDisplayOptions('form', [
         'type' => 'email_default',
       ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['count'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Count'))
+      ->setDescription(t('How many spaces the registration should use towards the total capacity for the event.'))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -139,13 +208,6 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setSetting('target_type', 'user')
       ->setRequired(TRUE)
       ->setReadOnly(TRUE)
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
-
-    $fields['count'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Count'))
-      ->setDescription(t('How many spaces the registration should use towards the total capacity for the event.'))
-      ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['state'] = BaseFieldDefinition::create('string')

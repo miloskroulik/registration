@@ -17,7 +17,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "registration",
  *   label = @Translation("Registration"),
  *   required_states = {
- *     "pending",
  *     "complete",
  *     "canceled",
  *   },
@@ -56,7 +55,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition):Registration {
     return new static(
       $configuration,
       $plugin_id,
@@ -97,7 +96,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
    */
   public function workflowHasData(WorkflowInterface $workflow): bool {
     return (bool) $this->entityTypeManager
-      ->getStorage('registration_state')
+      ->getStorage('registration')
       ->getQuery()
       ->condition('workflow', $workflow->id())
       ->count()
@@ -111,10 +110,10 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
    */
   public function workflowStateHasData(WorkflowInterface $workflow, StateInterface $state): bool {
     return (bool) $this->entityTypeManager
-      ->getStorage('registration_state')
+      ->getStorage('registration')
       ->getQuery()
       ->condition('workflow', $workflow->id())
-      ->condition('registration_state', $state->id())
+      ->condition('state', $state->id())
       ->count()
       ->accessCheck(FALSE)
       ->range(0, 1)
@@ -170,6 +169,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
           ],
         ],
       ],
+      'default_registration_state' => 'pending',
     ];
   }
 
