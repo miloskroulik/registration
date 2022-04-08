@@ -1,0 +1,3 @@
+registration.entities:
+  class: \Drupal\Core\Menu\LocalTaskDefault
+  deriver: \Drupal\registration\Plugin\Derivative\RegistrationLocalTask

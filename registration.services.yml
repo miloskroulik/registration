@@ -1,0 +1,14 @@
+services:
+  registration.manage_registrations_access_checker:
+    class: Drupal\registration\Access\ManageRegistrationsAccessCheck
+    arguments: ['@current_user', '@registration.service']
+    tags:
+      - { name: access_check, applies_to: _manage_registrations_access_check }
+  registration.route_subscriber:
+    class: Drupal\registration\Routing\RouteSubscriber
+    arguments: ['@entity_type.manager', '@registration.service']
+    tags:
+      - { name: event_subscriber }
+  registration.service:
+    class: Drupal\registration\RegistrationService
+    arguments: ['@entity_field.manager', '@entity_type.bundle.info', '@router.route_provider']

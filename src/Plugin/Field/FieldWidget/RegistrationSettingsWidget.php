@@ -206,7 +206,6 @@ class RegistrationSettingsWidget extends WidgetBase {
       '#title' => $this->t('Registration type'),
       '#options' => $this->getRegistrationTypeOptions(),
       '#default_value' => $this->getRegistrationSetting($items, 'registration_type'),
-      '#required' => TRUE,
       '#description' => $this->t('Select what type of registrations should be enabled for this @type. Depending on the display settings, it will appear as either string, registration link, or form.', [
         '@type' => $bundle,
       ]),
@@ -395,7 +394,7 @@ class RegistrationSettingsWidget extends WidgetBase {
    * @return mixed
    *   The setting value.
    */
-  protected function getRegistrationSetting(FieldItemListInterface $items, string $key):mixed {
+  protected function getRegistrationSetting(FieldItemListInterface $items, string $key): mixed {
     $entity = $items->getEntity();
     $field_name = $items->getFieldDefinition()->getName();
     if (!$entity->get($field_name)->isEmpty()) {
@@ -416,7 +415,7 @@ class RegistrationSettingsWidget extends WidgetBase {
    *   The array keyed by registration type machine name.
    */
   protected function getRegistrationTypeOptions(): array {
-    $options = [];
+    $options = ['' => $this->t('-- Disable Registrations --')];
     $entities = $this->entityTypeManager->getStorage('registration_type')->loadMultiple();
     foreach ($entities as $id => $entity) {
       $options[$id] = $entity->label();
