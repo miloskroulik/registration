@@ -67,6 +67,19 @@ interface RegistrationServiceInterface {
   public function getRegistrationField(EntityInterface $entity): ?FieldDefinitionInterface;
 
   /**
+   * Gets the route for the Settings local action for an entity type.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   *
+   * @return \Symfony\Component\Routing\Route|null
+   *   The generated route, if available.
+   *
+   * @throws \Symfony\Component\Routing\Exception\RouteNotFoundException
+   */
+  public function getSettingsRoute(EntityTypeInterface $entity_type): ?Route;
+
+  /**
    * Determines if an entity type has a bundle with a registration field.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type

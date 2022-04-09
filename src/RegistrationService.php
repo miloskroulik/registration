@@ -124,13 +124,28 @@ class RegistrationService implements RegistrationServiceInterface {
    * {@inheritdoc}
    */
   public function getRegistrationField(EntityInterface $entity): ?FieldDefinitionInterface {
-    $fields = $this->entityFieldManager->getFieldDefinitions($entity->getEntityType()->id(), $entity->bundle());
+    $fields = $this->entityFieldManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
     foreach ($fields as $field) {
       if ($field->getType() == 'registration') {
         return $field;
       }
     }
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSettingsRoute(EntityTypeInterface $entity_type): ?Route {
+    if ($route = $this->getManageRoute($entity_type)) {
+      $route
+        ->setPath($route->getPath() . '/settings')
+        ->setDefaults([
+          '_form' => '\Drupal\registration\Form\RegistrationSettingsForm',
+          '_title' => 'Registration settings',
+        ]);
+    }
+    return $route;
   }
 
   /**

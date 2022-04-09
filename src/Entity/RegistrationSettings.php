@@ -13,6 +13,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *   id = "registration_settings",
  *   label = @Translation("Registration settings"),
  *   handlers = {
+ *     "storage" = "Drupal\registration\RegistrationSettingsStorage",
  *     "storage_schema" = "Drupal\registration\RegistrationStorageSchema",
  *   },
  *   base_table = "registration_entity",

@@ -50,6 +50,9 @@ class RouteSubscriber extends RouteSubscriberBase {
       if ($route = $this->registration->getManageRoute($entity_type)) {
         $collection->add("entity.$entity_type_id.manage_registrations", $route);
       }
+      if ($route = $this->registration->getSettingsRoute($entity_type)) {
+        $collection->add("entity.$entity_type_id.registration_settings", $route);
+      }
     }
   }
 
