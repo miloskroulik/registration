@@ -1,0 +1,48 @@
+<?php
+
+namespace Drupal\registration;
+
+use Drupal\Core\Entity\ContentEntityTypeInterface;
+use Drupal\Core\Entity\Sql\SqlContentEntityStorageSchema;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+
+/**
+ * Defines the registration schema handler.
+ */
+class RegistrationStorageSchema extends SqlContentEntityStorageSchema {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEntitySchema(ContentEntityTypeInterface $entity_type, $reset = FALSE): array {
+    $schema = parent::getEntitySchema($entity_type, $reset);
+
+    if ($data_table = $this->storage->getDataTable()) {
+      $schema[$data_table]['indexes'] += [
+        'registration__host_entity' => ['entity_type_id', 'entity_id'],
+      ];
+    }
+
+    return $schema;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getSharedTableFieldSchema(FieldStorageDefinitionInterface $storage_definition, $table_name, array $column_mapping): array {
+    $schema = parent::getSharedTableFieldSchema($storage_definition, $table_name, $column_mapping);
+    $field_name = $storage_definition->getName();
+
+    switch ($field_name) {
+      case 'entity_type_id':
+      case 'entity_id':
+        // Improves the performance of the indexes defined
+        // in getEntitySchema().
+        $schema['fields'][$field_name]['not null'] = TRUE;
+        break;
+    }
+
+    return $schema;
+  }
+
+}

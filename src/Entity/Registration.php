@@ -28,6 +28,7 @@ use Drupal\workflows\WorkflowInterface;
  *   handlers = {
  *     "event" = "Drupal\registration\Event\RegistrationEvent",
  *     "storage" = "Drupal\Core\Entity\Sql\SqlContentEntityStorage",
+ *     "storage_schema" = "Drupal\registration\RegistrationStorageSchema",
  *     "access" = "Drupal\entity\EntityAccessControlHandler",
  *     "query_access" = "Drupal\entity\QueryAccess\QueryAccessHandler",
  *     "permission_provider" = "Drupal\entity\EntityPermissionProvider",
@@ -45,6 +46,7 @@ use Drupal\workflows\WorkflowInterface;
  *   },
  *   admin_permission = "administer registration",
  *   permission_granularity = "bundle",
+ *   storage_schema = "Drupal\registration\RegistrationStorageSchema",
  *   base_table = "registration",
  *   data_table = "registration_field_data",
  *   entity_keys = {
