@@ -17,8 +17,8 @@ class RegistrationStorageSchema extends SqlContentEntityStorageSchema {
   protected function getEntitySchema(ContentEntityTypeInterface $entity_type, $reset = FALSE): array {
     $schema = parent::getEntitySchema($entity_type, $reset);
 
-    if ($data_table = $this->storage->getDataTable()) {
-      $schema[$data_table]['indexes'] += [
+    if ($base_table = $this->storage->getBaseTable()) {
+      $schema[$base_table]['indexes'] += [
         'registration__host_entity' => ['entity_type_id', 'entity_id'],
       ];
     }
