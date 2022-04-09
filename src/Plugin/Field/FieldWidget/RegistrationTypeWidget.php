@@ -81,7 +81,7 @@ class RegistrationTypeWidget extends WidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
+  public function settingsForm(array $form, FormStateInterface $form_state): array {
     $element = parent::settingsForm($form, $form_state);
     $element['hide_register_tab'] = [
       '#type' => 'checkbox',
@@ -122,11 +122,10 @@ class RegistrationTypeWidget extends WidgetBase {
       '#format' => $default_format,
     ];
     if ($this->moduleHandler->moduleExists('token')) {
-      $entity_type = 'commerce_product_variation';
       $element['token_tree_container']['token_tree'] = [
         '#theme' => 'token_tree_link',
         '#token_types' => [
-          $entity_type,
+          $this->fieldDefinition->getTargetEntityTypeId(),
           'registration',
         ],
         '#global_types' => FALSE,
@@ -175,7 +174,7 @@ class RegistrationTypeWidget extends WidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function settingsSummary() {
+  public function settingsSummary(): array {
     $summary = parent::settingsSummary();
 
     if ($this->getSetting('hide_register_tab')) {
@@ -230,7 +229,7 @@ class RegistrationTypeWidget extends WidgetBase {
         '@type' => $bundle,
       ]),
     ];
-  
+
     return $element;
   }
 
