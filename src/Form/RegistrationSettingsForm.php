@@ -160,13 +160,9 @@ class RegistrationSettingsForm extends FormBase {
       '#description' => $this->t('If checked, a reminder will be sent to registrants on the following date.'),
       '#default_value' => (bool) $this->getRegistrationSetting('send_reminder'),
     ];
-    // Container is required for visibility states to work for a checkbox.
-    $form['reminder']['reminder_date_container'] = [
-      '#type' => 'container',
-    ];
     $date = $this->getRegistrationSetting('reminder_date');
     $default_value = $date ? DrupalDateTime::createFromTimestamp(strtotime($date)) : '';
-    $form['reminder']['reminder_date_container']['reminder_date'] = [
+    $form['reminder']['reminder_date'] = [
       '#type' => 'datetime',
       '#title' => $this->t('Reminder Date'),
       '#description' => $this->t('When to send reminders. (This uses the @timezone timezone.)', [
@@ -191,12 +187,7 @@ class RegistrationSettingsForm extends FormBase {
       '#format' => $default_format,
     ];
     if ($this->moduleHandler->moduleExists('token')) {
-      // Container is required for visibility states to work for a token tree.
-      $form['reminder']['reminder_template']['token_tree_container'] = [
-        '#type' => 'container',
-        '#weight' => 10,
-      ];
-      $form['reminder']['reminder_template']['token_tree_container']['token_tree'] = [
+      $form['reminder']['reminder_template']['token_tree'] = [
         '#theme' => 'token_tree_link',
         '#token_types' => [
           $this->getHostEntity()->getEntityTypeId(),
@@ -268,17 +259,20 @@ class RegistrationSettingsForm extends FormBase {
     $values = $form_state->getValues();
 
     // If sending a reminder, ensure date and template are set.
-    if ($values['send_reminder']
-      && (empty($values['reminder_date']) ||empty($values['reminder_template']['value']))
-    ) {
-      $form_state->setError($form['reminder'], t('If sending a reminder, provide a date and template.'));
+    if ($values['send_reminder'] && empty($values['reminder_date'])) {
+      $form_state->setError(
+        $form['reminder']['reminder_date'], $this->t('If sending a reminder, provide a date and template.'));
+    }
+    if ($values['send_reminder'] && empty($values['reminder_template']['value'])) {
+      $form_state->setError(
+        $form['reminder']['reminder_template'], $this->t('If sending a reminder, provide a date and template.'));
     }
 
     // Ensure reminder date is not in the past when "send_reminder" is TRUE:
     if ($values['send_reminder'] && !empty($values['reminder_date'])) {
       if ($values['reminder_date'] instanceof DrupalDateTime) {
         if (strtotime($values['reminder_date']) <= time()) {
-          $form_state->setError($form['reminder']['reminder_date_container'], t('Reminder must be in the future.'));
+          $form_state->setError($form['reminder']['reminder_date'], $this->t('Reminder must be in the future.'));
         }
       }
     }
@@ -292,16 +286,22 @@ class RegistrationSettingsForm extends FormBase {
     $entity = $this->getEntity();
     $values = $form_state->getValues();
     $fields = [
-      'status',
-      'capacity',
-      'open',
-      'close',
-      'send_reminder',
-      'reminder_date',
+      'status' => 'int',
+      'capacity' => 'int',
+      'open' => 'date',
+      'close' => 'date',
+      'send_reminder' => 'bool',
+      'reminder_date' => 'date',
     ];
-    foreach ($fields as $field) {
-      if ($values === '') {
+    foreach ($fields as $field => $type) {
+      if (!isset($values[$field])) {
         $entity->set($field, NULL);
+      }
+      elseif ($values[$field] === '') {
+        $entity->set($field, NULL);
+      }
+      elseif ($type == 'date') {
+        $entity->set($field, $values[$field]->format('Y-m-d H:i:s'));
       }
       else {
         $entity->set($field, $values[$field]);

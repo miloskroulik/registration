@@ -28,6 +28,19 @@ interface RegistrationServiceInterface {
   public function getBaseRouteName(EntityTypeInterface $entity_type): ?string;
 
   /**
+   * Gets the route for the Email Registrants local task for an entity type.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   *
+   * @return \Symfony\Component\Routing\Route|null
+   *   The generated route, if available.
+   *
+   * @throws \Symfony\Component\Routing\Exception\RouteNotFoundException
+   */
+  public function getBroadcastRoute(EntityTypeInterface $entity_type): ?Route;
+
+  /**
    * Gets the first upcasted entity object from a parameter bag.
    *
    * This function should typically be used for requests with a single object.
@@ -67,7 +80,7 @@ interface RegistrationServiceInterface {
   public function getRegistrationField(EntityInterface $entity): ?FieldDefinitionInterface;
 
   /**
-   * Gets the route for the Settings local action for an entity type.
+   * Gets the route for the Settings local task for an entity type.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type.

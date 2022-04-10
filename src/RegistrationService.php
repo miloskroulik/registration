@@ -72,6 +72,21 @@ class RegistrationService implements RegistrationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getBroadcastRoute(EntityTypeInterface $entity_type): ?Route {
+    if ($route = $this->getManageRoute($entity_type)) {
+      $route
+        ->setPath($route->getPath() . '/broadcast')
+        ->setDefaults([
+          '_form' => '\Drupal\registration\Form\EmailRegistrantsForm',
+          '_title' => 'Email registrants',
+        ]);
+    }
+    return $route;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getEntityFromParameters(ParameterBag $parameters): ?EntityInterface {
     $entity = NULL;
     foreach ($parameters as $parameter) {

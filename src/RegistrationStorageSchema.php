@@ -21,6 +21,11 @@ class RegistrationStorageSchema extends SqlContentEntityStorageSchema {
       $schema[$base_table]['indexes'] += [
         'registration__host_entity' => ['entity_type_id', 'entity_id'],
       ];
+      if ($base_table == 'registration_entity') {
+        $schema[$base_table]['unique keys'] = [
+          'registration__host_entity_unique' => ['entity_type_id', 'entity_id'],
+        ];
+      }
     }
 
     return $schema;
