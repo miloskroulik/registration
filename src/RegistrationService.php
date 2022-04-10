@@ -2,6 +2,7 @@
 
 namespace Drupal\registration;
 
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfo;
@@ -16,6 +17,13 @@ use Symfony\Component\Routing\Route;
  * Defines a utility class for registrations.
  */
 class RegistrationService implements RegistrationServiceInterface {
+
+  /**
+   * The entity display repository.
+   *
+   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
+   */
+  protected EntityDisplayRepositoryInterface $entityDisplayRepository;
 
   /**
    * The entity field manager.
@@ -41,6 +49,8 @@ class RegistrationService implements RegistrationServiceInterface {
   /**
    * Creates a RegistrationService object.
    *
+   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
+   *   The entity display repository.
    * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
    *   The entity field manager.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfo $entity_type_bundle_info
@@ -48,7 +58,8 @@ class RegistrationService implements RegistrationServiceInterface {
    * @param \Drupal\Core\Routing\RouteProvider $route_provider
    *   The route provider.
    */
-  public function __construct(EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, RouteProvider $route_provider) {
+  public function __construct(EntityDisplayRepositoryInterface $entity_display_repository, EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, RouteProvider $route_provider) {
+    $this->entityDisplayRepository = $entity_display_repository;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->routeProvider = $route_provider;
@@ -107,6 +118,8 @@ class RegistrationService implements RegistrationServiceInterface {
 
     if ($path = $this->getLinkTemplate($entity_type)) {
       if ($base_route_name = $this->getBaseRouteName($entity_type)) {
+        // @todo Allow non-standard base routes for custom entities.
+        // Use hook or event.
         $base_route = $this->routeProvider->getRouteByName($base_route_name);
         if (!$base_route) {
           throw new RouteNotFoundException('Route "'. $base_route_name . '" does not exist.');
@@ -138,6 +151,35 @@ class RegistrationService implements RegistrationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getRegisterRoute(EntityTypeInterface $entity_type): ?Route {
+    $route = NULL;
+
+    if ($path = $this->getLinkTemplate($entity_type)) {
+      $entity_type_id = $entity_type->id();
+      $edit = '/edit';
+      if (str_ends_with($path, $edit)) {
+        $path = substr($path, 0, strlen($path) - strlen($edit));
+      }
+      $route = new Route($path . '/register');
+      $route
+        ->addDefaults([
+          '_form' => '\Drupal\registration\Form\RegisterForm',
+          '_title' => 'Register',
+        ])
+        ->addRequirements([
+          '_register_access_check' => 'TRUE',
+        ])
+        ->setOption('parameters', [
+          $entity_type_id => ['type' => 'entity:' . $entity_type_id],
+        ]);
+    }
+
+    return $route;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRegistrationField(EntityInterface $entity): ?FieldDefinitionInterface {
     $fields = $this->entityFieldManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
     foreach ($fields as $field) {
@@ -146,6 +188,61 @@ class RegistrationService implements RegistrationServiceInterface {
       }
     }
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRegistrationFormDisplaySetting(EntityInterface $host_entity, &$form_display, string $key): mixed {
+    $field_definition = $this->getRegistrationField($host_entity);
+    $field_name = $field_definition->getName();
+
+    $form_modes = ['default' => ''];
+    $form_modes += $this->entityDisplayRepository->getFormModes($host_entity->getEntityTypeId());
+    foreach(array_keys($form_modes) as $form_mode) {
+      $this_form_display = $this->entityDisplayRepository
+        ->getFormDisplay($host_entity->getEntityTypeId(), $host_entity->bundle(), $form_mode);
+      if ($this_form_display) {
+        $component = $this_form_display->getComponent($field_name);
+        if (isset($component, $component['settings'], $component['settings'][$key])) {
+          $form_display = $this_form_display;
+          return $component['settings'][$key];
+        }
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRegistrationSetting(EntityInterface $host_entity, EntityInterface $registration_settings_entity, string $key): mixed {
+    if ($registration_settings_entity->hasField($key) && !$registration_settings_entity->get($key)->isEmpty()) {
+      // Registration settings entity has the setting.
+      $setting = $registration_settings_entity->get($key)->first()->getValue();
+      return $setting['value'];
+    }
+
+    // Check for an additional setting.
+    // Extract from the serialized settings property.
+    if (!$registration_settings_entity->hasField($key)) {
+      if (!$registration_settings_entity->get('settings')->isEmpty()) {
+        $settings = $registration_settings_entity->get('settings')->first()->getValue();
+        if (!empty($settings)) {
+          $settings = unserialize($settings['value']);
+          if (!empty($settings[$key])) {
+            // Registration settings entity has the additional setting.
+            return $settings[$key];
+          }
+        }
+      }
+    }
+
+    // The registration settings entity does not have the setting yet.
+    // Get a default value from the host entity registration field defaults.
+    $form_display = NULL;
+    return $this->getRegistrationFormDisplaySetting($host_entity, $form_display, $key);
   }
 
   /**
@@ -217,11 +314,13 @@ class RegistrationService implements RegistrationServiceInterface {
    *   The base template name, if available.
    */
   protected function getBaseTemplate(EntityTypeInterface $entity_type): ?string {
+    // @todo Allow non-standard templates for custom entities.
+    // Use hook or event.
     $base_template = NULL;
 
-    // Find a suitable link template for use in base route construction.
-    // Most entity types have a canonical template, but not all.
-    // Fallback to the edit form link if it exists.
+    // Find a suitable link template for use in base route construction. Most
+    // entity types have a canonical template, but not all. Use canonical if
+    // available, otherwise fallback to the edit form link if it exists.
     $templates = [
       'canonical',
       'edit-form',

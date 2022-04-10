@@ -85,6 +85,14 @@ class RegistrationLocalTask extends DeriverBase implements ContainerDeriverInter
           'weight' => 20,
         ];
       }
+      if ($this->registration->getRegisterRoute($entity_type)) {
+        $this->derivatives["$entity_type_id.register"] = [
+          'route_name' => "entity.$entity_type_id.register",
+          'title' => $this->t('Register'),
+          'base_route' => $this->registration->getBaseRouteName($entity_type),
+          'weight' => 50,
+        ];
+      }
     }
 
     foreach ($this->derivatives as &$entry) {

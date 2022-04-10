@@ -22,7 +22,7 @@ interface RegistrationServiceInterface {
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type.
    *
-   * @return string
+   * @return string|null
    *   The base route name, if available.
    */
   public function getBaseRouteName(EntityTypeInterface $entity_type): ?string;
@@ -69,6 +69,19 @@ interface RegistrationServiceInterface {
   public function getManageRoute(EntityTypeInterface $entity_type): ?Route;
 
   /**
+   * Gets the route for the Register task for an entity type.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   *
+   * @return \Symfony\Component\Routing\Route|null
+   *   The generated route, if available.
+   *
+   * @throws \Symfony\Component\Routing\Exception\RouteNotFoundException
+   */
+  public function getRegisterRoute(EntityTypeInterface $entity_type): ?Route;
+
+  /**
    * Gets the definition of the registration field for an entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
@@ -78,6 +91,42 @@ interface RegistrationServiceInterface {
    *   The field definition, if available.
    */
   public function getRegistrationField(EntityInterface $entity): ?FieldDefinitionInterface;
+
+  /**
+   * Gets the value of a setting for a host entity from a form display.
+   *
+   * Sets the form display variable that was used.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   *   The host entity, for example a node instance.
+   * @param mixed
+   *   The form display the value was retrieved from. Set on return.
+   *   Passed by reference, so must be an instantiated variable.
+   * @param string $key
+   *   The setting name, for example "hide_register_tab".
+   *
+   * @return mixed
+   *   The setting value. The data type depends on the key.
+   */
+  public function getRegistrationFormDisplaySetting(EntityInterface $host_entity, &$form_display, string $key): mixed;
+
+  /**
+   * Gets the value of a registration setting for a host entity.
+   *
+   * If the host entity does not have registration settings yet, a default
+   * value from the field configuration instance is returned.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   *   The host entity, for example a node instance.
+   * @param \Drupal\Core\Entity\EntityInterface $registration_settings_entity
+   *   The registration settings entity.
+   * @param string $key
+   *   The setting name, for example "status", "reminder date" etc.
+   *
+   * @return mixed
+   *   The setting value. The data type depends on the key.
+   */
+  public function getRegistrationSetting(EntityInterface $host_entity, EntityInterface $registration_settings_entity, string $key): mixed;
 
   /**
    * Gets the route for the Settings local task for an entity type.

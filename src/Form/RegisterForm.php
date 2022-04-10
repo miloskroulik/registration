@@ -13,9 +13,9 @@ use Drupal\registration\RegistrationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Defines the broadcast to email registrants form.
+ * Defines the Register form.
  */
-class EmailRegistrantsForm extends FormBase {
+class RegisterForm extends FormBase {
 
   /**
    * The entity.
@@ -60,7 +60,7 @@ class EmailRegistrantsForm extends FormBase {
   protected RegistrationServiceInterface $registration;
 
   /**
-   * Creates a EmailRegistrantsForm object.
+   * Creates a RegisterForm object.
    *
    * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
    *   The entity display repository.
@@ -81,7 +81,7 @@ class EmailRegistrantsForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container): EmailRegistrantsForm {
+  public static function create(ContainerInterface $container): RegisterForm {
     return new static(
       $container->get('entity_display.repository'),
       $container->get('entity_type.manager'),
@@ -94,7 +94,7 @@ class EmailRegistrantsForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId(): string {
-    return 'email_registrants';
+    return 'register';
   }
 
   /**
@@ -108,28 +108,21 @@ class EmailRegistrantsForm extends FormBase {
     $this->entity = $storage->loadSettingsForEntity($this->getHostEntity());
 
     $form = [];
-    $form['subject'] = [
+    $form['something'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Subject'),
-      '#required' => TRUE,
+      '#title' => $this->t('Something'),
       //'#default_value' => $this->getRegistrationSetting('status'),
-    ];
-    $form['message'] = [
-      '#type' => 'text_format',
-      '#title' => $this->t('Message'),
-      '#required' => TRUE,
-      //'#default_value' => $this->getRegistrationSetting('capacity'),
     ];
 
     $form['actions'] = ['#type' => 'actions'];
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Send'),
+      '#value' => $this->t('Save Registration'),
       '#button_type' => 'primary',
     ];
-    $form['actions']['preview'] = [
+    $form['actions']['cancel'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Preview'),
+      '#value' => $this->t('Cancel'),
       '#button_type' => 'secondary',
     ];
 
@@ -146,10 +139,6 @@ class EmailRegistrantsForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // Save values to the settings entity.
-    $entity = $this->getHostEntity();
-    $values = $form_state->getValues();
-    $this->messenger()->addStatus($this->t('The settings have been saved.'));
   }
 
   /**

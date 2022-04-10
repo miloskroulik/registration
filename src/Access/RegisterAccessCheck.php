@@ -4,6 +4,7 @@ namespace Drupal\registration\Access;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Session\AccountInterface;
@@ -11,9 +12,9 @@ use Drupal\Core\Session\AccountProxy;
 use Drupal\registration\RegistrationServiceInterface;
 
 /**
- * Checks access for the Manage Registrations route.
+ * Checks access for the Register route.
  */
-class ManageRegistrationsAccessCheck implements AccessInterface {
+class RegisterAccessCheck implements AccessInterface {
 
   /**
    * The current user service.
@@ -23,6 +24,13 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
   protected AccountProxy $currentUser;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected EntityTypeManagerInterface $entityTypeManager;
+
+  /**
    * The registration service.
    *
    * @var \Drupal\registration\RegistrationServiceInterface
@@ -30,15 +38,18 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
   protected RegistrationServiceInterface $registration;
 
   /**
-   * ManageRegistrationsAccessCheck constructor.
+   * RegisterAccessCheck constructor.
    *
    * @param \Drupal\Core\Session\AccountProxy $current_user
    *   The current user service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    * @param \Drupal\registration\RegistrationServiceInterface $registration_service
    *   The registration service.
    */
-  public function __construct(AccountProxy $current_user, RegistrationServiceInterface $registration_service) {
+  public function __construct(AccountProxy $current_user, EntityTypeManagerInterface $entity_type_manager, RegistrationServiceInterface $registration_service) {
     $this->currentUser = $current_user;
+    $this->entityTypeManager = $entity_type_manager;
     $this->registration = $registration_service;
   }
 
@@ -54,14 +65,36 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
    *   The access result.
    */
   public function access(AccountInterface $account, RouteMatch $route_match): AccessResultInterface {
+    // Initialize.
+    $field = NULL;
+    $form_display = NULL;
+    $registration_settings_entity = NULL;
+
+    // Retrieve the host entity.
     $entity = $this->registration->getEntityFromParameters($route_match->getParameters());
 
     // If the request has an entity with its registration field set,
+    // and the host entity has the enable registrations setting,
     // then allow access if the user has the appropriate permission.
     if ($entity) {
       $field = $this->registration->getRegistrationField($entity);
       if ($field && !$entity->get($field->getName())->isEmpty()) {
-        return AccessResult::allowedIfHasPermissions($account, ['manage registrations'])->addCacheableDependency($entity);
+        $storage = $this->entityTypeManager->getStorage('registration_settings');
+        $registration_settings_entity = $storage->loadSettingsForEntity($entity);
+
+        $hide_register_tab = (bool) $this->registration->getRegistrationFormDisplaySetting(
+          $entity, $form_display, 'hide_register_tab');
+        $status = (bool) $this->registration->getRegistrationSetting(
+          $entity, $registration_settings_entity, 'status');
+
+        if (!$hide_register_tab && $status) {
+          return AccessResult::allowedIfHasPermissions($account, ['manage registrations'])
+            // Recalculate this result if  the relevant entities are updated.
+            ->addCacheableDependency($entity)
+            ->addCacheableDependency($registration_settings_entity)
+            ->addCacheableDependency($field)
+            ->addCacheableDependency($form_display);
+        }
       }
     }
 
@@ -69,13 +102,21 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
     // Disable the route. This also hides the local task (tab) for the route.
     $access_result = AccessResult::forbidden();
 
-    // Ensure proper caching. Otherwise the task will be hidden until the
-    // next cache clear even if the entity is changed to enable registrations.
+    // Recalculate this result if  the relevant entities are updated.
     if ($account->id() === $this->currentUser->id()) {
-      $access_result->cachePerUser();
+      $access_result->cachePerPermissions();
     }
     if ($entity) {
       $access_result->addCacheableDependency($entity);
+    }
+    if ($registration_settings_entity) {
+      $access_result->addCacheableDependency($registration_settings_entity);
+    }
+    if ($field) {
+      $access_result->addCacheableDependency($field);
+    }
+    if ($form_display) {
+      $access_result->addCacheableDependency($form_display);
     }
     return $access_result;
   }

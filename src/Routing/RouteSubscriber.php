@@ -47,14 +47,17 @@ class RouteSubscriber extends RouteSubscriberBase {
    */
   protected function alterRoutes(RouteCollection $collection) {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
+      if ($route = $this->registration->getBroadcastRoute($entity_type)) {
+        $collection->add("entity.$entity_type_id.broadcast", $route);
+      }
       if ($route = $this->registration->getManageRoute($entity_type)) {
         $collection->add("entity.$entity_type_id.manage_registrations", $route);
       }
+      if ($route = $this->registration->getRegisterRoute($entity_type)) {
+        $collection->add("entity.$entity_type_id.register", $route);
+      }
       if ($route = $this->registration->getSettingsRoute($entity_type)) {
         $collection->add("entity.$entity_type_id.registration_settings", $route);
-      }
-      if ($route = $this->registration->getBroadcastRoute($entity_type)) {
-        $collection->add("entity.$entity_type_id.broadcast", $route);
       }
     }
   }

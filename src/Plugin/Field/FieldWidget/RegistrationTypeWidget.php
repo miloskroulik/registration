@@ -179,7 +179,9 @@ class RegistrationTypeWidget extends WidgetBase {
 
     if ($this->getSetting('hide_register_tab')) {
       $summary[] = $this->t('Hide the Register tab');
+      $summary[] = '';
     }
+    $summary[] = $this->t('-- Default registration settings --');
     $capacity = $this->getSetting('capacity');
     if ($capacity == 0) {
       $capacity = $this->t('No limit');
