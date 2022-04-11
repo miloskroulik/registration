@@ -60,7 +60,7 @@ class RegistrationLocalTask extends DeriverBase implements ContainerDeriverInter
     $this->derivatives = [];
 
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
-      if ($this->registration->getManageRoute($entity_type)) {
+      if ($this->registration->getRoute($entity_type, 'manage')) {
         $this->derivatives["$entity_type_id.manage_registrations"] = [
           'route_name' => "entity.$entity_type_id.manage_registrations",
           'title' => $this->t('Manage Registrations'),
@@ -85,7 +85,7 @@ class RegistrationLocalTask extends DeriverBase implements ContainerDeriverInter
           'weight' => 20,
         ];
       }
-      if ($this->registration->getRegisterRoute($entity_type)) {
+      if ($this->registration->getRoute($entity_type, 'register')) {
         if (!$this->registration->getFieldConfigSetting($entity_type, 'hide_register_tab')) {
           $this->derivatives["$entity_type_id.register"] = [
             'route_name' => "entity.$entity_type_id.register",

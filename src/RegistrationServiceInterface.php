@@ -28,17 +28,6 @@ interface RegistrationServiceInterface {
   public function getBaseRouteName(EntityTypeInterface $entity_type): ?string;
 
   /**
-   * Gets the route for the Email Registrants local task for an entity type.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type.
-   *
-   * @return \Symfony\Component\Routing\Route|null
-   *   The generated route, if available.
-   */
-  public function getBroadcastRoute(EntityTypeInterface $entity_type): ?Route;
-
-  /**
    * Gets the first upcasted entity object from a parameter bag.
    *
    * This function should typically be used for requests with a single object.
@@ -67,28 +56,6 @@ interface RegistrationServiceInterface {
    *   The setting value. The data type depends on the key.
    */
   public function getFieldConfigSetting(EntityTypeInterface $entity_type, string $key): mixed;
-
-  /**
-   * Gets the route for the Manage Registration task for an entity type.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type.
-   *
-   * @return \Symfony\Component\Routing\Route|null
-   *   The generated route, if available.
-   */
-  public function getManageRoute(EntityTypeInterface $entity_type): ?Route;
-
-  /**
-   * Gets the route for the Register task for an entity type.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type.
-   *
-   * @return \Symfony\Component\Routing\Route|null
-   *   The generated route, if available.
-   */
-  public function getRegisterRoute(EntityTypeInterface $entity_type): ?Route;
 
   /**
    * Gets the definition of the registration field for an entity.
@@ -120,15 +87,17 @@ interface RegistrationServiceInterface {
   public function getRegistrationSetting(EntityInterface $host_entity, EntityInterface $registration_settings_entity, string $key): mixed;
 
   /**
-   * Gets the route for the Settings local task for an entity type.
+   * Gets a registration related route for an entity type and key.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type.
+   * @param string $id
+   *   The id, for example 'registrations' or 'register'.
    *
    * @return \Symfony\Component\Routing\Route|null
    *   The generated route, if available.
    */
-  public function getSettingsRoute(EntityTypeInterface $entity_type): ?Route;
+  public function getRoute(EntityTypeInterface $entity_type, string $id): ?Route;
 
   /**
    * Determines if an entity type has a bundle with a registration field.

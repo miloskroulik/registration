@@ -83,21 +83,6 @@ class RegistrationService implements RegistrationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getBroadcastRoute(EntityTypeInterface $entity_type): ?Route {
-    if ($route = $this->getManageRoute($entity_type)) {
-      $route
-        ->setPath($route->getPath() . '/broadcast')
-        ->setDefaults([
-          '_form' => '\Drupal\registration\Form\EmailRegistrantsForm',
-          '_title' => 'Email registrants',
-        ]);
-    }
-    return $route;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getEntityFromParameters(ParameterBag $parameters): ?EntityInterface {
     $entity = NULL;
     foreach ($parameters as $parameter) {
@@ -136,65 +121,6 @@ class RegistrationService implements RegistrationServiceInterface {
     }
 
     return $setting_value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getManageRoute(EntityTypeInterface $entity_type): ?Route {
-    $route = NULL;
-
-    if ($path = $this->getLinkTemplate($entity_type)) {
-      $entity_type_id = $entity_type->id();
-      $edit = '/edit';
-      if (str_ends_with($path, $edit)) {
-        $path = substr($path, 0, strlen($path) - strlen($edit));
-      }
-      $route = new Route($path . '/registrations');
-      $route
-        ->addDefaults([
-          '_controller' => '\Drupal\registration\Controller\RegistrationController::manageRegistrations',
-          '_title' => 'Manage Registrations',
-        ])
-        ->addRequirements([
-          '_manage_registrations_access_check' => 'TRUE',
-        ])
-        ->setOption('_admin_route', TRUE)
-        ->setOption('parameters', [
-          $entity_type_id => ['type' => 'entity:' . $entity_type_id],
-        ]);
-    }
-
-    return $route;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRegisterRoute(EntityTypeInterface $entity_type): ?Route {
-    $route = NULL;
-
-    if ($path = $this->getLinkTemplate($entity_type)) {
-      $entity_type_id = $entity_type->id();
-      $edit = '/edit';
-      if (str_ends_with($path, $edit)) {
-        $path = substr($path, 0, strlen($path) - strlen($edit));
-      }
-      $route = new Route($path . '/register');
-      $route
-        ->addDefaults([
-          '_form' => '\Drupal\registration\Form\RegisterForm',
-          '_title' => 'Register',
-        ])
-        ->addRequirements([
-          '_register_access_check' => 'TRUE',
-        ])
-        ->setOption('parameters', [
-          $entity_type_id => ['type' => 'entity:' . $entity_type_id],
-        ]);
-    }
-
-    return $route;
   }
 
   /**
@@ -244,15 +170,56 @@ class RegistrationService implements RegistrationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getSettingsRoute(EntityTypeInterface $entity_type): ?Route {
-    if ($route = $this->getManageRoute($entity_type)) {
-      $route
-        ->setPath($route->getPath() . '/settings')
-        ->setDefaults([
-          '_form' => '\Drupal\registration\Form\RegistrationSettingsForm',
-          '_title' => 'Registration settings',
-        ]);
+  public function getRoute(EntityTypeInterface $entity_type, string $id): ?Route {
+    $path = $this->getLinkTemplate($entity_type);
+    if (!$path) {
+      return NULL;
     }
+
+    // Truncate if using the edit-form link template.
+    $edit = '/edit';
+    if (str_ends_with($path, $edit)) {
+      $path = substr($path, 0, strlen($path) - strlen($edit));
+    }
+
+    // Build the 'manage' route and adjust for other routes.
+    $route = $this->buildRoute($entity_type, $path);
+    switch($id) {
+      case 'broadcast':
+        $route
+          ->setPath($route->getPath() . '/broadcast')
+          ->setDefaults([
+            '_form' => '\Drupal\registration\Form\EmailRegistrantsForm',
+            '_title' => 'Email registrants',
+          ]);
+        break;
+
+      case 'manage':
+        break;
+
+      case 'register':
+        $route
+          ->setPath($path . '/register')
+          ->setDefaults([
+            '_form' => '\Drupal\registration\Form\RegisterForm',
+            '_title' => 'Register',
+          ])
+          ->setOption('_admin_route', FALSE)
+          ->setRequirements([
+            '_register_access_check' => 'TRUE',
+          ]);
+        break;
+
+      case 'settings':
+        $route
+          ->setPath($route->getPath() . '/settings')
+          ->setDefaults([
+            '_form' => '\Drupal\registration\Form\RegistrationSettingsForm',
+            '_title' => 'Registration settings',
+          ]);
+        break;
+    }
+
     return $route;
   }
 
@@ -273,6 +240,37 @@ class RegistrationService implements RegistrationServiceInterface {
       }
     }
     return FALSE;
+  }
+
+  /**
+   * Build a registration route for an entity type and path.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   * @param string $path
+   *   The path.
+   *
+   * @return \Symfony\Component\Routing\Route
+   *   The generated route.
+   *
+   */
+  protected function buildRoute(EntityTypeInterface $entity_type, string $path): Route {
+    $entity_type_id = $entity_type->id();
+    $route = new Route($path . '/registrations');
+    $route
+      ->addDefaults([
+        '_controller' => '\Drupal\registration\Controller\RegistrationController::manageRegistrations',
+        '_title' => 'Manage Registrations',
+      ])
+      ->addRequirements([
+        '_manage_registrations_access_check' => 'TRUE',
+      ])
+      ->setOption('_admin_route', TRUE)
+      ->setOption('parameters', [
+        $entity_type_id => ['type' => 'entity:' . $entity_type_id],
+      ]);
+
+    return $route;
   }
 
   /**
