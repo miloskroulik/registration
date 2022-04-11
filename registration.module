@@ -5,12 +5,14 @@
  * Provides user regigistration for events.
  */
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Render\Element;
 
 /**
  * Implements hook_theme().
  */
-function registration_theme() {
+function registration_theme(): array {
   return [
     'registration_form' => [
       'render element' => 'form',
@@ -19,12 +21,6 @@ function registration_theme() {
       'render element' => 'elements',
     ],
   ];
-}
-
-/**
- * Implements hook_theme_suggestions_registration().
- */
-function registration_theme_suggestions_registration(array $variables) {
 }
 
 /**
@@ -45,5 +41,21 @@ function template_preprocess_registration(array &$variables) {
   $variables['registration'] = [];
   foreach (Element::children($variables['elements']) as $key) {
     $variables['registration'][$key] = $variables['elements'][$key];
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function registration_entity_update(EntityInterface $entity) {
+  // If a form display for a registration field is updated, clear
+  // the local task plugin cache so local tasks (tabs) are rebuilt,
+  // in case the Hide Register Tab field setting may have changed.
+  if ($entity instanceof EntityFormDisplay) {
+    $entity_types = \Drupal::entityTypeManager()->getDefinitions();
+    $entity_type = $entity_types[$entity->getTargetEntityTypeId()];
+    if (\Drupal::service('registration.service')->hasRegistrationField($entity_type)) {
+      \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
+    }
   }
 }

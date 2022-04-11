@@ -67,7 +67,6 @@ class RegisterAccessCheck implements AccessInterface {
   public function access(AccountInterface $account, RouteMatch $route_match): AccessResultInterface {
     // Initialize.
     $field = NULL;
-    $form_display = NULL;
     $registration_settings_entity = NULL;
 
     // Retrieve the host entity.
@@ -82,18 +81,15 @@ class RegisterAccessCheck implements AccessInterface {
         $storage = $this->entityTypeManager->getStorage('registration_settings');
         $registration_settings_entity = $storage->loadSettingsForEntity($entity);
 
-        $hide_register_tab = (bool) $this->registration->getRegistrationFormDisplaySetting(
-          $entity, $form_display, 'hide_register_tab');
         $status = (bool) $this->registration->getRegistrationSetting(
           $entity, $registration_settings_entity, 'status');
 
-        if (!$hide_register_tab && $status) {
+        if ($status) {
           return AccessResult::allowedIfHasPermissions($account, ['manage registrations'])
             // Recalculate this result if  the relevant entities are updated.
             ->addCacheableDependency($entity)
             ->addCacheableDependency($registration_settings_entity)
-            ->addCacheableDependency($field)
-            ->addCacheableDependency($form_display);
+            ->addCacheableDependency($field);
         }
       }
     }
@@ -114,9 +110,6 @@ class RegisterAccessCheck implements AccessInterface {
     }
     if ($field) {
       $access_result->addCacheableDependency($field);
-    }
-    if ($form_display) {
-      $access_result->addCacheableDependency($form_display);
     }
     return $access_result;
   }

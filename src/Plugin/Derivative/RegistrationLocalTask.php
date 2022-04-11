@@ -78,7 +78,7 @@ class RegistrationLocalTask extends DeriverBase implements ContainerDeriverInter
           'parent_id' => "registration.entities:$entity_type_id.manage_registrations",
           'weight' => 10,
         ];
-        $this->derivatives["$entity_type_id.broadvast"] = [
+        $this->derivatives["$entity_type_id.broadcast"] = [
           'route_name' => "entity.$entity_type_id.broadcast",
           'title' => $this->t('Email registrants'),
           'parent_id' => "registration.entities:$entity_type_id.manage_registrations",
@@ -86,12 +86,14 @@ class RegistrationLocalTask extends DeriverBase implements ContainerDeriverInter
         ];
       }
       if ($this->registration->getRegisterRoute($entity_type)) {
-        $this->derivatives["$entity_type_id.register"] = [
-          'route_name' => "entity.$entity_type_id.register",
-          'title' => $this->t('Register'),
-          'base_route' => $this->registration->getBaseRouteName($entity_type),
-          'weight' => 50,
-        ];
+        if (!$this->registration->isRegisterTabHidden($entity_type)) {
+          $this->derivatives["$entity_type_id.register"] = [
+            'route_name' => "entity.$entity_type_id.register",
+            'title' => $this->t('Register'),
+            'base_route' => $this->registration->getBaseRouteName($entity_type),
+            'weight' => 50,
+          ];
+        }
       }
     }
 

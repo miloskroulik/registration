@@ -193,19 +193,18 @@ class RegistrationService implements RegistrationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrationFormDisplaySetting(EntityInterface $host_entity, &$form_display, string $key): mixed {
+  public function getRegistrationFormDisplaySetting(EntityInterface $host_entity, string $key): mixed {
     $field_definition = $this->getRegistrationField($host_entity);
     $field_name = $field_definition->getName();
 
     $form_modes = ['default' => ''];
     $form_modes += $this->entityDisplayRepository->getFormModes($host_entity->getEntityTypeId());
     foreach(array_keys($form_modes) as $form_mode) {
-      $this_form_display = $this->entityDisplayRepository
+      $form_display = $this->entityDisplayRepository
         ->getFormDisplay($host_entity->getEntityTypeId(), $host_entity->bundle(), $form_mode);
-      if ($this_form_display) {
-        $component = $this_form_display->getComponent($field_name);
+      if ($form_display) {
+        $component = $form_display->getComponent($field_name);
         if (isset($component, $component['settings'], $component['settings'][$key])) {
-          $form_display = $this_form_display;
           return $component['settings'][$key];
         }
       }
@@ -241,8 +240,7 @@ class RegistrationService implements RegistrationServiceInterface {
 
     // The registration settings entity does not have the setting yet.
     // Get a default value from the host entity registration field defaults.
-    $form_display = NULL;
-    return $this->getRegistrationFormDisplaySetting($host_entity, $form_display, $key);
+    return $this->getRegistrationFormDisplaySetting($host_entity, $key);
   }
 
   /**
@@ -280,6 +278,47 @@ class RegistrationService implements RegistrationServiceInterface {
       }
     }
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isRegisterTabHidden(EntityTypeInterface $entity_type): bool {
+    $hide = FALSE;
+
+    // If there are multiple bundles with a registration field, use the last
+    // field instance to determine if the Register tab should be hidden. This
+    // is not ideal but replicates the behavior of the D7 version of the module.
+    $key = 'hide_register_tab';
+    $entity_type_id = $entity_type->id();
+    $bundle_info = $this->entityTypeBundleInfo->getBundleInfo($entity_type_id);
+    foreach ($bundle_info as $bundle => $info) {
+      try {
+        $fields = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
+        foreach ($fields as $field) {
+          if ($field->getType() == 'registration') {
+            $field_name = $field->getName();
+            $form_modes = ['default' => ''];
+            $form_modes += $this->entityDisplayRepository->getFormModes($entity_type_id);
+            foreach(array_keys($form_modes) as $form_mode) {
+              $form_display = $this->entityDisplayRepository
+                ->getFormDisplay($entity_type_id, $bundle, $form_mode);
+              if ($form_display) {
+                $component = $form_display->getComponent($field_name);
+                if (isset($component, $component['settings'], $component['settings'][$key])) {
+                  $hide = (bool) $component['settings'][$key];
+                }
+              }
+            }
+          }
+        }
+      }
+      catch (\Exception $e) {
+        continue;
+      }
+    }
+
+    return $hide;
   }
 
   /**

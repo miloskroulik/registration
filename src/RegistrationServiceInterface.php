@@ -95,20 +95,15 @@ interface RegistrationServiceInterface {
   /**
    * Gets the value of a setting for a host entity from a form display.
    *
-   * Sets the form display variable that was used.
-   *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity
    *   The host entity, for example a node instance.
-   * @param mixed
-   *   The form display the value was retrieved from. Set on return.
-   *   Passed by reference, so must be an instantiated variable.
    * @param string $key
    *   The setting name, for example "hide_register_tab".
    *
    * @return mixed
    *   The setting value. The data type depends on the key.
    */
-  public function getRegistrationFormDisplaySetting(EntityInterface $host_entity, &$form_display, string $key): mixed;
+  public function getRegistrationFormDisplaySetting(EntityInterface $host_entity, string $key): mixed;
 
   /**
    * Gets the value of a registration setting for a host entity.
@@ -151,5 +146,18 @@ interface RegistrationServiceInterface {
    *   TRUE if the entity type has a bundle with a registration field.
    */
   public function hasRegistrationField(EntityTypeInterface $entity_type): bool;
+
+  /**
+   * Determines if the Register tab should be hidden for the entity type.
+   *
+   * The relevant setting on the registration field form display is checked.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   *
+   * @return bool
+   *   TRUE if the Register tab should be hidden for the entity type.
+   */
+  public function isRegisterTabHidden(EntityTypeInterface $entity_type): bool;
 
 }
