@@ -35,8 +35,6 @@ interface RegistrationServiceInterface {
    *
    * @return \Symfony\Component\Routing\Route|null
    *   The generated route, if available.
-   *
-   * @throws \Symfony\Component\Routing\Exception\RouteNotFoundException
    */
   public function getBroadcastRoute(EntityTypeInterface $entity_type): ?Route;
 
@@ -63,8 +61,6 @@ interface RegistrationServiceInterface {
    *
    * @return \Symfony\Component\Routing\Route|null
    *   The generated route, if available.
-   *
-   * @throws \Symfony\Component\Routing\Exception\RouteNotFoundException
    */
   public function getManageRoute(EntityTypeInterface $entity_type): ?Route;
 
@@ -129,8 +125,6 @@ interface RegistrationServiceInterface {
    *
    * @return \Symfony\Component\Routing\Route|null
    *   The generated route, if available.
-   *
-   * @throws \Symfony\Component\Routing\Exception\RouteNotFoundException
    */
   public function getSettingsRoute(EntityTypeInterface $entity_type): ?Route;
 

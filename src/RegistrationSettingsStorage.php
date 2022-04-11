@@ -14,7 +14,7 @@ class RegistrationSettingsStorage extends SqlContentEntityStorage {
    * {@inheritdoc}
    */
   public function loadSettingsForEntity(EntityInterface $entity) {
-    // Look for settings for the given entity.
+    // Look for settings for the given host entity.
     $settings = $this->loadByProperties([
       'entity_type_id' => $entity->getEntityTypeId(),
       'entity_id' => $entity->id(),
@@ -26,10 +26,10 @@ class RegistrationSettingsStorage extends SqlContentEntityStorage {
         'entity_type_id' => $entity->getEntityTypeId(),
         'entity_id' => $entity->id(),
       ]);
+      $settings_entity->save();
     }
     else {
       // The entity exists, return it.
-      // There should only be one.
       $settings_entity = reset($settings);
     }
 

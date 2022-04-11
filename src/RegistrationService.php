@@ -10,7 +10,6 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Routing\RouteProvider;
 use Symfony\Component\HttpFoundation\ParameterBag;
-use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -117,32 +116,24 @@ class RegistrationService implements RegistrationServiceInterface {
     $route = NULL;
 
     if ($path = $this->getLinkTemplate($entity_type)) {
-      if ($base_route_name = $this->getBaseRouteName($entity_type)) {
-        // @todo Allow non-standard base routes for custom entities.
-        // Use hook or event.
-        $base_route = $this->routeProvider->getRouteByName($base_route_name);
-        if (!$base_route) {
-          throw new RouteNotFoundException('Route "'. $base_route_name . '" does not exist.');
-        }
-        $entity_type_id = $entity_type->id();
-        $edit = '/edit';
-        if (str_ends_with($path, $edit)) {
-          $path = substr($path, 0, strlen($path) - strlen($edit));
-        }
-        $route = new Route($path . '/registrations');
-        $route
-          ->addDefaults([
-            '_controller' => '\Drupal\registration\Controller\RegistrationController::manageRegistrations',
-            '_title' => 'Manage Registrations',
-          ])
-          ->addRequirements([
-            '_manage_registrations_access_check' => 'TRUE',
-          ])
-          ->setOption('_admin_route', $base_route->getOption('_admin_route'))
-          ->setOption('parameters', [
-            $entity_type_id => ['type' => 'entity:' . $entity_type_id],
-          ]);
+      $entity_type_id = $entity_type->id();
+      $edit = '/edit';
+      if (str_ends_with($path, $edit)) {
+        $path = substr($path, 0, strlen($path) - strlen($edit));
       }
+      $route = new Route($path . '/registrations');
+      $route
+        ->addDefaults([
+          '_controller' => '\Drupal\registration\Controller\RegistrationController::manageRegistrations',
+          '_title' => 'Manage Registrations',
+        ])
+        ->addRequirements([
+          '_manage_registrations_access_check' => 'TRUE',
+        ])
+        ->setOption('_admin_route', TRUE)
+        ->setOption('parameters', [
+          $entity_type_id => ['type' => 'entity:' . $entity_type_id],
+        ]);
     }
 
     return $route;

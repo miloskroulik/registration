@@ -8,6 +8,7 @@
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Render\Element;
+use Drupal\field\Entity\FieldConfig;
 
 /**
  * Implements hook_theme().
@@ -41,6 +42,32 @@ function template_preprocess_registration(array &$variables) {
   $variables['registration'] = [];
   foreach (Element::children($variables['elements']) as $key) {
     $variables['registration'][$key] = $variables['elements'][$key];
+  }
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function registration_entity_insert(EntityInterface $entity) {
+  // Rebuild routes and local tasks when Registration fields are added.
+  if ($entity instanceof FieldConfig) {
+    if ($entity->getType() == 'registration') {
+      \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
+      \Drupal::service("router.builder")->rebuild();
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function registration_entity_delete(EntityInterface $entity) {
+  // Rebuild routes and local tasks when Registration fields are deleted.
+  if ($entity instanceof FieldConfig) {
+    if ($entity->getType() == 'registration') {
+      \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
+      \Drupal::service("router.builder")->rebuild();
+    }
   }
 }
 
