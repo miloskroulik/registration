@@ -9,7 +9,7 @@ use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
-use Drupal\registration\RegistrationServiceInterface;
+use Drupal\registration\RegistrationManagerInterface;
 
 /**
  * Checks access for the Register route.
@@ -31,11 +31,11 @@ class RegisterAccessCheck implements AccessInterface {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * The registration service.
+   * The registration manager.
    *
-   * @var \Drupal\registration\RegistrationServiceInterface
+   * @var \Drupal\registration\RegistrationManagerInterface
    */
-  protected RegistrationServiceInterface $registration;
+  protected RegistrationManagerInterface $registrationManager;
 
   /**
    * RegisterAccessCheck constructor.
@@ -44,13 +44,13 @@ class RegisterAccessCheck implements AccessInterface {
    *   The current user service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\registration\RegistrationServiceInterface $registration_service
-   *   The registration service.
+   * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
+   *   The registration manager.
    */
-  public function __construct(AccountProxy $current_user, EntityTypeManagerInterface $entity_type_manager, RegistrationServiceInterface $registration_service) {
+  public function __construct(AccountProxy $current_user, EntityTypeManagerInterface $entity_type_manager, RegistrationManagerInterface $registration_manager) {
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
-    $this->registration = $registration_service;
+    $this->registrationManager = $registration_manager;
   }
 
   /**
@@ -70,18 +70,18 @@ class RegisterAccessCheck implements AccessInterface {
     $registration_settings_entity = NULL;
 
     // Retrieve the host entity.
-    $entity = $this->registration->getEntityFromParameters($route_match->getParameters());
+    $entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
 
     // If the request has an entity with its registration field set,
     // and the host entity has the enable registrations setting,
     // then allow access if the user has the appropriate permission.
     if ($entity) {
-      $field = $this->registration->getRegistrationField($entity);
+      $field = $this->registrationManager->getRegistrationField($entity);
       if ($field && !$entity->get($field->getName())->isEmpty()) {
         $storage = $this->entityTypeManager->getStorage('registration_settings');
         $registration_settings_entity = $storage->loadSettingsForEntity($entity);
 
-        $status = (bool) $this->registration->getRegistrationSetting(
+        $status = (bool) $this->registrationManager->getRegistrationSetting(
           $entity, $registration_settings_entity, 'status');
 
         if ($status) {

@@ -8,7 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\registration\RegistrationServiceInterface;
+use Drupal\registration\RegistrationManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -45,11 +45,11 @@ class RegistrationSettingsForm extends FormBase {
   protected ModuleHandlerInterface $moduleHandler;
 
   /**
-   * The registration service.
+   * The registration manager.
    *
-   * @var \Drupal\registration\RegistrationServiceInterface
+   * @var \Drupal\registration\RegistrationManagerInterface
    */
-  protected RegistrationServiceInterface $registration;
+  protected RegistrationManagerInterface $registrationManager;
 
   /**
    * Creates a RegistrationLocalTask object.
@@ -58,13 +58,13 @@ class RegistrationSettingsForm extends FormBase {
    *   The entity type manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
-   * @param \Drupal\registration\RegistrationServiceInterface $registration_service
-   *   The registration service.
+   * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
+   *   The registration manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RegistrationServiceInterface $registration_service) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RegistrationManagerInterface $registration_manager) {
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
-    $this->registration = $registration_service;
+    $this->registrationManager = $registration_manager;
   }
 
   /**
@@ -74,7 +74,7 @@ class RegistrationSettingsForm extends FormBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('module_handler'),
-      $container->get('registration.service')
+      $container->get('registration.manager')
     );
   }
 
@@ -341,7 +341,7 @@ class RegistrationSettingsForm extends FormBase {
    */
   protected function setHostEntity() {
     $route_match = $this->getRouteMatch();
-    $this->hostEntity = $this->registration->getEntityFromParameters($route_match->getParameters());
+    $this->hostEntity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
   }
 
   /**
@@ -354,7 +354,7 @@ class RegistrationSettingsForm extends FormBase {
    *   The setting value.
    */
   protected function getRegistrationSetting(string $key): mixed {
-    return $this->registration->getRegistrationSetting($this->getHostEntity(), $this->getEntity(), $key);
+    return $this->registrationManager->getRegistrationSetting($this->getHostEntity(), $this->getEntity(), $key);
   }
 
 }

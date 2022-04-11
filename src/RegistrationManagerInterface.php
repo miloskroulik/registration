@@ -9,9 +9,9 @@ use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Route;
 
 /**
- * Defines the interface for the registration service.
+ * Defines the interface for the registration manager service.
  */
-interface RegistrationServiceInterface {
+interface RegistrationManagerInterface {
 
   /**
    * Gets the base route name for an entity type.

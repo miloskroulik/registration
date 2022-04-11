@@ -3,7 +3,7 @@ services:
     class: Drupal\registration\Access\ManageRegistrationsAccessCheck
     arguments: [
       '@current_user',
-      '@registration.service',
+      '@registration.manager',
     ]
     tags:
       - { name: access_check, applies_to: _manage_registrations_access_check }
@@ -13,7 +13,7 @@ services:
     arguments: [
       '@current_user',
       '@entity_type.manager',
-      '@registration.service',
+      '@registration.manager',
     ]
     tags:
       - { name: access_check, applies_to: _register_access_check }
@@ -22,13 +22,13 @@ services:
     class: Drupal\registration\Routing\RouteSubscriber
     arguments: [
       '@entity_type.manager',
-      '@registration.service',
+      '@registration.manager',
     ]
     tags:
       - { name: event_subscriber }
 
-  registration.service:
-    class: Drupal\registration\RegistrationService
+  registration.manager:
+    class: Drupal\registration\RegistrationManager
     arguments: [
       '@entity_display.repository',
       '@entity_field.manager',

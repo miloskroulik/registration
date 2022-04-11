@@ -3,7 +3,7 @@
 namespace Drupal\registration\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\registration\RegistrationServiceInterface;
+use Drupal\registration\RegistrationManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -13,27 +13,27 @@ use Symfony\Component\HttpFoundation\Request;
 class RegistrationController extends ControllerBase {
 
   /**
-   * The registration service.
+   * The registration manager.
    *
-   * @var \Drupal\registration\RegistrationServiceInterface
+   * @var \Drupal\registration\RegistrationManagerInterface
    */
-  protected RegistrationServiceInterface $registration;
+  protected RegistrationManagerInterface $registrationManager;
 
   /**
    * Creates a new RegistrationController instance.
    *
-   * @param \Drupal\registration\RegistrationServiceInterface $registration_service
-   *   The registration service.
+   * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
+   *   The registration manager.
    */
-  public function __construct(RegistrationServiceInterface $registration_service) {
-    $this->registration = $registration_service;
+  public function __construct(RegistrationManagerInterface $registration_manager) {
+    $this->registrationManager = $registration_manager;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): RegistrationController {
-    return new static($container->get('registration.service'));
+    return new static($container->get('registration.manager'));
   }
 
   /**
@@ -47,7 +47,7 @@ class RegistrationController extends ControllerBase {
    */
   public function manageRegistrations(Request $request): array {
     $build = [];
-    if ($entity = $this->registration->getEntityFromParameters($request->attributes)) {
+    if ($entity = $this->registrationManager->getEntityFromParameters($request->attributes)) {
       $build = [
         '#type' => 'markup',
         '#markup' => $this->t('This is some content for the manage registrations task for @label.', [

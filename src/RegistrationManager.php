@@ -14,9 +14,9 @@ use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Route;
 
 /**
- * Defines a utility class for registrations.
+ * Defines the class for the registration manager service.
  */
-class RegistrationService implements RegistrationServiceInterface {
+class RegistrationManager implements RegistrationManagerInterface {
 
   /**
    * The entity display repository.
@@ -47,7 +47,7 @@ class RegistrationService implements RegistrationServiceInterface {
   protected RouteProvider $routeProvider;
 
   /**
-   * Creates a RegistrationService object.
+   * Creates a RegistrationManager object.
    *
    * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
    *   The entity display repository.
@@ -183,7 +183,7 @@ class RegistrationService implements RegistrationServiceInterface {
     }
 
     // Build the 'manage' route and adjust for other routes.
-    $route = $this->buildRoute($entity_type, $path);
+    $route = $this->buildManageRoute($entity_type, $path);
     switch($id) {
       case 'broadcast':
         $route
@@ -243,18 +243,18 @@ class RegistrationService implements RegistrationServiceInterface {
   }
 
   /**
-   * Build a registration route for an entity type and path.
+   * Build the manage registrations route for an entity type and base path.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type.
    * @param string $path
-   *   The path.
+   *   The base path.
    *
    * @return \Symfony\Component\Routing\Route
    *   The generated route.
    *
    */
-  protected function buildRoute(EntityTypeInterface $entity_type, string $path): Route {
+  protected function buildManageRoute(EntityTypeInterface $entity_type, string $path): Route {
     $entity_type_id = $entity_type->id();
     $route = new Route($path . '/registrations');
     $route

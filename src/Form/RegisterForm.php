@@ -9,7 +9,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\registration\RegistrationServiceInterface;
+use Drupal\registration\RegistrationManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -53,11 +53,11 @@ class RegisterForm extends FormBase {
   protected ModuleHandlerInterface $moduleHandler;
 
   /**
-   * The registration service.
+   * The registration manager.
    *
-   * @var \Drupal\registration\RegistrationServiceInterface
+   * @var \Drupal\registration\RegistrationManagerInterface
    */
-  protected RegistrationServiceInterface $registration;
+  protected RegistrationManagerInterface $registrationManager;
 
   /**
    * Creates a RegisterForm object.
@@ -68,14 +68,14 @@ class RegisterForm extends FormBase {
    *   The entity type manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
-   * @param \Drupal\registration\RegistrationServiceInterface $registration_service
-   *   The registration service.
+   * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
+   *   The registration manager.
    */
-  public function __construct(EntityDisplayRepositoryInterface $entity_display_repository, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RegistrationServiceInterface $registration_service) {
+  public function __construct(EntityDisplayRepositoryInterface $entity_display_repository, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RegistrationManagerInterface $registration_manager) {
     $this->entityDisplayRepository = $entity_display_repository;
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
-    $this->registration = $registration_service;
+    $this->registrationManager = $registration_manager;
   }
 
   /**
@@ -86,7 +86,7 @@ class RegisterForm extends FormBase {
       $container->get('entity_display.repository'),
       $container->get('entity_type.manager'),
       $container->get('module_handler'),
-      $container->get('registration.service')
+      $container->get('registration.manager')
     );
   }
 
@@ -102,7 +102,7 @@ class RegisterForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $route_match = $this->getRouteMatch();
-    $this->hostEntity = $this->registration->getEntityFromParameters($route_match->getParameters());
+    $this->hostEntity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
 
     $storage = $this->entityTypeManager->getStorage('registration_settings');
     $this->entity = $storage->loadSettingsForEntity($this->getHostEntity());

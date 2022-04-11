@@ -5,7 +5,7 @@ namespace Drupal\registration\Routing;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
-use Drupal\registration\RegistrationServiceInterface;
+use Drupal\registration\RegistrationManagerInterface;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
@@ -23,23 +23,23 @@ class RouteSubscriber extends RouteSubscriberBase {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * The registration service.
+   * The registration manager.
    *
-   * @var \Drupal\registration\RegistrationServiceInterface
+   * @var \Drupal\registration\RegistrationManagerInterface
    */
-  protected RegistrationServiceInterface $registration;
+  protected RegistrationManagerInterface $registrationManager;
 
   /**
    * Creates a RouteSubscriber object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\registration\RegistrationServiceInterface $registration_service
-   *   The registration service.
+   * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
+   *   The registration manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RegistrationServiceInterface $registration_service) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RegistrationManagerInterface $registration_manager) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->registration = $registration_service;
+    $this->registrationManager = $registration_manager;
   }
 
   /**
@@ -47,16 +47,16 @@ class RouteSubscriber extends RouteSubscriberBase {
    */
   protected function alterRoutes(RouteCollection $collection) {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
-      if ($route = $this->registration->getRoute($entity_type, 'broadcast')) {
+      if ($route = $this->registrationManager->getRoute($entity_type, 'broadcast')) {
         $collection->add("entity.$entity_type_id.broadcast", $route);
       }
-      if ($route = $this->registration->getRoute($entity_type, 'manage')) {
+      if ($route = $this->registrationManager->getRoute($entity_type, 'manage')) {
         $collection->add("entity.$entity_type_id.manage_registrations", $route);
       }
-      if ($route = $this->registration->getRoute($entity_type, 'register')) {
+      if ($route = $this->registrationManager->getRoute($entity_type, 'register')) {
         $collection->add("entity.$entity_type_id.register", $route);
       }
-      if ($route = $this->registration->getRoute($entity_type, 'settings')) {
+      if ($route = $this->registrationManager->getRoute($entity_type, 'settings')) {
         $collection->add("entity.$entity_type_id.registration_settings", $route);
       }
     }

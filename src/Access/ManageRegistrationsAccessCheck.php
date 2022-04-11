@@ -8,7 +8,7 @@ use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
-use Drupal\registration\RegistrationServiceInterface;
+use Drupal\registration\RegistrationManagerInterface;
 
 /**
  * Checks access for the Manage Registrations route.
@@ -23,23 +23,23 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
   protected AccountProxy $currentUser;
 
   /**
-   * The registration service.
+   * The registration manager.
    *
-   * @var \Drupal\registration\RegistrationServiceInterface
+   * @var \Drupal\registration\RegistrationManagerInterface
    */
-  protected RegistrationServiceInterface $registration;
+  protected RegistrationManagerInterface $registrationManager;
 
   /**
    * ManageRegistrationsAccessCheck constructor.
    *
    * @param \Drupal\Core\Session\AccountProxy $current_user
    *   The current user service.
-   * @param \Drupal\registration\RegistrationServiceInterface $registration_service
-   *   The registration service.
+   * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
+   *   The registration manager.
    */
-  public function __construct(AccountProxy $current_user, RegistrationServiceInterface $registration_service) {
+  public function __construct(AccountProxy $current_user, RegistrationManagerInterface $registration_manager) {
     $this->currentUser = $current_user;
-    $this->registration = $registration_service;
+    $this->registrationManager = $registration_manager;
   }
 
   /**
@@ -54,12 +54,12 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
    *   The access result.
    */
   public function access(AccountInterface $account, RouteMatch $route_match): AccessResultInterface {
-    $entity = $this->registration->getEntityFromParameters($route_match->getParameters());
+    $entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
 
     // If the request has an entity with its registration field set,
     // then allow access if the user has the appropriate permission.
     if ($entity) {
-      $field = $this->registration->getRegistrationField($entity);
+      $field = $this->registrationManager->getRegistrationField($entity);
       if ($field && !$entity->get($field->getName())->isEmpty()) {
         return AccessResult::allowedIfHasPermissions($account, ['manage registrations'])->addCacheableDependency($entity);
       }

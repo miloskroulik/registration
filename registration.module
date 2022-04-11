@@ -91,7 +91,7 @@ function registration_entity_update(EntityInterface $entity) {
   if ($entity instanceof EntityFormDisplay) {
     $entity_types = \Drupal::entityTypeManager()->getDefinitions();
     $entity_type = $entity_types[$entity->getTargetEntityTypeId()];
-    if (\Drupal::service('registration.service')->hasRegistrationField($entity_type)) {
+    if (\Drupal::service('registration.manager')->hasRegistrationField($entity_type)) {
       \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
     }
   }
