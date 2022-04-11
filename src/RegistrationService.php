@@ -353,8 +353,7 @@ class RegistrationService implements RegistrationServiceInterface {
    *   The base template name, if available.
    */
   protected function getBaseTemplate(EntityTypeInterface $entity_type): ?string {
-    // @todo Allow non-standard templates for custom entities.
-    // Use hook or event.
+    // @todo Allow non-standard template for custom entities via hook or event.
     $base_template = NULL;
 
     // Find a suitable link template for use in base route construction. Most

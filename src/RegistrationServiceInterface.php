@@ -76,8 +76,6 @@ interface RegistrationServiceInterface {
    *
    * @return \Symfony\Component\Routing\Route|null
    *   The generated route, if available.
-   *
-   * @throws \Symfony\Component\Routing\Exception\RouteNotFoundException
    */
   public function getRegisterRoute(EntityTypeInterface $entity_type): ?Route;
 
