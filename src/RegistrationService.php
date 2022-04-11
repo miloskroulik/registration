@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Routing\RouteProvider;
 use Symfony\Component\HttpFoundation\ParameterBag;
@@ -112,6 +113,34 @@ class RegistrationService implements RegistrationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getFieldConfigSetting(EntityTypeInterface $entity_type, string $key): mixed {
+    $setting_value = NULL;
+
+    if ($entity_type->entityClassImplements(FieldableEntityInterface::class)) {
+      $entity_type_id = $entity_type->id();
+      $bundle_info = $this->entityTypeBundleInfo->getBundleInfo($entity_type_id);
+      // If there are multiple bundles with a registration field, the field
+      // instance for the last bundle will determine the setting value. This
+      // is not ideal but replicates the behavior of the D7 module.
+      foreach ($bundle_info as $bundle => $info) {
+        $fields = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
+        foreach ($fields as $field) {
+          if ($field->getType() == 'registration') {
+            $value = $this->getFieldWidgetSetting($entity_type, $field, $key);
+            if (!is_null($value)) {
+              $setting_value = $value;
+            }
+          }
+        }
+      }
+    }
+
+    return $setting_value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getManageRoute(EntityTypeInterface $entity_type): ?Route {
     $route = NULL;
 
@@ -184,29 +213,6 @@ class RegistrationService implements RegistrationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrationFormDisplaySetting(EntityInterface $host_entity, string $key): mixed {
-    $field_definition = $this->getRegistrationField($host_entity);
-    $field_name = $field_definition->getName();
-
-    $form_modes = ['default' => ''];
-    $form_modes += $this->entityDisplayRepository->getFormModes($host_entity->getEntityTypeId());
-    foreach(array_keys($form_modes) as $form_mode) {
-      $form_display = $this->entityDisplayRepository
-        ->getFormDisplay($host_entity->getEntityTypeId(), $host_entity->bundle(), $form_mode);
-      if ($form_display) {
-        $component = $form_display->getComponent($field_name);
-        if (isset($component, $component['settings'], $component['settings'][$key])) {
-          return $component['settings'][$key];
-        }
-      }
-    }
-
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getRegistrationSetting(EntityInterface $host_entity, EntityInterface $registration_settings_entity, string $key): mixed {
     if ($registration_settings_entity->hasField($key) && !$registration_settings_entity->get($key)->isEmpty()) {
       // Registration settings entity has the setting.
@@ -231,7 +237,8 @@ class RegistrationService implements RegistrationServiceInterface {
 
     // The registration settings entity does not have the setting yet.
     // Get a default value from the host entity registration field defaults.
-    return $this->getRegistrationFormDisplaySetting($host_entity, $key);
+    return $this->getFieldWidgetSetting($host_entity->getEntityType(),
+      $this->getRegistrationField($host_entity), $key);
   }
 
   /**
@@ -253,10 +260,10 @@ class RegistrationService implements RegistrationServiceInterface {
    * {@inheritdoc}
    */
   public function hasRegistrationField(EntityTypeInterface $entity_type): bool {
-    $entity_type_id = $entity_type->id();
-    $bundle_info = $this->entityTypeBundleInfo->getBundleInfo($entity_type_id);
-    foreach ($bundle_info as $bundle => $info) {
-      try {
+    if ($entity_type->entityClassImplements(FieldableEntityInterface::class)) {
+      $entity_type_id = $entity_type->id();
+      $bundle_info = $this->entityTypeBundleInfo->getBundleInfo($entity_type_id);
+      foreach ($bundle_info as $bundle => $info) {
         $fields = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
         foreach ($fields as $field) {
           if ($field->getType() == 'registration') {
@@ -264,71 +271,8 @@ class RegistrationService implements RegistrationServiceInterface {
           }
         }
       }
-      catch (\Exception $e) {
-        continue;
-      }
     }
     return FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isRegisterTabHidden(EntityTypeInterface $entity_type): bool {
-    $hide = FALSE;
-
-    // If there are multiple bundles with a registration field, use the last
-    // field instance to determine if the Register tab should be hidden. This
-    // is not ideal but replicates the behavior of the D7 version of the module.
-    $key = 'hide_register_tab';
-    $entity_type_id = $entity_type->id();
-    $bundle_info = $this->entityTypeBundleInfo->getBundleInfo($entity_type_id);
-    foreach ($bundle_info as $bundle => $info) {
-      try {
-        $fields = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
-        foreach ($fields as $field) {
-          if ($field->getType() == 'registration') {
-            $field_name = $field->getName();
-            $form_modes = ['default' => ''];
-            $form_modes += $this->entityDisplayRepository->getFormModes($entity_type_id);
-            foreach(array_keys($form_modes) as $form_mode) {
-              $form_display = $this->entityDisplayRepository
-                ->getFormDisplay($entity_type_id, $bundle, $form_mode);
-              if ($form_display) {
-                $component = $form_display->getComponent($field_name);
-                if (isset($component, $component['settings'], $component['settings'][$key])) {
-                  $hide = (bool) $component['settings'][$key];
-                }
-              }
-            }
-          }
-        }
-      }
-      catch (\Exception $e) {
-        continue;
-      }
-    }
-
-    return $hide;
-  }
-
-  /**
-   * Gets the link template for an entity type.
-   *
-   * Returns NULL unless the type has a bundle with a registration field.
-   * 
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type.
-   *
-   * @return string|null
-   *   The link template path, if available.
-   */
-  protected function getLinkTemplate(EntityTypeInterface $entity_type): ?string {
-    if (($template = $this->getBaseTemplate($entity_type)) && $this->hasRegistrationField($entity_type)) {
-      return $entity_type->getLinkTemplate($template);
-    }
-
-    return NULL;
   }
 
   /**
@@ -362,6 +306,59 @@ class RegistrationService implements RegistrationServiceInterface {
     }
 
     return $base_template;
+  }
+
+  /**
+   * Gets the value of a setting from a registration field widget.
+   *
+   * The value is retrieved from the form display containing the widget.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field
+   *   The field definition for a registration field.
+   * @param string $key
+   *   The setting name, for example "hide_register_tab".
+   *
+   * @return mixed
+   *   The setting value. The data type depends on the key.
+   */
+  protected function getFieldWidgetSetting(EntityTypeInterface $entity_type, FieldDefinitionInterface $field, string $key): mixed {
+    $entity_type_id = $entity_type->id();
+    $bundle = $field->getTargetBundle();
+
+    $form_modes = ['default' => ''];
+    $form_modes += $this->entityDisplayRepository->getFormModes($entity_type_id);
+    foreach(array_keys($form_modes) as $form_mode) {
+      $form_display = $this->entityDisplayRepository->getFormDisplay($entity_type_id, $bundle, $form_mode);
+      if ($form_display) {
+        $component = $form_display->getComponent($field->getName());
+        if (isset($component, $component['settings'], $component['settings'][$key])) {
+          return $component['settings'][$key];
+        }
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Gets the link template for an entity type.
+   *
+   * Returns NULL unless the type has a bundle with a registration field.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   *
+   * @return string|null
+   *   The link template path, if available.
+   */
+  protected function getLinkTemplate(EntityTypeInterface $entity_type): ?string {
+    if (($template = $this->getBaseTemplate($entity_type)) && $this->hasRegistrationField($entity_type)) {
+      return $entity_type->getLinkTemplate($template);
+    }
+
+    return NULL;
   }
 
 }

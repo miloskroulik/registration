@@ -54,6 +54,21 @@ interface RegistrationServiceInterface {
   public function getEntityFromParameters(ParameterBag $parameters): ?EntityInterface;
 
   /**
+   * Gets a setting from registration fields associated with an entity type.
+   *
+   * Retrieved from the form display containing the registration field widget.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   * @param string $key
+   *   The setting name, for example "hide_register_tab".
+   *
+   * @return mixed
+   *   The setting value. The data type depends on the key.
+   */
+  public function getFieldConfigSetting(EntityTypeInterface $entity_type, string $key): mixed;
+
+  /**
    * Gets the route for the Manage Registration task for an entity type.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
@@ -85,19 +100,6 @@ interface RegistrationServiceInterface {
    *   The field definition, if available.
    */
   public function getRegistrationField(EntityInterface $entity): ?FieldDefinitionInterface;
-
-  /**
-   * Gets the value of a setting for a host entity from a form display.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity, for example a node instance.
-   * @param string $key
-   *   The setting name, for example "hide_register_tab".
-   *
-   * @return mixed
-   *   The setting value. The data type depends on the key.
-   */
-  public function getRegistrationFormDisplaySetting(EntityInterface $host_entity, string $key): mixed;
 
   /**
    * Gets the value of a registration setting for a host entity.
@@ -138,18 +140,5 @@ interface RegistrationServiceInterface {
    *   TRUE if the entity type has a bundle with a registration field.
    */
   public function hasRegistrationField(EntityTypeInterface $entity_type): bool;
-
-  /**
-   * Determines if the Register tab should be hidden for the entity type.
-   *
-   * The relevant setting on the registration field form display is checked.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type.
-   *
-   * @return bool
-   *   TRUE if the Register tab should be hidden for the entity type.
-   */
-  public function isRegisterTabHidden(EntityTypeInterface $entity_type): bool;
 
 }

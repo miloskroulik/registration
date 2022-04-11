@@ -86,7 +86,7 @@ class RegistrationLocalTask extends DeriverBase implements ContainerDeriverInter
         ];
       }
       if ($this->registration->getRegisterRoute($entity_type)) {
-        if (!$this->registration->isRegisterTabHidden($entity_type)) {
+        if (!$this->registration->getFieldConfigSetting($entity_type, 'hide_register_tab')) {
           $this->derivatives["$entity_type_id.register"] = [
             'route_name' => "entity.$entity_type_id.register",
             'title' => $this->t('Register'),
