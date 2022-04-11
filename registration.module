@@ -62,6 +62,16 @@ function registration_entity_insert(EntityInterface $entity) {
  * Implements hook_entity_delete().
  */
 function registration_entity_delete(EntityInterface $entity) {
+  // Delete registrations and settings for this host entity.
+  \Drupal::database()->delete('registration')
+    ->condition('entity_type_id', $entity->getEntityTypeId())
+    ->condition('entity_id', $entity->id())
+    ->execute();
+  \Drupal::database()->delete('registration_entity')
+    ->condition('entity_type_id', $entity->getEntityTypeId())
+    ->condition('entity_id', $entity->id())
+    ->execute();
+
   // Rebuild routes and local tasks when Registration fields are deleted.
   if ($entity instanceof FieldConfig) {
     if ($entity->getType() == 'registration') {
