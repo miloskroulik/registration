@@ -134,13 +134,21 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
           'show_on_form' => FALSE,
           'weight' => 0,
         ],
+        'held' => [
+          'label' => 'Held',
+          'description' => 'Registration is held.',
+          'active' => FALSE,
+          'held' => TRUE,
+          'show_on_form' => FALSE,
+          'weight' => 1,
+        ],
         'complete' => [
           'label' => 'Complete',
           'description' => 'Registration has been completed.',
           'active' => TRUE,
           'held' => FALSE,
           'show_on_form' => FALSE,
-          'weight' => 1,
+          'weight' => 2,
         ],
         'canceled' => [
           'label' => 'Canceled',
@@ -148,7 +156,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
           'active' => FALSE,
           'held' => FALSE,
           'show_on_form' => FALSE,
-          'weight' => 2,
+          'weight' => 3,
         ],
       ],
       'transitions' => [
@@ -158,14 +166,24 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
           'weight' => 0,
           'from' => [
             'pending',
+            'held',
+          ],
+        ],
+        'hold' => [
+          'label' => 'Hold',
+          'to' => 'held',
+          'weight' => 1,
+          'from' => [
+            'pending',
           ],
         ],
         'cancel' => [
           'label' => 'Cancel',
           'to' => 'canceled',
-          'weight' => 1,
+          'weight' => 2,
           'from' => [
             'pending',
+            'held',
           ],
         ],
       ],

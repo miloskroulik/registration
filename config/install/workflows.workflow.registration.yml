@@ -1,4 +1,4 @@
-uuid: 2426ca72-8d31-4800-bb68-a7db7a4f45d1
+uuid: fd2e7d5a-b1d7-47f6-a820-2838996ad7b2
 langcode: en
 status: true
 dependencies:
@@ -15,13 +15,20 @@ type_settings:
       active: false
       held: false
       show_on_form: false
-      weight: 2
+      weight: 3
     complete:
-      description: 'Registration has been completed.'
-      active: 1
-      held: 0
-      show_on_form: 0
       label: Complete
+      description: 'Registration has been completed.'
+      active: true
+      held: false
+      show_on_form: false
+      weight: 2
+    held:
+      label: Held
+      description: 'Registration is held.'
+      active: false
+      held: true
+      show_on_form: false
       weight: 1
     pending:
       label: Pending
@@ -37,10 +44,18 @@ type_settings:
       weight: 0
       from:
         - pending
-    cancel:
-      label: Cancel
-      to: canceled
+        - held
+    hold:
+      label: Hold
+      to: held
       weight: 1
       from:
         - pending
+    cancel:
+      label: Cancel
+      to: canceled
+      weight: 2
+      from:
+        - pending
+        - held
   default_registration_state: pending
