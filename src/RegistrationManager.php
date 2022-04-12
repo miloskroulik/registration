@@ -170,21 +170,15 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRoute(EntityTypeInterface $entity_type, string $id): ?Route {
-    $path = $this->getLinkTemplate($entity_type);
+  public function getRoute(EntityTypeInterface $entity_type, string $route_id): ?Route {
+    $path = $this->getBasePath($entity_type);
     if (!$path) {
       return NULL;
     }
 
-    // Truncate if using the edit-form link template.
-    $edit = '/edit';
-    if (str_ends_with($path, $edit)) {
-      $path = substr($path, 0, strlen($path) - strlen($edit));
-    }
-
     // Build the 'manage' route and adjust for other routes.
     $route = $this->buildManageRoute($entity_type, $path);
-    switch($id) {
+    switch($route_id) {
       case 'broadcast':
         $route
           ->setPath($route->getPath() . '/broadcast')
@@ -274,6 +268,33 @@ class RegistrationManager implements RegistrationManagerInterface {
   }
 
   /**
+   * Gets the path for an entity type that registration routes will be based on.
+   *
+   * Returns NULL unless the type has a bundle with a registration field.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   *
+   * @return string|null
+   *   The base path, if available.
+   */
+  protected function getBasePath(EntityTypeInterface $entity_type): ?string {
+    if (($template = $this->getBaseTemplate($entity_type)) && $this->hasRegistrationField($entity_type)) {
+      $path = $entity_type->getLinkTemplate($template);
+
+      // Truncate 'edit' if using the edit-form link template.
+      $edit = '/edit';
+      if (str_ends_with($path, $edit)) {
+        $path = substr($path, 0, strlen($path) - strlen($edit));
+      }
+
+      return $path;
+    }
+
+    return NULL;
+  }
+
+  /**
    * Gets the base template for an entity type.
    *
    * This is typically 'canonical', but falls back to 'edit-form'.
@@ -325,6 +346,7 @@ class RegistrationManager implements RegistrationManagerInterface {
     $entity_type_id = $entity_type->id();
     $bundle = $field->getTargetBundle();
 
+    // Check default first, then other form modes that exist.
     $form_modes = ['default' => ''];
     $form_modes += $this->entityDisplayRepository->getFormModes($entity_type_id);
     foreach(array_keys($form_modes) as $form_mode) {
@@ -335,25 +357,6 @@ class RegistrationManager implements RegistrationManagerInterface {
           return $component['settings'][$key];
         }
       }
-    }
-
-    return NULL;
-  }
-
-  /**
-   * Gets the link template for an entity type.
-   *
-   * Returns NULL unless the type has a bundle with a registration field.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type.
-   *
-   * @return string|null
-   *   The link template path, if available.
-   */
-  protected function getLinkTemplate(EntityTypeInterface $entity_type): ?string {
-    if (($template = $this->getBaseTemplate($entity_type)) && $this->hasRegistrationField($entity_type)) {
-      return $entity_type->getLinkTemplate($template);
     }
 
     return NULL;

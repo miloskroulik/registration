@@ -87,17 +87,17 @@ interface RegistrationManagerInterface {
   public function getRegistrationSetting(EntityInterface $host_entity, EntityInterface $registration_settings_entity, string $key): mixed;
 
   /**
-   * Gets a registration related route for an entity type and key.
+   * Gets a registration related route for an entity type.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type.
-   * @param string $id
-   *   The id, for example 'registrations' or 'register'.
+   * @param string $route_id
+   *   The route id: one of 'broadcast', 'manage', 'register' or 'settings'.
    *
    * @return \Symfony\Component\Routing\Route|null
    *   The generated route, if available.
    */
-  public function getRoute(EntityTypeInterface $entity_type, string $id): ?Route;
+  public function getRoute(EntityTypeInterface $entity_type, string $route_id): ?Route;
 
   /**
    * Determines if an entity type has a bundle with a registration field.
