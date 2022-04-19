@@ -8,20 +8,12 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Session\AccountProxy;
 use Drupal\registration\RegistrationManagerInterface;
 
 /**
  * Checks access for the Register route.
  */
 class RegisterAccessCheck implements AccessInterface {
-
-  /**
-   * The current user service.
-   *
-   * @var \Drupal\Core\Session\AccountProxy
-   */
-  protected AccountProxy $currentUser;
 
   /**
    * The entity type manager.
@@ -40,15 +32,12 @@ class RegisterAccessCheck implements AccessInterface {
   /**
    * RegisterAccessCheck constructor.
    *
-   * @param \Drupal\Core\Session\AccountProxy $current_user
-   *   The current user service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
    */
-  public function __construct(AccountProxy $current_user, EntityTypeManagerInterface $entity_type_manager, RegistrationManagerInterface $registration_manager) {
-    $this->currentUser = $current_user;
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RegistrationManagerInterface $registration_manager) {
     $this->entityTypeManager = $entity_type_manager;
     $this->registrationManager = $registration_manager;
   }
@@ -67,7 +56,7 @@ class RegisterAccessCheck implements AccessInterface {
   public function access(AccountInterface $account, RouteMatch $route_match): AccessResultInterface {
     // Initialize.
     $field = NULL;
-    $registration_settings_entity = NULL;
+    $settings = NULL;
 
     // Retrieve the host entity.
     $entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
@@ -75,20 +64,18 @@ class RegisterAccessCheck implements AccessInterface {
     // If the request has an entity with its registration field set,
     // and the host entity has the enable registrations setting,
     // then allow access if the user has the appropriate permission.
-    if ($entity) {
-      $field = $this->registrationManager->getRegistrationField($entity);
-      if ($field && !$entity->get($field->getName())->isEmpty()) {
+    if ($entity && ($field = $this->registrationManager->getRegistrationField($entity))) {
+      if ($type = $this->registrationManager->getRegistrationTypeBundle($entity)) {
         $storage = $this->entityTypeManager->getStorage('registration_settings');
-        $registration_settings_entity = $storage->loadSettingsForEntity($entity);
+        $settings = $storage->loadSettingsForEntity($entity);
 
-        $status = (bool) $this->registrationManager->getRegistrationSetting(
-          $entity, $registration_settings_entity, 'status');
+        $status = (bool) $this->registrationManager->getRegistrationSetting($entity, $settings, 'status');
 
         if ($status) {
-          return AccessResult::allowedIfHasPermissions($account, ['manage registrations'])
+          return AccessResult::allowedIfHasPermissions($account, ["create $type registration"])
             // Recalculate this result if  the relevant entities are updated.
             ->addCacheableDependency($entity)
-            ->addCacheableDependency($registration_settings_entity)
+            ->addCacheableDependency($settings)
             ->addCacheableDependency($field);
         }
       }
@@ -99,14 +86,12 @@ class RegisterAccessCheck implements AccessInterface {
     $access_result = AccessResult::forbidden();
 
     // Recalculate this result if  the relevant entities are updated.
-    if ($account->id() === $this->currentUser->id()) {
-      $access_result->cachePerPermissions();
-    }
+    $access_result->cachePerPermissions();
     if ($entity) {
       $access_result->addCacheableDependency($entity);
     }
-    if ($registration_settings_entity) {
-      $access_result->addCacheableDependency($registration_settings_entity);
+    if ($settings) {
+      $access_result->addCacheableDependency($settings);
     }
     if ($field) {
       $access_result->addCacheableDependency($field);

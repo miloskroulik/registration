@@ -2,55 +2,20 @@
 
 namespace Drupal\registration\Form;
 
-use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Form\FormBase;
+use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Renderer;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\RegistrationManagerInterface;
+use Drupal\workflows\State;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines the Register form.
  */
-class RegisterForm extends FormBase {
-
-  /**
-   * The entity.
-   *
-   * @var \Drupal\Core\Entity\EntityInterface
-   */
-  protected EntityInterface $entity;
-
-  /**
-   * The host entity.
-   *
-   * @var \Drupal\Core\Entity\EntityInterface
-   */
-  protected EntityInterface $hostEntity;
-
-  /**
-   * The entity display repository.
-   *
-   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
-   */
-  protected EntityDisplayRepositoryInterface $entityDisplayRepository;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected ModuleHandlerInterface $moduleHandler;
+class RegisterForm extends ContentEntityForm {
 
   /**
    * The registration manager.
@@ -60,71 +25,171 @@ class RegisterForm extends FormBase {
   protected RegistrationManagerInterface $registrationManager;
 
   /**
-   * Creates a RegisterForm object.
+   * The renderer.
    *
-   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
-   *   The entity display repository.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
-   *   The registration manager.
+   * @var \Drupal\Core\Render\Renderer
    */
-  public function __construct(EntityDisplayRepositoryInterface $entity_display_repository, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RegistrationManagerInterface $registration_manager) {
-    $this->entityDisplayRepository = $entity_display_repository;
-    $this->entityTypeManager = $entity_type_manager;
-    $this->moduleHandler = $module_handler;
-    $this->registrationManager = $registration_manager;
-  }
+  protected Renderer $renderer;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): RegisterForm {
-    return new static(
-      $container->get('entity_display.repository'),
-      $container->get('entity_type.manager'),
-      $container->get('module_handler'),
-      $container->get('registration.manager')
-    );
+    $instance = parent::create($container);
+    $instance->registrationManager = $container->get('registration.manager');
+    $instance->renderer = $container->get('renderer');
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId(): string {
-    return 'register';
-  }
+  public function form(array $form, FormStateInterface $form_state): array {
+    // Initialize entities needed by the form.
+    $this->setEntities($form_state);
 
-  /**
-   * {@inheritdoc}
-   */
-  public function buildForm(array $form, FormStateInterface $form_state): array {
-    $route_match = $this->getRouteMatch();
-    $this->hostEntity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
+    // Set cache directives so the form rebuilds when needed.
+    $this->addCacheableDependencies($form, $form_state);
 
-    $storage = $this->entityTypeManager->getStorage('registration_settings');
-    $this->entity = $storage->loadSettingsForEntity($this->getHostEntity());
+    // Make sure registration is still allowed.
+    $host_entity = $form_state->get('host_entity');
+    $settings = $form_state->get('settings');
+    if (!$this->registrationManager->isEnabledForRegistration($host_entity, $settings)) {
+      $form['notice'] = [
+        '#markup' => $this->t('Sorry, registrations are no longer available for %name', [
+          '%name' => $host_entity->label(),
+        ]),
+      ];
+      return $form;
+    }
 
-    $form = [];
-    $form['something'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Something'),
-      //'#default_value' => $this->getRegistrationSetting('status'),
+    // Initialize the form with fields.
+    $form = parent::form($form, $form_state);
+
+    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+    $registration = $this->getEntity();
+
+    // Add the "Who is registering" field.
+    $registrant_options = $this->registrationManager->getRegistrantOptions($host_entity, $settings);
+    $default = NULL;
+    if (!$registration->isNew()) {
+      $default = $registration->getRegistrantType($this->currentUser());
+    }
+    elseif (count($registrant_options) == 1) {
+      $keys = array_keys($registrant_options);
+      $default = reset($keys);
+    }
+
+    // Show a message if there's one option as we're going to hide the field.
+    if ((count($registrant_options) == 1) && !$this->currentUser()->isAnonymous()) {
+      $message = $this->t('You are registering: %who', ['%who' => current($registrant_options)]);
+      $form['who_message'] = [
+        '#markup' => '<div class="registration-who-msg">' . $message . '</div>',
+        '#weight' => -1,
+      ];
+    }
+
+    $form['who_is_registering'] = [
+      '#type' => 'select',
+      '#title' => $this->t('This registration is for:'),
+      '#options' => $registrant_options,
+      '#default_value' => $default,
+      '#required' => TRUE,
+      '#access' => (count($registrant_options) > 1),
+      '#weight' => -1,
     ];
 
-    $form['actions'] = ['#type' => 'actions'];
-    $form['actions']['submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Save Registration'),
-      '#button_type' => 'primary',
-    ];
-    $form['actions']['cancel'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Cancel'),
-      '#button_type' => 'secondary',
-    ];
+    // The following checks for empty form fields, since the site admin
+    // may have hidden certain fields on the form via the form display.
+
+    // Set the User field visibility and required states.
+    if (!empty($form['user_uid'])) {
+      $form['user_uid']['#access'] = isset($registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER]);
+      $form['user_uid']['#states'] = [
+        'visible' => [
+          ':input[name="who_is_registering"]' => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER],
+        ],
+      ];
+      // @see https://www.drupal.org/project/drupal/issues/2855139
+      $form['user_uid']['widget'][0]['target_id']['#states'] = [
+        'required' => [
+          ':input[name="who_is_registering"]' => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER],
+        ],
+      ];
+    }
+
+    // Set the Email field visibility and required states.
+    if (!empty($form['anon_mail'])) {
+      $anonymous_allowed = isset($registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON]);
+      $form['anon_mail']['#access'] = $anonymous_allowed;
+      $form['anon_mail']['#states'] = [
+        'visible' => [
+          ':input[name="who_is_registering"]' => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON],
+        ],
+      ];
+      if ((count($registrant_options) == 1) && $anonymous_allowed) {
+        $form['anon_mail']['widget'][0]['value']['#required'] = TRUE;
+      }
+      else {
+        // @see https://www.drupal.org/project/drupal/issues/2855139
+        $form['anon_mail']['widget'][0]['value']['#states'] = [
+          'required' => [
+            ':input[name="who_is_registering"]' => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON],
+          ],
+        ];
+      }
+    }
+
+    // Update the Spaces field.
+    if (!empty($form['count'])) {
+      $capacity = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'capacity');
+      $limit = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'maximum_spaces');
+      $remaining = $capacity - $this->registrationManager->getActiveRegistrationCount($host_entity, $settings, $registration);
+      $max = 99999;
+      if ($capacity && $limit) {
+        $max = min($limit, $remaining);
+        $description = $this->t(
+          'The number of spaces you wish to reserve. @spaces_remaining spaces remaining. You may register up to @max spaces.', [
+            '@spaces_remaining' => $remaining,
+            '@max' => $max,
+        ]);
+      }
+      elseif ($capacity) {
+        $max = $remaining;
+        $description = $this->t('The number of spaces you wish to reserve. @spaces_remaining spaces remaining.', [
+          '@spaces_remaining' => $remaining,
+        ]);
+      }
+      elseif ($limit) {
+        $max = $limit;
+        $description = $this->t('The number of spaces you wish to reserve. You may register up to @max spaces.', [
+          '@max' => $limit,
+        ]);
+      }
+      else {
+        $description = $this->t('The number of spaces you wish to reserve.');
+      }
+
+      // Hide the element unless the user can register for more than one space.
+      $form['count']['#access'] = ($max > 1);
+
+      // @see https://www.drupal.org/project/drupal/issues/2855139
+      $form['count']['widget'][0]['value']['#description'] = $description;
+      $form['count']['widget'][0]['value']['#default_value'] = $registration->getSpacesReserved();
+      $form['count']['widget'][0]['value']['#max'] = $max;
+    }
+
+    // Update the Status field.
+    if (!empty($form['state'])) {
+      $registration_type = $registration->getType();
+      $current_state = $registration->getState();
+      $states = $registration_type->getStatesToShowOnForm($current_state);
+
+      $type = $registration_type->id();
+      $form['state']['#access'] = !empty($states) && $this->currentUser()->hasPermission("edit $type registration state");
+      $form['state']['widget'][0]['#options'] = array_map([State::class, 'labelCallback'], $states);
+      $form['state']['widget'][0]['#default_value'] = $registration->getState()->id();
+    }
 
     return $form;
   }
@@ -133,32 +198,243 @@ class RegisterForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+
+    $host_entity = $form_state->get('host_entity');
+    $settings = $form_state->get('settings');
+
+    // Spaces to reserve.
+    $spaces = 1;
+    if ($form_state->hasValue('count')) {
+      $spaces = $form_state->getValue('count')[0]['value'];
+    }
+
+    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+    $registration = $this->getEntity();
+
+    // Test status on new registrations.
+    if ($registration->isNew()) {
+      $errors = [];
+      if (!$this->registrationManager->isEnabledForRegistration($host_entity, $settings, $spaces, $registration, $errors)) {
+        foreach ($errors as $error) {
+          $form_state->setError($form, $error);
+        }
+      }
+    }
+    // Only check capacity for existing registrations that are active.
+    elseif ($registration->isActive()) {
+      if (!$this->registrationManager->hasRoom($host_entity, $settings, $spaces, $registration)) {
+        $form_state->setError($form, $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
+          '%label' => $$host_entity->label(),
+        ]));
+      }
+    }
+
+    // Validate according to who is registering.
+    $allow_multiple = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'multiple_registrations');
+    switch ($form_state->getValue('who_is_registering')) {
+      case RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON:
+        if ($form_state->hasValue('anon_mail')) {
+          $email = $form_state->getValue('anon_mail')[0]['value'];
+          if (!$allow_multiple && $registration->isNew()) {
+            if ($this->registrationManager->isEmailRegistered($host_entity, $email)) {
+              $form_state->setError($form['anon_mail'], $this->t('%mail is already registered for this event.', [
+                '%mail' => $email,
+              ]));
+            }
+          }
+        }
+        else {
+          // The site admin may need to add the email field to the form display.
+          $form_state->setError($form, $this->t('Email address is required.'));
+        }
+        break;
+
+      case RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME:
+        if (!$allow_multiple && $registration->isNew()) {
+          if ($this->registrationManager->isUserRegistered($host_entity, $this->currentUser())) {
+            $form_state->setError($form, $this->t('You are already registered for this event.'));
+          }
+        }
+        break;
+
+      case RegistrationInterface:: REGISTRATION_REGISTRANT_TYPE_USER:
+        if ($form_state->hasValue('user_uid')) {
+          $uid = $form_state->getValue('user_uid')[0]['target_id'];
+          /** @var \Drupal\user\UserInterface $user */
+          $user = $this->entityTypeManager->getStorage('user')->load($uid);
+          if ($user) {
+            if (!$allow_multiple && $registration->isNew()) {
+              if ($this->registrationManager->isUserRegistered($host_entity, $user)) {
+                $form_state->setError($form['user_uid'], $this->t('%user is already registered for this event.', [
+                  '%user' => $user->getDisplayName(),
+                ]));
+              }
+            }
+          }
+          elseif ($this->currentUser()->hasPermission('access user profiles')) {
+            // The user may have been deleted just before saving this registration.
+            $form_state->setError($form['user_uid'], $this->t('The selected user is no longer available.'));
+          }
+          else {
+            // General failure. Possible permissions issue.
+            $form_state->setError($form['user_uid'], $this->t('Registration Failed.'));
+          }
+        }
+        else {
+          // The site admin may need to add the user field to the form display.
+          $form_state->setError($form, $this->t('User name is required.'));
+        }
+        break;
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function save(array $form, FormStateInterface $form_state): int {
+    // Set the user when self-registering.
+    if ($form_state->getValue('who_is_registering') == RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME) {
+      $this->entity->set('user_uid', $this->currentUser()->id());
+    }
+    // Save the registration.
+    $return = $this->entity->save();
+
+    // Confirmation message.
+    $host_entity = $form_state->get('host_entity');
+    $settings = $form_state->get('settings');
+    $confirmation = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'confirmation');
+    if (!$confirmation) {
+      $confirmation = 'The registration was saved.';
+    }
+    $this->messenger()->addStatus($this->t($confirmation));
+
+    // Redirect.
+    $redirect = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'confirmation_redirect');
+    if ($redirect) {
+      // Custom redirect in the settings. Must start with a slash to work.
+      if ($redirect[0] !== '/') {
+        $redirect = '/' . $redirect;
+      }
+      $form_state->setRedirectUrl(Url::fromUserInput($redirect));
+    }
+    else {
+      $registration = $this->getEntity();
+      if ($registration->access('view', $this->currentUser())) {
+        // User has permission to view their registration.
+        $form_state->setRedirectUrl($registration->toUrl());
+      }
+      else {
+        // Fallback to redirecting to the host entity.
+        $form_state->setRedirectUrl($host_entity->toUrl());
+      }
+    }
+
+    // Must return the result from the entity save.
+    return $return;
   }
 
   /**
-   * Gets the settings entity.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   The settings entity.
+   * {@inheritdoc}
    */
-  protected function getEntity(): EntityInterface {
-    return $this->entity;
+  public function getEntityFromRouteMatch(RouteMatchInterface $route_match, $entity_type_id) {
+    if ($route_match->getRawParameter($entity_type_id) !== NULL) {
+      $entity = $route_match->getParameter($entity_type_id);
+    }
+    else {
+      $values = [];
+      // Fetch initial values from the host entity.
+      $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
+      $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
+      $values['entity_type_id'] = $host_entity->getEntityTypeId();
+      $values['entity_id'] = $host_entity->id();
+      if ($bundle_key = $entity_type->getKey('bundle')) {
+        $values[$bundle_key] = $this->registrationManager->getRegistrationTypeBundle($host_entity);
+      }
+
+      $entity = $this->entityTypeManager->getStorage($entity_type_id)->create($values);
+    }
+
+    return $entity;
   }
 
   /**
-   * Gets the host entity.
+   * Returns an array of supported actions for the current entity form.
    *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   The host entity.
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @return array
+   *   An array of supported Form API action elements keyed by name.
    */
-  protected function getHostEntity(): EntityInterface {
-    return $this->hostEntity;
+  protected function actions(array $form, FormStateInterface $form_state): array {
+    $actions = [];
+
+    $host_entity = $form_state->get('host_entity');
+    $settings = $form_state->get('settings');
+    if ($this->registrationManager->isEnabledForRegistration($host_entity, $settings)) {
+      // Override the button label for the Save button.
+      $actions = parent::actions($form, $form_state);
+      $actions['submit']['#value'] = $this->t('Save Registration');
+    }
+
+    return $actions;
+  }
+
+  /**
+   * Adds cache directives to the form.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  protected function addCacheableDependencies(array &$form, FormStateInterface $form_state) {
+    $host_entity = $form_state->get('host_entity');
+    $settings = $form_state->get('settings');
+
+    // Rebuild this form if the relevant entities are updated.
+    $this->renderer->addCacheableDependency($form, $host_entity);
+    $this->renderer->addCacheableDependency($form, $settings);
+
+    // Rebuild this form when registrations are added and deleted.
+    $form['#cache']['tags'][] = 'registration_list';
+
+    // Rebuild this form per user or anonymous session.
+    if ($this->currentUser()->isAnonymous()) {
+      $form['#cache']['contexts'][] = 'session';
+    }
+    else {
+      $form['#cache']['contexts'][] = 'user.permissions';
+    }
+  }
+
+  /**
+   * Ensure the host entity and settings entity are set.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  protected function setEntities(FormStateInterface $form_state) {
+    $host_entity = $form_state->get('host_entity');
+    if (!$host_entity) {
+      $host_entity = $this->registrationManager->getEntityFromParameters($this->getRouteMatch()->getParameters());
+      $form_state->set('host_entity', $host_entity);
+    }
+
+    $settings = $form_state->get('settings');
+    if (!$settings) {
+      /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
+      $storage = $this->entityTypeManager->getStorage('registration_settings');
+      $settings = $storage->loadSettingsForEntity($host_entity);
+      $form_state->set('settings', $settings);
+    }
   }
 
 }

@@ -2,7 +2,6 @@ services:
   registration.manage_registrations_access_checker:
     class: Drupal\registration\Access\ManageRegistrationsAccessCheck
     arguments: [
-      '@current_user',
       '@registration.manager',
     ]
     tags:
@@ -11,7 +10,6 @@ services:
   registration.register_access_checker:
     class: Drupal\registration\Access\RegisterAccessCheck
     arguments: [
-      '@current_user',
       '@entity_type.manager',
       '@registration.manager',
     ]
@@ -30,8 +28,11 @@ services:
   registration.manager:
     class: Drupal\registration\RegistrationManager
     arguments: [
+      '@current_user',
+      '@database',
       '@entity_display.repository',
       '@entity_field.manager',
       '@entity_type.bundle.info',
+      '@module_handler',
       '@router.route_provider',
     ]

@@ -3,12 +3,40 @@
 namespace Drupal\registration\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\workflows\StateInterface;
 use Drupal\workflows\WorkflowInterface;
 
 /**
  * Defines the interface for registration types.
  */
 interface RegistrationTypeInterface extends ConfigEntityInterface {
+
+  /**
+   * Gets the active states for the registration type.
+   *
+   * @return array
+   *   An array of states indexed by state ID, if any.
+   */
+  public function getActiveStates(): array;
+
+  /**
+   * Gets the active or held states for the registration type.
+   *
+   * @return array
+   *   An array of states indexed by state ID, if any.
+   */
+  public function getActiveOrHeldStates(): array;
+
+  /**
+   * Gets the states to show on the registration form.
+   *
+   * @param \Drupal\workflows\StateInterface|null $default_state
+   *   An optional default state that should be included in the return value.
+   *
+   * @return array
+   *   An array of states indexed by state ID, if any.
+   */
+  public function getStatesToShowOnForm(StateInterface $default_state = NULL): array;
 
   /**
    * Gets the workflow ID for the registration type.
@@ -38,7 +66,7 @@ interface RegistrationTypeInterface extends ConfigEntityInterface {
    * Gets the default state for the registration type.
    *
    * @return string
-   *   The default state.
+   *   The ID of the default state.
    */
   public function getDefaultState(): string;
 
@@ -46,7 +74,7 @@ interface RegistrationTypeInterface extends ConfigEntityInterface {
    * Sets the default state for the registration type.
    *
    * @param string $state
-   *   The state.
+   *   The state ID.
    *
    * @return $this
    */

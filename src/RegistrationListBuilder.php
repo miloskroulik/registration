@@ -39,6 +39,7 @@ class RegistrationListBuilder extends EntityListBuilder {
     $header['id'] = $this->t('ID');
     $header['type'] = $this->t('Type');
     $header['user'] = $this->t('User');
+    $header['spaces'] = $this->t('Spaces');
     $header['attached'] = $this->t('Attached to');
     $header['status'] = $this->t('Status');
     $header['updated'] = $this->t('Updated');
@@ -70,11 +71,10 @@ class RegistrationListBuilder extends EntityListBuilder {
     }
 
     /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
-    $registration_type = RegistrationType::load($entity->bundle());
-
     $row['id'] = Link::fromTextAndUrl($entity->id(), $entity->toUrl());
-    $row['type'] = $registration_type->label();
+    $row['type'] = $entity->getType()->label();
     $row['user'] = $user;
+    $row['spaces'] = $entity->getSpacesReserved();
     $row['attached'] = $attached;
     $row['status'] = $entity->getState()->label();
     $row['updated'] = Drupal::service('date.formatter')->format($entity->getChangedTime(), 'short');

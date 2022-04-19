@@ -4,6 +4,7 @@ namespace Drupal\registration\Entity;
 
 use Drupal;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
+use Drupal\workflows\StateInterface;
 use Drupal\workflows\WorkflowInterface;
 
 /**
@@ -90,6 +91,68 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
    * @var string
    */
   protected string $heldExpireState = 'canceled';
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getActiveStates(): array {
+    $states = [];
+
+    if ($workflow = $this->getWorkflow()) {
+      $all_states = $workflow->getTypePlugin()->getStates();
+      foreach ($all_states as $id => $state) {
+        /** @var \Drupal\registration\RegistrationState $state */
+        if ($state->isActive()) {
+          $states[$id] = $state;
+        }
+      }
+    }
+
+    return $states;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getActiveOrHeldStates(): array {
+    $states = [];
+
+    if ($workflow = $this->getWorkflow()) {
+      $all_states = $workflow->getTypePlugin()->getStates();
+      foreach ($all_states as $id => $state) {
+        /** @var \Drupal\registration\RegistrationState $state */
+        if ($state->isActive() || $state->isHeld()) {
+          $states[$id] = $state;
+        }
+      }
+    }
+
+    return $states;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getStatesToShowOnForm(StateInterface $default_state = NULL): array {
+    $states = [];
+
+    if ($workflow = $this->getWorkflow()) {
+      $all_states = $workflow->getTypePlugin()->getStates();
+      foreach ($all_states as $id => $state) {
+        /** @var \Drupal\registration\RegistrationState $state */
+        if ($state->isShownOnForm()) {
+          $states[$id] = $state;
+        }
+      }
+    }
+
+    // Ensure the default state is included, if set.
+    if ($default_state) {
+      $states[$default_state->id()] = $default_state;
+    }
+
+    return $states;
+  }
 
   /**
    * {@inheritdoc}

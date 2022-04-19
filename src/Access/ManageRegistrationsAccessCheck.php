@@ -7,20 +7,12 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Session\AccountProxy;
 use Drupal\registration\RegistrationManagerInterface;
 
 /**
  * Checks access for the Manage Registrations route.
  */
 class ManageRegistrationsAccessCheck implements AccessInterface {
-
-  /**
-   * The current user service.
-   *
-   * @var \Drupal\Core\Session\AccountProxy
-   */
-  protected AccountProxy $currentUser;
 
   /**
    * The registration manager.
@@ -32,13 +24,10 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
   /**
    * ManageRegistrationsAccessCheck constructor.
    *
-   * @param \Drupal\Core\Session\AccountProxy $current_user
-   *   The current user service.
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
    */
-  public function __construct(AccountProxy $current_user, RegistrationManagerInterface $registration_manager) {
-    $this->currentUser = $current_user;
+  public function __construct(RegistrationManagerInterface $registration_manager) {
     $this->registrationManager = $registration_manager;
   }
 
@@ -59,9 +48,15 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
     // If the request has an entity with its registration field set,
     // then allow access if the user has the appropriate permission.
     if ($entity) {
-      $field = $this->registrationManager->getRegistrationField($entity);
-      if ($field && !$entity->get($field->getName())->isEmpty()) {
-        return AccessResult::allowedIfHasPermissions($account, ['manage registrations'])->addCacheableDependency($entity);
+      if ($type = $this->registrationManager->getRegistrationTypeBundle($entity)) {
+        $access =
+             $account->hasPermission("administer $type registration")
+          || ($account->hasPermission("update own $type registration") && $entity->access('update', $account))
+        ;
+        return AccessResult::allowedIf($access)
+          // Recalculate this result if  the relevant entities are updated.
+          ->cachePerPermissions()
+          ->addCacheableDependency($entity);
       }
     }
 
@@ -69,11 +64,8 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
     // Disable the route. This also hides the local task (tab) for the route.
     $access_result = AccessResult::forbidden();
 
-    // Ensure proper caching. Otherwise the task will be hidden until the
-    // next cache clear even if the entity is changed to enable registrations.
-    if ($account->id() === $this->currentUser->id()) {
-      $access_result->cachePerUser();
-    }
+    // Recalculate this result if  the relevant entities are updated.
+    $access_result->cachePerPermissions();
     if ($entity) {
       $access_result->addCacheableDependency($entity);
     }

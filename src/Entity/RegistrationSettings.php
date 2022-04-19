@@ -25,6 +25,42 @@ use Drupal\Core\Field\BaseFieldDefinition;
 class RegistrationSettings extends ContentEntityBase {
 
   /**
+   * Gets a settings value for a given key.
+   *
+   * @param string $key
+   *   The setting name, for example "status", "reminder date" etc.
+   *
+   * @return mixed
+   *   The setting value. The data type depends on the key.
+   */
+  public function getSetting(string $key): mixed {
+
+    // Check the main settings.
+    if ($this->hasField($key) && !$this->get($key)->isEmpty()) {
+      // Registration settings entity has the setting.
+      $setting = $this->get($key)->first()->getValue();
+      return $setting['value'];
+    }
+
+    // Check for an additional setting.
+    // Extract from the serialized settings property.
+    if (!$this->hasField($key)) {
+      if (!$this->get('settings')->isEmpty()) {
+        $settings = $this->get('settings')->first()->getValue();
+        if (!empty($settings)) {
+          $settings = unserialize($settings['value']);
+          if (!empty($settings[$key])) {
+            // Registration settings entity has the additional setting.
+            return $settings[$key];
+          }
+        }
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {

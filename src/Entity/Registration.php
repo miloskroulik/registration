@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\workflows\StateInterface;
 use Drupal\workflows\WorkflowInterface;
 
@@ -38,7 +39,8 @@ use Drupal\workflows\WorkflowInterface;
  *       "default" = "Drupal\registration\Form\RegistrationForm",
  *       "add" = "Drupal\registration\Form\RegistrationForm",
  *       "edit" = "Drupal\registration\Form\RegistrationForm",
- *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm"
+ *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
+ *       "register" = "Drupal\registration\Form\RegisterForm",
  *     },
  *     "route_provider" = {
  *       "default" = "Drupal\entity\Routing\AdminHtmlRouteProvider"
@@ -85,7 +87,7 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
    */
   public function getAuthorDisplayName(): string|null {
     if (!$this->isNew()) {
-      $user = $this->entityTypeManager->getStorage('user')->load($this->author_uid);
+      $user = $this->author_uid->entity;
       if ($user) {
         return $user->getDisplayName();
       }
@@ -96,9 +98,49 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   /**
    * {@inheritdoc}
    */
+  public function getRegistrantType(AccountInterface $account): ?string {
+    $reg_type = NULL;
+    $uid = $this->user_uid ? $this->user_uid->target_id : 0;
+    if ($account->id() && ($account->id() == $uid)) {
+      $reg_type = self::REGISTRATION_REGISTRANT_TYPE_ME;
+    }
+    elseif (!empty($this->user_uid)) {
+      $reg_type = self::REGISTRATION_REGISTRANT_TYPE_USER;
+    }
+    elseif (!empty($this->anon_mail)) {
+      $reg_type = self::REGISTRATION_REGISTRANT_TYPE_ANON;
+    }
+    return $reg_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSpacesReserved(): int {
+    if (!$this->get('count')->isEmpty()) {
+      return (int) $this->get('count')->first()->value;
+    }
+    elseif ($this->isNew()) {
+      return 1;
+    }
+    else {
+      return 0;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getType(): RegistrationTypeInterface {
+    return $this->type->entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getWorkflow(): WorkflowInterface {
     if ($this->isNew() || $this->get('workflow')->isEmpty()) {
-      return $this->type->entity->getWorkflow();
+      return $this->getType()->getWorkflow();
     }
     else {
       return $this->workflow->entity;
@@ -111,7 +153,7 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   public function getState(): StateInterface {
     $workflow = $this->getWorkflow();
     if ($this->isNew() || $this->get('state')->isEmpty()) {
-      return $workflow->getTypePlugin()->getState($this->type->entity->getDefaultState());
+      return $workflow->getTypePlugin()->getState($this->getType()->getDefaultState());
     }
     else {
       return $workflow->getTypePlugin()->getState($this->get('state')->first()->value);
@@ -136,17 +178,27 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   /**
    * {@inheritdoc}
    */
+  public function isActive(): bool {
+    return $this->getState()->isActive();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
     if ($this->get('workflow')->isEmpty()) {
-      $this->set('workflow', $this->type->entity->getWorkflowId());
+      $this->set('workflow', $this->getType()->getWorkflowId());
     }
     if ($this->get('state')->isEmpty()) {
       $this->set('state', $this->getState()->id());
     }
     if ($this->get('author_uid')->isEmpty()) {
       $this->set('author_uid', Drupal::service('current_user')->id());
+    }
+    if ($this->get('count')->isEmpty()) {
+      $this->set('count', 1);
     }
   }
 
@@ -180,8 +232,8 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setSetting('unsigned', TRUE);
 
     $fields['anon_mail'] = BaseFieldDefinition::create('email')
-      ->setLabel(t('Anonymous email'))
-      ->setDescription(t('The email address for anonymous registrations.'))
+      ->setLabel(t('Email'))
+      ->setDescription(t('The email to associate with this registration.'))
       ->setDisplayOptions('form', [
         'type' => 'email_default',
       ])
@@ -189,14 +241,18 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['count'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Count'))
+      ->setLabel(t('Spaces'))
       ->setDescription(t('How many spaces the registration should use towards the total capacity for the event.'))
+      ->setSetting('min', 1)
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['user_uid'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Registrant'))
-      ->setDescription(t('The registrant for authenticated user registrations.'))
+      ->setLabel(t('User'))
+      ->setDescription(t('Select a user by typing their username to get a list of matches.'))
       ->setSetting('target_type', 'user')
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
@@ -219,7 +275,6 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setSetting('max_length', 255)
       ->setDisplayOptions('form', [
         'type' => 'registration_state_default',
-        'weight' => 10,
       ])
       ->setDisplayOptions('view', [
         'label' => 'hidden',
@@ -233,10 +288,6 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setLabel(t('Created'))
       ->setDescription(t('The time when the registration was created.'))
       ->setTranslatable(TRUE)
-      ->setDisplayOptions('form', [
-        'type' => 'datetime_timestamp',
-        'weight' => 10,
-      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
