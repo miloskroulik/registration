@@ -340,7 +340,6 @@ class RegistrationManager implements RegistrationManagerInterface {
         break;
 
       case 'manage':
-        $route->setOption('_admin_route', FALSE);
         break;
 
       case 'register':
@@ -350,7 +349,6 @@ class RegistrationManager implements RegistrationManagerInterface {
             '_entity_form' => 'registration.register',
             '_title' => 'Register',
           ])
-          ->setOption('_admin_route', FALSE)
           ->setRequirements([
             '_register_access_check' => 'TRUE',
           ]);
@@ -547,7 +545,6 @@ class RegistrationManager implements RegistrationManagerInterface {
       ->addRequirements([
         '_manage_registrations_access_check' => 'TRUE',
       ])
-      ->setOption('_admin_route', TRUE)
       ->setOption('parameters', [
         $entity_type_id => ['type' => 'entity:' . $entity_type_id],
       ]);

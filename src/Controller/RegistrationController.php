@@ -8,6 +8,9 @@ use Drupal\Core\Database\Query\PagerSelectExtender;
 use Drupal\Core\Database\Query\TableSortExtender;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Routing\RedirectDestinationTrait;
+use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationSettings;
 use Drupal\registration\RegistrationManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -17,6 +20,8 @@ use Symfony\Component\HttpFoundation\Request;
  * Returns responses for Registration routes.
  */
 class RegistrationController extends ControllerBase {
+
+  use RedirectDestinationTrait;
 
   /**
    * The database service.
@@ -166,6 +171,7 @@ class RegistrationController extends ControllerBase {
     $registration_storage = $this->entityTypeManager()->getStorage('registration');
     $user_storage = $this->entityTypeManager()->getStorage('user');
 
+    /** @var \Drupal\Core\Database\Query\TableSortExtender $query */
     $query = $this->database->select('registration', 'r')
       ->extend(PagerSelectExtender::class)
       ->extend(TableSortExtender::class);
@@ -186,11 +192,16 @@ class RegistrationController extends ControllerBase {
       ->execute();
 
     foreach ($result as $registration) {
+      /** @var \Drupal\registration\Entity\RegistrationInterface $registration_entity */
+      $registration_entity = $registration_storage->load($registration->registration_id);
+
+      // Registration ID.
+      $id = Link::fromTextAndUrl($registration->registration_id, $registration_entity->toUrl());
+
+      // User and Email.
       $email = NULL;
       $username = NULL;
       $authorname = NULL;
-
-      // User and Email.
       if ($registration->user_uid) {
         /** @var \Drupal\user\UserInterface $user */
         $user = $user_storage->load($registration->user_uid);
@@ -215,13 +226,10 @@ class RegistrationController extends ControllerBase {
       // Created.
       $date = $this->dateFormatter->format($registration->created, 'short');
 
-      /** @var \Drupal\registration\Entity\RegistrationInterface $registration_entity */
-      $registration_entity = $registration_storage->load($registration->registration_id);
-
       $rows[] = [
         'data' => [
           // Cells.
-          ['data' => $registration->registration_id],
+          ['data' => $id],
           ['data' => $email],
           ['data' => $username],
           ['data' => $authorname],
@@ -264,7 +272,7 @@ class RegistrationController extends ControllerBase {
       $operations['view'] = [
         '#type' => 'link',
         '#title' => $this->t('View'),
-        '#url' => $host_entity->toUrl(),
+        '#url' => $this->ensureDestination($host_entity->toUrl()),
       ];
       $prefix = TRUE;
     }
@@ -272,7 +280,7 @@ class RegistrationController extends ControllerBase {
       $operations['edit'] = [
         '#type' => 'link',
         '#title' => $this->t('Edit'),
-        '#url' => $host_entity->toUrl('edit-form'),
+        '#url' => $this->ensureDestination($host_entity->toUrl('edit-form')),
         '#prefix' => $prefix ? ' | ' : '',
       ];
       $prefix = TRUE;
@@ -281,11 +289,29 @@ class RegistrationController extends ControllerBase {
       $operations['delete'] = [
         '#type' => 'link',
         '#title' => $this->t('Delete'),
-        '#url' => $host_entity->toUrl('delete-form'),
+        '#url' => $this->ensureDestination($host_entity->toUrl('delete-form')),
         '#prefix' => $prefix ? ' | ' : '',
       ];
     }
     return $operations;
+  }
+
+  /**
+   * Update a URL with a destination.
+   *
+   * @param \Drupal\Core\Url $url
+   *   The url.
+   *
+   * @return \Drupal\Core\Url
+   *   The updated URL object.
+   */
+  protected function ensureDestination(Url $url): Url {
+    return $url
+      ->mergeOptions([
+      'query' => $this
+        ->getRedirectDestination()
+        ->getAsArray(),
+    ]);
   }
 
 }
