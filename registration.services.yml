@@ -33,6 +33,7 @@ services:
       '@entity_display.repository',
       '@entity_field.manager',
       '@entity_type.bundle.info',
+      '@entity_type.manager',
       '@module_handler',
       '@router.route_provider',
     ]

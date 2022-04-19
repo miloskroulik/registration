@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -67,6 +68,13 @@ class RegistrationManager implements RegistrationManagerInterface {
   protected EntityTypeBundleInfo $entityTypeBundleInfo;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected EntityTypeManagerInterface $entityTypeManager;
+
+  /**
    * The module handler.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -93,17 +101,20 @@ class RegistrationManager implements RegistrationManagerInterface {
    *   The entity field manager.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfo $entity_type_bundle_info
    *   The entity type bundle info.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type bundle info.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    * @param \Drupal\Core\Routing\RouteProvider $route_provider
    *   The route provider.
    */
-  public function __construct(AccountProxy $current_user, Connection $database, EntityDisplayRepositoryInterface $entity_display_repository, EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, ModuleHandlerInterface $module_handler, RouteProvider $route_provider) {
+  public function __construct(AccountProxy $current_user, Connection $database, EntityDisplayRepositoryInterface $entity_display_repository, EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RouteProvider $route_provider) {
     $this->currentUser = $current_user;
     $this->database = $database;
     $this->entityDisplayRepository = $entity_display_repository;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
+    $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
     $this->routeProvider = $route_provider;
   }
@@ -329,6 +340,7 @@ class RegistrationManager implements RegistrationManagerInterface {
         break;
 
       case 'manage':
+        $route->setOption('_admin_route', FALSE);
         break;
 
       case 'register':
@@ -355,6 +367,19 @@ class RegistrationManager implements RegistrationManagerInterface {
     }
 
     return $route;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSettingsForHost(EntityInterface $host_entity): ?RegistrationSettings {
+    $settings = NULL;
+    if ($this->getRegistrationTypeBundle($host_entity)) {
+      /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
+      $storage = $this->entityTypeManager->getStorage('registration_settings');
+      $settings = $storage->loadSettingsForEntity($host_entity);
+    }
+    return $settings;
   }
 
   /**

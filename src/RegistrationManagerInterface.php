@@ -160,6 +160,17 @@ interface RegistrationManagerInterface {
   public function getRoute(EntityTypeInterface $entity_type, string $route_id): ?Route;
 
   /**
+   * Gets the registration settings entity for a given host entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   *   The host entity.
+   *
+   * @return \Drupal\registration\Entity\RegistrationSettings|null
+   *   The settings entity. A new entity is created and saved if needed.
+   */
+  public function getSettingsForHost(EntityInterface $host_entity): ?RegistrationSettings;
+
+  /**
    * Determines if an entity type has a bundle with a registration field.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
