@@ -5,10 +5,93 @@
  * Provides user regigistration for events.
  */
 
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Render\Element;
 use Drupal\field\Entity\FieldConfig;
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function registration_entity_extra_field_info() {
+  // Add extra display fields for calculated registration data.
+  $extra = [];
+  $registration_types = \Drupal::service('entity_type.bundle.info')->getBundleInfo('registration');
+  foreach ($registration_types as $type => $info) {
+    $extra['registration'][$type]['display']['email_address'] = [
+      'label' => t('Email address'),
+      'description' => t('Registrant email address pseudo field.'),
+      'weight' => 0,
+      'visible' => TRUE,
+    ];
+    $extra['registration'][$type]['display']['host_entity'] = [
+      'label' => t('Host entity'),
+      'description' => t('Host entity pseudo field.'),
+      'weight' => 0,
+      'visible' => TRUE,
+    ];
+  }
+  return $extra;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ */
+function registration_registration_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  // Determine the label display to use for extra fields by looking at others.
+  $label_display = 'above';
+  $components = $display->getComponents();
+  foreach ($components as $id => $component) {
+    if ($id != 'anon_mail') {
+      if (!empty($component['label'])) {
+        $label_display = $component['label'];
+        break;
+      }
+    }
+  }
+
+  // Add the extra fields.
+  if ($display->getComponent('email_address')) {
+    $build['email_address'] = [
+      '#theme' => 'field',
+      '#label_display' => $label_display,
+      '#view_mode' => '_custom',
+      '#title' => t('Email address'),
+      '#field_type' => 'text',
+      '#field_name' => 'email_address',
+      '#bundle' => $entity->bundle(),
+      '#entity_type' => $entity->getEntityTypeId(),
+      '#object' => $entity,
+      '#is_multiple' => FALSE,
+      '#items' => [],
+      0 => [
+        '#markup' => $entity->getEmail(),
+      ],
+    ];
+  }
+  if ($display->getComponent('host_entity')) {
+    if ($host_entity = $entity->getHostEntity()) {
+      $build['host_entity'] = [
+        '#theme' => 'field',
+        '#label_display' => $label_display,
+        '#view_mode' => '_custom',
+        '#title' => $host_entity->getEntityType()->getLabel(),
+        '#field_type' => 'text',
+        '#field_name' => 'host_entity',
+        '#bundle' => $entity->bundle(),
+        '#entity_type' => $entity->getEntityTypeId(),
+        '#object' => $entity,
+        '#is_multiple' => FALSE,
+        '#items' => [],
+        0 => [
+          '#markup' => Link::fromTextAndUrl($host_entity->label(), $host_entity->toUrl())->toString(),
+        ],
+      ];
+    }
+  }
+}
 
 /**
  * Implements hook_theme().

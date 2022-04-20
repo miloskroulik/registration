@@ -118,7 +118,9 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     if ($author = $this->getAuthor()) {
       return $author->getDisplayName();
     }
-    return NULL;
+    // No author, must be an anonymous self registration.
+    // Return the name of the anonymous site visitor.
+    return Drupal::config('user.settings')->get('anonymous');
   }
 
   /**
@@ -276,7 +278,10 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     parent::preSave($storage);
 
     if ($this->get('author_uid')->isEmpty()) {
-      $this->set('author_uid', Drupal::service('current_user')->id());
+      $current_user = Drupal::service('current_user');
+      if ($current_user->isAuthenticated()) {
+        $this->set('author_uid', $current_user->id());
+      }
     }
     if ($this->get('count')->isEmpty()) {
       $this->set('count', 1);
@@ -324,8 +329,7 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setDisplayOptions('form', [
         'type' => 'email_default',
       ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['count'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Spaces'))
@@ -385,7 +389,8 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
       ->setDescription(t('The time when the registration was last saved.'))
-      ->setTranslatable(TRUE);
+      ->setTranslatable(TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     return $fields;
   }

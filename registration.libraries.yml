@@ -3,3 +3,9 @@ form:
   css:
     theme:
       css/registration.form.css: {}
+
+view:
+  version: VERSION
+  css:
+    theme:
+      css/registration.css: {}
