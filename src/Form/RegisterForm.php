@@ -404,6 +404,16 @@ class RegisterForm extends ContentEntityForm {
       // Override the button label for the Save button.
       $actions = parent::actions($form, $form_state);
       $actions['submit']['#value'] = $this->t('Save Registration');
+
+      // Add a Cancel link for new registrations.
+      if ($registration->isNew()) {
+        $actions['cancel'] = [
+          '#type' => 'link',
+          '#title' => $this->t('Cancel'),
+          '#url' => $host_entity->toUrl(),
+          '#weight' => 20,
+        ];
+      }
     }
 
     return $actions;
