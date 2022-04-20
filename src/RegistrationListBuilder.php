@@ -8,7 +8,6 @@ use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Link;
-use Drupal\registration\Entity\RegistrationType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -40,7 +39,7 @@ class RegistrationListBuilder extends EntityListBuilder {
     $header['type'] = $this->t('Type');
     $header['user'] = $this->t('User');
     $header['spaces'] = $this->t('Spaces');
-    $header['attached'] = $this->t('Attached to');
+    $header['host'] = $this->t('Host');
     $header['status'] = $this->t('Status');
     $header['updated'] = $this->t('Updated');
     return $header + parent::buildHeader();
@@ -50,32 +49,29 @@ class RegistrationListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity): array {
-    // Get the user column value.
-    $user = '';
-    if (!$entity->get('anon_mail')->isEmpty()) {
-      $user = $entity->get('anon_mail')->first()->value;
+    /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
+    if ($user = $entity->getUser()) {
+      $user = Link::fromTextAndUrl($user->getDisplayName(), $user->toUrl());
     }
-    elseif (!$entity->get('user_uid')->isEmpty()) {
-      $user_entity = $entity->get('user_uid')->first()->entity;
-      $user = Link::fromTextAndUrl($user_entity->getDisplayName(), $user_entity->toUrl());
+    else {
+      $user = $entity->getAnonymousEmail();
     }
 
     // Get the attached column value.
-    $attached = '';
-    if (!$entity->get('entity_type_id')->isEmpty() && !$entity->get('entity_id')->isEmpty()) {
-      $storage = $this->entityTypeManager->getStorage($entity->get('entity_type_id')->first()->value);
-      $attached_to_entity = $storage->load($entity->get('entity_id')->first()->value);
-      if ($attached_to_entity) {
-        $attached = Link::fromTextAndUrl($attached_to_entity->label(), $attached_to_entity->toUrl());
+    $host = '';
+    if ($entity->getHostEntityId() && $entity->getHostEntityTypeId()) {
+      $storage = $this->entityTypeManager->getStorage($entity->getHostEntityTypeId());
+      $host_entity = $storage->load($entity->getHostEntityId());
+      if ($host_entity) {
+        $host = Link::fromTextAndUrl($host_entity->label(), $host_entity->toUrl());
       }
     }
 
-    /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
     $row['id'] = Link::fromTextAndUrl($entity->id(), $entity->toUrl());
     $row['type'] = $entity->getType()->label();
     $row['user'] = $user;
     $row['spaces'] = $entity->getSpacesReserved();
-    $row['attached'] = $attached;
+    $row['host'] = $host;
     $row['status'] = $entity->getState()->label();
     $row['updated'] = Drupal::service('date.formatter')->format($entity->getChangedTime(), 'short');
 

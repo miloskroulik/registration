@@ -46,6 +46,9 @@ class RouteSubscriber extends RouteSubscriberBase {
    * {@inheritdoc}
    */
   protected function alterRoutes(RouteCollection $collection) {
+    if ($route = $collection->get('entity.registration.edit_form')) {
+      $route->setOption('_admin_route', FALSE);
+    }
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
       if ($route = $this->registrationManager->getRoute($entity_type, 'broadcast')) {
         $collection->add("entity.$entity_type_id.broadcast", $route);

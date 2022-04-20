@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\user\UserInterface;
 use Drupal\workflows\StateInterface;
 use Drupal\workflows\WorkflowInterface;
 
@@ -38,7 +39,7 @@ use Drupal\workflows\WorkflowInterface;
  *     "form" = {
  *       "default" = "Drupal\registration\Form\RegistrationForm",
  *       "add" = "Drupal\registration\Form\RegistrationForm",
- *       "edit" = "Drupal\registration\Form\RegistrationForm",
+ *       "edit" = "Drupal\registration\Form\RegisterForm",
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
  *       "register" = "Drupal\registration\Form\RegisterForm",
  *     },
@@ -75,7 +76,7 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   /**
    * {@inheritdoc}
    */
-  public function label():string {
+  public function label(): string {
     if (!$this->isNew()) {
       return (string) t('Registration #@id', ['@id' => $this->id()]);
     }
@@ -85,11 +86,18 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getAuthorDisplayName(): string|null {
-    if (!$this->isNew()) {
-      $user = $this->author_uid->entity;
-      if ($user) {
-        return $user->getDisplayName();
+  public function getAnonymousEmail(): string {
+    if (!$this->get('anon_mail')->isEmpty()) {
+      return $this->get('anon_mail')->first()->value;
+    }
+    return '';
+  }
+
+  public function getAuthor(): ?UserInterface {
+    if (!$this->get('author_uid')->isEmpty()) {
+      $author = $this->get('author_uid')->first()->entity;
+      if ($author && $author->isAuthenticated()) {
+        return $author;
       }
     }
     return NULL;
@@ -98,16 +106,57 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   /**
    * {@inheritdoc}
    */
+  public function getAuthorDisplayName(): ?string {
+    if ($author = $this->getAuthor()) {
+      return $author->getDisplayName();
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEmail(): string {
+    if ($user = $this->getUser()) {
+      return $user->getEmail();
+    }
+    else {
+      return $this->getAnonymousEmail();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHostEntityId(): int {
+    if (!$this->get('entity_id')->isEmpty()) {
+      return (int) $this->get('entity_id')->first()->value;
+    }
+    return 0;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHostEntityTypeId(): string {
+    if (!$this->get('entity_type_id')->isEmpty()) {
+      return $this->get('entity_type_id')->first()->value;
+    }
+    return 0;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRegistrantType(AccountInterface $account): ?string {
     $reg_type = NULL;
-    $uid = $this->user_uid ? $this->user_uid->target_id : 0;
-    if ($account->id() && ($account->id() == $uid)) {
+    if ($account->id() && ($account->id() == $this->getUserId())) {
       $reg_type = self::REGISTRATION_REGISTRANT_TYPE_ME;
     }
-    elseif (!empty($this->user_uid)) {
+    elseif ($this->getUserId()) {
       $reg_type = self::REGISTRATION_REGISTRANT_TYPE_USER;
     }
-    elseif (!empty($this->anon_mail)) {
+    elseif ($this->getAnonymousEmail()) {
       $reg_type = self::REGISTRATION_REGISTRANT_TYPE_ANON;
     }
     return $reg_type;
@@ -133,6 +182,26 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
    */
   public function getType(): RegistrationTypeInterface {
     return $this->type->entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUser(): ?UserInterface {
+    if (!$this->get('user_uid')->isEmpty()) {
+      return $this->get('user_uid')->first()->entity;
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUserId(): int {
+    if (!$this->get('user_uid')->isEmpty()) {
+      return (int) $this->get('user_uid')->first()->target_id;
+    }
+    return 0;
   }
 
   /**
@@ -188,17 +257,17 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
-    if ($this->get('workflow')->isEmpty()) {
-      $this->set('workflow', $this->getType()->getWorkflowId());
-    }
-    if ($this->get('state')->isEmpty()) {
-      $this->set('state', $this->getState()->id());
-    }
     if ($this->get('author_uid')->isEmpty()) {
       $this->set('author_uid', Drupal::service('current_user')->id());
     }
     if ($this->get('count')->isEmpty()) {
       $this->set('count', 1);
+    }
+    if ($this->get('state')->isEmpty()) {
+      $this->set('state', $this->getState()->id());
+    }
+    if ($this->get('workflow')->isEmpty()) {
+      $this->set('workflow', $this->getType()->getWorkflowId());
     }
   }
 

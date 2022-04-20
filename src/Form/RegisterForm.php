@@ -425,6 +425,11 @@ class RegisterForm extends ContentEntityForm {
     $host_entity = $form_state->get('host_entity');
     if (!$host_entity) {
       $host_entity = $this->registrationManager->getEntityFromParameters($this->getRouteMatch()->getParameters());
+      if ($host_entity instanceof RegistrationInterface) {
+        // Editing a registration. Get the host entity from the registration.
+        $storage = $this->entityTypeManager->getStorage($host_entity->getHostEntityTypeId());
+        $host_entity = $storage->load($host_entity->getHostEntityId());
+      }
       $form_state->set('host_entity', $host_entity);
     }
 

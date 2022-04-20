@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Url;
+use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 use Drupal\registration\RegistrationManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -169,7 +170,6 @@ class RegistrationController extends ControllerBase {
     $rows = [];
 
     $registration_storage = $this->entityTypeManager()->getStorage('registration');
-    $user_storage = $this->entityTypeManager()->getStorage('user');
 
     /** @var \Drupal\Core\Database\Query\TableSortExtender $query */
     $query = $this->database->select('registration', 'r')
@@ -191,52 +191,35 @@ class RegistrationController extends ControllerBase {
       ->orderByHeader($header)
       ->execute();
 
-    foreach ($result as $registration) {
-      /** @var \Drupal\registration\Entity\RegistrationInterface $registration_entity */
-      $registration_entity = $registration_storage->load($registration->registration_id);
+    foreach ($result as $record) {
+      /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+      $registration = $registration_storage->load($record->registration_id);
 
-      // Registration ID.
-      $id = Link::fromTextAndUrl($registration->registration_id, $registration_entity->toUrl());
-
-      // User and Email.
-      $email = NULL;
-      $username = NULL;
-      $authorname = NULL;
-      if ($registration->user_uid) {
-        /** @var \Drupal\user\UserInterface $user */
-        $user = $user_storage->load($registration->user_uid);
-        $username = [
+      // User.
+      if ($user = $registration->getUser()) {
+        $user = [
           '#theme' => 'username',
           '#account' => $user,
         ];
-        $email = $user->getEmail();
       }
-      elseif ($registration->anon_mail) {
-        $email = $registration->anon_mail;
-      }
-
       // Author.
-      if ($registration->author_uid) {
-        $authorname = [
+      if ($author = $registration->getAuthor()) {
+        $author = [
           '#theme' => 'username',
-          '#account' => $user_storage->load($registration->author_uid),
+          '#account' => $author,
         ];
       }
 
-      // Created.
-      $date = $this->dateFormatter->format($registration->created, 'short');
-
       $rows[] = [
         'data' => [
-          // Cells.
-          ['data' => $id],
-          ['data' => $email],
-          ['data' => $username],
-          ['data' => $authorname],
-          ['data' => $registration->count],
-          ['data' => $date],
-          ['data' => $registration_entity->getState()->label()],
-          ['data' => $this->getOperations($registration_entity)],
+          ['data' => Link::fromTextAndUrl($registration->id(), $registration->toUrl())],
+          ['data' => $registration->getEmail()],
+          ['data' => $user],
+          ['data' => $author],
+          ['data' => $registration->getSpacesReserved()],
+          ['data' => $this->dateFormatter->format($registration->getCreatedTime(), 'short')],
+          ['data' => $registration->getState()->label()],
+          ['data' => $this->getOperations($registration)],
         ],
       ];
     }
@@ -256,40 +239,40 @@ class RegistrationController extends ControllerBase {
   }
 
   /**
-   * Get the entity operations as a render array.
+   * Get the entity operations for a given registration.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
+   * @param \Drupal\registration\Entity\RegistrationInterface $registration
+   *   The registration.
    *
    * @return array
    *   A render array as expected by drupal_render().
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
-  protected function getOperations(EntityInterface $host_entity): array {
+  protected function getOperations(RegistrationInterface $registration): array {
     $prefix = FALSE;
     $operations = [];
-    if ($host_entity->access('view') && $host_entity->hasLinkTemplate('canonical')) {
+    if ($registration->access('view') && $registration->hasLinkTemplate('canonical')) {
       $operations['view'] = [
         '#type' => 'link',
         '#title' => $this->t('View'),
-        '#url' => $this->ensureDestination($host_entity->toUrl()),
+        '#url' => $this->ensureDestination($registration->toUrl()),
       ];
       $prefix = TRUE;
     }
-    if ($host_entity->access('update') && $host_entity->hasLinkTemplate('edit-form')) {
+    if ($registration->access('update') && $registration->hasLinkTemplate('edit-form')) {
       $operations['edit'] = [
         '#type' => 'link',
         '#title' => $this->t('Edit'),
-        '#url' => $this->ensureDestination($host_entity->toUrl('edit-form')),
+        '#url' => $this->ensureDestination($registration->toUrl('edit-form')),
         '#prefix' => $prefix ? ' | ' : '',
       ];
       $prefix = TRUE;
     }
-    if ($host_entity->access('delete') && $host_entity->hasLinkTemplate('delete-form')) {
+    if ($registration->access('delete') && $registration->hasLinkTemplate('delete-form')) {
       $operations['delete'] = [
         '#type' => 'link',
         '#title' => $this->t('Delete'),
-        '#url' => $this->ensureDestination($host_entity->toUrl('delete-form')),
+        '#url' => $this->ensureDestination($registration->toUrl('delete-form')),
         '#prefix' => $prefix ? ' | ' : '',
       ];
     }

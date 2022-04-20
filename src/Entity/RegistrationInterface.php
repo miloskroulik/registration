@@ -6,6 +6,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\workflows\StateInterface;
+use Drupal\user\UserInterface;
 use Drupal\workflows\WorkflowInterface;
 
 /**
@@ -29,12 +30,60 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
   const REGISTRATION_REGISTRANT_TYPE_ANON = 'registration_registrant_type_anon';
 
   /**
+   * Gets the email address used for an anonymous registration.
+   *
+   * @return string
+   *   The email for an anonymous registration, or a blank string otherwise.
+   */
+  public function getAnonymousEmail(): string;
+
+  /**
+   * Gets the user for the creator of the registration.
+   *
+   * Returns NULL if the creator was an anonymous registrant.
+   *
+   * @return \Drupal\user\UserInterface|null
+   *   The user entity, if available.
+   */
+  public function getAuthor(): ?UserInterface;
+
+  /**
    * Gets the display name for the creator of the registration.
    *
+   * Returns NULL if the creator was an anonymous registrant.
+   *
    * @return string|null
-   *   The author name or NULL for a new registration.
+   *   The author name, if available.
    */
   public function getAuthorDisplayName(): ?string;
+
+  /**
+   * Gets the registrant email address.
+   *
+   * If the registrant is an authenticated user, this is the email address
+   * currently associated with that user account. Otherwise, this is the
+   * email address entered by the anonymous registrant.
+   *
+   * @return string
+   *   The registrant email address.
+   */
+  public function getEmail(): string;
+
+  /**
+   * Gets the entity ID of the host entity that the registration is for.
+   *
+   * @return int
+   *   The host entity ID.
+   */
+  public function getHostEntityId(): int;
+
+  /**
+   * Gets the entity type ID of the host entity that the registration is for.
+   *
+   * @return string
+   *   The host entity type ID, for example "node".
+   */
+  public function getHostEntityTypeId(): string;
 
   /**
    * Gets the registrant type relative to the given account.
@@ -59,6 +108,22 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    *   The workflow.
    */
   public function getType(): RegistrationTypeInterface;
+
+  /**
+   * Gets the user if the registration is for a user account.
+   *
+   * @return \Drupal\user\UserInterface|null
+   *   The user entity, or NULL for an anonymous or new registration.
+   */
+  public function getUser(): ?UserInterface;
+
+  /**
+   * Gets the registrant user ID if the registration is for a user account.
+   *
+   * @return int
+   *   The registrant user ID, or 0 for an anonymous or new registration.
+   */
+  public function getUserId(): int;
 
   /**
    * Gets the workflow that the registration is in.
@@ -95,10 +160,10 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
   public function setCreatedTime(int $timestamp): RegistrationInterface;
 
   /**
-   * Determines if a registration is in an active state.
+   * Determines whether a registration is in an active state.
    *
    * @return bool
-   *   TRUE if the registration is in an active state.
+   *   TRUE if the registration is in an active state, FALSE otherwise.
    */
   public function isActive(): bool;
 
