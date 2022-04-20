@@ -9,6 +9,7 @@ use Drupal\Core\Database\Query\TableSortExtender;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Render\Renderer;
 use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
@@ -46,6 +47,13 @@ class RegistrationController extends ControllerBase {
   protected RegistrationManagerInterface $registrationManager;
 
   /**
+   * The renderer.
+   *
+   * @var \Drupal\Core\Render\Renderer
+   */
+  protected Renderer $renderer;
+
+  /**
    * Constructs a RegistrationController object.
    *
    * @param \Drupal\Core\Database\Connection $database
@@ -54,11 +62,14 @@ class RegistrationController extends ControllerBase {
    *   The date formatter service.
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
+   * @param \Drupal\Core\Render\Renderer $renderer
+   *   The renderer.
    */
-  public function __construct(Connection $database, DateFormatterInterface $date_formatter, RegistrationManagerInterface $registration_manager) {
+  public function __construct(Connection $database, DateFormatterInterface $date_formatter, RegistrationManagerInterface $registration_manager, Renderer $renderer) {
     $this->database = $database;
     $this->dateFormatter = $date_formatter;
     $this->registrationManager = $registration_manager;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -68,7 +79,8 @@ class RegistrationController extends ControllerBase {
     return new static(
       $container->get('database'),
       $container->get('date.formatter'),
-      $container->get('registration.manager')
+      $container->get('registration.manager'),
+      $container->get('renderer')
     );
   }
 
@@ -209,6 +221,10 @@ class RegistrationController extends ControllerBase {
           '#account' => $author,
         ];
       }
+      else {
+        // No author entity, display Anonymous.
+        $author = $registration->getAuthorDisplayName();
+      }
 
       $rows[] = [
         'data' => [
@@ -235,7 +251,27 @@ class RegistrationController extends ControllerBase {
     ];
     $build['registration_pager'] = ['#type' => 'pager'];
 
+    // Set cache directives so the form rebuilds when needed.
+    $this->addCacheableDependencies($build, $host_entity, $settings);
+
     return $build;
+  }
+
+  /**
+   * Adds cache directives to the form.
+   *
+   * @param array $build
+   *   The render array for the table.
+   * @param \Drupal\registration\Entity\RegistrationSettings $settings
+   *   The registration settings.
+   */
+  protected function addCacheableDependencies(array &$build, EntityInterface $host_entity, RegistrationSettings $settings) {
+    // Rebuild if the relevant entities are updated.
+    $this->renderer->addCacheableDependency($build, $host_entity);
+    $this->renderer->addCacheableDependency($build, $settings);
+
+    // Rebuild when registrations are added and deleted.
+    $build['#cache']['tags'][] = 'registration_list';
   }
 
   /**
