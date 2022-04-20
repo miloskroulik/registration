@@ -190,11 +190,8 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     if (!$this->get('count')->isEmpty()) {
       return (int) $this->get('count')->first()->value;
     }
-    elseif ($this->isNew()) {
-      return 1;
-    }
     else {
-      return 0;
+      return 1;
     }
   }
 
@@ -378,6 +375,10 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setLabel(t('Created'))
       ->setDescription(t('The time when the registration was created.'))
       ->setTranslatable(TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'datetime_timestamp',
+        'weight' => 10,
+      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 

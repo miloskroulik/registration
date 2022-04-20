@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Form;
 
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Renderer;
@@ -16,6 +17,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Defines the Register form.
  */
 class RegisterForm extends ContentEntityForm {
+
+  /**
+   * The date formatter.
+   *
+   * @var \Drupal\Core\Datetime\DateFormatterInterface
+   */
+  protected DateFormatterInterface $dateFormatter;
 
   /**
    * The registration manager.
@@ -36,6 +44,7 @@ class RegisterForm extends ContentEntityForm {
    */
   public static function create(ContainerInterface $container): RegisterForm {
     $instance = parent::create($container);
+    $instance->dateFormatter = $container->get('date.formatter');
     $instance->registrationManager = $container->get('registration.manager');
     $instance->renderer = $container->get('renderer');
     return $instance;
@@ -51,10 +60,14 @@ class RegisterForm extends ContentEntityForm {
     // Set cache directives so the form rebuilds when needed.
     $this->addCacheableDependencies($form, $form_state);
 
+    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+    $registration = $this->getEntity();
+
     // Make sure registration is still allowed.
     $host_entity = $form_state->get('host_entity');
     $settings = $form_state->get('settings');
-    if (!$this->registrationManager->isEnabledForRegistration($host_entity, $settings)) {
+    $count = $registration->getSpacesReserved();
+    if (!$this->registrationManager->isEnabledForRegistration($host_entity, $settings, $count, $registration)) {
       $form['notice'] = [
         '#markup' => $this->t('Sorry, registrations are no longer available for %name', [
           '%name' => $host_entity->label(),
@@ -65,9 +78,6 @@ class RegisterForm extends ContentEntityForm {
 
     // Initialize the form with fields.
     $form = parent::form($form, $form_state);
-
-    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
-    $registration = $this->getEntity();
 
     // Add the "Who is registering" field.
     $registrant_options = $this->registrationManager->getRegistrantOptions($registration, $settings);
@@ -189,6 +199,20 @@ class RegisterForm extends ContentEntityForm {
       $form['state']['#access'] = !empty($states) && $this->currentUser()->hasPermission("edit $type registration state");
       $form['state']['widget'][0]['#options'] = array_map([State::class, 'labelCallback'], $states);
       $form['state']['widget'][0]['#default_value'] = $registration->getState()->id();
+    }
+
+    // Update the created field.
+    $admin_theme = $this->currentUser()->hasPermission('view the administration theme');
+    if (!empty($form['created'])) {
+      // Hide for new registrations or non-admins.
+      if ($registration->isNew() || !$admin_theme) {
+        $form['created']['#access'] = FALSE;
+      }
+    }
+
+    // If an admin is editing an existing registration use the advanced form.
+    if (!$registration->isNew() && $admin_theme) {
+      $this->useAdvancedForm($form, $form_state);
     }
 
     return $form;
@@ -374,7 +398,9 @@ class RegisterForm extends ContentEntityForm {
 
     $host_entity = $form_state->get('host_entity');
     $settings = $form_state->get('settings');
-    if ($this->registrationManager->isEnabledForRegistration($host_entity, $settings)) {
+    $registration = $this->getEntity();
+    $count = $registration->getSpacesReserved();
+    if ($this->registrationManager->isEnabledForRegistration($host_entity, $settings, $count, $registration)) {
       // Override the button label for the Save button.
       $actions = parent::actions($form, $form_state);
       $actions['submit']['#value'] = $this->t('Save Registration');
@@ -440,6 +466,87 @@ class RegisterForm extends ContentEntityForm {
       $settings = $storage->loadSettingsForEntity($host_entity);
       $form_state->set('settings', $settings);
     }
+  }
+
+  /**
+   * Modify the form to use the Advanced interface.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  protected function useAdvancedForm(array &$form, FormStateInterface $form_state): array {
+    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+    $registration = $this->entity;
+
+    $form['#tree'] = TRUE;
+    $form['#theme'] = ['registration_form'];
+    $form['#attached']['library'][] = 'registration/form';
+    // Changed must be sent to the client, for later overwrite error checking.
+    $form['changed'] = [
+      '#type' => 'hidden',
+      '#default_value' => $registration->getChangedTime(),
+    ];
+    $form['state']['#group'] = 'footer';
+
+    $last_saved = $this->t('Not saved yet');
+    if (!$registration->isNew()) {
+      $last_saved = $this->dateFormatter->format($registration->getChangedTime(), 'short');
+    }
+    $form['meta'] = [
+      '#attributes' => ['class' => ['entity-meta__header']],
+      '#type' => 'container',
+      '#group' => 'advanced',
+      '#weight' => -100,
+      'state' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $registration->getState()->label(),
+        '#access' => !$registration->isNew(),
+        '#attributes' => [
+          'class' => ['entity-meta__title'],
+        ],
+      ],
+      'changed' => [
+        '#type' => 'item',
+        '#wrapper_attributes' => [
+          'class' => ['entity-meta__last-saved', 'container-inline'],
+        ],
+        '#markup' => '<h4 class="label inline">' . $this->t('Last saved') . '</h4> ' . $last_saved,
+      ],
+      'author' => [
+        '#type' => 'item',
+        '#access' => $registration->getAuthorDisplayName(),
+        '#wrapper_attributes' => [
+          'class' => ['author', 'container-inline'],
+        ],
+        '#markup' => '<h4 class="label inline">' . $this->t('Author') . '</h4> ' . $registration->getAuthorDisplayName(),
+      ],
+    ];
+    $form['advanced'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['entity-meta']],
+      '#weight' => 99,
+    ];
+    $form['author'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Authoring information'),
+      '#group' => 'advanced',
+      '#attributes' => [
+        'class' => ['registration-form-author'],
+      ],
+      '#weight' => 90,
+      '#optional' => TRUE,
+    ];
+    if (isset($form['author_uid'])) {
+      $form['author_uid']['#group'] = 'author';
+    }
+    if (isset($form['created'])) {
+      $form['created']['#group'] = 'author';
+    }
+
+    return $form;
   }
 
 }
