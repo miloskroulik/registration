@@ -38,8 +38,7 @@ use Drupal\workflows\WorkflowInterface;
  *     "list_builder" = "Drupal\registration\RegistrationListBuilder",
  *     "views_data" = "Drupal\views\EntityViewsData",
  *     "form" = {
- *       "default" = "Drupal\registration\Form\RegistrationForm",
- *       "add" = "Drupal\registration\Form\RegistrationForm",
+ *       "default" = "Drupal\registration\Form\RegisterForm",
  *       "edit" = "Drupal\registration\Form\RegisterForm",
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
  *       "register" = "Drupal\registration\Form\RegisterForm",
@@ -60,8 +59,6 @@ use Drupal\workflows\WorkflowInterface;
  *   },
  *   links = {
  *     "canonical" = "/registration/{registration}",
- *     "add-page" = "/registration/add",
- *     "add-form" = "/registration/add/{registration_type}",
  *     "edit-form" = "/registration/{registration}/edit",
  *     "delete-form" = "/registration/{registration}/delete",
  *     "collection" = "/admin/people/registrations"

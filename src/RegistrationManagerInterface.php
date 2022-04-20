@@ -77,12 +77,10 @@ interface RegistrationManagerInterface {
   public function getFieldConfigSetting(EntityTypeInterface $entity_type, string $key): mixed;
 
   /**
-   * Determines who can register for a given host entity.
+   * Determines who can register when a registration is added or edited.
    *
-   * Uses the settings to help determine this.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
+   * @param \Drupal\registration\Entity\RegistrationInterface $registration
+   *   The registration.
    * @param \Drupal\registration\Entity\RegistrationSettings $settings
    *   The registration settings entity.
    *
@@ -91,7 +89,7 @@ interface RegistrationManagerInterface {
    *
    * @see \Drupal\registration\Entity\RegistrationInterface for the constants.
    */
-  public function getRegistrantOptions(EntityInterface $host_entity, RegistrationSettings $settings): array;
+  public function getRegistrantOptions(RegistrationInterface $registration, RegistrationSettings $settings): array;
 
   /**
    * Gets the definition of the registration field for a host entity.

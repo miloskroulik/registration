@@ -70,7 +70,7 @@ class RegisterForm extends ContentEntityForm {
     $registration = $this->getEntity();
 
     // Add the "Who is registering" field.
-    $registrant_options = $this->registrationManager->getRegistrantOptions($host_entity, $settings);
+    $registrant_options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $default = NULL;
     if (!$registration->isNew()) {
       $default = $registration->getRegistrantType($this->currentUser());

@@ -221,16 +221,18 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrantOptions(EntityInterface $host_entity, RegistrationSettings $settings): array {
+  public function getRegistrantOptions(RegistrationInterface $registration, RegistrationSettings $settings): array {
     $options = [];
 
-    $type = $this->getRegistrationTypeBundle($host_entity);
+    $type = $registration->getType()->id();
+    $host_entity = $registration->getHostEntity();
 
     // Me:
+    $my_registration = ($registration->getUserId() == $this->currentUser->id());
     $allow_multiple = $this->getRegistrationSetting($host_entity, $settings, 'multiple_registrations');
     if ($this->currentUser->isAuthenticated()
       && $this->currentUser->hasPermission("create $type registration self")
-      && (!$this->isUserRegistered($host_entity, $this->currentUser) || $allow_multiple)
+      && ($my_registration || $allow_multiple || !$this->isUserRegistered($host_entity, $this->currentUser))
     ) {
       $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = $this->t('Myself');
     }
