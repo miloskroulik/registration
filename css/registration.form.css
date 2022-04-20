@@ -49,7 +49,6 @@
     float: left;
   }
 
-  /* @todo File an issue to add a standard class to all text-like inputs */
   .layout-region-registration-secondary .form-autocomplete,
   .layout-region-registration-secondary .form-text,
   .layout-region-registration-secondary .form-tel,
