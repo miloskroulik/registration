@@ -4,6 +4,7 @@ namespace Drupal\registration\Entity;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\workflows\StateInterface;
 use Drupal\user\UserInterface;
@@ -68,6 +69,14 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    *   The registrant email address.
    */
   public function getEmail(): string;
+
+  /**
+   * Gets the host entity that the registration is for.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface|null
+   *   The host entity, if available.
+   */
+  public function getHostEntity(): ?EntityInterface;
 
   /**
    * Gets the entity ID of the host entity that the registration is for.

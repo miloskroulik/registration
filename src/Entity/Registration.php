@@ -6,6 +6,7 @@ use Drupal;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Session\AccountInterface;
@@ -74,10 +75,20 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   use EntityChangedTrait;
 
   /**
+   * The host entity.
+   *
+   * @var \Drupal\Core\Entity\EntityInterface
+   */
+  protected EntityInterface $hostEntity;
+
+  /**
    * {@inheritdoc}
    */
   public function label(): string {
-    if (!$this->isNew()) {
+    if ($host_entity = $this->getHostEntity()) {
+      return (string) t('Registration for @label', ['@label' => $host_entity->label()]);
+    }
+    elseif (!$this->isNew()) {
       return (string) t('Registration #@id', ['@id' => $this->id()]);
     }
     return '';
@@ -123,6 +134,19 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     else {
       return $this->getAnonymousEmail();
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHostEntity(): ?EntityInterface {
+    if (!isset($this->hostEntity)) {
+      if (($entity_id = $this->getHostEntityId()) && ($entity_type_id = $this->getHostEntityTypeId())) {
+        $storage = Drupal::entityTypeManager()->getStorage($entity_type_id);
+        $this->hostEntity = $storage->load($entity_id);
+      }
+    }
+    return $this->hostEntity;
   }
 
   /**
