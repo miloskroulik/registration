@@ -275,28 +275,33 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
+    // Author default.
     if ($this->get('author_uid')->isEmpty()) {
       $current_user = Drupal::service('current_user');
       if ($current_user->isAuthenticated()) {
         $this->set('author_uid', $current_user->id());
       }
     }
+    // Count default.
     if ($this->get('count')->isEmpty()) {
       $this->set('count', 1);
     }
-    if ($this->get('mail')->isEmpty()) {
-      if ($user = $this->getUser()) {
-        $this->set('mail', $user->getEmail());
-      }
-      else {
-        $this->set('mail', $this->getAnonymousEmail());
-      }
-    }
+    // Status default.
     if ($this->get('state')->isEmpty()) {
       $this->set('state', $this->getState()->id());
     }
+    // Workflow default.
     if ($this->get('workflow')->isEmpty()) {
       $this->set('workflow', $this->getType()->getWorkflowId());
+    }
+
+    // Unlike other properties, always recompute the email address
+    // since the base user or anonymous email can change every save.
+    if ($user = $this->getUser()) {
+      $this->set('mail', $user->getEmail());
+    }
+    else {
+      $this->set('mail', $this->getAnonymousEmail());
     }
   }
 

@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Element;
+use Drupal\user\UserInterface;
 use Drupal\field\Entity\FieldConfig;
 
 /**
@@ -147,6 +148,25 @@ function registration_entity_delete(EntityInterface $entity) {
  * Implements hook_entity_update().
  */
 function registration_entity_update(EntityInterface $entity) {
+  // Update registrations if a user changes their email.
+  // The email address field is computed and saved for
+  // use in filtering and sorting in various listings.
+  if (($entity instanceof UserInterface) && isset($entity->original)) {
+    if ($entity->getEmail() != $entity->original->getEmail()) {
+      $query = \Drupal::database()->select('registration', 'r');
+      $query->addField('r', 'registration_id');
+      $query->condition('r.user_uid', $entity->id());
+      $result = $query->execute()->fetchCol();
+
+      $storage = \Drupal::entityTypeManager()->getStorage('registration');
+      $registrations = $storage->loadMultiple($result);
+      foreach ($registrations as $registration) {
+        // This updates the email address and clears cache.
+        $registration->save();
+      }
+    }
+  }
+
   // If a form display for a registration field is updated, clear
   // the local task plugin cache so local tasks (tabs) are rebuilt,
   // in case the Hide Register Tab field setting may have changed.
