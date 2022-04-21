@@ -102,18 +102,22 @@ class RegistrationController extends ControllerBase {
       $settings = $this->registrationManager->getSettingsForHost($host_entity);
 
       // Use the built-in manage registrations view if available.
+      $view = NULL;
       if ($this->moduleHandler()->moduleExists('views')) {
         if ($view = $this->entityTypeManager()->getStorage('view')->load('manage_registrations')) {
-          $build = [
-            '#type' => 'view',
-            '#name' => 'manage_registrations',
-            '#display_id' => 'block_1',
-            '#arguments' => [
-              $host_entity->getEntityTypeId(),
-              $host_entity->id(),
-            ],
-          ];
-          $build['#attached']['library'][] = 'registration/manage_registrations';
+          $display = 'block_1';
+          if ($view->getExecutable()->access($display)) {
+            $build = [
+              '#type' => 'view',
+              '#name' => 'manage_registrations',
+              '#display_id' => $display,
+              '#arguments' => [
+                $host_entity->getEntityTypeId(),
+                $host_entity->id(),
+              ],
+            ];
+            $build['#attached']['library'][] = 'registration/manage_registrations';
+          }
         }
       }
 
@@ -124,6 +128,11 @@ class RegistrationController extends ControllerBase {
 
       // Set cache directives so the form rebuilds when needed.
       $this->addCacheableDependencies($build, $host_entity, $settings);
+
+      // If the view was retrieved, rebuild when it is updated.
+      if ($view) {
+        $this->renderer->addCacheableDependency($build, $view);
+      }
     }
 
     return $build;
