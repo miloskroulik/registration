@@ -92,6 +92,19 @@ interface RegistrationManagerInterface {
   public function getRegistrantOptions(RegistrationInterface $registration, RegistrationSettings $settings): array;
 
   /**
+   * Gets the total number of registrations for the given host entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   *   The host entity.
+   * @param \Drupal\registration\Entity\RegistrationSettings $settings
+   *   The registration settings entity.
+   *
+   * @return int
+   *   The count of registrations (any status).
+   */
+  public function getRegistrationCount(EntityInterface $host_entity, RegistrationSettings $settings): int;
+
+  /**
    * Gets the definition of the registration field for a host entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity

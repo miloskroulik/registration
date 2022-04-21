@@ -127,12 +127,10 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
    * {@inheritdoc}
    */
   public function getEmail(): string {
-    if ($user = $this->getUser()) {
-      return $user->getEmail();
+    if (!$this->get('mail')->isEmpty()) {
+      return $this->get('mail')->first()->value;
     }
-    else {
-      return $this->getAnonymousEmail();
-    }
+    return '';
   }
 
   /**
@@ -286,6 +284,14 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     if ($this->get('count')->isEmpty()) {
       $this->set('count', 1);
     }
+    if ($this->get('mail')->isEmpty()) {
+      if ($user = $this->getUser()) {
+        $this->set('mail', $user->getEmail());
+      }
+      else {
+        $this->set('mail', $this->getAnonymousEmail());
+      }
+    }
     if ($this->get('state')->isEmpty()) {
       $this->set('state', $this->getState()->id());
     }
@@ -349,6 +355,16 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
         'type' => 'entity_reference_autocomplete',
       ])
       ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['mail'] = BaseFieldDefinition::create('email')
+      ->setLabel(t('Email address'))
+      ->setDescription(t('The email (anonymous or authenticated) associated with this registration.'))
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'email_mailto',
+        'weight' => 0,
+      ])
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['author_uid'] = BaseFieldDefinition::create('entity_reference')

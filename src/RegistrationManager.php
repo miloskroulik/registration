@@ -153,6 +153,8 @@ class RegistrationManager implements RegistrationManagerInterface {
       'host_entity' => $host_entity,
       'registration' => $registration,
       'settings' => $settings,
+      'states' => $states,
+      'sum' => TRUE,
     ];
 
     $this->moduleHandler->alter('registration_event_count', $count, $context);
@@ -180,10 +182,13 @@ class RegistrationManager implements RegistrationManagerInterface {
    */
   public function getEntityFromParameters(ParameterBag $parameters): ?EntityInterface {
     $entity = NULL;
+
     foreach ($parameters as $parameter) {
       if ($parameter instanceof EntityInterface) {
-        $entity = $parameter;
-        break;
+        if ($parameter->getEntityType()->entityClassImplements(FieldableEntityInterface::class)) {
+          $entity = $parameter;
+          break;
+        }
       }
     }
 
@@ -254,6 +259,30 @@ class RegistrationManager implements RegistrationManagerInterface {
     }
 
     return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRegistrationCount(EntityInterface $host_entity, RegistrationSettings $settings): int {
+    $query = $this->database->select('registration')
+      ->condition('entity_id', $host_entity->id())
+      ->condition('entity_type_id', $host_entity->getEntityTypeId());
+
+    $count = $query->countQuery()->execute()->fetchField();
+
+    // Allow other modules to override the count.
+    $context = [
+      'host_entity' => $host_entity,
+      'registration' => NULL,
+      'settings' => $settings,
+      'states' => [],
+      'sum' => FALSE,
+    ];
+
+    $this->moduleHandler->alter('registration_event_count', $count, $context);
+
+    return $count;
   }
 
   /**

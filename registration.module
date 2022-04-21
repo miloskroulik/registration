@@ -2,12 +2,13 @@
 
 /**
  * @file
- * Provides user regigistration for events.
+ * Provides user registration for events.
  */
 
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Element;
 use Drupal\field\Entity\FieldConfig;
@@ -22,12 +23,6 @@ function registration_entity_extra_field_info() {
   $extra = [];
   $registration_types = \Drupal::service('entity_type.bundle.info')->getBundleInfo('registration');
   foreach ($registration_types as $type => $info) {
-    $extra['registration'][$type]['display']['email_address'] = [
-      'label' => t('Email address'),
-      'description' => t('Registrant email address pseudo field.'),
-      'weight' => 0,
-      'visible' => TRUE,
-    ];
     $extra['registration'][$type]['display']['host_entity'] = [
       'label' => t('Host entity'),
       'description' => t('Host entity pseudo field.'),
@@ -48,33 +43,13 @@ function registration_registration_view(array &$build, EntityInterface $entity, 
   $label_display = 'above';
   $components = $display->getComponents();
   foreach ($components as $id => $component) {
-    if ($id != 'anon_mail') {
-      if (!empty($component['label'])) {
-        $label_display = $component['label'];
-        break;
-      }
+    if (!empty($component['label'])) {
+      $label_display = $component['label'];
+      break;
     }
   }
 
   // Add the extra fields.
-  if ($display->getComponent('email_address')) {
-    $build['email_address'] = [
-      '#theme' => 'field',
-      '#label_display' => $label_display,
-      '#view_mode' => '_custom',
-      '#title' => t('Email address'),
-      '#field_type' => 'text',
-      '#field_name' => 'email_address',
-      '#bundle' => $entity->bundle(),
-      '#entity_type' => $entity->getEntityTypeId(),
-      '#object' => $entity,
-      '#is_multiple' => FALSE,
-      '#items' => [],
-      0 => [
-        '#markup' => $entity->getEmail(),
-      ],
-    ];
-  }
   if ($display->getComponent('host_entity')) {
     if ($host_entity = $entity->getHostEntity()) {
       $build['host_entity'] = [
@@ -182,4 +157,44 @@ function registration_entity_update(EntityInterface $entity) {
       \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
     }
   }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function registration_form_views_exposed_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $view = $form_state->get('view');
+  if (($view->id() == 'manage_registrations')) {
+    // Hide the manage registrations filter when there are only a few rows.
+    $route_match = \Drupal::routeMatch();
+    $registration_manager = \Drupal::service('registration.manager');
+    if ($host_entity = $registration_manager->getEntityFromParameters($route_match->getParameters())) {
+      $settings = $registration_manager->getSettingsForHost($host_entity);
+      if ($registration_manager->getRegistrationCount($host_entity, $settings) < 10) {
+        $form['mail']['#access'] = FALSE;
+        $form['actions']['#access'] = FALSE;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_views_data().
+ */
+function registration_views_data() {
+  $data['views']['manage_registrations_caption'] = [
+    'title' => t('Manage registrations caption'),
+    'help' => t('Displays a caption for the Manage Registrations listing.'),
+    'area' => [
+      'id' => 'manage_registrations_caption',
+    ],
+  ];
+  $data['views']['manage_registrations_empty'] = [
+    'title' => t('Manage registrations empty'),
+    'help' => t('Displays an empty notice for the Manage Registrations listing.'),
+    'area' => [
+      'id' => 'manage_registrations_empty',
+    ],
+  ];
+  return $data;
 }

@@ -98,15 +98,39 @@ class RegistrationController extends ControllerBase {
    */
   public function manageRegistrations(Request $request): array {
     $build = [];
-    if ($entity = $this->registrationManager->getEntityFromParameters($request->attributes)) {
-      $settings = $this->registrationManager->getSettingsForHost($entity);
-      $build = $this->buildRegistrationsList($entity, $settings);
+    if ($host_entity = $this->registrationManager->getEntityFromParameters($request->attributes)) {
+      $settings = $this->registrationManager->getSettingsForHost($host_entity);
+
+      // Use the built-in manage registrations view if available.
+      if ($this->moduleHandler()->moduleExists('views')) {
+        if ($view = $this->entityTypeManager()->getStorage('view')->load('manage_registrations')) {
+          $build = [
+            '#type' => 'view',
+            '#name' => 'manage_registrations',
+            '#display_id' => 'block_1',
+            '#arguments' => [
+              $host_entity->getEntityTypeId(),
+              $host_entity->id(),
+            ],
+          ];
+          $build['#attached']['library'][] = 'registration/manage_registrations';
+        }
+      }
+
+      // Fallback to data table.
+      if (empty($build)) {
+        $build = $this->buildDataTable($host_entity, $settings);
+      }
+
+      // Set cache directives so the form rebuilds when needed.
+      $this->addCacheableDependencies($build, $host_entity, $settings);
     }
+
     return $build;
   }
 
   /**
-   * Displays the Manage Registrations task.
+   * Builds the Manage Registrations data table.
    *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity
    *   The host entity.
@@ -119,7 +143,7 @@ class RegistrationController extends ControllerBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
-  protected function buildRegistrationsList(EntityInterface $host_entity, RegistrationSettings $settings): array {
+  protected function buildDataTable(EntityInterface $host_entity, RegistrationSettings $settings): array {
     $capacity = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'capacity');
     $spaces =  $this->registrationManager->getActiveRegistrationCount($host_entity, $settings);
     if ($capacity) {
@@ -254,9 +278,6 @@ class RegistrationController extends ControllerBase {
       ]),
     ];
     $build['registration_pager'] = ['#type' => 'pager'];
-
-    // Set cache directives so the form rebuilds when needed.
-    $this->addCacheableDependencies($build, $host_entity, $settings);
 
     return $build;
   }

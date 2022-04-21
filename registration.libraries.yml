@@ -9,3 +9,9 @@ view:
   css:
     theme:
       css/registration.css: {}
+
+manage_registrations:
+  version: VERSION
+  css:
+    theme:
+      css/manage.registrations.css: {}
