@@ -198,3 +198,18 @@ function registration_views_data() {
   ];
   return $data;
 }
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function registration_views_data_alter(array &$data) {
+  $data['registration']['host_entity'] = array(
+    'title' => t('Host entity'),
+    'group' => t('Registration'),
+    'field' => array(
+      'title' => t('Host entity'),
+      'help' => t('Displays the host entity for a registration.'),
+      'id' => 'registration_host_entity',
+    ),
+  );
+}
