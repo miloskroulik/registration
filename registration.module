@@ -14,6 +14,8 @@ use Drupal\field\Entity\FieldConfig;
 
 /**
  * Implements hook_entity_extra_field_info().
+ *
+ * @see function registration_registration_view().
  */
 function registration_entity_extra_field_info() {
   // Add extra display fields for calculated registration data.
@@ -38,6 +40,8 @@ function registration_entity_extra_field_info() {
 
 /**
  * Implements hook_ENTITY_TYPE_view().
+ *
+ * @see function registration_entity_extra_field_info().
  */
 function registration_registration_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
   // Determine the label display to use for extra fields by looking at others.

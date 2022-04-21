@@ -54,7 +54,7 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
           || ($account->hasPermission("update own $type registration") && $entity->access('update', $account))
         ;
         return AccessResult::allowedIf($access)
-          // Recalculate this result if  the relevant entities are updated.
+          // Recalculate this result if the relevant entities are updated.
           ->cachePerPermissions()
           ->addCacheableDependency($entity);
       }
@@ -64,7 +64,7 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
     // Disable the route. This also hides the local task (tab) for the route.
     $access_result = AccessResult::forbidden();
 
-    // Recalculate this result if  the relevant entities are updated.
+    // Recalculate this result if the relevant entities are updated.
     $access_result->cachePerPermissions();
     if ($entity) {
       $access_result->addCacheableDependency($entity);

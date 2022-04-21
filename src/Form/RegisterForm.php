@@ -156,6 +156,9 @@ class RegisterForm extends ContentEntityForm {
       $limit = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'maximum_spaces');
       $remaining = $capacity - $this->registrationManager->getActiveRegistrationCount($host_entity, $settings, $registration);
       $max = 99999;
+
+      // Plural format is not needed since the field is hidden
+      // unless the user can register for more than one space.
       if ($capacity && $limit) {
         $max = min($limit, $remaining);
         $description = $this->t(

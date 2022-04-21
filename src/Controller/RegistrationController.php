@@ -121,18 +121,21 @@ class RegistrationController extends ControllerBase {
    */
   protected function buildRegistrationsList(EntityInterface $host_entity, RegistrationSettings $settings): array {
     $capacity = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'capacity');
-    $count =  $this->registrationManager->getActiveRegistrationCount($host_entity, $settings);
+    $spaces =  $this->registrationManager->getActiveRegistrationCount($host_entity, $settings);
     if ($capacity) {
-      $caption = $this->t('List of registrations for %title. @count of @capacity spaces are filled.', [
+      $caption = $this->formatPlural($capacity,
+       'List of registrations for %title. @spaces of 1 space is filled.',
+       'List of registrations for %title. @spaces of @count spaces are filled.', [
         '%title' => $host_entity->label(),
         '@capacity' => $capacity,
-        '@count' => $count,
+        '@spaces' => $spaces,
       ]);
     }
     else {
-      $caption = $this->t('List of registrations for %title. @count spaces are filled.', [
+      $caption = $this->formatPlural($spaces,
+       'List of registrations for %title. 1 space is filled.',
+       'List of registrations for %title. @count spaces are filled.', [
         '%title' => $host_entity->label(),
-        '@count' => $count,
       ]);
     }
 
@@ -222,7 +225,8 @@ class RegistrationController extends ControllerBase {
         ];
       }
       else {
-        // No author entity, display Anonymous.
+        // No author entity, this returns Anonymous.
+        // This case occurs for an anonymous self registration.
         $author = $registration->getAuthorDisplayName();
       }
 
@@ -271,6 +275,7 @@ class RegistrationController extends ControllerBase {
     $this->renderer->addCacheableDependency($build, $settings);
 
     // Rebuild when registrations are added and deleted.
+    // @todo Implement a custom tag specific to the list for one host entity.
     $build['#cache']['tags'][] = 'registration_list';
   }
 
