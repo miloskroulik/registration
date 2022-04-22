@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Element;
+use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\user\UserInterface;
 use Drupal\field\Entity\FieldConfig;
 
@@ -145,6 +146,26 @@ function registration_entity_delete(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_entity_presave().
+ */
+function registration_entity_presave(EntityInterface $entity) {
+  // This is done here instead of the preSave class method to
+  // avoid updating the changed time if the only change to the
+  // entity is the result of a user changing their email address.
+  // This hook runs after the ChangedItem field presave hook,
+  // which updates the changed time if field changes are detected.
+  if ($entity instanceof RegistrationInterface) {
+    // Always recompute email address since it is derived from other fields.
+    if ($user = $entity->getUser()) {
+      $entity->set('mail', $user->getEmail());
+    }
+    else {
+      $entity->set('mail', $entity->getAnonymousEmail());
+    }
+  }
+}
+
+/**
  * Implements hook_entity_update().
  */
 function registration_entity_update(EntityInterface $entity) {
@@ -158,6 +179,7 @@ function registration_entity_update(EntityInterface $entity) {
       $query->condition('r.user_uid', $entity->id());
       $result = $query->execute()->fetchCol();
 
+      // @todo use a queue if there are too many to update at once.
       $storage = \Drupal::entityTypeManager()->getStorage('registration');
       $registrations = $storage->loadMultiple($result);
       foreach ($registrations as $registration) {

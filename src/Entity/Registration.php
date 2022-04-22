@@ -21,8 +21,8 @@ use Drupal\workflows\WorkflowInterface;
  *   id = "registration",
  *   label = @Translation("Registration"),
  *   label_collection = @Translation("Registrations"),
- *   label_singular = @Translation("Registration"),
- *   label_plural = @Translation("Registrations"),
+ *   label_singular = @Translation("registration"),
+ *   label_plural = @Translation("registrations"),
  *   label_count = @PluralTranslation(
  *     singular = "@count registration",
  *     plural = "@count registrations",
@@ -286,6 +286,15 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     if ($this->get('count')->isEmpty()) {
       $this->set('count', 1);
     }
+    // Mail default.
+    if ($this->get('mail')->isEmpty()) {
+      if ($user = $this->getUser()) {
+        $this->set('mail', $user->getEmail());
+      }
+      else {
+        $this->set('mail', $this->getAnonymousEmail());
+      }
+    }
     // Status default.
     if ($this->get('state')->isEmpty()) {
       $this->set('state', $this->getState()->id());
@@ -294,22 +303,6 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     if ($this->get('workflow')->isEmpty()) {
       $this->set('workflow', $this->getType()->getWorkflowId());
     }
-
-    // Unlike other properties, always recompute the email address
-    // since the base user or anonymous email can change every save.
-    if ($user = $this->getUser()) {
-      $this->set('mail', $user->getEmail());
-    }
-    else {
-      $this->set('mail', $this->getAnonymousEmail());
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
-    parent::postSave($storage, $update);
   }
 
   /**
