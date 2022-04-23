@@ -288,6 +288,22 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function getRegistrationEnabledEntityTypes(): array {
+    $entity_types = [];
+
+    $definitions = $this->entityTypeManager->getDefinitions();
+    foreach ($definitions as $id => $definition) {
+      if ($this->hasRegistrationField($definition)) {
+        $entity_types[$id] = $definition;
+      }
+    }
+
+    return $entity_types;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRegistrationField(EntityInterface $host_entity): ?FieldDefinitionInterface {
     $fields = $this->entityFieldManager->getFieldDefinitions($host_entity->getEntityTypeId(), $host_entity->bundle());
     foreach ($fields as $field) {

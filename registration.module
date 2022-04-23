@@ -265,13 +265,37 @@ function registration_views_data() {
  * Implements hook_views_data_alter().
  */
 function registration_views_data_alter(array &$data) {
-  $data['registration']['host_entity'] = array(
+  foreach (\Drupal::service('registration.manager')->getRegistrationEnabledEntityTypes() as $entity_type) {
+    $id = $entity_type->id();
+    $base_table = $entity_type->getBaseTable();
+    $data[$base_table][$base_table . 'registration_settings'] = [
+      'title' => t('@type registration settings', [
+        '@type' => $entity_type->getLabel(),
+      ]),
+      'help' => t('Relate @type to their registration settings.', [
+        '@type' => $entity_type->getPluralLabel(),
+      ]),
+      'relationship' => [
+        'id' => "registration_settings",
+        'label' => t("$id registration settings"),
+        'base' => 'registration_entity',
+      ],
+    ];
+  }
+  $data['registration']['host_entity'] = [
     'title' => t('Host entity'),
     'group' => t('Registration'),
-    'field' => array(
+    'field' => [
       'title' => t('Host entity'),
       'help' => t('Displays the host entity for a registration.'),
       'id' => 'registration_host_entity',
-    ),
-  );
+    ],
+  ];
+  $data['registration_entity']['settings_operations'] = [
+    'title' => t('Settings operations'),
+    'help' => t('Provides links to perform settings operations.'),
+    'field' => [
+      'id' => 'registration_settings_operations',
+    ],
+  ];
 }

@@ -15,6 +15,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *   handlers = {
  *     "storage" = "Drupal\registration\RegistrationSettingsStorage",
  *     "storage_schema" = "Drupal\registration\RegistrationStorageSchema",
+ *     "views_data" = "Drupal\views\EntityViewsData",
  *   },
  *   base_table = "registration_entity",
  *   entity_keys = {
@@ -23,6 +24,32 @@ use Drupal\Core\Field\BaseFieldDefinition;
  * )
  */
 class RegistrationSettings extends ContentEntityBase {
+
+  /**
+   * Gets the entity ID of the host entity that the settings are for.
+   *
+   * @return int
+   *   The host entity ID.
+   */
+  public function getHostEntityId(): int {
+    if (!$this->get('entity_id')->isEmpty()) {
+      return (int) $this->get('entity_id')->first()->value;
+    }
+    return 0;
+  }
+
+  /**
+   * Gets the entity type ID of the host entity that the settings are for.
+   *
+   * @return string
+   *   The host entity type ID, for example "node".
+   */
+  public function getHostEntityTypeId(): string {
+    if (!$this->get('entity_type_id')->isEmpty()) {
+      return $this->get('entity_type_id')->first()->value;
+    }
+    return 0;
+  }
 
   /**
    * Gets a settings value for a given key.

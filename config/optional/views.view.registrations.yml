@@ -8,7 +8,7 @@ dependencies:
 id: registrations
 label: Registrations
 module: views
-description: 'Administrative listing of all registrations.'
+description: 'Find and manage all registrations.'
 tag: ''
 base_table: registration
 base_field: registration_id

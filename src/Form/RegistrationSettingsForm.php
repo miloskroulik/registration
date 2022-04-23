@@ -294,7 +294,7 @@ class RegistrationSettingsForm extends FormBase {
         $entity->set($field, NULL);
       }
       elseif ($type == 'date') {
-        $entity->set($field, $values[$field]->format('Y-m-d H:i:s'));
+        $entity->set($field, $values[$field]->format('Y-m-d\TH:i:s'));
       }
       else {
         $entity->set($field, $values[$field]);

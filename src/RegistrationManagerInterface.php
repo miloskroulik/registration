@@ -105,6 +105,14 @@ interface RegistrationManagerInterface {
   public function getRegistrationCount(EntityInterface $host_entity, RegistrationSettings $settings): int;
 
   /**
+   * Gets the entity types that have bundles with registration fields.
+   *
+   * @return \Drupal\Core\EntityTypeInterface[]
+   *   An array of entity type definitions indexed by machine name.
+   */
+  public function getRegistrationEnabledEntityTypes(): array;
+
+  /**
    * Gets the definition of the registration field for a host entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity
