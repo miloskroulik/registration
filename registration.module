@@ -268,7 +268,20 @@ function registration_views_data_alter(array &$data) {
   foreach (\Drupal::service('registration.manager')->getRegistrationEnabledEntityTypes() as $entity_type) {
     $id = $entity_type->id();
     $base_table = $entity_type->getBaseTable();
-    $data[$base_table][$base_table . 'registration_settings'] = [
+    $data[$base_table][$base_table . '_registration'] = [
+      'title' => t('@type registration', [
+        '@type' => $entity_type->getLabel(),
+      ]),
+      'help' => t('Relate @type to their registrations.', [
+        '@type' => $entity_type->getPluralLabel(),
+      ]),
+      'relationship' => [
+        'id' => "registration",
+        'label' => t("$id registration"),
+        'base' => 'registration',
+      ],
+    ];
+    $data[$base_table][$base_table . '_registration_settings'] = [
       'title' => t('@type registration settings', [
         '@type' => $entity_type->getLabel(),
       ]),

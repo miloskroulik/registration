@@ -1,4 +1,4 @@
-uuid: 18f5a156-a70b-4e40-9d2e-6c094d0fdacd
+uuid: aa6ddaf6-cc47-48a6-96d5-7b599dcb78b9
 langcode: en
 status: true
 dependencies:
@@ -9,8 +9,8 @@ dependencies:
     - node
     - registration
     - user
-id: content_registration_settings
-label: 'Content registration settings'
+id: content_registration_summary
+label: 'Content registration summary'
 module: views
 description: 'Manage registration settings for content.'
 tag: ''
@@ -23,7 +23,7 @@ display:
     display_plugin: default
     position: 0
     display_options:
-      title: 'Content registration settings'
+      title: 'Content registration summary'
       fields:
         title:
           id: title
@@ -76,7 +76,7 @@ display:
           id: status
           table: registration_entity
           field: status
-          relationship: registration_settings
+          relationship: node_registration_settings
           group_type: group
           admin_label: ''
           entity_type: registration_settings
@@ -139,11 +139,148 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
+        capacity:
+          id: capacity
+          table: registration_entity
+          field: capacity
+          relationship: node_registration_settings
+          group_type: group
+          admin_label: ''
+          entity_type: registration_settings
+          entity_field: capacity
+          plugin_id: field
+          label: Capacity
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: Unlimited
+          hide_empty: false
+          empty_zero: true
+          hide_alter_empty: true
+          click_sort_column: value
+          type: number_integer
+          settings:
+            thousand_separator: ''
+            prefix_suffix: true
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ', '
+          field_api_classes: false
+        count:
+          id: count
+          table: registration
+          field: count
+          relationship: node_registration
+          group_type: sum
+          admin_label: ''
+          entity_type: registration
+          entity_field: count
+          plugin_id: field
+          label: Usage
+          exclude: false
+          alter:
+            alter_text: false
+            text: ''
+            make_link: false
+            path: ''
+            absolute: false
+            external: false
+            replace_spaces: false
+            path_case: none
+            trim_whitespace: false
+            alt: ''
+            rel: ''
+            link_class: ''
+            prefix: ''
+            suffix: ''
+            target: ''
+            nl2br: false
+            max_length: 0
+            word_boundary: true
+            ellipsis: true
+            more_link: false
+            more_link_text: ''
+            more_link_path: ''
+            strip_tags: false
+            trim: false
+            preserve_tags: ''
+            html: false
+          element_type: ''
+          element_class: ''
+          element_label_type: ''
+          element_label_class: ''
+          element_label_colon: true
+          element_wrapper_type: ''
+          element_wrapper_class: ''
+          element_default_classes: true
+          empty: ''
+          hide_empty: false
+          empty_zero: false
+          hide_alter_empty: true
+          click_sort_column: value
+          type: number_integer
+          settings: {  }
+          group_column: value
+          group_columns: {  }
+          group_rows: true
+          delta_limit: 0
+          delta_offset: 0
+          delta_reversed: false
+          delta_first_last: false
+          multi_type: separator
+          separator: ','
+          field_api_classes: false
+          set_precision: false
+          precision: 0
+          decimal: .
+          format_plural: 0
+          format_plural_string: !!binary MQNAY291bnQ=
+          prefix: ''
+          suffix: ''
         open:
           id: open
           table: registration_entity
           field: open
-          relationship: registration_settings
+          relationship: node_registration_settings
           group_type: group
           admin_label: ''
           entity_type: registration_settings
@@ -209,7 +346,7 @@ display:
           id: close
           table: registration_entity
           field: close
-          relationship: registration_settings
+          relationship: node_registration_settings
           group_type: group
           admin_label: ''
           entity_type: registration_settings
@@ -271,144 +408,11 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-        send_reminder:
-          id: send_reminder
-          table: registration_entity
-          field: send_reminder
-          relationship: registration_settings
-          group_type: group
-          admin_label: ''
-          entity_type: registration_settings
-          entity_field: send_reminder
-          plugin_id: field
-          label: 'Send reminder'
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: boolean
-          settings:
-            format: yes-no
-            format_custom_false: ''
-            format_custom_true: ''
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        capacity:
-          id: capacity
-          table: registration_entity
-          field: capacity
-          relationship: registration_settings
-          group_type: group
-          admin_label: ''
-          entity_type: registration_settings
-          entity_field: capacity
-          plugin_id: field
-          label: Capacity
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: true
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: value
-          type: number_integer
-          settings:
-            thousand_separator: ''
-            prefix_suffix: true
-          group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
         settings_operations:
           id: settings_operations
           table: registration_entity
           field: settings_operations
-          relationship: registration_settings
+          relationship: node_registration_settings
           group_type: group
           admin_label: ''
           entity_type: registration_settings
@@ -562,7 +566,7 @@ display:
           id: status_1
           table: registration_entity
           field: status
-          relationship: registration_settings
+          relationship: node_registration_settings
           group_type: group
           admin_label: ''
           entity_type: registration_settings
@@ -613,6 +617,47 @@ display:
                 title: Disabled
                 operator: '='
                 value: '0'
+        state:
+          id: state
+          table: registration
+          field: state
+          relationship: node_registration
+          group_type: group
+          admin_label: ''
+          entity_type: registration
+          entity_field: state
+          plugin_id: string
+          operator: '='
+          value: complete
+          group: 1
+          exposed: false
+          expose:
+            operator_id: ''
+            label: ''
+            description: ''
+            use_operator: false
+            operator: ''
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: ''
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+            placeholder: ''
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
       filter_groups:
         operator: AND
         groups:
@@ -630,6 +675,7 @@ display:
             close: close
             send_reminder: send_reminder
             capacity: capacity
+            count: count
             settings_operations: settings_operations
           default: title
           info:
@@ -675,6 +721,13 @@ display:
               separator: ''
               empty_column: false
               responsive: ''
+            count:
+              sortable: true
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
             settings_operations:
               align: ''
               separator: ''
@@ -697,17 +750,28 @@ display:
           replica: false
           query_tags: {  }
       relationships:
-        registration_settings:
-          id: registration_settings
-          table: node_field_data
-          field: registration_settings
+        node_registration:
+          id: node_registration
+          table: node
+          field: node_registration
           relationship: none
           group_type: group
-          admin_label: 'registration settings'
+          admin_label: 'node registration'
           entity_type: node
-          plugin_id: node_registration_settings
+          plugin_id: registration
+          required: false
+        node_registration_settings:
+          id: node_registration_settings
+          table: node
+          field: node_registration_settings
+          relationship: none
+          group_type: group
+          admin_label: 'node registration settings'
+          entity_type: node
+          plugin_id: registration_settings
           required: true
       use_ajax: true
+      group_by: true
       header: {  }
       footer: {  }
       display_extenders: {  }
@@ -728,10 +792,10 @@ display:
     position: 1
     display_options:
       display_extenders: {  }
-      path: admin/people/registration-settings
+      path: admin/people/registration-summary
       menu:
         type: normal
-        title: 'Registration settings'
+        title: 'Registration summary'
         description: ''
         weight: 10
         expanded: false
