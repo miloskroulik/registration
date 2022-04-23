@@ -107,7 +107,7 @@ interface RegistrationManagerInterface {
   /**
    * Gets the entity types that have bundles with registration fields.
    *
-   * @return \Drupal\Core\EntityTypeInterface[]
+   * @return \Drupal\Core\Entity\EntityTypeInterface[]
    *   An array of entity type definitions indexed by machine name.
    */
   public function getRegistrationEnabledEntityTypes(): array;

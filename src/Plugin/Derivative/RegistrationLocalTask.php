@@ -3,7 +3,6 @@
 namespace Drupal\registration\Plugin\Derivative;
 
 use Drupal\Component\Plugin\Derivative\DeriverBase;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\registration\RegistrationManagerInterface;
@@ -17,13 +16,6 @@ class RegistrationLocalTask extends DeriverBase implements ContainerDeriverInter
   use StringTranslationTrait;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
    * The registration manager.
    *
    * @var \Drupal\registration\RegistrationManagerInterface
@@ -33,13 +25,10 @@ class RegistrationLocalTask extends DeriverBase implements ContainerDeriverInter
   /**
    * Creates a RegistrationLocalTask object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RegistrationManagerInterface $registration_manager) {
-    $this->entityTypeManager = $entity_type_manager;
+  public function __construct(RegistrationManagerInterface $registration_manager) {
     $this->registrationManager = $registration_manager;
   }
 
@@ -48,7 +37,6 @@ class RegistrationLocalTask extends DeriverBase implements ContainerDeriverInter
    */
   public static function create(ContainerInterface $container, $base_plugin_id): RegistrationLocalTask {
     return new static(
-      $container->get('entity_type.manager'),
       $container->get('registration.manager')
     );
   }
@@ -59,7 +47,7 @@ class RegistrationLocalTask extends DeriverBase implements ContainerDeriverInter
   public function getDerivativeDefinitions($base_plugin_definition): array {
     $this->derivatives = [];
 
-    foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
+    foreach ($this->registrationManager->getRegistrationEnabledEntityTypes() as $entity_type_id => $entity_type) {
       if ($this->registrationManager->getRoute($entity_type, 'manage')) {
         $this->derivatives["$entity_type_id.manage_registrations"] = [
           'route_name' => "entity.$entity_type_id.manage_registrations",

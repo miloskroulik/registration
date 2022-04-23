@@ -2,7 +2,6 @@
 
 namespace Drupal\registration\Routing;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
 use Drupal\registration\RegistrationManagerInterface;
@@ -16,13 +15,6 @@ use Symfony\Component\Routing\RouteCollection;
 class RouteSubscriber extends RouteSubscriberBase {
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
    * The registration manager.
    *
    * @var \Drupal\registration\RegistrationManagerInterface
@@ -32,13 +24,10 @@ class RouteSubscriber extends RouteSubscriberBase {
   /**
    * Creates a RouteSubscriber object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RegistrationManagerInterface $registration_manager) {
-    $this->entityTypeManager = $entity_type_manager;
+  public function __construct(RegistrationManagerInterface $registration_manager) {
     $this->registrationManager = $registration_manager;
   }
 
@@ -46,7 +35,7 @@ class RouteSubscriber extends RouteSubscriberBase {
    * {@inheritdoc}
    */
   protected function alterRoutes(RouteCollection $collection) {
-    foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
+    foreach ($this->registrationManager->getRegistrationEnabledEntityTypes() as $entity_type_id => $entity_type) {
       if ($route = $this->registrationManager->getRoute($entity_type, 'broadcast')) {
         $collection->add("entity.$entity_type_id.broadcast", $route);
       }
