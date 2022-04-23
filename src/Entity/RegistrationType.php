@@ -26,18 +26,14 @@ use Drupal\workflows\WorkflowInterface;
  *     "form" = {
  *       "add" = "Drupal\registration\Form\RegistrationTypeForm",
  *       "edit" = "Drupal\registration\Form\RegistrationTypeForm",
- *       "duplicate" = "Drupal\registration\Form\RegistrationTypeForm",
  *       "delete" = "Drupal\Core\Entity\EntityDeleteForm"
  *     },
- *     "local_task_provider" = {
- *       "default" = "Drupal\entity\Menu\DefaultEntityLocalTaskProvider",
- *     },
  *     "route_provider" = {
- *       "default" = "Drupal\entity\Routing\DefaultHtmlRouteProvider",
+ *       "default" = "Drupal\Core\Entity\Routing\DefaultHtmlRouteProvider",
  *     },
  *   },
  *   config_prefix = "registration_type",
- *   admin_permission = "administer registration_type",
+ *   admin_permission = "administer registration types",
  *   bundle_of = "registration",
  *   entity_keys = {
  *     "id" = "id",
@@ -54,7 +50,6 @@ use Drupal\workflows\WorkflowInterface;
  *   links = {
  *     "add-form" = "/admin/structure/registration-types/add",
  *     "edit-form" = "/admin/structure/registration-types/{registration_type}/edit",
- *     "duplicate-form" = "/admin/structure/registration-types/{registration_type}/duplicate",
  *     "delete-form" = "/admin/structure/registration-types/{registration_type}/delete",
  *     "collection" = "/admin/structure/registration-types"
  *   }

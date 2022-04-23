@@ -33,7 +33,6 @@ use Drupal\workflows\WorkflowInterface;
  *     "storage" = "Drupal\Core\Entity\Sql\SqlContentEntityStorage",
  *     "storage_schema" = "Drupal\registration\RegistrationStorageSchema",
  *     "access" = "Drupal\registration\RegistrationAccessControlHandler",
- *     "query_access" = "Drupal\entity\QueryAccess\QueryAccessHandler",
  *     "list_builder" = "Drupal\registration\RegistrationListBuilder",
  *     "views_data" = "Drupal\views\EntityViewsData",
  *     "form" = {
