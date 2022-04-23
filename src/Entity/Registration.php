@@ -32,9 +32,8 @@ use Drupal\workflows\WorkflowInterface;
  *     "event" = "Drupal\registration\Event\RegistrationEvent",
  *     "storage" = "Drupal\Core\Entity\Sql\SqlContentEntityStorage",
  *     "storage_schema" = "Drupal\registration\RegistrationStorageSchema",
- *     "access" = "Drupal\entity\EntityAccessControlHandler",
+ *     "access" = "Drupal\registration\RegistrationAccessControlHandler",
  *     "query_access" = "Drupal\entity\QueryAccess\QueryAccessHandler",
- *     "permission_provider" = "Drupal\entity\EntityPermissionProvider",
  *     "list_builder" = "Drupal\registration\RegistrationListBuilder",
  *     "views_data" = "Drupal\views\EntityViewsData",
  *     "form" = {

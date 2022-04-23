@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Controller;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\PagerSelectExtender;
@@ -123,7 +124,20 @@ class RegistrationController extends ControllerBase {
 
       // Fallback to data table.
       if (empty($build)) {
-        $build = $this->buildDataTable($host_entity, $settings);
+        $type = $this->registrationManager->getRegistrationTypeBundle($host_entity);
+        $access_result = AccessResult::allowedIfHasPermissions($this->currentUser(), [
+          "administer registration",
+          "view any registration",
+          "view any $type registration",
+        ], 'OR');
+
+        if ($access_result->isAllowed()) {
+          $build = $this->buildDataTable($host_entity, $settings);
+        }
+        else {
+          // The user cannot view registrations, so show a summary instead.
+          $build = $this->buildSummary($host_entity, $settings);
+        }
       }
 
       // Set cache directives so the form rebuilds when needed.
@@ -234,6 +248,7 @@ class RegistrationController extends ControllerBase {
     ]);
     $query->condition('r.entity_type_id', $host_entity->getEntityTypeId());
     $query->condition('r.entity_id', $host_entity->id());
+    $query->addTag('registration_access');
     $result = $query
       ->limit(20)
       ->orderByHeader($header)
@@ -292,6 +307,42 @@ class RegistrationController extends ControllerBase {
   }
 
   /**
+   * Builds the Manage Registrations data table as a simple summary.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   *   The host entity.
+   * @param \Drupal\registration\Entity\RegistrationSettings $settings
+   *   The registration settings entity.
+   *
+   * @return array
+   *   A render array as expected by drupal_render().
+   */
+  protected function buildSummary(EntityInterface $host_entity, RegistrationSettings $settings): array {
+    $capacity = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'capacity');
+    $spaces =  $this->registrationManager->getActiveRegistrationCount($host_entity, $settings);
+    if ($capacity) {
+      $caption = $this->formatPlural($capacity,
+       'Registration summary for %title: @spaces of 1 space is filled.',
+       'Registration summary for %title: @spaces of @count spaces are filled.', [
+        '%title' => $host_entity->label(),
+        '@capacity' => $capacity,
+        '@spaces' => $spaces,
+      ]);
+    }
+    else {
+      $caption = $this->formatPlural($spaces,
+       'Registration summary for %title: 1 space is filled.',
+       'Registration summary for %title: @count spaces are filled.', [
+        '%title' => $host_entity->label(),
+      ]);
+    }
+    $build['registration_table'] = [
+      '#markup' => $caption,
+    ];
+    return $build;
+  }
+
+  /**
    * Adds cache directives to the form.
    *
    * @param array $build
@@ -303,6 +354,9 @@ class RegistrationController extends ControllerBase {
     // Rebuild if the relevant entities are updated.
     $this->renderer->addCacheableDependency($build, $host_entity);
     $this->renderer->addCacheableDependency($build, $settings);
+
+    // Rebuild when permissions change.
+    $build['#cache']['contexts'][] = 'user.permissions';
 
     // Rebuild when registrations are added and deleted.
     // @todo Implement a custom tag specific to the list for one host entity.

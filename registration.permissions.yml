@@ -10,3 +10,6 @@ administer registration:
   title: 'Administer registrations'
   description: 'View, edit, delete and manage all registrations, regardless of type.'
   restrict access: true
+
+permission_callbacks:
+  - \Drupal\registration\RegistrationPermissionProvider::buildPermissions

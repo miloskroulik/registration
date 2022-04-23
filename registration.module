@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\user\UserInterface;
 use Drupal\field\Entity\FieldConfig;
@@ -107,6 +108,25 @@ function template_preprocess_registration(array &$variables) {
   foreach (Element::children($variables['elements']) as $key) {
     $variables['registration'][$key] = $variables['elements'][$key];
   }
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function registration_entity_operation(EntityInterface $entity) {
+  $operations = [];
+  if ($entity instanceof RegistrationInterface) {
+    // Add a View operation for registrations. This will be first, followed
+    // by the Edit and Delete operations (if the user has those permissions).
+    $operations['view'] = [
+      'title' => t('View'),
+      'url' => Url::fromRoute('entity.registration.canonical', [
+        'registration' => $entity->id(),
+      ]),
+      'weight' => -1,
+    ];
+  }
+  return $operations;
 }
 
 /**

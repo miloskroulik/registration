@@ -4,6 +4,7 @@ status: true
 dependencies:
   module:
     - registration
+    - user
 id: manage_registrations
 label: 'Manage registrations'
 module: views
@@ -200,9 +201,8 @@ display:
           empty_zero: false
           hide_alter_empty: true
           click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
+          type: author
+          settings: {  }
           group_column: target_id
           group_columns: {  }
           group_rows: true
@@ -265,9 +265,8 @@ display:
           empty_zero: false
           hide_alter_empty: true
           click_sort_column: target_id
-          type: entity_reference_label
-          settings:
-            link: true
+          type: author
+          settings: {  }
           group_column: target_id
           group_columns: {  }
           group_rows: true
@@ -559,8 +558,9 @@ display:
           sort_asc_label: Asc
           sort_desc_label: Desc
       access:
-        type: none
-        options: {  }
+        type: perm
+        options:
+          perm: 'administer registration'
       cache:
         type: tag
         options: {  }
@@ -809,6 +809,7 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
+        - user.permissions
       tags: {  }
   block_1:
     id: block_1
@@ -824,4 +825,5 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
+        - user.permissions
       tags: {  }

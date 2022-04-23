@@ -12,6 +12,10 @@ use Drupal\registration\RegistrationManagerInterface;
 
 /**
  * Checks access for the Register route.
+ *
+ * The Register route displays the Register form, which allows
+ * site visitors to create new registrations by registering
+ * for events or appropriately configured entity types.
  */
 class RegisterAccessCheck implements AccessInterface {
 
@@ -61,19 +65,24 @@ class RegisterAccessCheck implements AccessInterface {
     // Retrieve the host entity.
     $entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
 
-    // If the request has an entity with its registration field set,
-    // and the host entity has the enable registrations setting,
+    // If the request has a host entity with its registration field set,
+    // and the host entity has the enable registrations setting checked,
     // then allow access if the user has the appropriate permission.
     if ($entity && ($field = $this->registrationManager->getRegistrationField($entity))) {
       if ($type = $this->registrationManager->getRegistrationTypeBundle($entity)) {
         $storage = $this->entityTypeManager->getStorage('registration_settings');
         $settings = $storage->loadSettingsForEntity($entity);
-
         $status = (bool) $this->registrationManager->getRegistrationSetting($entity, $settings, 'status');
-
         if ($status) {
-          return AccessResult::allowedIfHasPermissions($account, ["create $type registration"])
+          // Registration is enabled for the host entity. Check if the account
+          // has create registration permissions for the registration type.
+          return $this->entityTypeManager
+            ->getAccessControlHandler('registration')
+            ->createAccess($type, $account, [], TRUE)
             // Recalculate this result if the relevant entities are updated.
+            // This is crucial so the Register tab and form can display for
+            // some users and host entities, and not for others.
+            ->cachePerPermissions()
             ->addCacheableDependency($entity)
             ->addCacheableDependency($settings)
             ->addCacheableDependency($field);
@@ -81,9 +90,12 @@ class RegisterAccessCheck implements AccessInterface {
       }
     }
 
-    // No entity or its registration field is set to disable registrations.
-    // Disable the route. This also hides the local task (tab) for the route.
-    $access_result = AccessResult::forbidden();
+    // No host entity available, or its registration field is disabling
+    // registrations. Return neutral so other modules can have a say in
+    // whether registration is allowed. Most likely no other module will
+    // allow the registration, so this will disable the route. This would
+    // in turn hide the Register tab within the host entity local tasks.
+    $access_result = AccessResult::neutral();
 
     // Recalculate this result if the relevant entities are updated.
     $access_result->cachePerPermissions();

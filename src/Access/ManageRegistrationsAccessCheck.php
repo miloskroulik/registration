@@ -50,7 +50,8 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
     if ($entity) {
       if ($type = $this->registrationManager->getRegistrationTypeBundle($entity)) {
         $access =
-             $account->hasPermission("administer $type registration")
+             $account->hasPermission("administer registration")
+          || $account->hasPermission("administer $type registration")
           || ($account->hasPermission("update own $type registration") && $entity->access('update', $account))
         ;
         return AccessResult::allowedIf($access)
@@ -60,9 +61,12 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
       }
     }
 
-    // No entity or its registration field is set to disable registrations.
-    // Disable the route. This also hides the local task (tab) for the route.
-    $access_result = AccessResult::forbidden();
+    // No entity available, or its registration field is set to disable
+    // registrations. Return neutral so other modules can have a say in
+    // whether registration is allowed. Most likely no other module will
+    // allow the registration, so this will disable the route. This would
+    // in turn hide the Register tab within the host entity local tasks.
+    $access_result = AccessResult::neutral();
 
     // Recalculate this result if the relevant entities are updated.
     $access_result->cachePerPermissions();
