@@ -627,8 +627,8 @@ display:
           entity_type: registration
           entity_field: state
           plugin_id: string
-          operator: '='
-          value: complete
+          operator: word
+          value: 'complete held'
           group: 1
           exposed: false
           expose:
