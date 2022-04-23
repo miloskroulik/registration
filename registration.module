@@ -115,7 +115,7 @@ function template_preprocess_registration(array &$variables) {
  */
 function registration_entity_operation(EntityInterface $entity) {
   $operations = [];
-  if ($entity instanceof RegistrationInterface) {
+  if (($entity instanceof RegistrationInterface) && $entity->access('view')) {
     // Add a View operation for registrations. This will be first, followed
     // by the Edit and Delete operations (if the user has those permissions).
     $operations['view'] = [

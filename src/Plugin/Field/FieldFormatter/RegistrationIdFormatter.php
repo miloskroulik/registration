@@ -31,9 +31,16 @@ class RegistrationIdFormatter extends FormatterBase {
 
     $entity = $items->getEntity();
     if ($entity instanceof RegistrationInterface) {
-      $elements[] = [
-        '#markup' => Link::fromTextAndUrl($entity->id(), $entity->toUrl())->toString(),
-      ];
+      if ($entity->access('view')) {
+        $elements[] = [
+          '#markup' => Link::fromTextAndUrl($entity->id(), $entity->toUrl())->toString(),
+        ];
+      }
+      else {
+        $elements[] = [
+          '#markup' => $entity->id(),
+        ];
+      }
     }
 
     return $elements;
