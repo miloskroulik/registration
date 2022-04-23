@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Form;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -259,6 +260,13 @@ class RegistrationSettingsForm extends FormBase {
         if (strtotime($values['reminder_date']) <= time()) {
           $form_state->setError($form['reminder']['reminder_date'], $this->t('Reminder must be in the future.'));
         }
+      }
+    }
+
+    // If a redirect is set must either be external or start with a slash.
+    if ($redirect = $values['settings']['confirmation_redirect']) {
+      if (!UrlHelper::isExternal($redirect) && ($redirect[0] != '/')) {
+        $form_state->setError($form['settings']['confirmation_redirect'], $this->t('Confirmation redirect path must be a valid URL. Internal paths must start with a forward slash.'));
       }
     }
   }

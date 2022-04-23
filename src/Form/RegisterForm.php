@@ -2,11 +2,14 @@
 
 namespace Drupal\registration\Form;
 
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\RegistrationManagerInterface;
@@ -339,13 +342,25 @@ class RegisterForm extends ContentEntityForm {
     // Redirect.
     $redirect = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'confirmation_redirect');
     if ($redirect) {
-      // Custom redirect in the settings. Must start with a slash to work.
-      if ($redirect[0] !== '/') {
-        $redirect = '/' . $redirect;
+      // Custom redirect in the settings.
+      // Check for external first.
+      if (UrlHelper::isExternal($redirect)) {
+        // To be considered external, the URL helper checks
+        // for dangerous protocols, so the redirect must be safe.
+        // Sanitize and use it.
+        $redirect = Html::escape($redirect);
+        $response = new TrustedRedirectResponse($redirect);
+        $form_state->setResponse($response);
       }
-      $form_state->setRedirectUrl(Url::fromUserInput($redirect));
+      else {
+        // Potentially unsafe URL. Try for an internal redirect.
+        $redirect = UrlHelper::stripDangerousProtocols($redirect);
+        $redirect = Html::escape($redirect);
+        $form_state->setRedirectUrl(Url::fromUserInput($redirect));
+      }
     }
     else {
+      // No redirect in the settings.
       $registration = $this->getEntity();
       if ($registration->access('view', $this->currentUser())) {
         // User has permission to view their registration.
@@ -353,6 +368,9 @@ class RegisterForm extends ContentEntityForm {
       }
       else {
         // Fallback to redirecting to the host entity.
+        // The user should have permission to view the host
+        // entity, otherwise it is unlikely they would be
+        // able to reach the register page for that entity.
         $form_state->setRedirectUrl($host_entity->toUrl());
       }
     }
