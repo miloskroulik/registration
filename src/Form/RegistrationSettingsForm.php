@@ -231,7 +231,7 @@ class RegistrationSettingsForm extends FormBase {
     $form['actions'] = ['#type' => 'actions'];
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Save settings'),
+      '#value' => $this->t('Save Settings'),
       '#button_type' => 'primary',
     ];
 
