@@ -5,20 +5,22 @@ namespace Drupal\registration\Plugin\Field\FieldFormatter;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Plugin implementation of the 'registration_type' formatter.
+ * Plugin implementation of the 'registration_link' formatter.
  *
  * @FieldFormatter(
- *   id = "registration_type",
- *   label = @Translation("Registration type"),
+ *   id = "registration_link",
+ *   label = @Translation("Registration link"),
  *   field_types = {
  *     "registration",
  *   }
  * )
  */
-class RegistrationTypeFormatter extends FormatterBase {
+class RegistrationLinkFormatter extends FormatterBase {
 
   /**
    * The entity type manager.
@@ -30,7 +32,7 @@ class RegistrationTypeFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): RegistrationTypeFormatter {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): RegistrationLinkFormatter {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->entityTypeManager = $container->get('entity_type.manager');
     return $instance;
@@ -46,9 +48,15 @@ class RegistrationTypeFormatter extends FormatterBase {
       if ($id) {
         $registration_type = $this->entityTypeManager->getStorage('registration_type')->load($id);
         if ($registration_type) {
-          $elements[] = [
-            '#markup' => $registration_type->label(),
-          ];
+          if ($host_entity = $items->getEntity()) {
+            $entity_type_id = $host_entity->getEntityTypeId();
+            $url = Url::fromRoute("entity.$entity_type_id.register", [
+              $entity_type_id => $host_entity->id(),
+            ]);
+            $elements[] = [
+              '#markup' => Link::fromTextAndUrl($registration_type->label(), $url)->toString(),
+            ];
+          }
         }
       }
     }
