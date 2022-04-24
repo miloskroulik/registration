@@ -209,14 +209,13 @@ function registration_entity_update(EntityInterface $entity) {
     }
   }
 
-  // If a form display for a registration field is updated, clear
-  // the local task plugin cache so local tasks (tabs) are rebuilt,
-  // in case the Hide Register Tab field setting may have changed.
+  // Rebuild routes and local tasks when Registration fields are updated.
   if ($entity instanceof EntityFormDisplay) {
-    $entity_types = \Drupal::entityTypeManager()->getDefinitions();
-    $entity_type = $entity_types[$entity->getTargetEntityTypeId()];
+    $entity_type_id = $entity->getTargetEntityTypeId();
+    $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
     if (\Drupal::service('registration.manager')->hasRegistrationField($entity_type)) {
       \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
+      \Drupal::service("router.builder")->rebuild();
     }
   }
 }

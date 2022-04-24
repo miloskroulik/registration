@@ -90,6 +90,23 @@ interface RegistrationManagerInterface {
   public function getFieldConfigSetting(EntityTypeInterface $entity_type, string $key): mixed;
 
   /**
+   * Gets the value of a setting from a registration field widget.
+   *
+   * The value is retrieved from the form display containing the widget.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field
+   *   The field definition for a registration field.
+   * @param string $key
+   *   The setting name, for example "hide_register_tab".
+   *
+   * @return mixed
+   *   The setting value. The data type depends on the key.
+   */
+  public function getFieldWidgetSetting(EntityTypeInterface $entity_type, FieldDefinitionInterface $field, string $key): mixed;
+
+  /**
    * Determines who can register when a registration is added or edited.
    *
    * @param \Drupal\registration\Entity\RegistrationInterface $registration

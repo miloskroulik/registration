@@ -93,6 +93,12 @@ class RegistrationTypeWidget extends WidgetBase {
       '#type' => 'item',
       '#markup' => $this->t('<strong>Default Registration Settings:</strong>'),
     ];
+    $element['status'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable'),
+      '#description' => $this->t('Check to enable registrations.'),
+      '#default_value' => $this->getSetting('status'),
+    ];
     $element['capacity'] = [
       '#type' => 'number',
       '#title' => $this->t('Capacity'),
@@ -182,6 +188,10 @@ class RegistrationTypeWidget extends WidgetBase {
       $summary[] = '';
     }
     $summary[] = $this->t('-- Default registration settings --');
+    $status = $this->getSetting('status');
+    if ($status) {
+      $summary[] = $this->t('Registration enabled');
+    }
     $capacity = $this->getSetting('capacity');
     if ($capacity == 0) {
       $capacity = $this->t('No limit');

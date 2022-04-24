@@ -306,6 +306,23 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   /**
    * {@inheritdoc}
    */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+
+    // Ensure registrations are backed by stored settings.
+    if (!$update) {
+      $storage = Drupal::entityTypeManager()->getStorage('registration_settings');
+      $settings = $storage->loadSettings($this->getHostEntityTypeId(), $this->getHostEntityId());
+      if ($settings->isNew()) {
+        $host_entity = $this->getHostEntity();
+        $settings->initFromConfig($host_entity)->save();
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {
     $fields = parent::baseFieldDefinitions($entity_type);
 

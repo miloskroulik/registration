@@ -264,6 +264,29 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function getFieldWidgetSetting(EntityTypeInterface $entity_type, FieldDefinitionInterface $field, string $key): mixed {
+    $entity_type_id = $entity_type->id();
+    $bundle = $field->getTargetBundle();
+
+    // Check default first, then other form modes that exist.
+    $form_modes = ['default' => ''];
+    $form_modes += $this->entityDisplayRepository->getFormModes($entity_type_id);
+    foreach(array_keys($form_modes) as $form_mode) {
+      $form_display = $this->entityDisplayRepository->getFormDisplay($entity_type_id, $bundle, $form_mode);
+      if ($form_display) {
+        $component = $form_display->getComponent($field->getName());
+        if (isset($component, $component['settings'], $component['settings'][$key])) {
+          return $component['settings'][$key];
+        }
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRegistrantOptions(RegistrationInterface $registration, RegistrationSettings $settings): array {
     $options = [];
 
@@ -696,41 +719,6 @@ class RegistrationManager implements RegistrationManagerInterface {
     }
 
     return $base_template;
-  }
-
-  /**
-   * Gets the value of a setting from a registration field widget.
-   *
-   * The value is retrieved from the form display containing the widget.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type.
-   * @param \Drupal\Core\Field\FieldDefinitionInterface $field
-   *   The field definition for a registration field.
-   * @param string $key
-   *   The setting name, for example "hide_register_tab".
-   *
-   * @return mixed
-   *   The setting value. The data type depends on the key.
-   */
-  protected function getFieldWidgetSetting(EntityTypeInterface $entity_type, FieldDefinitionInterface $field, string $key): mixed {
-    $entity_type_id = $entity_type->id();
-    $bundle = $field->getTargetBundle();
-
-    // Check default first, then other form modes that exist.
-    $form_modes = ['default' => ''];
-    $form_modes += $this->entityDisplayRepository->getFormModes($entity_type_id);
-    foreach(array_keys($form_modes) as $form_mode) {
-      $form_display = $this->entityDisplayRepository->getFormDisplay($entity_type_id, $bundle, $form_mode);
-      if ($form_display) {
-        $component = $form_display->getComponent($field->getName());
-        if (isset($component, $component['settings'], $component['settings'][$key])) {
-          return $component['settings'][$key];
-        }
-      }
-    }
-
-    return NULL;
   }
 
 }

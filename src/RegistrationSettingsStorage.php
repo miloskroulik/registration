@@ -12,6 +12,40 @@ use Drupal\registration\Entity\RegistrationSettings;
 class RegistrationSettingsStorage extends SqlContentEntityStorage {
 
   /**
+   * Load the settings entity for a given host entity using IDs.
+   *
+   * Creates one if settings do not exist yet.
+   *
+   * @param string $host_entity_type_id
+   *   The host entity type ID.
+   * @param int $host_entity_id
+   *   The host entity ID.
+   *
+   * @return \Drupal\registration\Entity\RegistrationSettings
+   *   The settings entity.
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function loadSettings(string $host_entity_type_id, int $host_entity_id): RegistrationSettings {
+    $values = [
+      'entity_type_id' => $host_entity_type_id,
+      'entity_id' => $host_entity_id,
+    ];
+
+    // Look for settings for the given host entity.
+    $settings = $this->loadByProperties($values);
+    if (empty($settings)) {
+      // Settings entity does not exist yet. Create it.
+      $settings_entity = $this->create($values);
+    }
+    else {
+      // The entity exists, return it.
+      $settings_entity = reset($settings);
+    }
+
+    return $settings_entity;
+  }
+
+  /**
    * Load the settings entity for a given host entity.
    *
    * Creates one if settings do not exist yet.
@@ -36,7 +70,6 @@ class RegistrationSettingsStorage extends SqlContentEntityStorage {
         'entity_type_id' => $host_entity->getEntityTypeId(),
         'entity_id' => $host_entity->id(),
       ]);
-      $settings_entity->save();
     }
     else {
       // The entity exists, return it.

@@ -2,7 +2,10 @@
 
 namespace Drupal\registration\Entity;
 
+use Drupal;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 
@@ -88,6 +91,31 @@ class RegistrationSettings extends ContentEntityBase {
   }
 
   /**
+   * Initialize main settings from field configuration.
+   *
+   * @return $this
+   *   The settings entity.
+   */
+  public function initFromConfig(EntityInterface $host_entity) {
+    $keys = [
+      'status',
+      'capacity',
+    ];
+
+    $entity_type_id = $host_entity->getEntityTypeId();
+    $entity_type = Drupal::entityTypeManager()->getDefinition($entity_type_id);
+    $registration_manager = Drupal::service('registration.manager');
+    $registration_field = $registration_manager->getRegistrationField($host_entity);
+
+    foreach ($keys as $key) {
+      $value = $registration_manager->getFieldWidgetSetting($entity_type, $registration_field, $key);
+      $this->set($key, $value);
+    }
+
+    return $this;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {
@@ -144,6 +172,25 @@ class RegistrationSettings extends ContentEntityBase {
       ->setRequired(TRUE);
 
     return $fields;
+  }
+
+  /**
+   * Invalidates an entity's cache tag upon save.
+   *
+   * @param bool $update
+   *   TRUE if the entity has been updated, or FALSE if it has been inserted.
+   */
+  protected function invalidateTagsOnSave($update) {
+    parent::invalidateTagsOnSave($update);
+
+    // Invalid the host entity cache tag when adding new settings.
+    // Needed to rebuild registration related elements. After this,
+    // the settings entity is included in cacheability so rebuilds
+    // will happen through the default cache handling.
+    if (!$update) {
+      $host_entity_tag = $this->getHostEntityTypeId() . ':' . $this->getHostEntityId();
+      Cache::invalidateTags([$host_entity_tag]);
+    }
   }
 
 }
