@@ -141,6 +141,12 @@ class RegistrationPermissionProvider implements ContainerInjectionInterface {
         ]),
         'description' => $this->t('Allow changing registration settings for entities which a user has edit access.'),
       ];
+      $permissions["edit $bundle_name $entity_type_id state"] = [
+        'title' => $this->t('@bundle: Edit @type state', [
+          '@bundle' => $bundle_info['label'],
+          '@type' => $singular_label,
+        ]),
+      ];
       $permissions["create $bundle_name $entity_type_id self"] = [
         'title' => $this->t('@bundle: Register self', [
           '@bundle' => $bundle_info['label'],
