@@ -294,6 +294,7 @@ class RegistrationSettingsForm extends FormBase {
         $entity->set($field, NULL);
       }
       elseif ($type == 'date') {
+        // Without \T the Views module cannot filter or sort properly.
         $entity->set($field, $values[$field]->format('Y-m-d\TH:i:s'));
       }
       else {
