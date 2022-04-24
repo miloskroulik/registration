@@ -42,7 +42,7 @@ use Drupal\workflows\WorkflowInterface;
  *       "register" = "Drupal\registration\Form\RegisterForm",
  *     },
  *     "route_provider" = {
- *       "default" = "Drupal\entity\Routing\AdminHtmlRouteProvider"
+ *       "default" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
  *     }
  *   },
  *   admin_permission = "administer registration",

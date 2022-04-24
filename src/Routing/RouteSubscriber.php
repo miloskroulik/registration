@@ -35,6 +35,13 @@ class RouteSubscriber extends RouteSubscriberBase {
    * {@inheritdoc}
    */
   protected function alterRoutes(RouteCollection $collection) {
+    // Update the registration canonical route to use the admin theme.
+    // Users without permission to use it fall back to the front end theme.
+    if ($route = $collection->get('entity.registration.canonical')) {
+      $route->setOption('_admin_route', TRUE);
+    }
+
+    // Add routes for managing registrations and registering.
     foreach ($this->registrationManager->getRegistrationEnabledEntityTypes() as $entity_type_id => $entity_type) {
       if ($route = $this->registrationManager->getRoute($entity_type, 'broadcast')) {
         $collection->add("entity.$entity_type_id.broadcast", $route);

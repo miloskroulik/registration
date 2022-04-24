@@ -630,6 +630,7 @@ class RegistrationManager implements RegistrationManagerInterface {
       ->addRequirements([
         '_manage_registrations_access_check' => 'TRUE',
       ])
+      ->setOption('_admin_route', TRUE)
       ->setOption('parameters', [
         $entity_type_id => ['type' => 'entity:' . $entity_type_id],
       ]);

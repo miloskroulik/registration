@@ -9,6 +9,7 @@ entity.registration.edit_form:
 registration.entities:
   class: \Drupal\Core\Menu\LocalTaskDefault
   deriver: \Drupal\registration\Plugin\Derivative\RegistrationLocalTask
+
 entity.registration_type.edit_form:
   route_name: entity.registration_type.edit_form
   base_route: entity.registration_type.edit_form
