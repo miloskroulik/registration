@@ -5,6 +5,7 @@ namespace Drupal\registration\Plugin\Field\FieldFormatter;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\registration\RegistrationManagerInterface;
@@ -50,6 +51,47 @@ class RegistrationLinkFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
+  public static function defaultSettings() {
+    $options = parent::defaultSettings();
+
+    $options['label'] = '';
+    return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state) {
+    $form = parent::settingsForm($form, $form_state);
+    $form['label'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Label'),
+      '#description' => $this->t("Optional label to use when displaying the registration title or link. Leave blank to use the parent event's label."),
+      '#default_value' => $this->getSetting('label'),
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = [];
+    if ($label = $this->getSetting('label')) {
+      $summary[] = $this->t('Registration label: @label', [
+        '@label' => $label,
+      ]);
+    }
+    else {
+      $summary[] = $this->t('Registration label: Parent label');
+    }
+    return $summary;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
     $cache_entities = [];
@@ -66,8 +108,9 @@ class RegistrationLinkFormatter extends FormatterBase {
               $url = Url::fromRoute("entity.$entity_type_id.register", [
                 $entity_type_id => $host_entity->id(),
               ]);
+              $label = $this->getSetting('label') ?: $registration_type->label();
               $elements[] = [
-                '#markup' => Link::fromTextAndUrl($registration_type->label(), $url)->toString(),
+                '#markup' => Link::fromTextAndUrl($label, $url)->toString(),
               ];
             }
           }
