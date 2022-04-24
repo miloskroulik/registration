@@ -65,7 +65,7 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
     // registrations. Return neutral so other modules can have a say in
     // whether registration is allowed. Most likely no other module will
     // allow the registration, so this will disable the route. This would
-    // in turn hide the Register tab within the host entity local tasks.
+    // in turn hide the Manage Registrations tab for the host entity.
     $access_result = AccessResult::neutral();
 
     // Recalculate this result if the relevant entities are updated.

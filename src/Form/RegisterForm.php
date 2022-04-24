@@ -7,7 +7,6 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Renderer;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
@@ -36,20 +35,12 @@ class RegisterForm extends ContentEntityForm {
   protected RegistrationManagerInterface $registrationManager;
 
   /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\Renderer
-   */
-  protected Renderer $renderer;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): RegisterForm {
     $instance = parent::create($container);
     $instance->dateFormatter = $container->get('date.formatter');
     $instance->registrationManager = $container->get('registration.manager');
-    $instance->renderer = $container->get('renderer');
     return $instance;
   }
 
@@ -419,6 +410,7 @@ class RegisterForm extends ContentEntityForm {
 
     $host_entity = $form_state->get('host_entity');
     $settings = $form_state->get('settings');
+    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->getEntity();
     $count = $registration->getSpacesReserved();
     if ($this->registrationManager->isEnabledForRegistration($host_entity, $settings, $count, $registration)) {
@@ -452,20 +444,7 @@ class RegisterForm extends ContentEntityForm {
     $host_entity = $form_state->get('host_entity');
     $settings = $form_state->get('settings');
 
-    // Rebuild this form if the relevant entities are updated.
-    $this->renderer->addCacheableDependency($form, $host_entity);
-    $this->renderer->addCacheableDependency($form, $settings);
-
-    // Rebuild this form when registrations are added and deleted.
-    $form['#cache']['tags'][] = 'registration_list';
-
-    // Rebuild this form per user or anonymous session.
-    if ($this->currentUser()->isAnonymous()) {
-      $form['#cache']['contexts'][] = 'session';
-    }
-    else {
-      $form['#cache']['contexts'][] = 'user.permissions';
-    }
+    $this->registrationManager->addCacheableDependencies($form, $host_entity, [$settings]);
   }
 
   /**

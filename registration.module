@@ -199,7 +199,7 @@ function registration_entity_update(EntityInterface $entity) {
       $query->condition('r.user_uid', $entity->id());
       $result = $query->execute()->fetchCol();
 
-      // @todo use a queue if there are too many to update at once.
+      // @todo Use a queue if there are too many to update at once.
       $storage = \Drupal::entityTypeManager()->getStorage('registration');
       $registrations = $storage->loadMultiple($result);
       foreach ($registrations as $registration) {

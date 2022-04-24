@@ -41,9 +41,11 @@ class ManageRegistrationsCaption extends AreaPluginBase {
             '%title' => $host_entity->label(),
           ]);
         }
-        return [
+        $build = [
           '#markup' => $caption,
         ];
+        $registration_manager->addCacheableDependencies($build, $host_entity, [$settings]);
+        return $build;
       }
     }
     return [];

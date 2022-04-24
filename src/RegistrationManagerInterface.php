@@ -18,6 +18,19 @@ use Symfony\Component\Routing\Route;
 interface RegistrationManagerInterface {
 
   /**
+   * Adds cache information to a render array for a given host entity.
+   *
+   * This allows it to rebuild for different users and when settings change.
+   * Used by registration forms and registration related field formatters.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   *   The host entity.
+   * @param \Drupal\Core\Entity\EntityInterface[] $other_entities
+   *   (optional) Other entities that should be added as dependencies.
+   */
+  public function addCacheableDependencies(array &$build, EntityInterface $host_entity, array $other_entities = []);
+
+  /**
    * Gets the total number of active registrations for the given host entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity
@@ -93,6 +106,8 @@ interface RegistrationManagerInterface {
 
   /**
    * Gets the total number of registrations for the given host entity.
+   *
+   * Note that this is the number of registrations, not the spaces reserved.
    *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity
    *   The host entity.

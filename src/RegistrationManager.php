@@ -13,6 +13,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Render\Renderer;
 use Drupal\Core\Routing\RouteProvider;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
@@ -82,6 +83,13 @@ class RegistrationManager implements RegistrationManagerInterface {
   protected ModuleHandlerInterface $moduleHandler;
 
   /**
+   * The renderer.
+   *
+   * @var \Drupal\Core\Render\Renderer
+   */
+  protected Renderer $renderer;
+
+  /**
    * The route provider.
    *
    * @var \Drupal\Core\Routing\RouteProvider
@@ -105,10 +113,12 @@ class RegistrationManager implements RegistrationManagerInterface {
    *   The entity type bundle info.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\Core\Render\Renderer $renderer
+   *   The renderer.
    * @param \Drupal\Core\Routing\RouteProvider $route_provider
    *   The route provider.
    */
-  public function __construct(AccountProxy $current_user, Connection $database, EntityDisplayRepositoryInterface $entity_display_repository, EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RouteProvider $route_provider) {
+  public function __construct(AccountProxy $current_user, Connection $database, EntityDisplayRepositoryInterface $entity_display_repository, EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, Renderer $renderer, RouteProvider $route_provider) {
     $this->currentUser = $current_user;
     $this->database = $database;
     $this->entityDisplayRepository = $entity_display_repository;
@@ -116,7 +126,35 @@ class RegistrationManager implements RegistrationManagerInterface {
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
+    $this->renderer = $renderer;
     $this->routeProvider = $route_provider;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addCacheableDependencies(array &$build, EntityInterface $host_entity, array $other_entities = []) {
+    // Rebuild if the host entity is updated.
+    $this->renderer->addCacheableDependency($build, $host_entity);
+
+    // Rebuild if other entities are updated.
+    foreach ($other_entities as $entity) {
+      if (isset($entity)) {
+        $this->renderer->addCacheableDependency($build, $entity);
+      }
+    }
+
+    // Rebuild when registrations are added and deleted.
+    // @todo Make this more granular.
+    $build['#cache']['tags'][] = 'registration_list';
+
+    // Rebuild per user or anonymous session.
+    if ($this->currentUser->isAnonymous()) {
+      $build['#cache']['contexts'][] = 'session';
+    }
+    else {
+      $build['#cache']['contexts'][] = 'user.permissions';
+    }
   }
 
   /**

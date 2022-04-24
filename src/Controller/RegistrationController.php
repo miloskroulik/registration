@@ -99,14 +99,16 @@ class RegistrationController extends ControllerBase {
    */
   public function manageRegistrations(Request $request): array {
     $build = [];
+    $cache_entities = [];
     if ($host_entity = $this->registrationManager->getEntityFromParameters($request->attributes)) {
       $settings = $this->registrationManager->getSettingsForHost($host_entity);
+      $cache_entities[] = $settings;
 
       // Use the built-in manage registrations view if available.
-      $view = NULL;
       if ($this->moduleHandler()->moduleExists('views')) {
         if ($view = $this->entityTypeManager()->getStorage('view')->load('manage_registrations')) {
           $display = 'block_1';
+          $cache_entities[] = $view;
           if ($view->getExecutable()->access($display)) {
             $build = [
               '#type' => 'view',
@@ -141,12 +143,11 @@ class RegistrationController extends ControllerBase {
       }
 
       // Set cache directives so the form rebuilds when needed.
-      $this->addCacheableDependencies($build, $host_entity, $settings);
-
-      // If the view was retrieved, rebuild when it is updated.
-      if ($view) {
-        $this->renderer->addCacheableDependency($build, $view);
-      }
+      $this->registrationManager->addCacheableDependencies(
+        $build,
+        $host_entity,
+        $cache_entities
+      );
     }
 
     return $build;
@@ -340,27 +341,6 @@ class RegistrationController extends ControllerBase {
       '#markup' => $caption,
     ];
     return $build;
-  }
-
-  /**
-   * Adds cache directives to the form.
-   *
-   * @param array $build
-   *   The render array for the table.
-   * @param \Drupal\registration\Entity\RegistrationSettings $settings
-   *   The registration settings.
-   */
-  protected function addCacheableDependencies(array &$build, EntityInterface $host_entity, RegistrationSettings $settings) {
-    // Rebuild if the relevant entities are updated.
-    $this->renderer->addCacheableDependency($build, $host_entity);
-    $this->renderer->addCacheableDependency($build, $settings);
-
-    // Rebuild when permissions change.
-    $build['#cache']['contexts'][] = 'user.permissions';
-
-    // Rebuild when registrations are added and deleted.
-    // @todo Implement a custom tag specific to the list for one host entity.
-    $build['#cache']['tags'][] = 'registration_list';
   }
 
   /**
