@@ -137,7 +137,7 @@ function registration_entity_insert(EntityInterface $entity) {
   if ($entity instanceof FieldConfig) {
     if ($entity->getType() == 'registration') {
       \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
-      \Drupal::service("router.builder")->rebuild();
+      \Drupal::service("router.builder")->setRebuildNeeded();
     }
   }
 }
@@ -160,15 +160,13 @@ function registration_entity_delete(EntityInterface $entity) {
   if ($entity instanceof FieldConfig) {
     if ($entity->getType() == 'registration') {
       \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
-      \Drupal::service("router.builder")->rebuild();
+      \Drupal::service("router.builder")->setRebuildNeeded();
     }
   }
 }
 
 /**
  * Implements hook_entity_presave().
- *
- * @see registration_entity_update().
  */
 function registration_entity_presave(EntityInterface $entity) {
   // This is done here instead of the preSave class method to
@@ -191,33 +189,13 @@ function registration_entity_presave(EntityInterface $entity) {
  * Implements hook_entity_update().
  */
 function registration_entity_update(EntityInterface $entity) {
-  // Update registrations if a user changes their email.
-  // The email address field is computed and saved for
-  // use in filtering and sorting in various listings.
-  if (($entity instanceof UserInterface) && isset($entity->original)) {
-    if ($entity->getEmail() != $entity->original->getEmail()) {
-      $query = \Drupal::database()->select('registration', 'r');
-      $query->addField('r', 'registration_id');
-      $query->condition('r.user_uid', $entity->id());
-      $result = $query->execute()->fetchCol();
-
-      // @todo Use a queue if there are too many to update at once.
-      $storage = \Drupal::entityTypeManager()->getStorage('registration');
-      $registrations = $storage->loadMultiple($result);
-      foreach ($registrations as $registration) {
-        // This updates the email address and clears cache.
-        $registration->save();
-      }
-    }
-  }
-
   // Rebuild routes and local tasks when Registration fields are updated.
   if ($entity instanceof EntityFormDisplay) {
     $entity_type_id = $entity->getTargetEntityTypeId();
     $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
     if (\Drupal::service('registration.manager')->hasRegistrationField($entity_type)) {
       \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
-      \Drupal::service("router.builder")->rebuild();
+      \Drupal::service("router.builder")->setRebuildNeeded();
     }
   }
 }

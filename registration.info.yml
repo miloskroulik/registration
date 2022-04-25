@@ -6,5 +6,6 @@ core_version_requirement: ^8.9 || ^9
 configure: entity.registration_type.collection
 dependencies:
   - drupal:datetime
+  - drupal:field
   - drupal:user
   - drupal:workflows
