@@ -9,6 +9,7 @@
  * Implements hook_views_data().
  */
 function registration_views_data() {
+  // Make views aware of custom area plugins.
   $data['views']['manage_registrations_caption'] = [
     'title' => t('Manage registrations caption'),
     'help' => t('Displays a caption for the Manage Registrations listing.'),
@@ -30,9 +31,15 @@ function registration_views_data() {
  * Implements hook_views_data_alter().
  */
 function registration_views_data_alter(array &$data) {
+  // Most registration fields are handled automatically by setting a
+  // views_data class in the entity annotation. Derive additional data
+  // for relationships. These are added one per registration enabled
+  // entity type, since there is a different base table for each.
   foreach (\Drupal::service('registration.manager')->getRegistrationEnabledEntityTypes() as $entity_type) {
     $id = $entity_type->id();
     $base_table = $entity_type->getBaseTable();
+
+    // Add a relationship from a host entity type to registrations.
     $data[$base_table][$base_table . '_registration'] = [
       'title' => t('@type registration', [
         '@type' => $entity_type->getLabel(),
@@ -46,6 +53,7 @@ function registration_views_data_alter(array &$data) {
         'base' => 'registration',
       ],
     ];
+    // Add a relationship from a host entity type to registration settings.
     $data[$base_table][$base_table . '_registration_settings'] = [
       'title' => t('@type registration settings', [
         '@type' => $entity_type->getLabel(),
@@ -60,6 +68,8 @@ function registration_views_data_alter(array &$data) {
       ],
     ];
   }
+
+  // Make views aware of custom field plugins.
   $data['registration']['host_entity'] = [
     'title' => t('Host entity'),
     'group' => t('Registration'),
