@@ -70,13 +70,6 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   use EntityChangedTrait;
 
   /**
-   * The host entity.
-   *
-   * @var \Drupal\Core\Entity\EntityInterface
-   */
-  protected EntityInterface $hostEntity;
-
-  /**
    * {@inheritdoc}
    */
   public function label(): string {
@@ -135,13 +128,10 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
    * {@inheritdoc}
    */
   public function getHostEntity(): ?EntityInterface {
-    if (!isset($this->hostEntity)) {
-      if (($entity_id = $this->getHostEntityId()) && ($entity_type_id = $this->getHostEntityTypeId())) {
-        $storage = Drupal::entityTypeManager()->getStorage($entity_type_id);
-        $this->hostEntity = $storage->load($entity_id);
-      }
+    if (!$this->get('host_entity')->isEmpty()) {
+      return $this->get('host_entity')->first()->entity;
     }
-    return $this->hostEntity;
+    return NULL;
   }
 
   /**
@@ -341,6 +331,12 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setLabel(t('Entity ID'))
       ->setDescription(t('The ID of the entity this registration is attached to.'))
       ->setSetting('unsigned', TRUE);
+
+    $fields['host_entity'] = BaseFieldDefinition::create('registration_host_entity')
+      ->setLabel(t('Host entity'))
+      ->setDescription(t('The host entity for the registration.'))
+      ->setComputed(TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['anon_mail'] = BaseFieldDefinition::create('email')
       ->setLabel(t('Email'))

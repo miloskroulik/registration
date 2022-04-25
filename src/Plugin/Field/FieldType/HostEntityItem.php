@@ -1,0 +1,104 @@
+<?php
+
+namespace Drupal\registration\Plugin\Field\FieldType;
+
+use Drupal\Core\Field\FieldItemBase;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\TypedData\DataReferenceDefinition;
+
+/**
+ * Plugin implementation of the 'registration_host_entity' field type.
+ *
+ * This is a computed field used for rendering links to host entities.
+ *
+ * @FieldType(
+ *   id = "registration_host_entity",
+ *   label = @Translation("Host entity"),
+ *   description = @Translation("Display a host entity for a registration."),
+ *   category = @Translation("Entity registration"),
+ *   default_formatter = "registration_host_entity",
+ *   cardinality = 1,
+ *   no_ui = TRUE,
+ *   list_class = "\Drupal\registration\Plugin\Field\HostEntityFieldItemList",
+ * )
+ */
+class HostEntityItem extends FieldItemBase {
+
+  /**
+   * Whether or not the value has been calculated.
+   *
+   * @var bool
+   */
+  protected bool $isCalculated = FALSE;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition): array {
+    // The host entity is the entity that a registration is for. For example,
+    // when registering for an event, the host entity is often an event node.
+    // Since registrations can be for entities of any type, a custom computed
+    // field must be used instead of a computed entity reference field, since
+    // entity reference fields require a specific target type known in advance.
+    $properties['entity'] = DataReferenceDefinition::create('entity')
+      ->setLabel(new TranslatableMarkup('Host entity'))
+      ->setDescription(new TranslatableMarkup('The referenced entity'))
+      ->setComputed(TRUE)
+      ->setReadOnly(FALSE);
+
+    return $properties;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function schema(FieldStorageDefinitionInterface $field_definition): array {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __get($name) {
+    $this->ensureCalculated();
+    return parent::__get($name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getValue() {
+    $this->ensureCalculated();
+    return parent::getValue();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEmpty(): bool {
+    $this->ensureCalculated();
+    $value = $this->get('entity')->getValue();
+    return ($value === NULL) || ($value === '');
+  }
+
+  /**
+   * Calculates the value of the field and sets it.
+   */
+  protected function ensureCalculated() {
+    if (!$this->isCalculated) {
+      /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+      $registration = $this->getEntity();
+      try {
+        $entity_id = $registration->getHostEntityId();
+        $entity_type_id = $registration->getHostEntityTypeId();
+        $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
+        $this->set('entity', $storage->load($entity_id));
+      }
+      catch (\Exception $e) {
+      }
+      $this->isCalculated = TRUE;
+    }
+  }
+
+}
