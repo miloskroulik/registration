@@ -100,7 +100,7 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    * If the entity type has bundles, the bundle label is returned instead.
    *
    * @return string
-   *   The host entity type or bundle label, for example "Article".
+   *   The host entity type or bundle label, for example "Event".
    */
   public function getHostEntityTypeLabel(): ?string;
 
