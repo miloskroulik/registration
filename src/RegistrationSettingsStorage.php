@@ -23,7 +23,6 @@ class RegistrationSettingsStorage extends SqlContentEntityStorage {
    *
    * @return \Drupal\registration\Entity\RegistrationSettings
    *   The settings entity.
-   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function loadSettings(string $host_entity_type_id, int $host_entity_id): RegistrationSettings {
     $values = [
@@ -55,21 +54,18 @@ class RegistrationSettingsStorage extends SqlContentEntityStorage {
    *
    * @return \Drupal\registration\Entity\RegistrationSettings
    *   The settings entity.
-   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function loadSettingsForEntity(EntityInterface $host_entity): RegistrationSettings {
-    // Look for settings for the given host entity.
-    $settings = $this->loadByProperties([
+    $values = [
       'entity_type_id' => $host_entity->getEntityTypeId(),
       'entity_id' => $host_entity->id(),
-    ]);
+    ];
 
+    // Look for settings for the given host entity.
+    $settings = $this->loadByProperties($values);
     if (empty($settings)) {
       // Settings entity does not exist yet. Create it.
-      $settings_entity = $this->create([
-        'entity_type_id' => $host_entity->getEntityTypeId(),
-        'entity_id' => $host_entity->id(),
-      ]);
+      $settings_entity = $this->create($values);
     }
     else {
       // The entity exists, return it.
