@@ -4,80 +4,20 @@ namespace Drupal\registration\Form;
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\registration\RegistrationManagerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\registration\Entity\RegistrationSettings;
 
 /**
  * Defines the registration settings form.
  */
-class RegistrationSettingsForm extends FormBase {
+class RegistrationSettingsForm extends RegistrationFormBase {
 
   /**
-   * The entity.
+   * The settings entity being added or changed.
    *
-   * @var \Drupal\Core\Entity\EntityInterface
+   * @var \Drupal\registration\Entity\RegistrationSettings
    */
-  protected EntityInterface $entity;
-
-  /**
-   * The host entity.
-   *
-   * @var \Drupal\Core\Entity\EntityInterface
-   */
-  protected EntityInterface $hostEntity;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected ModuleHandlerInterface $moduleHandler;
-
-  /**
-   * The registration manager.
-   *
-   * @var \Drupal\registration\RegistrationManagerInterface
-   */
-  protected RegistrationManagerInterface $registrationManager;
-
-  /**
-   * Creates a RegistrationLocalTask object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
-   *   The registration manager.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RegistrationManagerInterface $registration_manager) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->moduleHandler = $module_handler;
-    $this->registrationManager = $registration_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container): RegistrationSettingsForm {
-    return new static(
-      $container->get('entity_type.manager'),
-      $container->get('module_handler'),
-      $container->get('registration.manager')
-    );
-  }
+  protected RegistrationSettings $settings;
 
   /**
    * {@inheritdoc}
@@ -90,15 +30,15 @@ class RegistrationSettingsForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state): array {
-    $this->setHostEntity();
-    $this->setEntity();
+    $this->getHostEntity($form_state);
+    $this->setSettings($form_state);
 
     $form = [];
     $form['status'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable'),
       '#description' => $this->t('Check to enable registrations.'),
-      '#default_value' => $this->getRegistrationSetting('status'),
+      '#default_value' => $this->getRegistrationSetting($form_state, 'status'),
     ];
     $form['capacity'] = [
       '#type' => 'number',
@@ -107,14 +47,14 @@ class RegistrationSettingsForm extends FormBase {
       '#min' => 0,
       '#max' => 99999,
       '#required' => TRUE,
-      '#default_value' => $this->getRegistrationSetting('capacity'),
+      '#default_value' => $this->getRegistrationSetting($form_state, 'capacity'),
     ];
 
     $form['scheduling'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Scheduling'),
     ];
-    $date = $this->getRegistrationSetting('open');
+    $date = $this->getRegistrationSetting($form_state, 'open');
     $default_value = $date ? DrupalDateTime::createFromTimestamp(strtotime($date)) : '';
     $form['scheduling']['open'] = [
       '#type' => 'datetime',
@@ -124,7 +64,7 @@ class RegistrationSettingsForm extends FormBase {
       ]),
       '#default_value' => $default_value,
     ];
-    $date = $this->getRegistrationSetting('close');
+    $date = $this->getRegistrationSetting($form_state, 'close');
     $default_value = $date ? DrupalDateTime::createFromTimestamp(strtotime($date)) : '';
     $form['scheduling']['close'] = [
       '#type' => 'datetime',
@@ -144,9 +84,9 @@ class RegistrationSettingsForm extends FormBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Send Reminder'),
       '#description' => $this->t('If checked, a reminder will be sent to registrants on the following date.'),
-      '#default_value' => (bool) $this->getRegistrationSetting('send_reminder'),
+      '#default_value' => (bool) $this->getRegistrationSetting($form_state, 'send_reminder'),
     ];
-    $date = $this->getRegistrationSetting('reminder_date');
+    $date = $this->getRegistrationSetting($form_state, 'reminder_date');
     $default_value = $date ? DrupalDateTime::createFromTimestamp(strtotime($date)) : '';
     $form['reminder']['reminder_date'] = [
       '#type' => 'datetime',
@@ -158,7 +98,7 @@ class RegistrationSettingsForm extends FormBase {
     ];
     $default_value = '';
     $default_format = filter_default_format();
-    $template = $this->getRegistrationSetting('reminder_template');
+    $template = $this->getRegistrationSetting($form_state, 'reminder_template');
     if (!empty($template)) {
       if (is_string($template)) {
         $template = unserialize($template);
@@ -176,8 +116,9 @@ class RegistrationSettingsForm extends FormBase {
       $form['reminder']['reminder_template']['token_tree'] = [
         '#theme' => 'token_tree_link',
         '#token_types' => [
-          $this->getHostEntity()->getEntityTypeId(),
+          $this->getHostEntity($form_state)->getEntityTypeId(),
           'registration',
+          'registration_settings',
         ],
         '#global_types' => FALSE,
       ];
@@ -196,19 +137,19 @@ class RegistrationSettingsForm extends FormBase {
       '#max' => 9999,
       '#required' => TRUE,
       '#description' => $this->t('The maximum number of spaces allowed for each registrations. For no limit, use 0. (Default is 1)'),
-      '#default_value' => $this->getRegistrationSetting('maximum_spaces'),
+      '#default_value' => $this->getRegistrationSetting($form_state, 'maximum_spaces'),
     ];
     $form['settings']['multiple_registrations'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Allow multiple registrations'),
       '#description' => $this->t('If selected, each person can create multiple registrations for this event.'),
-      '#default_value' => $this->getRegistrationSetting('multiple_registrations'),
+      '#default_value' => $this->getRegistrationSetting($form_state, 'multiple_registrations'),
     ];
     $form['settings']['from_address'] = [
       '#type' => 'textfield',
       '#title' => $this->t('From Address'),
       '#description' => $this->t('From email address to use for confirmations, reminders, and broadcast emails.'),
-      '#default_value' => $this->getRegistrationSetting('from_address'),
+      '#default_value' => $this->getRegistrationSetting($form_state, 'from_address'),
       '#required' => TRUE,
     ];
     $form['settings']['confirmation'] = [
@@ -217,7 +158,7 @@ class RegistrationSettingsForm extends FormBase {
       '#description' => $this->t('The message to display when someone registers. Leave blank for none.'),
       '#size' => 60,
       '#maxlength' => 120,
-      '#default_value' => $this->getRegistrationSetting('confirmation'),
+      '#default_value' => $this->getRegistrationSetting($form_state, 'confirmation'),
     ];
     $form['settings']['confirmation_redirect'] = [
       '#type' => 'textfield',
@@ -225,7 +166,7 @@ class RegistrationSettingsForm extends FormBase {
       '#description' => $this->t('Optional path to redirect to when someone registers. Leave blank to redirect to the registration itself if the user has permission or the host entity if they do not.'),
       '#size' => 60,
       '#maxlength' => 120,
-      '#default_value' => $this->getRegistrationSetting('confirmation_redirect'),
+      '#default_value' => $this->getRegistrationSetting($form_state, 'confirmation_redirect'),
     ];
 
     $form['actions'] = ['#type' => 'actions'];
@@ -276,7 +217,7 @@ class RegistrationSettingsForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Save values to the settings entity.
-    $entity = $this->getEntity();
+    $entity = $this->getSettings();
     $values = $form_state->getValues();
     $fields = [
       'status' => 'int',
@@ -317,53 +258,43 @@ class RegistrationSettingsForm extends FormBase {
   }
 
   /**
-   * Gets the settings entity.
+   * Gets the settings for a host entity.
    *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   The settings entity.
+   * @return \Drupal\registration\Entity\RegistrationSettings
+   *   The settings.
    */
-  protected function getEntity(): EntityInterface {
-    return $this->entity;
+  protected function getSettings(): RegistrationSettings {
+    return $this->settings;
   }
 
   /**
-   * Sets the settings entity.
+   * Gets the settings for a host entity.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    */
-  protected function setEntity() {
+  protected function setSettings(FormStateInterface $form_state) {
+    $host_entity = $this->getHostEntity($form_state);
+    /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
     $storage = $this->entityTypeManager->getStorage('registration_settings');
-    $this->entity = $storage->loadSettingsForEntity($this->getHostEntity());
-
-  }
-
-  /**
-   * Gets the host entity.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   The host entity, for example, a node.
-   */
-  protected function getHostEntity(): EntityInterface {
-    return $this->hostEntity;
-  }
-
-  /**
-   * Sets the host entity.
-   */
-  protected function setHostEntity() {
-    $route_match = $this->getRouteMatch();
-    $this->hostEntity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
+    $this->settings = $storage->loadSettingsForEntity($host_entity);
   }
 
   /**
    * Returns the setting value for a given key.
    *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    * @param string $key
    *   The key.
    *
    * @return mixed
    *   The setting value.
    */
-  protected function getRegistrationSetting(string $key): mixed {
-    return $this->registrationManager->getRegistrationSetting($this->getHostEntity(), $this->getEntity(), $key);
+  protected function getRegistrationSetting(FormStateInterface $form_state, string $key): mixed {
+    $host_entity = $this->getHostEntity($form_state);
+    $settings = $this->getSettings();
+    return $this->registrationManager->getRegistrationSetting($host_entity, $settings, $key);
   }
 
 }
