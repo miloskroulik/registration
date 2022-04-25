@@ -121,6 +121,7 @@ class RegistrationSettingsForm extends RegistrationFormBase {
           'registration_settings',
         ],
         '#global_types' => FALSE,
+        '#weight' => 10,
       ];
     }
 
