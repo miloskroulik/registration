@@ -71,7 +71,7 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
   public function getEmail(): string;
 
   /**
-   * Gets the host entity that the registration is for.
+   * Gets the host entity.
    *
    * @return \Drupal\Core\Entity\EntityInterface|null
    *   The host entity, if available.
@@ -79,7 +79,7 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
   public function getHostEntity(): ?EntityInterface;
 
   /**
-   * Gets the entity ID of the host entity that the registration is for.
+   * Gets the entity ID of the host entity.
    *
    * @return int
    *   The host entity ID.
@@ -87,12 +87,22 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
   public function getHostEntityId(): int;
 
   /**
-   * Gets the entity type ID of the host entity that the registration is for.
+   * Gets the entity type ID of the host entity.
    *
    * @return string
    *   The host entity type ID, for example "node".
    */
   public function getHostEntityTypeId(): string;
+
+  /**
+   * Gets the entity type label of the host entity.
+   *
+   * If the entity type has bundles, the bundle label is returned instead.
+   *
+   * @return string
+   *   The host entity type or bundle label, for example "Article".
+   */
+  public function getHostEntityTypeLabel(): ?string;
 
   /**
    * Gets the registrant type relative to the given account.
@@ -106,7 +116,7 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    * Gets the number of spaces reserved by the registration.
    *
    * @return int
-   *   The number of spaces.  Defaults to 1 for a new registration.
+   *   The number of spaces. Defaults to 1 for a new registration.
    */
   public function getSpacesReserved(): int;
 
@@ -114,7 +124,7 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    * Gets the registration type.
    *
    * @return \Drupal\registration\Entity\RegistrationTypeInterface
-   *   The workflow.
+   *   The registration type.
    */
   public function getType(): RegistrationTypeInterface;
 

@@ -46,6 +46,13 @@ function template_preprocess_registration(array &$variables) {
   foreach (Element::children($variables['elements']) as $key) {
     $variables['registration'][$key] = $variables['elements'][$key];
   }
+  // Override label for host entity.
+  $entity = $variables['registration']['host_entity']['#object'];
+  if ($entity instanceof RegistrationInterface) {
+    if ($label = $entity->getHostEntityTypeLabel()) {
+      $variables['registration']['host_entity']['#title'] = $label;
+    }
+  }
 }
 
 /**

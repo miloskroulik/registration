@@ -7,6 +7,7 @@ use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityMalformedException;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Session\AccountInterface;
@@ -30,7 +31,7 @@ use Drupal\workflows\WorkflowInterface;
  *   bundle_label = @Translation("Registration type"),
  *   handlers = {
  *     "event" = "Drupal\registration\Event\RegistrationEvent",
- *     "storage" = "Drupal\Core\Entity\Sql\SqlContentEntityStorage",
+ *     "storage" = "Drupal\registration\RegistrationStorage",
  *     "storage_schema" = "Drupal\registration\RegistrationStorageSchema",
  *     "access" = "Drupal\registration\RegistrationAccessControlHandler",
  *     "list_builder" = "Drupal\registration\RegistrationListBuilder",
@@ -157,6 +158,25 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   /**
    * {@inheritdoc}
    */
+  public function getHostEntityTypeLabel(): ?string {
+    if ($host_entity = $this->getHostEntity()) {
+      $entity_type = $host_entity->getEntityType();
+      if ($bundle_type = $entity_type->getBundleEntityType()) {
+        return Drupal::entityTypeManager()
+          ->getStorage($bundle_type)
+          ->load($host_entity->bundle())
+          ->label();
+      }
+      else {
+        return $entity_type->getLabel();
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRegistrantType(AccountInterface $account): ?string {
     $reg_type = NULL;
     if ($account->id() && ($account->id() == $this->getUserId())) {
@@ -262,6 +282,13 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
    */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
+
+    // Ensure host entity fields are set.
+    foreach (['entity_type_id', 'entity_id'] as $field) {
+      if ($this->get($field)->isEmpty()) {
+        throw new EntityMalformedException(sprintf('Required registration field "%s" is empty.', $field));
+      }
+    }
 
     // Author default.
     if ($this->get('author_uid')->isEmpty()) {
