@@ -167,6 +167,8 @@ function registration_entity_delete(EntityInterface $entity) {
 
 /**
  * Implements hook_entity_presave().
+ *
+ * @see registration_entity_update().
  */
 function registration_entity_presave(EntityInterface $entity) {
   // This is done here instead of the preSave class method to
