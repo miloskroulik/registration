@@ -81,15 +81,15 @@ class RegistrationMailer implements RegistrationMailerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getEmailRecipientList(EntityInterface $host_entity, RegistrationSettings $settings, array $data = []): array {
+  public function getEmailRecipientList(EntityInterface $host_entity, array $data = []): array {
     if (!empty($data['test'])) {
       $registrations = [$this->registrationManager->generateSampleRegistration($host_entity)];
     }
     elseif (!empty($data['states'])) {
-      $registrations = $this->registrationManager->getRegistrationList($host_entity, $settings, $data['states']);
+      $registrations = $this->registrationManager->getRegistrationList($host_entity, $data['states']);
     }
     else {
-      $registrations = $this->registrationManager->getRegistrationList($host_entity, $settings);
+      $registrations = $this->registrationManager->getRegistrationList($host_entity);
     }
 
     // The list is built as an associative array, indexed by email address.
@@ -118,6 +118,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
     }
 
     // @todo Call the event here.
+    // Use settings.
     return $recipients;
   }
 
@@ -138,11 +139,12 @@ class RegistrationMailer implements RegistrationMailerInterface {
   /**
    * {@inheritdoc}
    */
-  public function sendMail(EntityInterface $host_entity, RegistrationSettings $settings, array $data = []) {
+  public function sendMail(EntityInterface $host_entity, array $data = []) {
+    $settings = $this->registrationManager->getSettingsForHost($host_entity);
     $langcode = $this->currentUser->getPreferredLangcode();
     $send = TRUE;
 
-    $registrants =  $this->getEmailRecipientList($host_entity, $settings, $data);
+    $registrants =  $this->getEmailRecipientList($host_entity, $data);
     foreach ($registrants as $email => $registrations) {
       // Convert singleton to array.
       if ($registrations instanceof RegistrationInterface) {

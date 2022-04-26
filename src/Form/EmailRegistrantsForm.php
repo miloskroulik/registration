@@ -53,7 +53,7 @@ class EmailRegistrantsForm extends RegistrationFormBase {
     // Setup.
     $host_entity = $this->getHostEntity($form_state);
     $settings = $this->getSettings($form_state);
-    $registrants =  $this->registrationMailer->getEmailRecipientList($host_entity, $settings);
+    $registrants =  $this->registrationMailer->getEmailRecipientList($host_entity);
     $registrant_count =  count($registrants);
 
     $form = [];
@@ -182,8 +182,7 @@ class EmailRegistrantsForm extends RegistrationFormBase {
     if ($triggering_element['#id'] == 'edit-submit') {
       // The Send button was submitted. Fire off the emails.
       $host_entity = $this->getHostEntity($form_state);
-      $settings = $this->getSettings($form_state);
-      $this->registrationMailer->sendMail($host_entity, $settings, $values);
+      $this->registrationMailer->sendMail($host_entity, $values);
       $this->messenger()->addStatus($this->t('The emails have been sent.'));
 
       $entity_id = $host_entity->id();

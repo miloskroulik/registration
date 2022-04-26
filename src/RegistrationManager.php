@@ -168,13 +168,15 @@ class RegistrationManager implements RegistrationManagerInterface {
       'user_uid' => $this->currentUser->id(),
       'count' => 1,
     ];
-    return $this->entityTypeManager->getStorage('registration')->create($values);
+    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+    $registration = $this->entityTypeManager->getStorage('registration')->create($values);
+    return $registration;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getActiveRegistrationCount(EntityInterface $host_entity, RegistrationSettings $settings, RegistrationInterface $registration = NULL): int {
+  public function getActiveSpacesReserved(EntityInterface $host_entity, RegistrationInterface $registration = NULL): int {
     $states = [];
 
     if ($registration_type = $this->getRegistrationType($host_entity)) {
@@ -204,7 +206,7 @@ class RegistrationManager implements RegistrationManagerInterface {
     $context = [
       'host_entity' => $host_entity,
       'registration' => $registration,
-      'settings' => $settings,
+      'settings' => $this->getSettingsForHost($host_entity),
       'states' => $states,
       'sum' => TRUE,
     ];
@@ -339,7 +341,7 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrationCount(EntityInterface $host_entity, RegistrationSettings $settings): int {
+  public function getRegistrationCount(EntityInterface $host_entity): int {
     $query = $this->database->select('registration')
       ->condition('entity_id', $host_entity->id())
       ->condition('entity_type_id', $host_entity->getEntityTypeId());
@@ -350,7 +352,7 @@ class RegistrationManager implements RegistrationManagerInterface {
     $context = [
       'host_entity' => $host_entity,
       'registration' => NULL,
-      'settings' => $settings,
+      'settings' => $this->getSettingsForHost($host_entity),
       'states' => [],
       'sum' => FALSE,
     ];
@@ -392,7 +394,7 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrationList(EntityInterface $host_entity, RegistrationSettings $settings, array $states = []): array {
+  public function getRegistrationList(EntityInterface $host_entity, array $states = []): array {
     if (!empty($states)) {
       $registrations = $this->entityTypeManager->getStorage('registration')->loadByProperties([
         'entity_type_id' => $host_entity->getEntityTypeId(),
@@ -407,6 +409,7 @@ class RegistrationManager implements RegistrationManagerInterface {
       ]);
     }
     // @todo Call an event so other modules can add to this list?
+    // Use settings in this event.
     return $registrations;
   }
 
@@ -545,23 +548,23 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function hasRoom(EntityInterface $host_entity, RegistrationSettings $settings, int $spaces = 1, RegistrationInterface $registration = NULL): bool {
-
+  public function hasRoom(EntityInterface $host_entity, int $spaces = 1, RegistrationInterface $registration = NULL): bool {
+    $settings = $this->getSettingsForHost($host_entity);
     $capacity = $this->getRegistrationSetting($host_entity, $settings, 'capacity');
     if ($capacity) {
-      $count = $this->getActiveRegistrationCount($host_entity, $settings, $registration) + $spaces;
+      $count = $this->getActiveSpacesReserved($host_entity, $registration) + $spaces;
       if (($capacity - $count) < 0) {
         return FALSE;
       }
     }
-
     return TRUE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function isEnabledForRegistration(EntityInterface $host_entity, RegistrationSettings $settings, int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool {
+  public function isEnabledForRegistration(EntityInterface $host_entity, int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool {
+    $settings = $this->getSettingsForHost($host_entity);
     $status = $this->getRegistrationSetting($host_entity, $settings, 'status');
     $open = $this->getRegistrationSetting($host_entity, $settings, 'open');
     $close = $this->getRegistrationSetting($host_entity, $settings, 'close');
@@ -579,7 +582,7 @@ class RegistrationManager implements RegistrationManagerInterface {
       }
 
       // Check capacity.
-      if (!$this->hasRoom($host_entity, $settings, $spaces, $registration)) {
+      if (!$this->hasRoom($host_entity, $spaces, $registration)) {
         $status = FALSE;
         $errors[] = $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
           '%label' => $host_entity->label(),

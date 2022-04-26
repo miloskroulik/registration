@@ -6,7 +6,6 @@ use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\registration\Form\RegisterForm;
 use Drupal\registration\RegistrationManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -69,7 +68,7 @@ class RegistrationFormFormatter extends FormatterBase {
           $registration_type = $this->entityTypeManager->getStorage('registration_type')->load($id);
           if ($registration_type) {
             $cache_entities[] = $registration_type;
-            if ($this->registrationManager->isEnabledForRegistration($host_entity, $settings)) {
+            if ($this->registrationManager->isEnabledForRegistration($host_entity)) {
               $registration = $this->entityTypeManager->getStorage('registration')->create([
                 'entity_type_id' => $host_entity->getEntityTypeId(),
                 'entity_id' => $host_entity->id(),

@@ -61,7 +61,7 @@ class RegisterForm extends ContentEntityForm {
     $host_entity = $form_state->get('host_entity');
     $settings = $form_state->get('settings');
     $count = $registration->getSpacesReserved();
-    if (!$this->registrationManager->isEnabledForRegistration($host_entity, $settings, $count, $registration)) {
+    if (!$this->registrationManager->isEnabledForRegistration($host_entity, $count, $registration)) {
       $form['notice'] = [
         '#markup' => $this->t('Sorry, registrations are no longer available for %name', [
           '%name' => $host_entity->label(),
@@ -148,7 +148,7 @@ class RegisterForm extends ContentEntityForm {
     if (!empty($form['count'])) {
       $capacity = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'capacity');
       $limit = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'maximum_spaces');
-      $remaining = $capacity - $this->registrationManager->getActiveRegistrationCount($host_entity, $settings, $registration);
+      $remaining = $capacity - $this->registrationManager->getActiveSpacesReserved($host_entity, $registration);
       $max = 99999;
 
       // Plural format is not needed since the field is hidden
@@ -209,7 +209,7 @@ class RegisterForm extends ContentEntityForm {
 
     // If an admin is editing an existing registration use the advanced form.
     if (!$registration->isNew() && $admin_theme) {
-      $this->useAdvancedForm($form, $form_state);
+      $this->useAdvancedForm($form);
     }
 
     return $form;
@@ -236,7 +236,7 @@ class RegisterForm extends ContentEntityForm {
     // Test status on new registrations.
     if ($registration->isNew()) {
       $errors = [];
-      if (!$this->registrationManager->isEnabledForRegistration($host_entity, $settings, $spaces, $registration, $errors)) {
+      if (!$this->registrationManager->isEnabledForRegistration($host_entity, $spaces, $registration, $errors)) {
         foreach ($errors as $error) {
           $form_state->setError($form, $error);
         }
@@ -244,7 +244,7 @@ class RegisterForm extends ContentEntityForm {
     }
     // Only check capacity for existing registrations that are active.
     elseif ($registration->isActive()) {
-      if (!$this->registrationManager->hasRoom($host_entity, $settings, $spaces, $registration)) {
+      if (!$this->registrationManager->hasRoom($host_entity, $spaces, $registration)) {
         $form_state->setError($form, $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
           '%label' => $$host_entity->label(),
         ]));
@@ -409,11 +409,10 @@ class RegisterForm extends ContentEntityForm {
     $actions = [];
 
     $host_entity = $form_state->get('host_entity');
-    $settings = $form_state->get('settings');
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->getEntity();
     $count = $registration->getSpacesReserved();
-    if ($this->registrationManager->isEnabledForRegistration($host_entity, $settings, $count, $registration)) {
+    if ($this->registrationManager->isEnabledForRegistration($host_entity, $count, $registration)) {
       // Override the button label for the Save button.
       $actions = parent::actions($form, $form_state);
       $actions['submit']['#value'] = $this->t('Save Registration');
@@ -455,7 +454,6 @@ class RegisterForm extends ContentEntityForm {
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   protected function setEntities(FormStateInterface $form_state) {
     $host_entity = $form_state->get('host_entity');
@@ -483,10 +481,9 @@ class RegisterForm extends ContentEntityForm {
    *
    * @param array $form
    *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    */
-  protected function useAdvancedForm(array &$form, FormStateInterface $form_state): array {
+  protected function useAdvancedForm(array &$form): array {
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->entity;
 

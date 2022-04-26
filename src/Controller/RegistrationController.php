@@ -169,7 +169,7 @@ class RegistrationController extends ControllerBase {
    */
   protected function buildDataTable(EntityInterface $host_entity, RegistrationSettings $settings): array {
     $capacity = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'capacity');
-    $spaces =  $this->registrationManager->getActiveRegistrationCount($host_entity, $settings);
+    $spaces =  $this->registrationManager->getActiveSpacesReserved($host_entity);
     if ($capacity) {
       $caption = $this->formatPlural($capacity,
        'List of registrations for %title. @spaces of 1 space is filled.',
@@ -321,7 +321,7 @@ class RegistrationController extends ControllerBase {
    */
   protected function buildSummary(EntityInterface $host_entity, RegistrationSettings $settings): array {
     $capacity = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'capacity');
-    $spaces =  $this->registrationManager->getActiveRegistrationCount($host_entity, $settings);
+    $spaces =  $this->registrationManager->getActiveSpacesReserved($host_entity);
     if ($capacity) {
       $caption = $this->formatPlural($capacity,
        'Registration summary for %title: @spaces of 1 space is filled.',

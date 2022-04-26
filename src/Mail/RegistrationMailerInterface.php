@@ -16,8 +16,6 @@ interface RegistrationMailerInterface {
    *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity
    *   The host entity.
-   * @param \Drupal\registration\Entity\RegistrationSettings $settings
-   *   The registration settings entity.
    * @param array $data
    *   (optional)
    *   Contextual data with information about the usage of the list.
@@ -52,7 +50,7 @@ interface RegistrationMailerInterface {
    *   but tokens related to registrations will be removed from the message
    *   instead of being replaced.
    */
-  public function getEmailRecipientList(EntityInterface $host_entity, RegistrationSettings $settings, array $data = []): array;
+  public function getEmailRecipientList(EntityInterface $host_entity, array $data = []): array;
 
   /**
    * Replaces tokens in a string and puts the result into a render element.
@@ -77,11 +75,9 @@ interface RegistrationMailerInterface {
    *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity
    *   The host entity.
-   * @param \Drupal\registration\Entity\RegistrationSettings $settings
-   *   The registration settings entity.
    * @param array $data
-   *   (optional) Data as documented above.
+   *   (optional) Data as documented for function getEmailRecipientList().
    */
-  public function sendMail(EntityInterface $host_entity, RegistrationSettings $settings, array $data = []);
+  public function sendMail(EntityInterface $host_entity, array $data = []);
 
 }

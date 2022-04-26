@@ -51,7 +51,7 @@ class RegistrationLinkFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
-  public static function defaultSettings() {
+  public static function defaultSettings(): array {
     $options = parent::defaultSettings();
 
     $options['label'] = '';
@@ -61,7 +61,7 @@ class RegistrationLinkFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
+  public function settingsForm(array $form, FormStateInterface $form_state): array {
     $form = parent::settingsForm($form, $form_state);
     $form['label'] = [
       '#type' => 'textfield',
@@ -76,7 +76,7 @@ class RegistrationLinkFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
-  public function settingsSummary() {
+  public function settingsSummary(): array {
     $summary = [];
     if ($label = $this->getSetting('label')) {
       $summary[] = $this->t('Registration label: @label', [
@@ -103,7 +103,7 @@ class RegistrationLinkFormatter extends FormatterBase {
           $registration_type = $this->entityTypeManager->getStorage('registration_type')->load($id);
           if ($registration_type) {
             $cache_entities[] = $registration_type;
-            if ($this->registrationManager->isEnabledForRegistration($host_entity, $settings)) {
+            if ($this->registrationManager->isEnabledForRegistration($host_entity)) {
               $entity_type_id = $host_entity->getEntityTypeId();
               $url = Url::fromRoute("entity.$entity_type_id.register", [
                 $entity_type_id => $host_entity->id(),
