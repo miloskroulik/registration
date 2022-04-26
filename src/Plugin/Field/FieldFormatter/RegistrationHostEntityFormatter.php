@@ -10,6 +10,10 @@ use Drupal\Core\Form\FormStateInterface;
 /**
  * Plugin implementation of the 'registration_host_entity' formatter.
  *
+ * An adaptation of the core entity reference formatter.
+ * Only for use with a computed host entity item field.
+ * See the comments in the HostEntityItem class for more information.
+ *
  * @FieldFormatter(
  *   id = "registration_host_entity",
  *   label = @Translation("Host entity"),
@@ -18,6 +22,9 @@ use Drupal\Core\Form\FormStateInterface;
  *     "registration_host_entity"
  *   }
  * )
+ *
+ * @see \Drupal\registration\Plugin\Field\FieldType\HostEntityItem
+ * @see \Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceLabelFormatter
  */
 class RegistrationHostEntityFormatter extends FormatterBase {
 
