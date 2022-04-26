@@ -215,7 +215,7 @@ interface RegistrationManagerInterface {
   public function getRegistrationType(EntityInterface $host_entity): ?RegistrationTypeInterface;
 
   /**
-   * Gets the value of the registration field for a host entity.
+   * Gets the value of the registration type field for a host entity.
    *
    * This is a Registration Type bundle machine name.
    *

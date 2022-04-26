@@ -189,6 +189,7 @@ class EmailRegistrantsForm extends RegistrationFormBase {
       $entity_id = $host_entity->id();
       $entity_type_id = $host_entity->getEntityTypeId();
 
+      // Redirect to the Manage Registrations tab for the host entity.
       $url = Url::fromRoute("entity.$entity_type_id.manage_registrations", [
         $entity_type_id => $entity_id,
       ]);

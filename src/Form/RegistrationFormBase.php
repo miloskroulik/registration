@@ -37,7 +37,7 @@ abstract class RegistrationFormBase extends FormBase {
   protected RegistrationManagerInterface $registrationManager;
 
   /**
-   * Creates a RegistrationLocalTask object.
+   * Creates a Registration Form object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.

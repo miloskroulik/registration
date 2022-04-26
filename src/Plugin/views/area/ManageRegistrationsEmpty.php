@@ -6,7 +6,7 @@ use Drupal;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
 
 /**
- * Defines a caption area handler.
+ * Defines an area used when there are no registrations to manage.
  *
  * @ingroup views_area_handlers
  *
