@@ -31,6 +31,20 @@ interface RegistrationManagerInterface {
   public function addCacheableDependencies(array &$build, EntityInterface $host_entity, array $other_entities = []);
 
   /**
+   * Generates a sample registration for use in tests and email preview.
+   *
+   * The registration is created but not saved, so it is ephemeral unless
+   * the caller subequently saves it. Saving it is not recommended.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   *   The host entity.
+   *
+   * @return \Drupal\registration\Entity\RegistrationInterface
+   *   The generate registration.
+   */
+  public function generateSampleRegistration(EntityInterface $host_entity): RegistrationInterface;
+
+  /**
    * Gets the total number of active registrations for the given host entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity
@@ -154,6 +168,22 @@ interface RegistrationManagerInterface {
    *   The field definition, if available.
    */
   public function getRegistrationField(EntityInterface $host_entity): ?FieldDefinitionInterface;
+
+  /**
+   * Gets the list of registrations for the given host entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   *   The host entity.
+   * @param \Drupal\registration\Entity\RegistrationSettings $settings
+   *   The registration settings entity.
+   * @param array $states
+   *   (optional) An array of state IDs to filter on.
+   *   For example: ['completed', 'held']
+   *
+   * @return \Drupal\registration\Entity\Registration[]
+   *   The list of registrations.
+   */
+  public function getRegistrationList(EntityInterface $host_entity, RegistrationSettings $settings, array $states = []): array;
 
   /**
    * Gets the value of a registration setting for a host entity.

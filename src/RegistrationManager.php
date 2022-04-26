@@ -160,6 +160,20 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function generateSampleRegistration(EntityInterface $host_entity): RegistrationInterface {
+    $values = [
+      'entity_type_id' => $host_entity->getEntityTypeId(),
+      'entity_id' => $host_entity->id(),
+      'type' => $this->getRegistrationTypeBundle($host_entity),
+      'user_uid' => $this->currentUser->id(),
+      'count' => 1,
+    ];
+    return $this->entityTypeManager->getStorage('registration')->create($values);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getActiveRegistrationCount(EntityInterface $host_entity, RegistrationSettings $settings, RegistrationInterface $registration = NULL): int {
     $states = [];
 
@@ -373,6 +387,27 @@ class RegistrationManager implements RegistrationManagerInterface {
       }
     }
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRegistrationList(EntityInterface $host_entity, RegistrationSettings $settings, array $states = []): array {
+    if (!empty($states)) {
+      $registrations = $this->entityTypeManager->getStorage('registration')->loadByProperties([
+        'entity_type_id' => $host_entity->getEntityTypeId(),
+        'entity_id' => $host_entity->id(),
+        'state' => $states,
+      ]);
+    }
+    else {
+      $registrations = $this->entityTypeManager->getStorage('registration')->loadByProperties([
+        'entity_type_id' => $host_entity->getEntityTypeId(),
+        'entity_id' => $host_entity->id(),
+      ]);
+    }
+    // @todo Call an event so other modules can add to this list?
+    return $registrations;
   }
 
   /**

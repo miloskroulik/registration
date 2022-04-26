@@ -255,6 +255,7 @@ class RegistrationController extends ControllerBase {
       ->orderByHeader($header)
       ->execute();
 
+    // @todo Call an event handler so the list can be modified?
     foreach ($result as $record) {
       /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
       $registration = $registration_storage->load($record->registration_id);
