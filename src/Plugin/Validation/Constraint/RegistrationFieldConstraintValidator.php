@@ -4,6 +4,7 @@ namespace Drupal\registration\Plugin\Validation\Constraint;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\FieldDefinitionListenerInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\registration\RegistrationManagerInterface;
@@ -24,6 +25,13 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
+   * The field definition listener.
+   *
+   * @var \Drupal\Core\Field\FieldDefinitionListenerInterface
+   */
+  protected FieldDefinitionListenerInterface $fieldDefinitionListener;
+
+  /**
    * The registration manager.
    *
    * @var \Drupal\registration\RegistrationManagerInterface
@@ -35,11 +43,14 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
+   * @param \Drupal\Core\Field\FieldDefinitionListenerInterface $field_definition_listener
+   *   The entity field manager.
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RegistrationManagerInterface $registration_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, FieldDefinitionListenerInterface $field_definition_listener, RegistrationManagerInterface $registration_manager) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->fieldDefinitionListener = $field_definition_listener;
     $this->registrationManager = $registration_manager;
   }
 
@@ -49,6 +60,7 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('entity_type.manager'),
+      $container->get('field_definition.listener'),
       $container->get('registration.manager')
     );
   }
@@ -65,8 +77,22 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
         $entity_type_id = $field_config->get('entity_type');
         $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
         if ($this->registrationManager->hasRegistrationField($entity_type, $bundle)) {
-          // Must be cardinality 1. Prevent adding a second.
+          // Prevent adding a second registration field to the same bundle.
           $this->context->addViolation($constraint->disallowedCardinalityMessage);
+
+          // Unfortunately Field UI has already updated the field map,
+          // so that needs to be reversed. Otherwise the field is still
+          // associated with the entity type and bundle, and any cache
+          // rebuilds will throw "non-existent config" errors in the log.
+          // Therefore back out the field definition using its listener.
+          // @see https://www.drupal.org/project/drupal/issues/2916266
+          $this->fieldDefinitionListener->onFieldDefinitionDelete($field_config);
+
+          // Also remove the storage if it no longer has any fields.
+          $storage_definition = $field_config->getFieldStorageDefinition();
+          if ($storage_definition->isDeletable()) {
+            $storage_definition->delete();
+          }
         }
       }
     }
