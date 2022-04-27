@@ -22,7 +22,7 @@ class RegistrationFieldConstraint extends Constraint {
   public string $disallowedCardinalityMessage = 'An entity can only have one registration field.';
 
   /**
-   * If the user tries to add a regisration field to the registration entity type.
+   * If the user tries to add a registration field to the registration entity type.
    *
    * @var string
    */
@@ -30,6 +30,9 @@ class RegistrationFieldConstraint extends Constraint {
 
   /**
    * If the target entity type does not have an "id" key in its annotation.
+   *
+   * The "id" key is required for views relationships to work for registations.
+   * It would be highly unusual if a content entity type did not have one.
    *
    * @var string
    */
