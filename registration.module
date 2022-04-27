@@ -12,6 +12,19 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+
+/**
+ * Implements hook_entity_type_alter().
+ *
+ * @param array $entity_types
+ */
+function registration_entity_type_alter(array &$entity_types) {
+  // Add validation constraints to the field config entity types.
+  // This prevents more than registration field on a bundle, etc.
+  $entity_types['field_config']->addConstraint('registration_field');
+  $entity_types['field_storage_config']->addConstraint('registration_field');
+}
 
 /**
  * Implements hook_theme().
@@ -116,13 +129,20 @@ function registration_entity_delete(EntityInterface $entity) {
  * Implements hook_entity_presave().
  */
 function registration_entity_presave(EntityInterface $entity) {
-  // This is done here instead of the preSave class method to
-  // avoid updating the changed time if the only change to the
-  // entity is the result of a user changing their email address.
-  // This hook runs after the ChangedItem field presave hook,
-  // which updates the changed time if field changes are detected.
+  // Validate new registration fields since Field UI skips constraints.
+  if ($entity->isNew()) {
+    if (($entity instanceof FieldConfig) || ($entity instanceof FieldStorageConfig)) {
+      $violations = $entity->getTypedData()->validate();
+      // Field UI catches axceptions thrown and displays the error to the user.
+      foreach ($violations as $violation) {
+        /** @var \Symfony\Component\Validator\ConstraintViolationInterface $violation */
+        throw new \InvalidArgumentException($violation->getMessage());
+      }
+    }
+  }
+
+  // Always recompute email address since it is derived from other fields.
   if ($entity instanceof RegistrationInterface) {
-    // Always recompute email address since it is derived from other fields.
     if ($user = $entity->getUser()) {
       $entity->set('mail', $user->getEmail());
     }

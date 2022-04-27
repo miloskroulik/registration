@@ -110,7 +110,7 @@ class RegistrationManager implements RegistrationManagerInterface {
    * @param \Drupal\Core\Entity\EntityTypeBundleInfo $entity_type_bundle_info
    *   The entity type bundle info.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type bundle info.
+   *   The entity type manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    * @param \Drupal\Core\Render\Renderer $renderer
@@ -529,15 +529,17 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function hasRegistrationField(EntityTypeInterface $entity_type): bool {
+  public function hasRegistrationField(EntityTypeInterface $entity_type, $bundle = NULL): bool {
     if ($entity_type->entityClassImplements(FieldableEntityInterface::class)) {
       $entity_type_id = $entity_type->id();
       $bundle_info = $this->entityTypeBundleInfo->getBundleInfo($entity_type_id);
-      foreach ($bundle_info as $bundle => $info) {
-        $fields = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
+      foreach ($bundle_info as $type => $info) {
+        $fields = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $type);
         foreach ($fields as $field) {
           if ($field->getType() == 'registration') {
-            return TRUE;
+            if (is_null($bundle) || ($type == $bundle)) {
+              return TRUE;
+            }
           }
         }
       }

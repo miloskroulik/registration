@@ -36,7 +36,7 @@ interface RegistrationManagerInterface {
    * Generates a sample registration for use in tests and email preview.
    *
    * The registration is created but not saved, so it is ephemeral unless
-   * the caller subequently saves it. Saving it is not recommended.
+   * the caller subsequently saves it. Saving it is not recommended.
    *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity
    *   The host entity.
@@ -256,13 +256,19 @@ interface RegistrationManagerInterface {
   /**
    * Determines if an entity type has a bundle with a registration field.
    *
+   * If a bundle name is also passed, then the specific bundle is checked.
+   *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type.
+   *   The entity type, for example "node".
+   * @param string|null $bundle
+   *   (optional) A bundle machine name, for example "event".
    *
    * @return bool
-   *   TRUE if the entity type has a bundle with a registration field.
+   *   TRUE if the entity type has a bundle with a registration field,
+   *   FALSE otherwise. If a bundle name is also provided, then TRUE
+   *   is only returned if the specific bundle has a registration field.
    */
-  public function hasRegistrationField(EntityTypeInterface $entity_type): bool;
+  public function hasRegistrationField(EntityTypeInterface $entity_type, string $bundle = NULL): bool;
 
   /**
    * Determines if a host entity has spaces remaining.
