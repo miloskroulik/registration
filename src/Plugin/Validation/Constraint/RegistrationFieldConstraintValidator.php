@@ -77,7 +77,7 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
         $entity_type_id = $field_config->get('entity_type');
         $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
         if ($this->registrationManager->hasRegistrationField($entity_type, $bundle)) {
-          // Prevent adding a second registration field to the same bundle.
+          // Cannot add a second registration field to the same bundle.
           $this->context->addViolation($constraint->disallowedCardinalityMessage);
 
           // Unfortunately Field UI has already updated the field map,
