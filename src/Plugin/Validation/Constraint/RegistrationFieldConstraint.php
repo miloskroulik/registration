@@ -5,7 +5,7 @@ namespace Drupal\registration\Plugin\Validation\Constraint;
 use Symfony\Component\Validator\Constraint;
 
 /**
- * Checks if a value represents a valid oEmbed resource URL.
+ * Checks new registration fields for errors.
  *
  * @Constraint(
  *   id = "registration_field",
