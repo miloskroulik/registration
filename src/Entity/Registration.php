@@ -31,7 +31,7 @@ use Drupal\workflows\WorkflowInterface;
  *   bundle_label = @Translation("Registration type"),
  *   handlers = {
  *     "event" = "Drupal\registration\Event\RegistrationEvent",
- *     "storage" = "Drupal\registration\RegistrationStorage",
+ *     "storage" = "Drupal\Core\Entity\Sql\SqlContentEntityStorage",
  *     "storage_schema" = "Drupal\registration\RegistrationStorageSchema",
  *     "access" = "Drupal\registration\RegistrationAccessControlHandler",
  *     "list_builder" = "Drupal\registration\RegistrationListBuilder",
