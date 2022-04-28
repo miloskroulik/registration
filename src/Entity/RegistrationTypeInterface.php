@@ -28,6 +28,14 @@ interface RegistrationTypeInterface extends ConfigEntityInterface {
   public function getActiveOrHeldStates(): array;
 
   /**
+   * Gets the held states for the registration type.
+   *
+   * @return array
+   *   An array of states indexed by state ID, if any.
+   */
+  public function getHeldStates(): array;
+
+  /**
    * Gets the states to show on the registration form.
    *
    * @param \Drupal\workflows\StateInterface|null $default_state

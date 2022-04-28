@@ -195,14 +195,16 @@ class RegistrationMailer implements RegistrationMailerInterface {
           $success_count++;
         }
         else {
-          $this->logger->error('Failed to send registration broadcast email to %email.', [
+          $this->logger->error('Failed to send registration broadcast email for @title to %email.', [
+            '@title' => $host_entity->label(),
             '%email' => $email,
           ]);
         }
       }
     }
     if ($success_count) {
-      $this->logger->info('Registration broadcast sent to @count recipients.', [
+      $this->logger->info('Registration broadcast for @title sent to @count recipient(s).', [
+        '@title' => $host_entity->label(),
         '@count' => $success_count,
       ]);
     }

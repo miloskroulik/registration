@@ -128,6 +128,25 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
   /**
    * {@inheritdoc}
    */
+  public function getHeldStates(): array {
+    $states = [];
+
+    if ($workflow = $this->getWorkflow()) {
+      $all_states = $workflow->getTypePlugin()->getStates();
+      foreach ($all_states as $id => $state) {
+        /** @var \Drupal\registration\RegistrationState $state */
+        if ($state->isHeld()) {
+          $states[$id] = $state;
+        }
+      }
+    }
+
+    return $states;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getStatesToShowOnForm(StateInterface $default_state = NULL): array {
     $states = [];
 

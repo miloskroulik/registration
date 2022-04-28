@@ -1,0 +1,90 @@
+<?php
+
+namespace Drupal\registration\Cron;
+
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Queue\QueueFactory;
+use Drupal\Core\Queue\QueueInterface;
+use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
+
+/**
+ * Queue host entities that need reminders.
+ *
+ * @see \Drupal\registration\Plugin\QueueWorker\SendReminders
+ */
+class SendReminders {
+
+  /**
+   * The database service.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected Connection $database;
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected EntityTypeManagerInterface $entityTypeManager;
+
+  /**
+   * The queue.
+   *
+   * @var \Drupal\Core\Queue\QueueInterface
+   */
+  protected QueueInterface $queue;
+
+  /**
+   * Constructs a new SendReminders object.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\Core\Queue\QueueFactory $queue_factory
+   *   The queue factory.
+   */
+  public function __construct(Connection $database, EntityTypeManagerInterface $entity_type_manager, QueueFactory $queue_factory) {
+    $this->database = $database;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->queue = $queue_factory->get('registration.send_reminders');
+  }
+
+  /**
+   * Run this task.
+   */
+  public function run() {
+    // Establish the current time in UTC.
+    $now = new DrupalDateTime('now');
+    $now->setTimezone(new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
+    $now_date = $now->format('Y-m-d\TH:i:s');
+
+    $minus_2_days = new DrupalDateTime('-2 days');
+    $minus_2_days->setTimezone(new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
+    $minus_2_days_date = $minus_2_days->format('Y-m-d\TH:i:s');
+
+    // Clear existing queue items to avoid reprocessing.
+    $this->queue->deleteQueue();
+
+    // Re-fill the queue with host entities that need reminders.
+    $query = $this->database->select('registration_entity', 'r')
+      ->fields('r')
+      ->condition('send_reminder', 1)
+      ->condition('reminder_date', $now_date, '<=')
+      ->condition('reminder_date', $minus_2_days_date, '>');
+    $result = $query->execute();
+
+    foreach ($result as $record) {
+      $item = [
+        'entity_type_id' => $record->entity_type_id,
+        'entity_id' => $record->entity_id,
+        'message' => unserialize($record->reminder_template),
+      ];
+      $this->queue->createItem($item);
+    }
+  }
+
+}

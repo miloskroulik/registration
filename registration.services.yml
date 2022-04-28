@@ -1,8 +1,25 @@
 services:
 
+  registration.cron.send_reminders:
+    class: Drupal\registration\Cron\SendReminders
+    arguments: [
+      '@database',
+      '@entity_type.manager',
+      '@queue',
+    ]
+
+  registration.cron.expire_held_registrations:
+    class: Drupal\registration\Cron\ExpireHeldRegistrations
+    arguments: [
+      '@entity_type.manager',
+      '@queue',
+    ]
+
   registration.logger:
     parent: logger.channel_base
-    arguments: ['registration']
+    arguments: [
+      'registration',
+    ]
 
   registration.manage_registrations_access_checker:
     class: Drupal\registration\Access\ManageRegistrationsAccessCheck
