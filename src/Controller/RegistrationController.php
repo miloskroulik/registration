@@ -255,7 +255,7 @@ class RegistrationController extends ControllerBase {
       ->orderByHeader($header)
       ->execute();
 
-    // @todo Call an event handler so the list can be modified?
+    // Add the rows to the table.
     foreach ($result as $record) {
       /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
       $registration = $registration_storage->load($record->registration_id);
@@ -294,6 +294,13 @@ class RegistrationController extends ControllerBase {
       ];
     }
 
+    // The caption and table header aren't needed when there is no data.
+    if (empty($rows)) {
+      $caption = [];
+      $header = [];
+    }
+
+    // Build the table.
     $build['registration_table'] = [
       '#type' => 'table',
       '#caption' => $caption,

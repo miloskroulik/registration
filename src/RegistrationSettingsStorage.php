@@ -3,13 +3,12 @@
 namespace Drupal\registration;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\Sql\SqlContentEntityStorage;
 use Drupal\registration\Entity\RegistrationSettings;
 
 /**
  * Defines the storage handler class for registration settings entities.
  */
-class RegistrationSettingsStorage extends SqlContentEntityStorage {
+class RegistrationSettingsStorage extends RegistrationStorage {
 
   /**
    * Load the settings entity for a given host entity using IDs.

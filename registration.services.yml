@@ -39,6 +39,7 @@ services:
     arguments: [
       '@current_user',
       '@database',
+      '@event_dispatcher',
       '@entity_display.repository',
       '@entity_field.manager',
       '@entity_type.bundle.info',

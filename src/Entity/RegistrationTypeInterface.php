@@ -52,7 +52,7 @@ interface RegistrationTypeInterface extends ConfigEntityInterface {
    * @return \Drupal\workflows\WorkflowInterface|null
    *   The workflow entity, or NULL if none exists yet.
    */
-  public function getWorkflow(): WorkflowInterface|null;
+  public function getWorkflow(): ?WorkflowInterface;
 
   /**
    * Sets the workflow ID for the registration type.

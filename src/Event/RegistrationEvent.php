@@ -6,7 +6,7 @@ use Drupal\Component\EventDispatcher\Event;
 use Drupal\registration\Entity\RegistrationInterface;
 
 /**
- * Defines the registration event.
+ * Defines the event for load and CRUD operations on registrations.
  *
  * @see \Drupal\registration\Event\RegistrationEvents
  */

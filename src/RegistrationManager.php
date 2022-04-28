@@ -2,6 +2,7 @@
 
 namespace Drupal\registration;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
@@ -14,11 +15,13 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Render\Renderer;
-use Drupal\Core\Routing\RouteProvider;
+use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
+use Drupal\registration\Event\RegistrationAlterEvents;
+use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 use Drupal\registration\Entity\RegistrationType;
@@ -46,6 +49,13 @@ class RegistrationManager implements RegistrationManagerInterface {
    * @var \Drupal\Core\Database\Connection
    */
   protected Connection $database;
+
+  /**
+   * The event dispatcher.
+   *
+   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   */
+  protected ContainerAwareEventDispatcher $eventDispatcher;
 
   /**
    * The entity display repository.
@@ -92,9 +102,9 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * The route provider.
    *
-   * @var \Drupal\Core\Routing\RouteProvider
+   * @var \Drupal\Core\Routing\RouteProviderInterface
    */
-  protected RouteProvider $routeProvider;
+  protected RouteProviderInterface $routeProvider;
 
   /**
    * Creates a RegistrationManager object.
@@ -103,6 +113,8 @@ class RegistrationManager implements RegistrationManagerInterface {
    *   The current user.
    * @param \Drupal\Core\Database\Connection $database
    *   The database.
+   * @param \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher $event_dispatcher
+   *   The event dispatcher.
    * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
    *   The entity display repository.
    * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
@@ -115,12 +127,13 @@ class RegistrationManager implements RegistrationManagerInterface {
    *   The module handler.
    * @param \Drupal\Core\Render\Renderer $renderer
    *   The renderer.
-   * @param \Drupal\Core\Routing\RouteProvider $route_provider
+   * @param \Drupal\Core\Routing\RouteProviderInterface $route_provider
    *   The route provider.
    */
-  public function __construct(AccountProxy $current_user, Connection $database, EntityDisplayRepositoryInterface $entity_display_repository, EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, Renderer $renderer, RouteProvider $route_provider) {
+  public function __construct(AccountProxy $current_user, Connection $database, ContainerAwareEventDispatcher $event_dispatcher, EntityDisplayRepositoryInterface $entity_display_repository, EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, Renderer $renderer, RouteProviderInterface $route_provider) {
     $this->currentUser = $current_user;
     $this->database = $database;
+    $this->eventDispatcher = $event_dispatcher;
     $this->entityDisplayRepository = $entity_display_repository;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
@@ -197,23 +210,19 @@ class RegistrationManager implements RegistrationManagerInterface {
       $query->condition('registration_id', $registration->id(), '<>');
     }
 
-    $query->addExpression('sum(count)', 'count');
+    $query->addExpression('sum(count)', 'spaces');
 
-    $count = $query->execute()->fetchField();
-    $count = empty($count) ? 0 : $count;
+    $spaces = $query->execute()->fetchField();
+    $spaces = empty($spaces) ? 0 : $spaces;
 
-    // Allow other modules to override the count.
-    $context = [
+    // Allow other modules to alter the number of spaces reserved.
+    $event = new RegistrationDataAlterEvent($spaces, [
       'host_entity' => $host_entity,
-      'registration' => $registration,
       'settings' => $this->getSettingsForHost($host_entity),
-      'states' => $states,
-      'sum' => TRUE,
-    ];
-
-    $this->moduleHandler->alter('registration_event_count', $count, $context);
-
-    return $count;
+      'registration' => $registration,
+    ]);
+    $this->eventDispatcher->dispatch($event, RegistrationAlterEvents::REGISTRATION_ALTER_USAGE);
+    return $event->getData();
   }
 
   /**
@@ -348,18 +357,13 @@ class RegistrationManager implements RegistrationManagerInterface {
 
     $count = $query->countQuery()->execute()->fetchField();
 
-    // Allow other modules to override the count.
-    $context = [
+    // Allow other modules to alter the count.
+    $event = new RegistrationDataAlterEvent($count, [
       'host_entity' => $host_entity,
-      'registration' => NULL,
       'settings' => $this->getSettingsForHost($host_entity),
-      'states' => [],
-      'sum' => FALSE,
-    ];
-
-    $this->moduleHandler->alter('registration_event_count', $count, $context);
-
-    return $count;
+    ]);
+    $this->eventDispatcher->dispatch($event, RegistrationAlterEvents::REGISTRATION_ALTER_COUNT);
+    return $event->getData();
   }
 
   /**
@@ -418,15 +422,20 @@ class RegistrationManager implements RegistrationManagerInterface {
    */
   public function getRegistrationSetting(EntityInterface $host_entity, RegistrationSettings $settings, string $key): mixed {
     $setting_value = $settings->getSetting($key);
-    if (!is_null($setting_value)) {
-      // Registration settings entity has the setting.
-      return $setting_value;
-    }
-
+    if (is_null($setting_value)) {
     // The registration settings entity does not have the setting yet.
     // Get a default value from the host entity registration field defaults.
-    return $this->getFieldWidgetSetting($host_entity->getEntityType(),
-      $this->getRegistrationField($host_entity), $key);
+      $setting_value = $this->getFieldWidgetSetting($host_entity->getEntityType(),
+        $this->getRegistrationField($host_entity), $key);
+    }
+
+    // Allow other modules to alter the setting value.
+    $event = new RegistrationDataAlterEvent($setting_value, [
+      'host_entity' => $host_entity,
+      'settings' => $settings,
+    ]);
+    $this->eventDispatcher->dispatch($event, 'registration.alter.setting.' . $key);
+    return $event->getData();
   }
 
   /**
@@ -554,8 +563,8 @@ class RegistrationManager implements RegistrationManagerInterface {
     $settings = $this->getSettingsForHost($host_entity);
     $capacity = $this->getRegistrationSetting($host_entity, $settings, 'capacity');
     if ($capacity) {
-      $count = $this->getActiveSpacesReserved($host_entity, $registration) + $spaces;
-      if (($capacity - $count) < 0) {
+      $projected_usage = $this->getActiveSpacesReserved($host_entity, $registration) + $spaces;
+      if (($capacity - $projected_usage) < 0) {
         return FALSE;
       }
     }

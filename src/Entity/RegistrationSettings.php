@@ -16,6 +16,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *   id = "registration_settings",
  *   label = @Translation("Registration settings"),
  *   handlers = {
+ *     "event" = "Drupal\registration\Event\RegistrationSettingsEvent",
  *     "storage" = "Drupal\registration\RegistrationSettingsStorage",
  *     "storage_schema" = "Drupal\registration\RegistrationStorageSchema",
  *     "views_data" = "Drupal\views\EntityViewsData",
