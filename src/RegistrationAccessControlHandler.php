@@ -57,7 +57,7 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
     }
 
     /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
-    if ($account->id() == $entity->getUserId()) {
+    if ($account->id() && ($account->id() == $entity->getUserId())) {
       $own_result = AccessResult::allowedIfHasPermissions($account, [
         "$operation own {$entity->getEntityTypeId()}",
         "$operation own {$entity->bundle()} {$entity->getEntityTypeId()}",
