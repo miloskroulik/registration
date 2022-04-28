@@ -142,7 +142,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
   public function sendMail(EntityInterface $host_entity, array $data = []): int {
     $success_count = 0;
     $settings = $this->registrationManager->getSettingsForHost($host_entity);
-    $langcode = $this->currentUser->getPreferredLangcode();
+    $langcode = $this->currentUser->getPreferredLangcode(TRUE);
     $send = TRUE;
 
     // Build parameters. These are common to every email sent.
