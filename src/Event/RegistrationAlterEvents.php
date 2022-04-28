@@ -7,13 +7,38 @@ final class RegistrationAlterEvents {
   /**
    * Alter the registration count for a host entity
    *
-   * This is the number of registrations, not spaces reserved..
+   * This is the number of registrations, not spaces reserved.
    *
    * @Event
    *
    * @see \Drupal\registration\Event\RegistrationDataAlterEvent
    */
   const REGISTRATION_ALTER_COUNT = 'registration.alter.count';
+
+  /**
+   * Alter email parameters before an email is sent to a registrant.
+   *
+   * The data altered is an array of message parameters.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   * @see \Drupal\registration\Mail\RegistrationMailer
+   */
+  const REGISTRATION_ALTER_MAIL = 'registration.alter.mail';
+
+  /**
+   * Alter the list of email recipients before emails are sent.
+   *
+   * The recipient list is an associative array indexed by email address.
+   * See the mailer interface file for a description of this structure.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   * @see \Drupal\registration\Mail\RegistrationMailerInterface
+   */
+  const REGISTRATION_ALTER_RECIPIENTS = 'registration.alter.recipients';
 
   /**
    * Alter the registration usage (spaces reserved) for a host entity.
@@ -25,14 +50,23 @@ final class RegistrationAlterEvents {
   const REGISTRATION_ALTER_USAGE = 'registration.alter.usage';
 
   /**
-   * Alter specific settings such as the status (enabled) setting.
+   * Alter specific settings such as the registration status setting.
    *
-   * These are listed in the order they appear on the Settings form.
+   * The alter events for settings are dispatched whenever the value
+   * of the setting is requested via the registration manager.
+   *
+   * Altering settings may be useful for sites that need to calculate
+   * values based on third party data instead of relying on a single
+   * value stored per host entity. Sites that alter settings may wish
+   * to alter the RegistrationSettingsForm to hide the relevant fields.
    *
    * @Event
    *
    * @see \Drupal\registration\Event\RegistrationDataAlterEvent
    * @see \Drupal\registration\Form\RegistrationSettingsForm
+   * @see \Drupal\registration\RegistrationManager
+   *
+   * These are listed in the order they appear on the Settings form.
    */
   const REGISTRATION_ALTER_SETTING_STATUS        = 'registration.alter.setting.status';
   const REGISTRATION_ALTER_SETTING_CAPACITY      = 'registration.alter.setting.capacity';

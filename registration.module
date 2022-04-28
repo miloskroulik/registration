@@ -5,6 +5,7 @@
  * Provides user registration for events.
  */
 
+use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -189,7 +190,14 @@ function registration_form_views_exposed_form_alter(array &$form, FormStateInter
  * Implements hook_mail().
  */
 function registration_mail($key, &$message, $params) {
-  $message['subject'] = $params['subject'];
-  $message['body'][] = $params['message'];
+  $token = \Drupal::token();
+  $langcode = $message['langcode'];
+  $variables = $params['token_entities'];
+  $options = ['langcode' => $langcode, 'clear' => TRUE];
+  $message['subject'] = PlainTextOutput::renderFromHtml($token->replace($params['subject'], $variables, $options));
+  $message['body'][] = $token->replace($params['message'], $variables, $options);
   $message['headers']['Content-Type'] = 'text/html; charset=UTF-8; format=flowed; delsp=yes';
+  if (!empty($message['params']['from'])) {
+    $message['headers']['From'] = $message['params']['from'];
+  }
 }

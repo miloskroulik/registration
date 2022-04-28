@@ -1,4 +1,9 @@
 services:
+
+  registration.logger:
+    parent: logger.channel_base
+    arguments: ['registration']
+
   registration.manage_registrations_access_checker:
     class: Drupal\registration\Access\ManageRegistrationsAccessCheck
     arguments: [
@@ -28,10 +33,11 @@ services:
     class: Drupal\registration\Mail\RegistrationMailer
     arguments: [
       '@current_user',
+      '@event_dispatcher',
+      '@registration.logger',
       '@plugin.manager.mail',
       '@registration.manager',
       '@renderer',
-      '@token',
     ]
 
   registration.manager:

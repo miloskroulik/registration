@@ -3,8 +3,6 @@
 namespace Drupal\registration\Mail;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\registration\Entity\RegistrationInterface;
-use Drupal\registration\Entity\RegistrationSettings;
 
 /**
  * Defines the interface for the registration mailer service.
@@ -53,31 +51,16 @@ interface RegistrationMailerInterface {
   public function getEmailRecipientList(EntityInterface $host_entity, array $data = []): array;
 
   /**
-   * Replaces tokens in a string and puts the result into a render element.
-   *
-   * Modifies the render element with bubbleable metadata and #markup set.
-   *
-   * @param array $element
-   *   The render element.
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   * @param \Drupal\registration\Entity\RegistrationSettings $settings
-   *   The registration settings entity.
-   * @param \Drupal\registration\Entity\RegistrationInterface $registration
-   *   The registration entity.
-   * @param string $input
-   *   The input string with tokens.
-   */
-  public function replaceTokens(array &$element, EntityInterface $host_entity, RegistrationSettings $settings, RegistrationInterface $registration, string $input);
-
-  /**
-   * Sends email to registrations associated with a given host entity.
+   * Sends email to registrants associated with a given host entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity
    *   The host entity.
    * @param array $data
-   *   (optional) Data as documented for function getEmailRecipientList().
+   *   (optional) Data as documented above.
+   *
+   * @return int
+   *   The number of emails sent.
    */
-  public function sendMail(EntityInterface $host_entity, array $data = []);
+  public function sendMail(EntityInterface $host_entity, array $data = []): int;
 
 }

@@ -3,9 +3,13 @@
 namespace Drupal\registration\Form;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Url;
+use Drupal\Core\Utility\Token;
+use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 use Drupal\registration\Mail\RegistrationMailerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -30,12 +34,20 @@ class EmailRegistrantsForm extends RegistrationFormBase {
   protected Renderer $renderer;
 
   /**
+   * The token service.
+   *
+   * @var \Drupal\Core\Utility\Token
+   */
+  protected Token $token;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): static {
     $instance = parent::create($container);
     $instance->registrationMailer = $container->get('registration.mailer');
     $instance->renderer = $container->get('renderer');
+    $instance->token = $container->get('token');
     return $instance;
   }
 
@@ -57,6 +69,17 @@ class EmailRegistrantsForm extends RegistrationFormBase {
     $registrant_count =  count($registrants);
 
     $form = [];
+
+    // Only send to registrants with active registrations.
+    $registration_type = $this->registrationManager->getRegistrationType($host_entity);
+    $states = $registration_type->getActiveStates();
+    if (empty($states)) {
+      $message = $this->t('There are no active registration states configured. For email to be sent, an active registration state must be specified for the @type registration type.', [
+        '@type' => $registration_type->label(),
+      ]);
+      $this->messenger()->addError($message);
+      return $form;
+    }
 
     // If no registrants yet then take an early exit.
     if ($registrant_count == 0) {
@@ -85,12 +108,12 @@ class EmailRegistrantsForm extends RegistrationFormBase {
         '#title' => $this->t('Message'),
       ];
 
-      // Use a sample registration.
+      // Use a sample registration for token replacement.
       $registration = $this->registrationManager->generateSampleRegistration($host_entity);
 
       // Replace tokens in Subject.
       $subject = Html::escape($values['subject']);
-      $this->registrationMailer->replaceTokens($form['subject_preview'], $host_entity, $settings, $registration, $subject);
+      $this->replaceTokens($form['subject_preview'], $host_entity, $settings, $registration, $subject);
 
       // Replace tokens in Message.
       $build = [
@@ -99,7 +122,7 @@ class EmailRegistrantsForm extends RegistrationFormBase {
         '#format' => $values['message']['format'],
       ];
       $message = $this->renderer->render($build);
-      $this->registrationMailer->replaceTokens($form['message_preview'], $host_entity, $settings, $registration, $message);
+      $this->replaceTokens($form['message_preview'], $host_entity, $settings, $registration, $message);
 
       // Hidden fields for the next submit.
       $form['subject'] = [
@@ -119,9 +142,8 @@ class EmailRegistrantsForm extends RegistrationFormBase {
         '#required' => TRUE,
         '#default_value' => $values['subject'] ?? '',
       ];
-      $description = $this->formatPlural($registrant_count,
-       'Enter the message you want to send to 1 registrant. Tokens are supported if the module is enabled, E.g., [node:title].',
-       'Enter the message you want to send to @count registrants. Tokens are supported if the module is enabled, E.g., [node:title].', [
+      $description = $this->t('Enter the message you want to send to registrants for @title. Tokens are supported, e.g., [node:title].', [
+        '@title' => $host_entity->label(),
       ]);
       $form['message'] = [
         '#type' => 'text_format',
@@ -176,19 +198,44 @@ class EmailRegistrantsForm extends RegistrationFormBase {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    // Although this same check is done during form build, it is redone here
+    // since the admin could have changed states after the form was loaded.
+    $triggering_element = $form_state->getTriggeringElement();
+    if ($triggering_element['#id'] == 'edit-submit') {
+      $host_entity = $this->getHostEntity($form_state);
+      $registration_type = $this->registrationManager->getRegistrationType($host_entity);
+      $states = $registration_type->getActiveStates();
+      if (empty($states)) {
+        $form_state->setError($form, $this->t('There are no active registration states configured. For email to be sent, an active registration state must be specified for the @type registration type.', [
+          '@type' => $registration_type->label(),
+        ]));
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
     $triggering_element = $form_state->getTriggeringElement();
     if ($triggering_element['#id'] == 'edit-submit') {
       // The Send button was submitted. Fire off the emails.
       $host_entity = $this->getHostEntity($form_state);
-      $this->registrationMailer->sendMail($host_entity, $values);
-      $this->messenger()->addStatus($this->t('The emails have been sent.'));
-
-      $entity_id = $host_entity->id();
-      $entity_type_id = $host_entity->getEntityTypeId();
+      $registration_type = $this->registrationManager->getRegistrationType($host_entity);
+      $states = $registration_type->getActiveStates();
+      $values['states'] = array_keys($states);
+      $success_count = $this->registrationMailer->sendMail($host_entity, $values);
+      $message = $this->formatPlural($success_count,
+       'Registration broadcast sent to 1 recipient.',
+       'Registration broadcast sent to @count recipients.',
+      );
+      $this->messenger()->addStatus($message);
 
       // Redirect to the Manage Registrations tab for the host entity.
+      $entity_id = $host_entity->id();
+      $entity_type_id = $host_entity->getEntityTypeId();
       $url = Url::fromRoute("entity.$entity_type_id.manage_registrations", [
         $entity_type_id => $entity_id,
       ]);
@@ -217,6 +264,35 @@ class EmailRegistrantsForm extends RegistrationFormBase {
       $form_state->set('settings', $settings);
     }
     return $settings;
+  }
+
+  /**
+   * Replaces tokens in a string and puts the result into a render element.
+   *
+   * Modifies the render element with bubbleable metadata and #markup set.
+   *
+   * @param array $element
+   *   The render element.
+   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   *   The host entity.
+   * @param \Drupal\registration\Entity\RegistrationSettings $settings
+   *   The registration settings entity.
+   * @param \Drupal\registration\Entity\RegistrationInterface $registration
+   *   The registration entity.
+   * @param string $input
+   *   The input string with tokens.
+   */
+  protected function replaceTokens(array &$element, EntityInterface $host_entity, RegistrationSettings $settings, RegistrationInterface $registration, string $input) {
+    $registration_type = $this->registrationManager->getRegistrationType($host_entity);
+    $entities = [
+      $host_entity->getEntityTypeId() => $host_entity,
+      $registration_type->id() => $registration_type,
+      'registration' => $registration,
+      'registration_settings' => $settings,
+    ];
+    $bubbleable_metadata = new BubbleableMetadata();
+    $element['#markup'] = $this->token->replace($input, $entities, [], $bubbleable_metadata);
+    $bubbleable_metadata->applyTo($element);
   }
 
 }

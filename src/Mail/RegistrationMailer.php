@@ -2,17 +2,17 @@
 
 namespace Drupal\registration\Mail;
 
-use Drupal\Component\Utility\Html;
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Mail\MailManagerInterface;
-use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\Utility\Token;
 use Drupal\registration\Entity\RegistrationInterface;
-use Drupal\registration\Entity\RegistrationSettings;
+use Drupal\registration\Event\RegistrationAlterEvents;
+use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\RegistrationManagerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Defines the class for the registration mailer service.
@@ -27,6 +27,20 @@ class RegistrationMailer implements RegistrationMailerInterface {
    * @var \Drupal\Core\Session\AccountProxy
    */
   protected AccountProxy $currentUser;
+
+  /**
+   * The event dispatcher.
+   *
+   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   */
+  protected ContainerAwareEventDispatcher $eventDispatcher;
+
+  /**
+   * The logger.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected LoggerInterface $logger;
 
   /**
    * The mail manager.
@@ -50,32 +64,28 @@ class RegistrationMailer implements RegistrationMailerInterface {
   protected Renderer $renderer;
 
   /**
-   * The token service.
-   *
-   * @var \Drupal\Core\Utility\Token
-   */
-  protected Token $token;
-
-  /**
    * Creates a RegistrationMailer object.
    *
    * @param \Drupal\Core\Session\AccountProxy $current_user
    *   The current user.
+   * @param \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher $event_dispatcher
+   *   The event dispatcher.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger.
    * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
    *   The mail manager.
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
    * @param \Drupal\Core\Render\Renderer $renderer
    *   The renderer.
-   * @param \Drupal\Core\Utility\Token $token
-   *   The token service.
    */
-  public function __construct(AccountProxy $current_user, MailManagerInterface $mail_manager, RegistrationManagerInterface $registration_manager, Renderer $renderer, Token $token) {
+  public function __construct(AccountProxy $current_user, ContainerAwareEventDispatcher $event_dispatcher, LoggerInterface $logger, MailManagerInterface $mail_manager, RegistrationManagerInterface $registration_manager, Renderer $renderer) {
     $this->currentUser = $current_user;
+    $this->eventDispatcher = $event_dispatcher;
+    $this->logger = $logger;
     $this->mailManager = $mail_manager;
     $this->registrationManager = $registration_manager;
     $this->renderer = $renderer;
-    $this->token = $token;
   }
 
   /**
@@ -117,62 +127,86 @@ class RegistrationMailer implements RegistrationMailerInterface {
       }
     }
 
-    // @todo Call the event here.
-    // Use settings.
-    return $recipients;
+    // Allow other modules to alter the recipient list.
+    $event = new RegistrationDataAlterEvent($recipients, [
+      'host_entity' => $host_entity,
+      'settings' => $this->registrationManager->getSettingsForHost($host_entity),
+    ]);
+    $this->eventDispatcher->dispatch($event, RegistrationAlterEvents::REGISTRATION_ALTER_RECIPIENTS);
+    return $event->getData();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function replaceTokens(array &$element, EntityInterface $host_entity, RegistrationSettings $settings, RegistrationInterface $registration, string $input) {
-    $entities = [
-      $host_entity->getEntityTypeId() => $host_entity,
-      'registration' => $registration,
-      'registration_settings' => $settings,
-    ];
-    $bubbleable_metadata = new BubbleableMetadata();
-    $element['#markup'] = $this->token->replace($input, $entities, [], $bubbleable_metadata);
-    $bubbleable_metadata->applyTo($element);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function sendMail(EntityInterface $host_entity, array $data = []) {
+  public function sendMail(EntityInterface $host_entity, array $data = []): int {
+    $success_count = 0;
     $settings = $this->registrationManager->getSettingsForHost($host_entity);
     $langcode = $this->currentUser->getPreferredLangcode();
     $send = TRUE;
 
-    $registrants =  $this->getEmailRecipientList($host_entity, $data);
-    foreach ($registrants as $email => $registrations) {
+    // Build parameters. These are common to every email sent.
+    $params = [];
+    $params['subject'] = $data['subject'];
+    $params['from'] = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'from_address');
+    $build = [
+      '#type' => 'processed_text',
+      '#text' => $data['message']['value'],
+      '#format' => $data['message']['format'],
+    ];
+    $params['message'] = $this->renderer->render($build);
+    $params['token_entities'] = [
+      $host_entity->getEntityTypeId() => $host_entity,
+      'registration_settings' => $settings,
+    ];
+
+    // Get the recipients and send to each.
+    $recipients =  $this->getEmailRecipientList($host_entity, $data);
+    foreach ($recipients as $email => $registrations) {
       // Convert singleton to array.
-      if ($registrations instanceof RegistrationInterface) {
+      if (!is_array($registrations)) {
         $registrations = [$registrations];
       }
+      // @todo Send via a queue worker if there are very many.
       foreach ($registrations as $registration) {
-        $params = [];
+        // Set registration entity for token replacement if available.
+        if ($registration instanceof RegistrationInterface) {
+          $params['token_entities']['registration'] = $registration;
+        }
+        else {
+          // Clear what is there from the previous loop iteration.
+          unset($params['token_entities']['registration']);
+        }
 
-        // Subject.
-        $build = [];
-        $subject = Html::escape($data['subject']);
-        $this->replaceTokens($build, $host_entity, $settings, $registration, $subject);
-        $params['subject'] = $build['#markup'];
+        // Allow other modules to alter the parameters.
+        // Token replacement should not be done in the event subscriber
+        // because the registration_mail function already handles this.
+        $event = new RegistrationDataAlterEvent($params, [
+          'host_entity' => $host_entity,
+          'settings' => $settings,
+          'registration' => $registration,
+        ]);
+        $this->eventDispatcher->dispatch($event, RegistrationAlterEvents::REGISTRATION_ALTER_MAIL);
+        $params = $event->getData();
 
-        // Message.
-        $build = [
-          '#type' => 'processed_text',
-          '#text' => $data['message']['value'],
-          '#format' => $data['message']['format'],
-        ];
-        $message = $this->renderer->render($build);
-        $build = [];
-        $this->replaceTokens($build, $host_entity, $settings, $registration, $message);
-        $params['message'] = $build['#markup'];
-
-        $result = $this->mailManager->mail('registration', 'email_registrants', $email, $langcode, $params, NULL, $send);
+        // Send the mail and count successes.
+        $result = $this->mailManager->mail('registration', 'broadcast', $email, $langcode, $params, NULL, $send);
+        if ($result['result'] !== FALSE) {
+          $success_count++;
+        }
+        else {
+          $this->logger->error('Failed to send registration broadcast email to %email.', [
+            '%email' => $email,
+          ]);
+        }
       }
     }
+    if ($success_count) {
+      $this->logger->info('Registration broadcast sent to @count recipients.', [
+        '@count' => $success_count,
+      ]);
+    }
+    return $success_count;
   }
 
 }

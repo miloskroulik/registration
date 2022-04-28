@@ -412,8 +412,6 @@ class RegistrationManager implements RegistrationManagerInterface {
         'entity_id' => $host_entity->id(),
       ]);
     }
-    // @todo Call an event so other modules can add to this list?
-    // Use settings in this event.
     return $registrations;
   }
 

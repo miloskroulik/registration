@@ -7,6 +7,12 @@ use Drupal\Component\EventDispatcher\Event;
 /**
  * Defines the registration data alter event.
  *
+ * This event is used to alter registration related data
+ * such as status flags, usage counts and settings values.
+ * In this way a site builder can make the registration
+ * module more dynamic by integrating with third party
+ * data sources or incorporating custom logic.
+ *
  * @see \Drupal\registration\Event\RegistrationAlterEvents
  */
 class RegistrationDataAlterEvent extends Event {
@@ -33,14 +39,12 @@ class RegistrationDataAlterEvent extends Event {
    * @param array $context
    *   The context in which the data was derived:
    *   [
-   *     'host_entity' => \Drupal\Core\Entity\EntityInterface
-   *     'settings' => \Drupal\registration\Entity\RegistrationSettings
+   *     'host_entity' => \Drupal\Core\Entity\EntityInterface,
+   *     'settings' => \Drupal\registration\Entity\RegistrationSettings,
+   *     'registration' => \Drupal\registration\Entity\RegistrationInterface
    *   ]
-   *
-   *   For the REGISTRATION_ALTER_USAGE event, there is an additional context
-   *   element: ['registration' => \Drupal\registration\Entity\Registration|null ]
-   *   When set, the registration has been excluded from the calculation of
-   *   spaces reserved while an existing registration is being edited.
+   *   The host_entity and settings elements are always present.
+   *   The registration element is only present for a few events.
    */
   public function __construct(mixed $data, array $context) {
     $this->data = $data;
