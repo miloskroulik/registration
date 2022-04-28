@@ -80,7 +80,7 @@ class RegistrationSettings extends ContentEntityBase {
         $settings = $this->get('settings')->first()->getValue();
         if (!empty($settings)) {
           $settings = unserialize($settings['value']);
-          if (!empty($settings[$key])) {
+          if (isset($settings[$key])) {
             // Registration settings entity has the additional setting.
             return $settings[$key];
           }
