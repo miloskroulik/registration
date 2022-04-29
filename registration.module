@@ -19,6 +19,9 @@ use Drupal\field\Entity\FieldStorageConfig;
  * Implements hook_cron().
  */
 function registration_cron() {
+  // @todo Add a Cron task for set-and-forget registration enable/disable
+  // based on open and close dates?  So admins do not have to check
+  // the box and have the Register tab visible for longer than necessary.
   \Drupal::service('registration.cron.send_reminders')->run();
   \Drupal::service('registration.cron.expire_held_registrations')->run();
 }
@@ -186,6 +189,7 @@ function registration_form_views_exposed_form_alter(array &$form, FormStateInter
     $route_match = \Drupal::routeMatch();
     $registration_manager = \Drupal::service('registration.manager');
     if ($host_entity = $registration_manager->getEntityFromParameters($route_match->getParameters())) {
+      // @todo Make the number 10 config settings based.
       if ($registration_manager->getRegistrationCount($host_entity) < 10) {
         $form['mail']['#access'] = FALSE;
         $form['actions']['#access'] = FALSE;

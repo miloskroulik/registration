@@ -226,6 +226,7 @@ class EmailRegistrantsForm extends RegistrationFormBase {
       $registration_type = $this->registrationManager->getRegistrationType($host_entity);
       $states = $registration_type->getActiveStates();
       $values['states'] = array_keys($states);
+      // @todo Queue this instead of sending interactively.
       $success_count = $this->registrationMailer->sendMail($host_entity, $values);
       $message = $this->formatPlural($success_count,
        'Registration broadcast sent to 1 recipient.',
