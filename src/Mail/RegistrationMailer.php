@@ -9,7 +9,7 @@ use Drupal\Core\Render\Renderer;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\registration\Entity\RegistrationInterface;
-use Drupal\registration\Event\RegistrationAlterEvents;
+use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\RegistrationManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -132,7 +132,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
       'host_entity' => $host_entity,
       'settings' => $this->registrationManager->getSettingsForHost($host_entity),
     ]);
-    $this->eventDispatcher->dispatch($event, RegistrationAlterEvents::REGISTRATION_ALTER_RECIPIENTS);
+    $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_RECIPIENTS);
     return $event->getData();
   }
 
@@ -186,7 +186,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
           'settings' => $settings,
           'registration' => $registration,
         ]);
-        $this->eventDispatcher->dispatch($event, RegistrationAlterEvents::REGISTRATION_ALTER_MAIL);
+        $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_MAIL);
         $params = $event->getData();
 
         // Send the mail and count successes.

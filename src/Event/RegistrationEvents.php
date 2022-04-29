@@ -2,7 +2,67 @@
 
 namespace Drupal\registration\Event;
 
-final class RegistrationCrudEvents {
+final class RegistrationEvents {
+
+  /**
+   * Name of the event fired to allow alter of the registration count.
+   *
+   * This is the number of registrations, not spaces reserved.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_COUNT = 'registration.alter.count';
+
+  /**
+   * Name of the event fired to allow alter of registration enabled status.
+   *
+   * The standard check looks at the status flag, open and close
+   * dates, and whether there is still room for new registrations
+   * based on the capacity setting. Use this to apply your own logic.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_ENABLED = 'registration.alter.enabled';
+
+  /**
+   * Name of the event fired to allow alter of registration email.
+   *
+   * The data altered is an array of message parameters.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   * @see \Drupal\registration\Mail\RegistrationMailer
+   */
+  const REGISTRATION_ALTER_MAIL = 'registration.alter.mail';
+
+  /**
+   * Name of the event fired to allow alter of email recipients.
+   *
+   * The recipient list is an associative array indexed by email address.
+   * See the mailer interface file for a description of this structure.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   * @see \Drupal\registration\Mail\RegistrationMailerInterface
+   */
+  const REGISTRATION_ALTER_RECIPIENTS = 'registration.alter.recipients';
+
+  /**
+   * Name of the event fired to allow alter of registration usage.
+   *
+   * This is the number of spaces currently reserved.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_USAGE = 'registration.alter.usage';
 
   /**
    * Name of the event fired after loading a registration.
@@ -70,7 +130,7 @@ final class RegistrationCrudEvents {
   const REGISTRATION_DELETE = 'registration.registration.delete';
 
   /**
-   * Name of the event fired after loadingregistration settings.
+   * Name of the event fired after loading registration settings.
    *
    * @Event
    *

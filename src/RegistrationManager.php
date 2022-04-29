@@ -19,7 +19,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
-use Drupal\registration\Event\RegistrationAlterEvents;
+use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
@@ -210,7 +210,7 @@ class RegistrationManager implements RegistrationManagerInterface {
       'settings' => $this->getSettingsForHost($host_entity),
       'registration' => $registration,
     ]);
-    $this->eventDispatcher->dispatch($event, RegistrationAlterEvents::REGISTRATION_ALTER_USAGE);
+    $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_USAGE);
     return $event->getData();
   }
 
@@ -351,7 +351,7 @@ class RegistrationManager implements RegistrationManagerInterface {
       'host_entity' => $host_entity,
       'settings' => $this->getSettingsForHost($host_entity),
     ]);
-    $this->eventDispatcher->dispatch($event, RegistrationAlterEvents::REGISTRATION_ALTER_COUNT);
+    $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_COUNT);
     return $event->getData();
   }
 
@@ -604,7 +604,7 @@ class RegistrationManager implements RegistrationManagerInterface {
       'settings' => $settings,
       'errors' => $errors,
     ]);
-    $this->eventDispatcher->dispatch($event, RegistrationAlterEvents::REGISTRATION_ALTER_ENABLED);
+    $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_ENABLED);
     return $event->getData();
   }
 

@@ -8,12 +8,12 @@ use Drupal\Component\EventDispatcher\Event;
  * Defines the registration data alter event.
  *
  * This event is used to alter registration related data
- * such as status flags, usage counts and settings values.
+ * such as status flags, usage counts and mail recipients.
  * In this way a site builder can make the registration
  * module more dynamic by integrating with third party
  * data sources or incorporating custom logic.
  *
- * @see \Drupal\registration\Event\RegistrationAlterEvents
+ * @see \Drupal\registration\Event\RegistrationEvents
  */
 class RegistrationDataAlterEvent extends Event {
 
