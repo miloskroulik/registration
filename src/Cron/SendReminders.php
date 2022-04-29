@@ -79,10 +79,14 @@ class SendReminders {
     $result = $query->execute();
 
     foreach ($result as $record) {
+      $message = [
+        'value' => $record->reminder_template__value,
+        'format' => $record->reminder_template__format,
+      ];
       $item = [
         'entity_type_id' => $record->entity_type_id,
         'entity_id' => $record->entity_id,
-        'message' => unserialize($record->reminder_template),
+        'message' => $message,
       ];
       $this->queue->createItem($item);
     }

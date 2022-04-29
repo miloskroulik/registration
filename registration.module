@@ -199,6 +199,30 @@ function registration_form_views_exposed_form_alter(array &$form, FormStateInter
 }
 
 /**
+ * Implements hook_field_widget_complete_WIDGET_TYPE_form_alter().
+ */
+function registration_field_widget_complete_datetime_default_form_alter(&$field_widget_complete_form,
+  FormStateInterface $form_state, $context) {
+  // Add timezone to the datetime widgets when editing registration settings.
+  if ($context['items']
+    ->getFieldDefinition()
+    ->getTargetEntityTypeId() == 'registration_settings') {
+    $field_widget_complete_form['widget'][0]['#description'] .= t(' (This uses the @timezone timezone.)', [
+      '@timezone' => date_default_timezone_get(),
+    ]);
+  }
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ */
+function registration_local_tasks_alter(&$local_tasks) {
+  // Remove the Manage Display tab for registration settings as
+  // they are only used in forms and not displayed as content.
+  unset($local_tasks['field_ui.fields:display_overview_registration_settings']);
+}
+
+/**
  * Implements hook_mail().
  */
 function registration_mail($key, &$message, $params) {

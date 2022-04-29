@@ -148,7 +148,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
     // Build parameters. These are common to every email sent.
     $params = [];
     $params['subject'] = $data['subject'];
-    $params['from'] = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'from_address');
+    $params['from'] = $settings->getSetting('from_address');
     $build = [
       '#type' => 'processed_text',
       '#text' => $data['message']['value'],

@@ -76,7 +76,7 @@ class RegisterAccessCheck implements AccessInterface {
           if ($registration_type->getWorkflow()) {
             $storage = $this->entityTypeManager->getStorage('registration_settings');
             $settings = $storage->loadSettingsForEntity($entity);
-            $status = (bool) $this->registrationManager->getRegistrationSetting($entity, $settings, 'status');
+            $status = (bool) $settings->getSetting('status');
             if ($status) {
               // Registration is enabled for the host entity. Check if the account
               // has create registration permissions for the registration type.

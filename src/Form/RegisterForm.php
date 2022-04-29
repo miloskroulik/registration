@@ -148,8 +148,8 @@ class RegisterForm extends ContentEntityForm {
 
     // Update the Spaces field.
     if (!empty($form['count'])) {
-      $capacity = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'capacity');
-      $limit = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'maximum_spaces');
+      $capacity = $settings->getSetting('capacity');
+      $limit = $settings->getSetting('maximum_spaces');
       $remaining = $capacity - $this->registrationManager->getActiveSpacesReserved($host_entity, $registration);
       $max = 99999;
 
@@ -254,7 +254,7 @@ class RegisterForm extends ContentEntityForm {
     }
 
     // Validate according to who is registering.
-    $allow_multiple = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'multiple_registrations');
+    $allow_multiple = $settings->getSetting('multiple_registrations');
     switch ($form_state->getValue('who_is_registering')) {
       case RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON:
         if ($form_state->hasValue('anon_mail')) {
@@ -326,14 +326,14 @@ class RegisterForm extends ContentEntityForm {
     // Confirmation message.
     $host_entity = $form_state->get('host_entity');
     $settings = $form_state->get('settings');
-    $confirmation = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'confirmation');
+    $confirmation = $settings->getSetting('confirmation');
     if (!$confirmation) {
       $confirmation = 'The registration was saved.';
     }
     $this->messenger()->addStatus($this->t($confirmation));
 
     // Redirect.
-    $redirect = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'confirmation_redirect');
+    $redirect = $settings->getSetting('confirmation_redirect');
     if ($redirect) {
       // Custom redirect in the settings.
       // Check for external first.

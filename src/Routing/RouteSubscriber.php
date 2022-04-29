@@ -44,16 +44,16 @@ class RouteSubscriber extends RouteSubscriberBase {
     // Add routes for managing registrations and registering.
     foreach ($this->registrationManager->getRegistrationEnabledEntityTypes() as $entity_type_id => $entity_type) {
       if ($route = $this->registrationManager->getRoute($entity_type, 'broadcast')) {
-        $collection->add("entity.$entity_type_id.broadcast", $route);
+        $collection->add("entity.$entity_type_id.registration.broadcast", $route);
       }
       if ($route = $this->registrationManager->getRoute($entity_type, 'manage')) {
-        $collection->add("entity.$entity_type_id.manage_registrations", $route);
+        $collection->add("entity.$entity_type_id.registration.manage_registrations", $route);
       }
       if ($route = $this->registrationManager->getRoute($entity_type, 'register')) {
-        $collection->add("entity.$entity_type_id.register", $route);
+        $collection->add("entity.$entity_type_id.registration.register", $route);
       }
       if ($route = $this->registrationManager->getRoute($entity_type, 'settings')) {
-        $collection->add("entity.$entity_type_id.registration_settings", $route);
+        $collection->add("entity.$entity_type_id.registration.registration_settings", $route);
       }
     }
   }

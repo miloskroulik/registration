@@ -49,34 +49,34 @@ class RegistrationLocalTask extends DeriverBase implements ContainerDeriverInter
 
     foreach ($this->registrationManager->getRegistrationEnabledEntityTypes() as $entity_type_id => $entity_type) {
       if ($this->registrationManager->getRoute($entity_type, 'manage')) {
-        $this->derivatives["$entity_type_id.manage_registrations"] = [
-          'route_name' => "entity.$entity_type_id.manage_registrations",
+        $this->derivatives["$entity_type_id.registration.manage_registrations"] = [
+          'route_name' => "entity.$entity_type_id.registration.manage_registrations",
           'title' => $this->t('Manage Registrations'),
           'base_route' => $this->registrationManager->getBaseRouteName($entity_type),
           'weight' => 50,
         ];
-        $this->derivatives["$entity_type_id.manage_registrations_sub"] = [
-          'route_name' => "entity.$entity_type_id.manage_registrations",
+        $this->derivatives["$entity_type_id.registration.manage_registrations_sub"] = [
+          'route_name' => "entity.$entity_type_id.registration.manage_registrations",
           'title' => $this->t('Registrations'),
-          'parent_id' => "registration.entities:$entity_type_id.manage_registrations",
+          'parent_id' => "registration.entities:$entity_type_id.registration.manage_registrations",
         ];
-        $this->derivatives["$entity_type_id.registration_settings"] = [
-          'route_name' => "entity.$entity_type_id.registration_settings",
+        $this->derivatives["$entity_type_id.registration.registration_settings"] = [
+          'route_name' => "entity.$entity_type_id.registration.registration_settings",
           'title' => $this->t('Settings'),
-          'parent_id' => "registration.entities:$entity_type_id.manage_registrations",
+          'parent_id' => "registration.entities:$entity_type_id.registration.manage_registrations",
           'weight' => 10,
         ];
-        $this->derivatives["$entity_type_id.broadcast"] = [
-          'route_name' => "entity.$entity_type_id.broadcast",
+        $this->derivatives["$entity_type_id.registration.broadcast"] = [
+          'route_name' => "entity.$entity_type_id.registration.broadcast",
           'title' => $this->t('Email registrants'),
-          'parent_id' => "registration.entities:$entity_type_id.manage_registrations",
+          'parent_id' => "registration.entities:$entity_type_id.registration.manage_registrations",
           'weight' => 20,
         ];
       }
       if ($this->registrationManager->getRoute($entity_type, 'register')) {
         if (!$this->registrationManager->getFieldConfigSetting($entity_type, 'hide_register_tab')) {
-          $this->derivatives["$entity_type_id.register"] = [
-            'route_name' => "entity.$entity_type_id.register",
+          $this->derivatives["$entity_type_id.registration.register"] = [
+            'route_name' => "entity.$entity_type_id.registration.register",
             'title' => $this->t('Register'),
             'base_route' => $this->registrationManager->getBaseRouteName($entity_type),
             'weight' => 50,

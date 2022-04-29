@@ -162,7 +162,7 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     if (!$this->get('entity_type_id')->isEmpty()) {
       return $this->get('entity_type_id')->first()->value;
     }
-    return 0;
+    return '';
   }
 
   /**
@@ -338,11 +338,11 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
 
     // Ensure registrations are backed by stored settings.
     if (!$update) {
+      $host_entity = $this->getHostEntity();
       $storage = Drupal::entityTypeManager()->getStorage('registration_settings');
-      $settings = $storage->loadSettings($this->getHostEntityTypeId(), $this->getHostEntityId());
+      $settings = $storage->loadSettingsForEntity($host_entity);
       if ($settings->isNew()) {
-        $host_entity = $this->getHostEntity();
-        $settings->initFromConfig($host_entity)->save();
+        $settings->save();
       }
     }
   }
@@ -361,12 +361,12 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
 
     $fields['entity_type_id'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Entity type ID'))
-      ->setDescription(t('The ID of the entity type this registration is attached to.'))
+      ->setDescription(t('The machine name of the host entity type this registration is attached to.'))
       ->setSetting('max_length', EntityTypeInterface::ID_MAX_LENGTH);
 
     $fields['entity_id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Entity ID'))
-      ->setDescription(t('The ID of the entity this registration is attached to.'))
+      ->setDescription(t('The ID of the host entity this registration is attached to.'))
       ->setSetting('unsigned', TRUE);
 
     $fields['host_entity'] = BaseFieldDefinition::create('registration_host_entity')

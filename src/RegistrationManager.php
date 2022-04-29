@@ -309,7 +309,7 @@ class RegistrationManager implements RegistrationManagerInterface {
 
     // Me:
     $my_registration = ($registration->getUserId() == $this->currentUser->id());
-    $allow_multiple = $this->getRegistrationSetting($host_entity, $settings, 'multiple_registrations');
+    $allow_multiple = $settings->getSetting('multiple_registrations');
     if ($this->currentUser->isAuthenticated()
       && $this->currentUser->hasPermission("create $type registration self")
       && ($my_registration || $allow_multiple || !$this->isUserRegistered($host_entity, $this->currentUser))
@@ -407,27 +407,6 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrationSetting(EntityInterface $host_entity, RegistrationSettings $settings, string $key): mixed {
-    $setting_value = $settings->getSetting($key);
-    if (is_null($setting_value)) {
-    // The registration settings entity does not have the setting yet.
-    // Get a default value from the host entity registration field defaults.
-      $setting_value = $this->getFieldWidgetSetting($host_entity->getEntityType(),
-        $this->getRegistrationField($host_entity), $key);
-    }
-
-    // Allow other modules to alter the setting value.
-    $event = new RegistrationDataAlterEvent($setting_value, [
-      'host_entity' => $host_entity,
-      'settings' => $settings,
-    ]);
-    $this->eventDispatcher->dispatch($event, 'registration.alter.setting.' . $key);
-    return $event->getData();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getRegistrationType(EntityInterface $host_entity): ?RegistrationTypeInterface {
     $registration_type = NULL;
 
@@ -500,7 +479,7 @@ class RegistrationManager implements RegistrationManagerInterface {
         $route
           ->setPath($route->getPath() . '/settings')
           ->setDefaults([
-            '_form' => '\Drupal\registration\Form\RegistrationSettingsForm',
+            '_entity_form' => 'registration_settings.edit',
             '_title' => 'Registration settings',
           ]);
         break;
@@ -548,7 +527,7 @@ class RegistrationManager implements RegistrationManagerInterface {
    */
   public function hasRoom(EntityInterface $host_entity, int $spaces = 1, RegistrationInterface $registration = NULL): bool {
     $settings = $this->getSettingsForHost($host_entity);
-    $capacity = $this->getRegistrationSetting($host_entity, $settings, 'capacity');
+    $capacity = $settings->getSetting('capacity');
     if ($capacity) {
       $projected_usage = $this->getActiveSpacesReserved($host_entity, $registration) + $spaces;
       if (($capacity - $projected_usage) < 0) {
@@ -563,12 +542,12 @@ class RegistrationManager implements RegistrationManagerInterface {
    */
   public function isEnabledForRegistration(EntityInterface $host_entity, int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool {
     $settings = $this->getSettingsForHost($host_entity);
-    $enabled = $this->getRegistrationSetting($host_entity, $settings, 'status');
+    $enabled = $settings->getSetting('status');
 
     // Only explore other settings if main status is enabled.
     if ($enabled) {
       // Check maximum allowed spaces per registration.
-      $maximum_spaces = (int) $this->getRegistrationSetting($host_entity, $settings, 'maximum_spaces');
+      $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
       if ($maximum_spaces && ($spaces > $maximum_spaces)) {
         $enabled = FALSE;
         $errors[] = $this->t('You may not register for more than @count spaces.', [
@@ -590,7 +569,7 @@ class RegistrationManager implements RegistrationManagerInterface {
       $now = new DrupalDateTime('now', $storage_timezone);
 
       // Check open date.
-      $open = $this->getRegistrationSetting($host_entity, $settings, 'open');
+      $open = $settings->getSetting('open');
       if ($open) {
         $open = DrupalDateTime::createFromFormat($storage_format, $open, $storage_timezone);
       }
@@ -602,7 +581,7 @@ class RegistrationManager implements RegistrationManagerInterface {
       }
 
       // Check close date.
-      $close = $this->getRegistrationSetting($host_entity, $settings, 'close');
+      $close = $settings->getSetting('close');
       if ($close) {
         $close = DrupalDateTime::createFromFormat($storage_format, $close, $storage_timezone);
       }

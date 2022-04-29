@@ -188,24 +188,6 @@ interface RegistrationManagerInterface {
   public function getRegistrationList(EntityInterface $host_entity, array $states = []): array;
 
   /**
-   * Gets the value of a registration setting for a host entity.
-   *
-   * If the host entity does not have registration settings yet, a default
-   * value from the field configuration instance is returned.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity, for example a node instance.
-   * @param \Drupal\registration\Entity\RegistrationSettings $settings
-   *   The registration settings entity.
-   * @param string $key
-   *   The setting name, for example "status", "reminder date" etc.
-   *
-   * @return mixed
-   *   The setting value. The data type depends on the key.
-   */
-  public function getRegistrationSetting(EntityInterface $host_entity, RegistrationSettings $settings, string $key): mixed;
-
-  /**
    * Gets the registration type for a host entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $host_entity

@@ -1,0 +1,7 @@
+registration.admin_settings:
+  path: '/admin/structure/registration-settings'
+  defaults:
+    _form: '\Drupal\registration\Form\RegistrationAdminForm'
+    _title: 'Registration settings'
+  requirements:
+    _permission: 'administer registration'

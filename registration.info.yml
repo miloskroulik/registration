@@ -7,5 +7,6 @@ configure: entity.registration_type.collection
 dependencies:
   - drupal:datetime
   - drupal:field
+  - drupal:text
   - drupal:user
   - drupal:workflows

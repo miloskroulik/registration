@@ -23,7 +23,7 @@ class ManageRegistrationsCaption extends AreaPluginBase {
       $registration_manager = Drupal::service('registration.manager');
       if ($host_entity = $registration_manager->getEntityFromParameters($route_match->getParameters())) {
         $settings = $registration_manager->getSettingsForHost($host_entity);
-        $capacity = $registration_manager->getRegistrationSetting($host_entity, $settings, 'capacity');
+        $capacity = $settings->getSetting('capacity');
         $spaces =  $registration_manager->getActiveSpacesReserved($host_entity);
         if ($capacity) {
           $caption = $this->formatPlural($capacity,

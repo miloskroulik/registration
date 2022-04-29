@@ -168,7 +168,7 @@ class RegistrationController extends ControllerBase {
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   protected function buildDataTable(EntityInterface $host_entity, RegistrationSettings $settings): array {
-    $capacity = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'capacity');
+    $capacity = $settings->getSetting('capacity');
     $spaces =  $this->registrationManager->getActiveSpacesReserved($host_entity);
     if ($capacity) {
       $caption = $this->formatPlural($capacity,
@@ -327,7 +327,7 @@ class RegistrationController extends ControllerBase {
    *   A render array as expected by drupal_render().
    */
   protected function buildSummary(EntityInterface $host_entity, RegistrationSettings $settings): array {
-    $capacity = $this->registrationManager->getRegistrationSetting($host_entity, $settings, 'capacity');
+    $capacity = $settings->getSetting('capacity');
     $spaces =  $this->registrationManager->getActiveSpacesReserved($host_entity);
     if ($capacity) {
       $caption = $this->formatPlural($capacity,

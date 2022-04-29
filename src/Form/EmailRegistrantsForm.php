@@ -284,7 +284,6 @@ class EmailRegistrantsForm extends RegistrationFormBase {
    *   The input string with tokens.
    */
   protected function replaceTokens(array &$element, EntityInterface $host_entity, RegistrationSettings $settings, RegistrationInterface $registration, string $input) {
-    $registration_type = $this->registrationManager->getRegistrationType($host_entity);
     $entities = [
       $host_entity->getEntityTypeId() => $host_entity,
       'registration' => $registration,
