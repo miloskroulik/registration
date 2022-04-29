@@ -71,7 +71,7 @@ class SettingsOperations extends EntityOperations {
           ->addCacheableDependency($host_entity);
 
         if ($access_result->isAllowed()) {
-          $url = Url::fromRoute("entity.$entity_type_id.registration_settings", [
+          $url = Url::fromRoute("entity.$entity_type_id.registration.registration_settings", [
             $entity_type_id => $entity_id,
           ]);
           $operations['edit'] = [

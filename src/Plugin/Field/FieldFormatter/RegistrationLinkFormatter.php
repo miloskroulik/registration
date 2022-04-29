@@ -105,7 +105,7 @@ class RegistrationLinkFormatter extends FormatterBase {
             $cache_entities[] = $registration_type;
             if ($this->registrationManager->isEnabledForRegistration($host_entity)) {
               $entity_type_id = $host_entity->getEntityTypeId();
-              $url = Url::fromRoute("entity.$entity_type_id.register", [
+              $url = Url::fromRoute("entity.$entity_type_id.registration.register", [
                 $entity_type_id => $host_entity->id(),
               ]);
               $label = $this->getSetting('label') ?: $registration_type->label();
