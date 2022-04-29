@@ -12,7 +12,6 @@ use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Routing\RouteProviderInterface;
@@ -86,13 +85,6 @@ class RegistrationManager implements RegistrationManagerInterface {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected ModuleHandlerInterface $moduleHandler;
-
-  /**
    * The renderer.
    *
    * @var \Drupal\Core\Render\Renderer
@@ -123,14 +115,12 @@ class RegistrationManager implements RegistrationManagerInterface {
    *   The entity type bundle info.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
    * @param \Drupal\Core\Render\Renderer $renderer
    *   The renderer.
    * @param \Drupal\Core\Routing\RouteProviderInterface $route_provider
    *   The route provider.
    */
-  public function __construct(AccountProxy $current_user, Connection $database, ContainerAwareEventDispatcher $event_dispatcher, EntityDisplayRepositoryInterface $entity_display_repository, EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, Renderer $renderer, RouteProviderInterface $route_provider) {
+  public function __construct(AccountProxy $current_user, Connection $database, ContainerAwareEventDispatcher $event_dispatcher, EntityDisplayRepositoryInterface $entity_display_repository, EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager, Renderer $renderer, RouteProviderInterface $route_provider) {
     $this->currentUser = $current_user;
     $this->database = $database;
     $this->eventDispatcher = $event_dispatcher;
@@ -138,7 +128,6 @@ class RegistrationManager implements RegistrationManagerInterface {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->entityTypeManager = $entity_type_manager;
-    $this->moduleHandler = $module_handler;
     $this->renderer = $renderer;
     $this->routeProvider = $route_provider;
   }
@@ -574,17 +563,14 @@ class RegistrationManager implements RegistrationManagerInterface {
    */
   public function isEnabledForRegistration(EntityInterface $host_entity, int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool {
     $settings = $this->getSettingsForHost($host_entity);
-    $status = $this->getRegistrationSetting($host_entity, $settings, 'status');
-    $open = $this->getRegistrationSetting($host_entity, $settings, 'open');
-    $close = $this->getRegistrationSetting($host_entity, $settings, 'close');
+    $enabled = $this->getRegistrationSetting($host_entity, $settings, 'status');
 
     // Only explore other settings if main status is enabled.
-    if ($status) {
-
+    if ($enabled) {
       // Check maximum allowed spaces per registration.
       $maximum_spaces = (int) $this->getRegistrationSetting($host_entity, $settings, 'maximum_spaces');
       if ($maximum_spaces && ($spaces > $maximum_spaces)) {
-        $status = FALSE;
+        $enabled = FALSE;
         $errors[] = $this->t('You may not register for more than @count spaces.', [
           '@count' => $maximum_spaces,
         ]);
@@ -592,33 +578,36 @@ class RegistrationManager implements RegistrationManagerInterface {
 
       // Check capacity.
       if (!$this->hasRoom($host_entity, $spaces, $registration)) {
-        $status = FALSE;
+        $enabled = FALSE;
         $errors[] = $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
           '%label' => $host_entity->label(),
         ]);
       }
 
       // Initialize the current time.
+      $storage_format = 'Y-m-d\TH:i:s';
       $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
       $now = new DrupalDateTime('now', $storage_timezone);
 
       // Check open date.
+      $open = $this->getRegistrationSetting($host_entity, $settings, 'open');
       if ($open) {
-        $open = DrupalDateTime::createFromFormat('Y-m-d\TH:i:s', $open, $storage_timezone);
+        $open = DrupalDateTime::createFromFormat($storage_format, $open, $storage_timezone);
       }
       if ($open && ($now < $open)) {
-        $status = FALSE;
+        $enabled = FALSE;
         $errors[] = $this->t('Registration for %label is not open yet.', [
           '%label' => $host_entity->label(),
         ]);
       }
 
       // Check close date.
+      $close = $this->getRegistrationSetting($host_entity, $settings, 'close');
       if ($close) {
-        $close = DrupalDateTime::createFromFormat('Y-m-d\TH:i:s', $close, $storage_timezone);
+        $close = DrupalDateTime::createFromFormat($storage_format, $close, $storage_timezone);
       }
       if ($close && ($now >= $close)) {
-        $status = FALSE;
+        $enabled = FALSE;
         $errors[] = $this->t('Registration for %label is closed.', [
           '%label' => $host_entity->label(),
         ]);
@@ -626,19 +615,18 @@ class RegistrationManager implements RegistrationManagerInterface {
     }
     else {
       $errors[] = $this->t('Registration for %label is disabled.', [
-          '%label' => $host_entity->label(),
-        ]);
+        '%label' => $host_entity->label(),
+      ]);
     }
 
-    // Allow other mods to override status.
-    // @todo change to a new event REGISTRATION_STATUS.
-    $context = [
+    // Allow other modules to override the result.
+    $event = new RegistrationDataAlterEvent($enabled, [
       'host_entity' => $host_entity,
-      'errors' => &$errors,
-    ];
-    $this->moduleHandler->alter('registration_status', $status, $context);
-
-    return $status;
+      'settings' => $settings,
+      'errors' => $errors,
+    ]);
+    $this->eventDispatcher->dispatch($event, RegistrationAlterEvents::REGISTRATION_ALTER_ENABLED);
+    return $event->getData();
   }
 
   /**

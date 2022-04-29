@@ -181,7 +181,7 @@ function registration_entity_update(EntityInterface $entity) {
  */
 function registration_form_views_exposed_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   $view = $form_state->get('view');
-  if (($view->id() == 'manage_registrations')) {
+  if ($view->id() == 'manage_registrations') {
     // Hide the manage registrations filter when there are only a few rows.
     $route_match = \Drupal::routeMatch();
     $registration_manager = \Drupal::service('registration.manager');

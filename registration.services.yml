@@ -67,7 +67,6 @@ services:
       '@entity_field.manager',
       '@entity_type.bundle.info',
       '@entity_type.manager',
-      '@module_handler',
       '@renderer',
       '@router.route_provider',
     ]

@@ -5,7 +5,7 @@ namespace Drupal\registration\Event;
 final class RegistrationAlterEvents {
 
   /**
-   * Alter the registration count for a host entity
+   * Alter the registration count for a host entity.
    *
    * This is the number of registrations, not spaces reserved.
    *
@@ -14,6 +14,19 @@ final class RegistrationAlterEvents {
    * @see \Drupal\registration\Event\RegistrationDataAlterEvent
    */
   const REGISTRATION_ALTER_COUNT = 'registration.alter.count';
+
+  /**
+   * Alter whether registration is enabled for a host entity.
+   *
+   * The standard check looks at the status flag, open and close
+   * dates, and whether there is still room for new registrations
+   * based on the capacity setting.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_ENABLED = 'registration.alter.enabled';
 
   /**
    * Alter email parameters before an email is sent to a registrant.
