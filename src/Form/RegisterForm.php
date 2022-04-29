@@ -62,6 +62,7 @@ class RegisterForm extends ContentEntityForm {
     $settings = $form_state->get('settings');
     $count = $registration->getSpacesReserved();
     $errors = [];
+    // @todo Should only admins be allowed to edit existing registration when new are closed?
     if ($registration->isNew() && !$this->registrationManager->isEnabledForRegistration($host_entity, $count, $registration, $errors)) {
       foreach ($errors as $error) {
         $form['notice'][] = [
