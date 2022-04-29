@@ -123,7 +123,7 @@ function registration_entity_delete(EntityInterface $entity) {
     ->condition('entity_type_id', $entity->getEntityTypeId())
     ->condition('entity_id', $entity->id())
     ->execute();
-  \Drupal::database()->delete('registration_entity')
+  \Drupal::database()->delete('registration_settings')
     ->condition('entity_type_id', $entity->getEntityTypeId())
     ->condition('entity_id', $entity->id())
     ->execute();

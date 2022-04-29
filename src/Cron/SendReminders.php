@@ -71,7 +71,7 @@ class SendReminders {
     $this->queue->deleteQueue();
 
     // Re-fill the queue with host entities that need reminders.
-    $query = $this->database->select('registration_entity', 'r')
+    $query = $this->database->select('registration_settings', 'r')
       ->fields('r')
       ->condition('send_reminder', 1)
       ->condition('reminder_date', $now_date, '<=')

@@ -74,7 +74,7 @@ display:
           field_api_classes: false
         status:
           id: status
-          table: registration_entity
+          table: registration_settings
           field: status
           relationship: node_registration_settings
           group_type: group
@@ -141,7 +141,7 @@ display:
           field_api_classes: false
         capacity:
           id: capacity
-          table: registration_entity
+          table: registration_settings
           field: capacity
           relationship: node_registration_settings
           group_type: group
@@ -278,7 +278,7 @@ display:
           suffix: ''
         open:
           id: open
-          table: registration_entity
+          table: registration_settings
           field: open
           relationship: node_registration_settings
           group_type: group
@@ -344,7 +344,7 @@ display:
           field_api_classes: false
         close:
           id: close
-          table: registration_entity
+          table: registration_settings
           field: close
           relationship: node_registration_settings
           group_type: group
@@ -410,7 +410,7 @@ display:
           field_api_classes: false
         settings_operations:
           id: settings_operations
-          table: registration_entity
+          table: registration_settings
           field: settings_operations
           relationship: node_registration_settings
           group_type: group
@@ -564,7 +564,7 @@ display:
             group_items: {  }
         status_1:
           id: status_1
-          table: registration_entity
+          table: registration_settings
           field: status
           relationship: node_registration_settings
           group_type: group

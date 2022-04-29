@@ -50,7 +50,6 @@ use Drupal\workflows\WorkflowInterface;
  *   permission_granularity = "bundle",
  *   storage_schema = "Drupal\registration\RegistrationStorageSchema",
  *   base_table = "registration",
- *   data_table = "registration_field_data",
  *   entity_keys = {
  *     "id" = "registration_id",
  *     "bundle" = "type",

@@ -21,7 +21,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
  *     "storage_schema" = "Drupal\registration\RegistrationStorageSchema",
  *     "views_data" = "Drupal\views\EntityViewsData",
  *   },
- *   base_table = "registration_entity",
+ *   base_table = "registration_settings",
  *   entity_keys = {
  *     "id" = "settings_id",
  *   },

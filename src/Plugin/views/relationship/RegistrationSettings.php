@@ -22,7 +22,7 @@ class RegistrationSettings extends RelationshipPluginBase {
     $def = $this->definition;
     $def['left_table'] = $this->tableAlias;
     $def['left_field'] = \Drupal::entityTypeManager()->getDefinition($def['entity_type'])->getKey('id');
-    $def['table'] = 'registration_entity';
+    $def['table'] = 'registration_settings';
     $def['field'] = 'entity_id';
     $def['type'] = empty($this->options['required']) ? 'LEFT' : 'INNER';
     $def['extra'] = [0 => [
@@ -34,7 +34,7 @@ class RegistrationSettings extends RelationshipPluginBase {
 
     $alias = $def['table'] . '_' . $this->table;
 
-    $this->alias = $this->query->addRelationship($alias, $join, 'registration_entity', $this->relationship);
+    $this->alias = $this->query->addRelationship($alias, $join, 'registration_settings', $this->relationship);
   }
 
 }
