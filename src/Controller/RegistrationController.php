@@ -172,18 +172,18 @@ class RegistrationController extends ControllerBase {
     $spaces =  $this->registrationManager->getActiveSpacesReserved($host_entity);
     if ($capacity) {
       $caption = $this->formatPlural($capacity,
-       'List of registrations for %title. @spaces of 1 space is filled.',
-       'List of registrations for %title. @spaces of @count spaces are filled.', [
-        '%title' => $host_entity->label(),
+       'List of registrations for %label. @spaces of 1 space is filled.',
+       'List of registrations for %label. @spaces of @count spaces are filled.', [
+        '%label' => $host_entity->label(),
         '@capacity' => $capacity,
         '@spaces' => $spaces,
       ]);
     }
     else {
       $caption = $this->formatPlural($spaces,
-       'List of registrations for %title. 1 space is filled.',
-       'List of registrations for %title. @count spaces are filled.', [
-        '%title' => $host_entity->label(),
+       'List of registrations for %label. 1 space is filled.',
+       'List of registrations for %label. @count spaces are filled.', [
+        '%label' => $host_entity->label(),
       ]);
     }
 
@@ -331,18 +331,18 @@ class RegistrationController extends ControllerBase {
     $spaces =  $this->registrationManager->getActiveSpacesReserved($host_entity);
     if ($capacity) {
       $caption = $this->formatPlural($capacity,
-       'Registration summary for %title: @spaces of 1 space is filled.',
-       'Registration summary for %title: @spaces of @count spaces are filled.', [
-        '%title' => $host_entity->label(),
+       'Registration summary for %label: @spaces of 1 space is filled.',
+       'Registration summary for %label: @spaces of @count spaces are filled.', [
+        '%label' => $host_entity->label(),
         '@capacity' => $capacity,
         '@spaces' => $spaces,
       ]);
     }
     else {
       $caption = $this->formatPlural($spaces,
-       'Registration summary for %title: 1 space is filled.',
-       'Registration summary for %title: @count spaces are filled.', [
-        '%title' => $host_entity->label(),
+       'Registration summary for %label: 1 space is filled.',
+       'Registration summary for %label: @count spaces are filled.', [
+        '%label' => $host_entity->label(),
       ]);
     }
     $build['registration_table'] = [

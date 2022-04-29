@@ -142,8 +142,8 @@ class EmailRegistrantsForm extends RegistrationFormBase {
         '#required' => TRUE,
         '#default_value' => $values['subject'] ?? '',
       ];
-      $description = $this->t('Enter the message you want to send to registrants for @title. Tokens are supported, e.g., [node:title].', [
-        '@title' => $host_entity->label(),
+      $description = $this->t('Enter the message you want to send to registrants for %label. Tokens are supported, e.g., [node:title].', [
+        '%label' => $host_entity->label(),
       ]);
       $form['message'] = [
         '#type' => 'text_format',
