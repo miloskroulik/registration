@@ -5,6 +5,7 @@ namespace Drupal\registration\Form;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 
 /**
@@ -50,12 +51,16 @@ class RegistrationSettingsForm extends RegistrationFormBase {
       '#default_value' => $this->getRegistrationSetting($form_state, 'capacity'),
     ];
 
+    // Set the storage timezone for use with dates.
+    $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+
+    // Open and close dates.
     $form['scheduling'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Scheduling'),
     ];
     $date = $this->getRegistrationSetting($form_state, 'open');
-    $default_value = $date ? DrupalDateTime::createFromTimestamp(strtotime($date)) : '';
+    $default_value = $date ? DrupalDateTime::createFromFormat('Y-m-d\TH:i:s', $date, $storage_timezone) : '';
     $form['scheduling']['open'] = [
       '#type' => 'datetime',
       '#title' => $this->t('Open Date'),
@@ -65,7 +70,7 @@ class RegistrationSettingsForm extends RegistrationFormBase {
       '#default_value' => $default_value,
     ];
     $date = $this->getRegistrationSetting($form_state, 'close');
-    $default_value = $date ? DrupalDateTime::createFromTimestamp(strtotime($date)) : '';
+    $default_value = $date ? DrupalDateTime::createFromFormat('Y-m-d\TH:i:s', $date, $storage_timezone) : '';
     $form['scheduling']['close'] = [
       '#type' => 'datetime',
       '#title' => $this->t('Close Date'),
@@ -87,7 +92,7 @@ class RegistrationSettingsForm extends RegistrationFormBase {
       '#default_value' => (bool) $this->getRegistrationSetting($form_state, 'send_reminder'),
     ];
     $date = $this->getRegistrationSetting($form_state, 'reminder_date');
-    $default_value = $date ? DrupalDateTime::createFromTimestamp(strtotime($date)) : '';
+    $default_value = $date ? DrupalDateTime::createFromFormat('Y-m-d\TH:i:s', $date, $storage_timezone) : '';
     $form['reminder']['reminder_date'] = [
       '#type' => 'datetime',
       '#title' => $this->t('Reminder Date'),
@@ -199,7 +204,12 @@ class RegistrationSettingsForm extends RegistrationFormBase {
     // Ensure reminder date is not in the past when "send_reminder" is TRUE:
     if ($values['send_reminder'] && !empty($values['reminder_date'])) {
       if ($values['reminder_date'] instanceof DrupalDateTime) {
-        if (strtotime($values['reminder_date']) <= time()) {
+        // Ensure dates are compared using the storage timezone for both.
+        $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+        $date = $values['reminder_date'];
+        $date->setTimezone($storage_timezone);
+        $now = new DrupalDateTime('now', $storage_timezone);
+        if ($date <= $now) {
           $form_state->setError($form['reminder']['reminder_date'], $this->t('Reminder must be in the future.'));
         }
       }
@@ -217,6 +227,9 @@ class RegistrationSettingsForm extends RegistrationFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Save all dates in the storage timezone.
+    $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+
     // Save values to the settings entity.
     $entity = $this->getSettings();
     $values = $form_state->getValues();
@@ -236,6 +249,7 @@ class RegistrationSettingsForm extends RegistrationFormBase {
         $entity->set($field, NULL);
       }
       elseif ($type == 'date') {
+        $values[$field]->setTimezone($storage_timezone);
         // Without \T the Views module cannot filter or sort properly.
         $entity->set($field, $values[$field]->format('Y-m-d\TH:i:s'));
       }

@@ -598,26 +598,40 @@ class RegistrationManager implements RegistrationManagerInterface {
         ]);
       }
 
-      // Check open date range.
-      $now = new DrupalDateTime('now');
-      $now->setTimezone(new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
-      $now = $now->getTimestamp();
-      if ($open && ($now < strtotime($open))) {
+      // Initialize the current time.
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      $now = new DrupalDateTime('now', $storage_timezone);
+
+      // Check open date.
+      if ($open) {
+        $open = DrupalDateTime::createFromFormat('Y-m-d\TH:i:s', $open, $storage_timezone);
+      }
+      if ($open && ($now < $open)) {
         $status = FALSE;
-        $errors[] = $this->t('Registration is not yet open.');
+        $errors[] = $this->t('Registration for %label is not open yet.', [
+          '%label' => $host_entity->label(),
+        ]);
       }
 
-      // Check close date range.
-      if ($close && ($now >= strtotime($close))) {
+      // Check close date.
+      if ($close) {
+        $close = DrupalDateTime::createFromFormat('Y-m-d\TH:i:s', $close, $storage_timezone);
+      }
+      if ($close && ($now >= $close)) {
         $status = FALSE;
-        $errors[] = $this->t('Registration is closed.');
+        $errors[] = $this->t('Registration for %label is closed.', [
+          '%label' => $host_entity->label(),
+        ]);
       }
     }
     else {
-      $errors[] = $this->t('Registration is disabled.');
+      $errors[] = $this->t('Registration for %label is disabled.', [
+          '%label' => $host_entity->label(),
+        ]);
     }
 
     // Allow other mods to override status.
+    // @todo change to a new event REGISTRATION_STATUS.
     $context = [
       'host_entity' => $host_entity,
       'errors' => &$errors,

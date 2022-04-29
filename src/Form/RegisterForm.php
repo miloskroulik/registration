@@ -61,12 +61,13 @@ class RegisterForm extends ContentEntityForm {
     $host_entity = $form_state->get('host_entity');
     $settings = $form_state->get('settings');
     $count = $registration->getSpacesReserved();
-    if (!$this->registrationManager->isEnabledForRegistration($host_entity, $count, $registration)) {
-      $form['notice'] = [
-        '#markup' => $this->t('Sorry, registrations are no longer available for %name', [
-          '%name' => $host_entity->label(),
-        ]),
-      ];
+    $errors = [];
+    if (!$this->registrationManager->isEnabledForRegistration($host_entity, $count, $registration, $errors)) {
+      foreach ($errors as $error) {
+        $form['notice'][] = [
+          '#markup' => $error,
+        ];
+      }
       return $form;
     }
 
