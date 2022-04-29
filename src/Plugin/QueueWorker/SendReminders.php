@@ -103,17 +103,17 @@ class SendReminders extends QueueWorkerBase implements ContainerFactoryPluginInt
     if ($host_entity) {
       $registration_type = $this->registrationManager->getRegistrationType($host_entity);
       $states = $registration_type->getActiveStates();
-      $data['states'] = array_keys($states);
       if (empty($states)) {
         $this->logger->error('There are no active registration states configured. For a reminder email to be sent, an active registration state must be specified for the @type registration type.', [
           '@type' => $registration_type->label(),
         ]);
       }
       else {
-        // All clear, send email to the registrants.
+        // Active states confirmed, send email to the active registrants.
         $data['subject'] = $this->t('Reminder for @title', [
           '@title' => $host_entity->label(),
         ]);
+        $data['states'] = array_keys($states);
         $success_count = $this->registrationMailer->sendMail($host_entity, $data);
         if (!$success_count) {
           $this->logger->warning('Reminder email for @title had no recipients.', [
@@ -122,6 +122,7 @@ class SendReminders extends QueueWorkerBase implements ContainerFactoryPluginInt
         }
       }
 
+      // Turn off the reminder now that is has been processed.
       $settings = $this->registrationManager->getSettingsForHost($host_entity);
       $settings->set('send_reminder', FALSE);
       $settings->save();

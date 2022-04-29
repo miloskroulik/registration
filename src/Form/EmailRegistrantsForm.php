@@ -199,7 +199,7 @@ class EmailRegistrantsForm extends RegistrationFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // Although this same check is done during form build, it is redone here
+    // Although this same check is done during form build, it is done again
     // since the admin could have changed states after the form was loaded.
     $triggering_element = $form_state->getTriggeringElement();
     if ($triggering_element['#id'] == 'edit-submit') {
@@ -286,7 +286,6 @@ class EmailRegistrantsForm extends RegistrationFormBase {
     $registration_type = $this->registrationManager->getRegistrationType($host_entity);
     $entities = [
       $host_entity->getEntityTypeId() => $host_entity,
-      $registration_type->id() => $registration_type,
       'registration' => $registration,
       'registration_settings' => $settings,
     ];
