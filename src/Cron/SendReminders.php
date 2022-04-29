@@ -57,14 +57,15 @@ class SendReminders {
    * Run this task.
    */
   public function run() {
-    // Establish the current time in the storage timezone.
+    // Establish the current time in the storage timezone and format.
+    $storage_format = 'Y-m-d\TH:i:s';
     $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
     $now = new DrupalDateTime('now', $storage_timezone);
-    $now_date = $now->format('Y-m-d\TH:i:s');
+    $now_date = $now->format($storage_format);
 
     // Set a 2-day range so very old reminders are not sent.
     $minus_2_days = new DrupalDateTime('-2 days', $storage_timezone);
-    $minus_2_days_date = $minus_2_days->format('Y-m-d\TH:i:s');
+    $minus_2_days_date = $minus_2_days->format($storage_format);
 
     // Clear existing queue items to avoid reprocessing.
     $this->queue->deleteQueue();

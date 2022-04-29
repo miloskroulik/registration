@@ -51,7 +51,8 @@ class RegistrationSettingsForm extends RegistrationFormBase {
       '#default_value' => $this->getRegistrationSetting($form_state, 'capacity'),
     ];
 
-    // Set the storage timezone for use with dates.
+    // Set the storage format and timezone for use with dates.
+    $storage_format = 'Y-m-d\TH:i:s';
     $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
 
     // Open and close dates.
@@ -60,7 +61,7 @@ class RegistrationSettingsForm extends RegistrationFormBase {
       '#title' => $this->t('Scheduling'),
     ];
     $date = $this->getRegistrationSetting($form_state, 'open');
-    $default_value = $date ? DrupalDateTime::createFromFormat('Y-m-d\TH:i:s', $date, $storage_timezone) : '';
+    $default_value = $date ? DrupalDateTime::createFromFormat($storage_format, $date, $storage_timezone) : '';
     $form['scheduling']['open'] = [
       '#type' => 'datetime',
       '#title' => $this->t('Open Date'),
@@ -70,7 +71,7 @@ class RegistrationSettingsForm extends RegistrationFormBase {
       '#default_value' => $default_value,
     ];
     $date = $this->getRegistrationSetting($form_state, 'close');
-    $default_value = $date ? DrupalDateTime::createFromFormat('Y-m-d\TH:i:s', $date, $storage_timezone) : '';
+    $default_value = $date ? DrupalDateTime::createFromFormat($storage_format, $date, $storage_timezone) : '';
     $form['scheduling']['close'] = [
       '#type' => 'datetime',
       '#title' => $this->t('Close Date'),
@@ -92,7 +93,7 @@ class RegistrationSettingsForm extends RegistrationFormBase {
       '#default_value' => (bool) $this->getRegistrationSetting($form_state, 'send_reminder'),
     ];
     $date = $this->getRegistrationSetting($form_state, 'reminder_date');
-    $default_value = $date ? DrupalDateTime::createFromFormat('Y-m-d\TH:i:s', $date, $storage_timezone) : '';
+    $default_value = $date ? DrupalDateTime::createFromFormat($storage_format, $date, $storage_timezone) : '';
     $form['reminder']['reminder_date'] = [
       '#type' => 'datetime',
       '#title' => $this->t('Reminder Date'),
@@ -287,6 +288,9 @@ class RegistrationSettingsForm extends RegistrationFormBase {
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   protected function setSettings(FormStateInterface $form_state) {
     $host_entity = $this->getHostEntity($form_state);
