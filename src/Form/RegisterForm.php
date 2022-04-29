@@ -62,7 +62,7 @@ class RegisterForm extends ContentEntityForm {
     $settings = $form_state->get('settings');
     $count = $registration->getSpacesReserved();
     $errors = [];
-    if (!$this->registrationManager->isEnabledForRegistration($host_entity, $count, $registration, $errors)) {
+    if ($registration->isNew() && !$this->registrationManager->isEnabledForRegistration($host_entity, $count, $registration, $errors)) {
       foreach ($errors as $error) {
         $form['notice'][] = [
           '#markup' => $error,
