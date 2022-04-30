@@ -82,18 +82,18 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   public function label(): string {
     $host_entity = $this->getHostEntity();
     if (!$this->isNew() && $host_entity) {
-      return (string) t('Registration #@id for @label', [
+      return t('Registration #@id for @label', [
         '@id' => $this->id(),
         '@label' => $host_entity->label(),
       ]);
     }
     elseif ($this->isNew() && $host_entity) {
-      return (string) t('Registration for @label', [
+      return t('Registration for @label', [
         '@label' => $host_entity->label(),
       ]);
     }
     elseif (!$this->isNew()) {
-      return (string) t('Registration #@id', [
+      return t('Registration #@id', [
         '@id' => $this->id(),
       ]);
     }
