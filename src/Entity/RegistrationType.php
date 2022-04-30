@@ -2,7 +2,6 @@
 
 namespace Drupal\registration\Entity;
 
-use Drupal;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
 use Drupal\workflows\StateInterface;
 use Drupal\workflows\WorkflowInterface;
@@ -179,7 +178,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
    * {@inheritdoc}
    */
   public function getWorkflow(): WorkflowInterface|null {
-    $storage = Drupal::service('entity_type.manager')->getStorage('workflow');
+    $storage = \Drupal::entityTypeManager()->getStorage('workflow');
     return $storage->load($this->getWorkflowId());
   }
 

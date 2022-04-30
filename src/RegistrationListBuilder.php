@@ -2,7 +2,6 @@
 
 namespace Drupal\registration;
 
-use Drupal;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Link;
@@ -32,7 +31,10 @@ class RegistrationListBuilder extends EntityListBuilder {
   public function buildRow(EntityInterface $entity): array {
     /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
     if ($user = $entity->getUser()) {
-      $user = Link::fromTextAndUrl($user->getDisplayName(), $user->toUrl());
+      $user = Link::fromTextAndUrl(
+        $user->getDisplayName(),
+        $user->toUrl()
+      );
     }
     else {
       $user = $entity->getAnonymousEmail();
@@ -40,7 +42,12 @@ class RegistrationListBuilder extends EntityListBuilder {
 
     // Get the attached column value.
     if ($host_entity = $entity->getHostEntity()) {
-      $host_entity = Link::fromTextAndUrl($host_entity->label(), $host_entity->getEntity()->toUrl());
+      $host_entity = Link::fromTextAndUrl(
+        $host_entity->label(),
+        $host_entity
+          ->getEntity()
+          ->toUrl()
+        );
     }
 
     $row['id'] = Link::fromTextAndUrl($entity->id(), $entity->toUrl());
@@ -49,7 +56,8 @@ class RegistrationListBuilder extends EntityListBuilder {
     $row['spaces'] = $entity->getSpacesReserved();
     $row['host'] = $host_entity;
     $row['status'] = $entity->getState()->label();
-    $row['updated'] = Drupal::service('date.formatter')->format($entity->getChangedTime(), 'short');
+    $row['updated'] = \Drupal::service('date.formatter')
+      ->format($entity->getChangedTime(), 'short');
 
     return $row + parent::buildRow($entity);
   }

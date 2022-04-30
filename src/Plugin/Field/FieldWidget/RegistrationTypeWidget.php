@@ -2,16 +2,13 @@
 
 namespace Drupal\registration\Plugin\Field\FieldWidget;
 
-use Drupal;
-use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'registration_type' widget.
@@ -47,14 +44,16 @@ class RegistrationTypeWidget extends WidgetBase {
    */
   protected ModuleHandlerInterface $moduleHandler;
 
+
   /**
    * {@inheritdoc}
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings) {
-    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
-    $this->entityTypeBundleInfo = Drupal::service('entity_type.bundle.info');
-    $this->entityTypeManager = Drupal::entityTypeManager();
-    $this->moduleHandler = Drupal::moduleHandler();
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->entityTypeBundleInfo = $container->get('entity_type.bundle.info');
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->moduleHandler = $container->get('module_handler');
+    return $instance;
   }
 
   /**
@@ -72,7 +71,7 @@ class RegistrationTypeWidget extends WidgetBase {
       'reminder_template' => '',
       'maximum_spaces' => 1,
       'multiple_registrations' => 0,
-      'from_address' => Drupal::service('config.factory')->get('system.site')->get('mail'),
+      'from_address' => \Drupal::service('config.factory')->get('system.site')->get('mail'),
       'confirmation' => 'Registration has been saved.',
       'confirmation_redirect' => '',
     ] + parent::defaultSettings();
@@ -86,7 +85,7 @@ class RegistrationTypeWidget extends WidgetBase {
     $element['hide_register_tab'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Hide Register Tab'),
-      '#description' => t('Hide the tab on the content displaying the registration form. The form can still be embedded or linked to by changing the field display settings.'),
+      '#description' => $this->t('Hide the tab on the content displaying the registration form. The form can still be embedded or linked to by changing the field display settings.'),
       '#default_value' => (bool) $this->getSetting('hide_register_tab'),
     ];
     $element['default_registration_settings'] = [

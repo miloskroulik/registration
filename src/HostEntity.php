@@ -79,9 +79,9 @@ class HostEntity implements HostEntityInterface {
   /**
    * The settings for the host entity.
    *
-   * @var \Drupal\registration\Entity\RegistrationSettings
+   * @var \Drupal\registration\Entity\RegistrationSettings|null
    */
-  protected RegistrationSettings $settings;
+  protected RegistrationSettings|null $settings;
 
   /**
    * Creates a HostEntity object.
@@ -295,6 +295,7 @@ class HostEntity implements HostEntityInterface {
    */
   public function getSettings(): ?RegistrationSettings {
     if (!isset($this->settings)) {
+      $this->settings = NULL;
       if ($this->getRegistrationTypeBundle()) {
         /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
         $storage = $this->entityTypeManager()->getStorage('registration_settings');
