@@ -85,7 +85,7 @@ function template_preprocess_registration(array &$variables) {
 /**
  * Implements hook_entity_operation().
  */
-function registration_entity_operation(EntityInterface $entity) {
+function registration_entity_operation(EntityInterface $entity): array {
   $operations = [];
   if (($entity instanceof RegistrationInterface) && $entity->access('view')) {
     // Add a View operation for registrations. This will be first, followed
