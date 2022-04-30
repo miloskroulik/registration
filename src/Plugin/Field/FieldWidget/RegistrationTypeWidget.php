@@ -44,7 +44,6 @@ class RegistrationTypeWidget extends WidgetBase {
    */
   protected ModuleHandlerInterface $moduleHandler;
 
-
   /**
    * {@inheritdoc}
    */

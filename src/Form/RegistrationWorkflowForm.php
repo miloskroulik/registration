@@ -39,7 +39,10 @@ class RegistrationWorkflowForm extends WorkflowTypeConfigureFormBase {
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $configuration = $this->workflowType->getConfiguration();
-    $configuration['default_registration_state'] = $form_state->getValue(['workflow_settings', 'default_registration_state']);
+    $configuration['default_registration_state'] = $form_state->getValue([
+      'workflow_settings',
+      'default_registration_state',
+    ]);
     $this->workflowType->setConfiguration($configuration);
   }
 

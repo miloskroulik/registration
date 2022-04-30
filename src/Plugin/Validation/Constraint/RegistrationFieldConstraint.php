@@ -22,7 +22,7 @@ class RegistrationFieldConstraint extends Constraint {
   public string $disallowedCardinalityMessage = 'An entity can only have one registration field.';
 
   /**
-   * If the user tries to add a registration field to the registration entity type.
+   * If the user tries to add a registration field to a registration type.
    *
    * @var string
    */

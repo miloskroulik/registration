@@ -43,7 +43,7 @@ class RegistrationState implements StateInterface {
    *
    * @var bool
    */
-  protected bool $show_on_form;
+  protected bool $showOnForm;
 
   /**
    * RegistrationState constructor.
@@ -55,33 +55,37 @@ class RegistrationState implements StateInterface {
    * @param string $description
    *   The registration state description.
    * @param bool $active
-   *   TRUE if registrations should be considered active in this state, FALSE otherwise.
+   *   TRUE if registrations should be considered active in this state,
+   *   FALSE otherwise.
    * @param bool $held
    *   TRUE if registrations in this state should be held, FALSE otherwise.
    * @param bool $show_on_form
-   *   TRUE if this state should be displayed on the registration form, FALSE otherwise.
+   *   TRUE if this state should be displayed on the registration form,
+   *   FALSE otherwise.
    */
   public function __construct(StateInterface $state, string $description = '', bool $active = FALSE, bool $held = FALSE, bool $show_on_form = FALSE) {
     $this->state = $state;
     $this->description = $description;
     $this->active = $active;
     $this->held = $held;
-    $this->show_on_form = $show_on_form;
+    $this->showOnForm = $show_on_form;
   }
 
   /**
    * Gets the state description.
    *
    * @return string
+   *   The description.
    */
   public function getDescription(): string {
     return $this->description;
   }
 
   /**
-   * Determines if registrations should be considered active when in this state.
+   * Determines if registrations should be considered active in this state.
    *
    * @return bool
+   *   TRUE if active, FALSE otherwise.
    */
   public function isActive(): bool {
     return $this->active;
@@ -91,6 +95,7 @@ class RegistrationState implements StateInterface {
    * Determines if registrations in this state should be held.
    *
    * @return bool
+   *   TRUE if held, FALSE otherwise.
    */
   public function isHeld(): bool {
     return $this->held;
@@ -100,9 +105,10 @@ class RegistrationState implements StateInterface {
    * Determines if this state should be displayed on the registration form.
    *
    * @return bool
+   *   TRUE if displayed on the form, FLASE otherwise.
    */
   public function isShownOnForm(): bool {
-    return $this->show_on_form;
+    return $this->showOnForm;
   }
 
   /**

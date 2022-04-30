@@ -6,7 +6,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\registration\HostEntity;
 use Drupal\registration\Notify\RegistrationMailerInterface;
 use Drupal\registration\RegistrationManagerInterface;
 use Psr\Log\LoggerInterface;

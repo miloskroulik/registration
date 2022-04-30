@@ -161,7 +161,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
     ];
 
     // Get the recipients and send to each.
-    $recipients =  $this->getRecipientList($host_entity, $data);
+    $recipients = $this->getRecipientList($host_entity, $data);
     foreach ($recipients as $email => $registrations) {
       // Convert singleton to array.
       if (!is_array($registrations)) {

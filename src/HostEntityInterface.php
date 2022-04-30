@@ -53,7 +53,7 @@ interface HostEntityInterface {
    *   The entity identifier, or NULL if the object does not yet have an
    *   identifier.
    */
-  public function id(): string|int|null;
+  public function id(): string|int|NULL;
 
   /**
    * Determines whether the wrapped entity is new.
@@ -74,7 +74,7 @@ interface HostEntityInterface {
    * @return string|\Drupal\Core\StringTranslation\TranslatableMarkup|null
    *   The label of the wrapped entity, or NULL if there is no label defined.
    */
-  public function label(): string|TranslatableMarkup|null;
+  public function label(): string|TranslatableMarkup|NULL;
 
   /**
    * Adds cache information to a render array.
@@ -133,7 +133,7 @@ interface HostEntityInterface {
    *
    * @param array $states
    *   (optional) An array of state IDs to filter on.
-   *   For example: ['completed', 'held']
+   *   For example: ['completed', 'held'].
    *
    * @return \Drupal\registration\Entity\Registration[]
    *   The list of registrations.

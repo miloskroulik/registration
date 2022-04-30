@@ -3,7 +3,6 @@
 namespace Drupal\registration;
 
 use Drupal\registration\Entity\RegistrationSettings;
-use Drupal\registration\HostEntityInterface;
 
 /**
  * Defines the storage handler class for registration settings entities.

@@ -141,7 +141,7 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'number',
       ])
-     ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['open'] = BaseFieldDefinition::create('datetime')
       ->setLabel(t('Open date'))
@@ -197,7 +197,7 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'number',
       ])
-     ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['multiple_registrations'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Allow multiple registrations'))

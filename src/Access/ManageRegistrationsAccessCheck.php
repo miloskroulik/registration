@@ -54,8 +54,7 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
         $access =
              $account->hasPermission("administer registration")
           || $account->hasPermission("administer $type registration")
-          || ($account->hasPermission("update own $type registration") && $entity->access('update', $account))
-        ;
+          || ($account->hasPermission("update own $type registration") && $entity->access('update', $account));
         return AccessResult::allowedIf($access)
           // Recalculate this result if the relevant entities are updated.
           ->cachePerPermissions()

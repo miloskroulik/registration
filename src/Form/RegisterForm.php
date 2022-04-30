@@ -107,7 +107,6 @@ class RegisterForm extends ContentEntityForm {
 
     // The following checks for empty form fields, since the site admin
     // may have hidden certain fields on the form via the form display.
-
     // Set the User field visibility and required states.
     if (!empty($form['user_uid'])) {
       $form['user_uid']['#access'] = isset($registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER]);
@@ -161,7 +160,7 @@ class RegisterForm extends ContentEntityForm {
           'The number of spaces you wish to reserve. @spaces_remaining spaces remaining. You may register up to @max spaces.', [
             '@spaces_remaining' => $remaining,
             '@max' => $max,
-        ]);
+          ]);
       }
       elseif ($capacity) {
         $max = $remaining;
@@ -196,7 +195,10 @@ class RegisterForm extends ContentEntityForm {
 
       $type = $registration_type->id();
       $form['state']['#access'] = !empty($states) && $this->currentUser()->hasPermission("edit $type registration state");
-      $form['state']['widget'][0]['#options'] = array_map([State::class, 'labelCallback'], $states);
+      $form['state']['widget'][0]['#options'] = array_map([
+        State::class,
+        'labelCallback',
+      ], $states);
       $form['state']['widget'][0]['#default_value'] = $registration->getState()->id();
     }
 
@@ -289,14 +291,16 @@ class RegisterForm extends ContentEntityForm {
           if ($user) {
             if (!$allow_multiple && $registration->isNew()) {
               if ($host_entity->isUserRegistered($user)) {
-                $form_state->setError($form['user_uid'], $this->t('%user is already registered for this event.', [
-                  '%user' => $user->getDisplayName(),
-                ]));
+                $form_state->setError($form['user_uid'],
+                  $this->t('%user is already registered for this event.', [
+                    '%user' => $user->getDisplayName(),
+                  ]));
               }
             }
           }
           elseif ($this->currentUser()->hasPermission('access user profiles')) {
-            // The user may have been deleted just before saving this registration.
+            // The user may have been deleted just before saving this
+            // registration.
             $form_state->setError($form['user_uid'], $this->t('The selected user is no longer available.'));
           }
           else {

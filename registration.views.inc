@@ -49,7 +49,9 @@ function registration_views_data_alter(array &$data) {
       ]),
       'relationship' => [
         'id' => "registration",
-        'label' => t("$id registration"),
+        'label' => t('@id registration', [
+          '@id' => $id,
+        ]),
         'base' => 'registration',
       ],
     ];
@@ -63,7 +65,9 @@ function registration_views_data_alter(array &$data) {
       ]),
       'relationship' => [
         'id' => "registration_settings",
-        'label' => t("$id registration settings"),
+        'label' => t('@id registration settings', [
+          '@id' => $id,
+        ]),
         'base' => 'registration_settings',
       ],
     ];

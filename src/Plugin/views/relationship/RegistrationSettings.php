@@ -25,10 +25,12 @@ class RegistrationSettings extends RelationshipPluginBase {
     $def['table'] = 'registration_settings';
     $def['field'] = 'entity_id';
     $def['type'] = empty($this->options['required']) ? 'LEFT' : 'INNER';
-    $def['extra'] = [0 => [
-      'field' => 'entity_type_id',
-      'value' => $def['entity_type'],
-    ]];
+    $def['extra'] = [
+      0 => [
+        'field' => 'entity_type_id',
+        'value' => $def['entity_type'],
+      ],
+    ];
 
     $join = \Drupal::service('plugin.manager.views.join')->createInstance('standard', $def);
 

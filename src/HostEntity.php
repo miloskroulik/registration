@@ -81,12 +81,12 @@ class HostEntity implements HostEntityInterface {
    *
    * @var \Drupal\registration\Entity\RegistrationSettings|null
    */
-  protected RegistrationSettings|null $settings;
+  protected RegistrationSettings|NULL $settings;
 
   /**
    * Creates a HostEntity object.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The real entity being wrapped.
    */
   public function __construct(EntityInterface $entity) {
@@ -117,7 +117,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function id(): string|int|null {
+  public function id(): string|int|NULL {
     return $this->getEntity()->id();
   }
 

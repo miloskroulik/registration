@@ -58,8 +58,7 @@ class SettingsOperations extends EntityOperations {
       if ($type = $host_entity->getRegistrationTypeBundle()) {
         $access =
              $this->currentUser->hasPermission("administer registration")
-          || $this->currentUser->hasPermission("administer $type registration")
-        ;
+          || $this->currentUser->hasPermission("administer $type registration");
         $access_result = AccessResult::allowedIf($access)
           // Recalculate this result if the relevant entities are updated.
           ->cachePerPermissions()

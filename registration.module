@@ -28,8 +28,6 @@ function registration_cron() {
 
 /**
  * Implements hook_entity_type_alter().
- *
- * @param array $entity_types
  */
 function registration_entity_type_alter(array &$entity_types) {
   // Add validation constraints to the field config entity types.
@@ -202,7 +200,8 @@ function registration_form_views_exposed_form_alter(array &$form, FormStateInter
  * Implements hook_field_widget_complete_WIDGET_TYPE_form_alter().
  */
 function registration_field_widget_complete_datetime_default_form_alter(&$field_widget_complete_form,
-  FormStateInterface $form_state, $context) {
+  FormStateInterface $form_state,
+ $context) {
   // Add timezone to the datetime widgets when editing registration settings.
   if ($context['items']
     ->getFieldDefinition()

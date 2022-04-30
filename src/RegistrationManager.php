@@ -110,7 +110,7 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getEntityFromParameters(ParameterBag $parameters, bool $return_host_entity = FALSE): EntityInterface|HostEntityInterface|null {
+  public function getEntityFromParameters(ParameterBag $parameters, bool $return_host_entity = FALSE): EntityInterface|HostEntityInterface|NULL {
     $entity = NULL;
 
     foreach ($parameters as $parameter) {
@@ -169,7 +169,7 @@ class RegistrationManager implements RegistrationManagerInterface {
     // Check default first, then other form modes that exist.
     $form_modes = ['default' => ''];
     $form_modes += $this->entityDisplayRepository->getFormModes($entity_type_id);
-    foreach(array_keys($form_modes) as $form_mode) {
+    foreach (array_keys($form_modes) as $form_mode) {
       $form_display = $this->entityDisplayRepository->getFormDisplay($entity_type_id, $bundle, $form_mode);
       if ($form_display) {
         $component = $form_display->getComponent($field->getName());
@@ -247,7 +247,7 @@ class RegistrationManager implements RegistrationManagerInterface {
 
     // Build the 'manage' route and adjust for other routes.
     $route = $this->buildManageRoute($entity_type, $path);
-    switch($route_id) {
+    switch ($route_id) {
       case 'broadcast':
         $route
           ->setPath($route->getPath() . '/broadcast')
@@ -316,7 +316,6 @@ class RegistrationManager implements RegistrationManagerInterface {
    *
    * @return \Symfony\Component\Routing\Route
    *   The generated route.
-   *
    */
   protected function buildManageRoute(EntityTypeInterface $entity_type, string $path): Route {
     $entity_type_id = $entity_type->id();

@@ -5,6 +5,9 @@ namespace Drupal\registration\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
+/**
+ * Allows the site admin to configure global registration settings.
+ */
 class RegistrationAdminForm extends ConfigFormBase {
 
   /**

@@ -2,7 +2,6 @@
 
 namespace Drupal\registration\Form;
 
-use DateTimeZone;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\ContentEntityForm;
@@ -83,7 +82,7 @@ class RegistrationSettingsForm extends ContentEntityForm {
     if ($send_reminder && !empty($reminder_date)) {
       if ($reminder_date instanceof DrupalDateTime) {
         // Ensure dates are compared using the storage timezone for both.
-        $storage_timezone = new DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+        $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
         $reminder_date->setTimezone($storage_timezone);
         $now = new DrupalDateTime('now', $storage_timezone);
         if ($reminder_date <= $now) {

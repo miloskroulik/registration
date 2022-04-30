@@ -15,7 +15,7 @@ use Drupal\views\ResultRow;
 class HostEntity extends FieldPluginBase {
 
   /**
-   * @{inheritdoc}
+   * {@inheritdoc}
    */
   public function query() {
     // Leave empty to avoid a query on this field.

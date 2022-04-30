@@ -18,8 +18,8 @@
 
 /* Wide screens */
 @media
-  screen and (min-width: 780px),
-  (orientation: landscape) and (min-device-height: 780px) {
+screen and (min-width: 780px),
+(orientation: landscape) and (min-device-height: 780px) {
 
   .layout-region-registration-main,
   .layout-region-registration-footer {
@@ -71,7 +71,7 @@
  * toolbar width (240px). In this case, 240px + 780px.
  */
 @media
-  screen and (max-width: 1020px) {
+screen and (max-width: 1020px) {
 
   .toolbar-vertical.toolbar-tray-open .layout-region-registration-main,
   .toolbar-vertical.toolbar-tray-open .layout-region-registration-footer,

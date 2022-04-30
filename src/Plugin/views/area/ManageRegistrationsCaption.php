@@ -23,22 +23,22 @@ class ManageRegistrationsCaption extends AreaPluginBase {
       if ($host_entity = $registration_manager->getEntityFromParameters($route_match->getParameters(), TRUE)) {
         $settings = $host_entity->getSettings();
         $capacity = $settings->getSetting('capacity');
-        $spaces =  $host_entity->getActiveSpacesReserved();
+        $spaces = $host_entity->getActiveSpacesReserved();
         if ($capacity) {
           $caption = $this->formatPlural($capacity,
            'List of registrations for %label. @spaces of 1 space is filled.',
            'List of registrations for %label. @spaces of @count spaces are filled.', [
-            '%label' => $host_entity->label(),
-            '@capacity' => $capacity,
-            '@spaces' => $spaces,
-          ]);
+             '%label' => $host_entity->label(),
+             '@capacity' => $capacity,
+             '@spaces' => $spaces,
+           ]);
         }
         else {
           $caption = $this->formatPlural($spaces,
            'List of registrations for %label. 1 space is filled.',
            'List of registrations for %label. @count spaces are filled.', [
-            '%label' => $host_entity->label(),
-          ]);
+             '%label' => $host_entity->label(),
+           ]);
         }
         $build = [
           '#markup' => $caption,

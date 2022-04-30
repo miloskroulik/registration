@@ -110,6 +110,9 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     return '';
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getAuthor(): ?UserInterface {
     if (!$this->get('author_uid')->isEmpty()) {
       $author = $this->get('author_uid')->first()->entity;
@@ -160,7 +163,7 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getHostEntityId(): int|string|null {
+  public function getHostEntityId(): int|string|NULL {
     if (!$this->get('entity_id')->isEmpty()) {
       return (int) $this->get('entity_id')->first()->value;
     }

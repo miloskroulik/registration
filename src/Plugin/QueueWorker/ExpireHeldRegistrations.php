@@ -82,7 +82,7 @@ class ExpireHeldRegistrations extends QueueWorkerBase implements ContainerFactor
       $current_time = $this->time->getCurrentTime();
       $hold_time = $registration_type->getHeldExpirationTime() * 60 * 60;
       if (($hold_time > 0) && (($current_time - $hold_time) > $registration->getChangedTime())) {
-        $registration->set('state', $registration_type-> getHeldExpirationState());
+        $registration->set('state', $registration_type->getHeldExpirationState());
         $registration->save();
       }
     }

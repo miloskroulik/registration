@@ -7,6 +7,9 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\workflows\Entity\Workflow;
 
+/**
+ * Maintains new or existing registration types.
+ */
 class RegistrationTypeForm extends BundleEntityFormBase {
 
   /**

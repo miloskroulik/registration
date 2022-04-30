@@ -16,7 +16,7 @@ use Drupal\workflows\WorkflowInterface;
 interface RegistrationInterface extends ContentEntityInterface, EntityChangedInterface {
 
   /**
-   * If user has access to create registrations for his/her account.
+   * If user has access to create registrations for their account.
    */
   const REGISTRATION_REGISTRANT_TYPE_ME = 'registration_registrant_type_me';
 
@@ -84,7 +84,7 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    * @return int
    *   The host entity ID.
    */
-  public function getHostEntityId(): int|string|null;
+  public function getHostEntityId(): int|string|NULL;
 
   /**
    * Gets the entity type ID of the host entity.

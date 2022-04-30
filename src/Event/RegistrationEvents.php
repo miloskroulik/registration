@@ -2,6 +2,9 @@
 
 namespace Drupal\registration\Event;
 
+/**
+ * Events fired by the Registration module.
+ */
 final class RegistrationEvents {
 
   /**

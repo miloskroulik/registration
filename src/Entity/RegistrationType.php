@@ -177,7 +177,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
   /**
    * {@inheritdoc}
    */
-  public function getWorkflow(): WorkflowInterface|null {
+  public function getWorkflow(): WorkflowInterface|NULL {
     $storage = \Drupal::entityTypeManager()->getStorage('workflow');
     return $storage->load($this->getWorkflowId());
   }
@@ -249,7 +249,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
   public function calculateDependencies(): RegistrationTypeInterface {
     parent::calculateDependencies();
 
-    // The registration type must depend on the module that provides the workflow.
+    // The registration type depends on the module that provides the workflow.
     $workflow_plugin = $this->getWorkflow()->getTypePlugin();
     $this->calculatePluginDependencies($workflow_plugin);
 

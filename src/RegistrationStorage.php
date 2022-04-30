@@ -65,7 +65,8 @@ class RegistrationStorage extends SqlContentEntityStorage {
    * maps to the 'registration.registration_settings.update' event name.
    *
    * @param string $hook
-   *   'load', 'create', 'presave', 'insert', 'update', 'predelete', 'delete'
+   *   One of 'load', 'create', 'presave', 'insert', 'update', 'predelete',
+   *   'delete'.
    *
    * @return string
    *   The event name.

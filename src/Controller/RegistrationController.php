@@ -80,6 +80,7 @@ class RegistrationController extends ControllerBase {
    *
    * @return array
    *   A render array as expected by drupal_render().
+   *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityMalformedException
@@ -147,28 +148,29 @@ class RegistrationController extends ControllerBase {
    *
    * @return array
    *   A render array as expected by drupal_render().
+   *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   protected function buildDataTable(HostEntityInterface $host_entity): array {
     $capacity = $host_entity->getSetting('capacity');
-    $spaces =  $host_entity->getActiveSpacesReserved();
+    $spaces = $host_entity->getActiveSpacesReserved();
     if ($capacity) {
       $caption = $this->formatPlural($capacity,
-       'List of registrations for %label. @spaces of 1 space is filled.',
-       'List of registrations for %label. @spaces of @count spaces are filled.', [
-        '%label' => $host_entity->label(),
-        '@capacity' => $capacity,
-        '@spaces' => $spaces,
-      ]);
+        'List of registrations for %label. @spaces of 1 space is filled.',
+        'List of registrations for %label. @spaces of @count spaces are filled.', [
+          '%label' => $host_entity->label(),
+          '@capacity' => $capacity,
+          '@spaces' => $spaces,
+        ]);
     }
     else {
       $caption = $this->formatPlural($spaces,
-       'List of registrations for %label. 1 space is filled.',
-       'List of registrations for %label. @count spaces are filled.', [
-        '%label' => $host_entity->label(),
-      ]);
+        'List of registrations for %label. 1 space is filled.',
+        'List of registrations for %label. @count spaces are filled.', [
+          '%label' => $host_entity->label(),
+        ]);
     }
 
     $header = [
@@ -310,22 +312,22 @@ class RegistrationController extends ControllerBase {
    */
   protected function buildSummary(HostEntityInterface $host_entity): array {
     $capacity = $host_entity->getSetting('capacity');
-    $spaces =  $host_entity->getActiveSpacesReserved();
+    $spaces = $host_entity->getActiveSpacesReserved();
     if ($capacity) {
       $caption = $this->formatPlural($capacity,
-       'Registration summary for %label: @spaces of 1 space is filled.',
-       'Registration summary for %label: @spaces of @count spaces are filled.', [
-        '%label' => $host_entity->label(),
-        '@capacity' => $capacity,
-        '@spaces' => $spaces,
-      ]);
+        'Registration summary for %label: @spaces of 1 space is filled.',
+        'Registration summary for %label: @spaces of @count spaces are filled.', [
+          '%label' => $host_entity->label(),
+          '@capacity' => $capacity,
+          '@spaces' => $spaces,
+        ]);
     }
     else {
       $caption = $this->formatPlural($spaces,
-       'Registration summary for %label: 1 space is filled.',
-       'Registration summary for %label: @count spaces are filled.', [
-        '%label' => $host_entity->label(),
-      ]);
+        'Registration summary for %label: 1 space is filled.',
+        'Registration summary for %label: @count spaces are filled.', [
+          '%label' => $host_entity->label(),
+        ]);
     }
     $build['registration_table'] = [
       '#markup' => $caption,
@@ -341,6 +343,7 @@ class RegistrationController extends ControllerBase {
    *
    * @return array
    *   A render array as expected by drupal_render().
+   *
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   protected function getOperations(RegistrationInterface $registration): array {
@@ -386,10 +389,10 @@ class RegistrationController extends ControllerBase {
   protected function ensureDestination(Url $url): Url {
     return $url
       ->mergeOptions([
-      'query' => $this
-        ->getRedirectDestination()
-        ->getAsArray(),
-    ]);
+        'query' => $this
+          ->getRedirectDestination()
+          ->getAsArray(),
+      ]);
   }
 
 }

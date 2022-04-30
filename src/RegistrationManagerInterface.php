@@ -44,7 +44,7 @@ interface RegistrationManagerInterface {
    *
    * @see https://www.drupal.org/docs/8/api/routing-system/parameters-in-routes/using-parameters-in-routes
    */
-  public function getEntityFromParameters(ParameterBag $parameters, bool $return_host_entity = FALSE): EntityInterface|HostEntityInterface|null;
+  public function getEntityFromParameters(ParameterBag $parameters, bool $return_host_entity = FALSE): EntityInterface|HostEntityInterface|NULL;
 
   /**
    * Gets a setting from registration fields associated with an entity type.
@@ -93,7 +93,7 @@ interface RegistrationManagerInterface {
    * @return array
    *   An array keyed by registrant constants.
    *
-   * @see \Drupal\registration\Entity\RegistrationInterface for the constants.
+   * @see \Drupal\registration\Entity\RegistrationInterface
    */
   public function getRegistrantOptions(RegistrationInterface $registration, RegistrationSettings $settings): array;
 

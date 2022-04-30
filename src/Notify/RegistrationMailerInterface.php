@@ -15,7 +15,7 @@ interface RegistrationMailerInterface {
    * @param \Drupal\registration\HostEntityInterface $host_entity
    *   The host entity.
    * @param array $data
-   *   (optional)
+   *   (Optional)
    *   Contextual data with information about the usage of the list.
    *   This will be passed to events triggered by this method.
    *   For example, values submitted from the broadcast email form

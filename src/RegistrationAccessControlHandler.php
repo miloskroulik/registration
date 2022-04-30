@@ -10,7 +10,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 
 /**
- * @internal
+ * Access control for registrations.
  */
 class RegistrationAccessControlHandler extends EntityAccessControlHandler {
 

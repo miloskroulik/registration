@@ -63,8 +63,8 @@ class EmailRegistrantsForm extends RegistrationFormBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
     // Setup.
     $host_entity = $this->getHostEntity($form_state);
-    $registrants =  $this->registrationMailer->getRecipientList($host_entity);
-    $registrant_count =  count($registrants);
+    $registrants = $this->registrationMailer->getRecipientList($host_entity);
+    $registrant_count = count($registrants);
 
     $form = [];
 

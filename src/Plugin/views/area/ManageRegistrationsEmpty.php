@@ -24,7 +24,8 @@ class ManageRegistrationsEmpty extends AreaPluginBase {
         return [
           '#markup' => $this->t('There are no registrants for %name', [
             '%name' => $entity->label(),
-        ])];
+          ]),
+        ];
       }
     }
     return [];
