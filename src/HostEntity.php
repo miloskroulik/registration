@@ -96,6 +96,48 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function bundle(): string {
+    return $this->getEntity()->bundle();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntity(): EntityInterface {
+    return $this->entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityTypeId(): string {
+    return $this->getEntity()->getEntityTypeId();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function id(): string|int|null {
+    return $this->getEntity()->id();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isNew(): bool {
+    return $this->getEntity()->isNew();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function label(): string {
+    return $this->getEntity()->label();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function addCacheableDependencies(array &$build, array $other_entities = []) {
     // Rebuild if the host entity is updated.
     $this->renderer()->addCacheableDependency($build, $this->getEntity());
@@ -118,13 +160,6 @@ class HostEntity implements HostEntityInterface {
     else {
       $build['#cache']['contexts'][] = 'user.permissions';
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function bundle(): string {
-    return $this->getEntity()->bundle();
   }
 
   /**
@@ -185,20 +220,6 @@ class HostEntity implements HostEntityInterface {
     ]);
     $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_USAGE);
     return $event->getData();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getEntity(): EntityInterface {
-    return $this->entity;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getEntityTypeId(): string {
-    return $this->getEntity()->getEntityTypeId();
   }
 
   /**
@@ -293,6 +314,16 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function getSetting(string $key): mixed {
+    if ($settings = $this->getSettings()) {
+      return $settings->getSetting($key);
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSettings(): ?RegistrationSettings {
     if (!isset($this->settings)) {
       $this->settings = NULL;
@@ -317,13 +348,6 @@ class HostEntity implements HostEntityInterface {
       }
     }
     return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function id(): int|string|null {
-    return $this->getEntity()->id();
   }
 
   /**
@@ -426,13 +450,6 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function isNew(): bool {
-    return $this->getEntity()->isNew();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function isUserRegistered(AccountInterface $account): bool {
     $states = [];
 
@@ -454,13 +471,6 @@ class HostEntity implements HostEntityInterface {
 
     $count = $query->countQuery()->execute()->fetchField();
     return ($count > 0);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function label(): string {
-    return $this->getEntity()->label();
   }
 
   /**

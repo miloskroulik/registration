@@ -18,6 +18,65 @@ use Drupal\registration\Entity\RegistrationTypeInterface;
 interface HostEntityInterface {
 
   /**
+   * Gets the bundle of the wrapped entity.
+   *
+   * This is a machine name, e.g., "event".
+   *
+   * @return string
+   *   The bundle of the wrapped entity. Defaults to the entity type ID if the
+   *   entity type does not make use of different bundles.
+   */
+  public function bundle(): string;
+
+  /**
+   * Gets the wrapped entity.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface
+   *   The wrapped entity.
+   */
+  public function getEntity(): EntityInterface;
+
+  /**
+   * Gets the ID of the type of the wrapped entity.
+   *
+   * This is a machine name, e.g., "node".
+   *
+   * @return string
+   *   The entity type ID of the wrapped entity.
+   */
+  public function getEntityTypeId(): string;
+
+  /**
+   * Gets the identifier of the wrapped entity.
+   *
+   * @return string|int|null
+   *   The entity identifier, or NULL if the object does not yet have an
+   *   identifier.
+   */
+  public function id(): string|int|null;
+
+  /**
+   * Determines whether the wrapped entity is new.
+   *
+   * Usually an entity is new if no ID exists for it yet. However, entities may
+   * be enforced to be new with existing IDs too.
+   *
+   * @return bool
+   *   TRUE if the entity is new, or FALSE if the entity has already been saved.
+   *
+   * @see \Drupal\Core\Entity\EntityInterface::enforceIsNew()
+   */
+  public function isNew(): bool;
+
+  /**
+   * Gets the label of the wrapped entity.
+   *
+   * @return string|\Drupal\Core\StringTranslation\TranslatableMarkup|null
+   *   The label of the wrapped entity, or NULL if there is no label defined.
+   */
+  public function label(): string|TranslatableMarkup|null;
+
+  /**
    * Adds cache information to a render array.
    *
    * @param array $build
@@ -26,15 +85,6 @@ interface HostEntityInterface {
    *   (optional) Other entities that should be added as dependencies.
    */
   public function addCacheableDependencies(array &$build, array $other_entities = []);
-
-  /**
-   * Gets the bundle of the wrapper entity.
-   *
-   * @return string
-   *   The bundle of the wrapper entity. Defaults to the entity type ID if the
-   *   entity type does not make use of different bundles.
-   */
-  public function bundle(): string;
 
   /**
    * Generates a sample registration for use in tests and email preview.
@@ -59,22 +109,6 @@ interface HostEntityInterface {
    *   The total number of reserved spaces for active registrations.
    */
   public function getActiveSpacesReserved(RegistrationInterface $registration = NULL): int;
-
-  /**
-   * Gets the wrapper entity.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   The wrapped entity.
-   */
-  public function getEntity(): EntityInterface;
-
-  /**
-   * Gets the ID of the type of the wrapped entity.
-   *
-   * @return string
-   *   The entity type ID of the wrapped entity.
-   */
-  public function getEntityTypeId(): string;
 
   /**
    * Gets the total number of registrations.
@@ -125,6 +159,17 @@ interface HostEntityInterface {
   public function getRegistrationTypeBundle(): ?string;
 
   /**
+   * Gets a settings value for a given key.
+   *
+   * @param string $key
+   *   The setting name, for example "status", "reminder date" etc.
+   *
+   * @return mixed
+   *   The setting value. The data type depends on the key.
+   */
+  public function getSetting(string $key): mixed;
+
+  /**
    * Gets the registration settings entity.
    *
    * @return \Drupal\registration\Entity\RegistrationSettings|null
@@ -144,15 +189,6 @@ interface HostEntityInterface {
    *   TRUE if there are spaces remaining, FALSE otherwise.
    */
   public function hasRoom(int $spaces = 1, RegistrationInterface $registration = NULL): bool;
-
-  /**
-   * Gets the identifier of the wrapper entity.
-   *
-   * @return string|int|null
-   *   The entity identifier, or NULL if the object does not yet have an
-   *   identifier.
-   */
-  public function id(): int|string|null;
 
   /**
    * Determines whether new registrations are allowed.
@@ -186,19 +222,6 @@ interface HostEntityInterface {
   public function isEmailRegistered(string $email): bool;
 
   /**
-   * Determines whether the wrapped entity is new.
-   *
-   * Usually an entity is new if no ID exists for it yet. However, entities may
-   * be enforced to be new with existing IDs too.
-   *
-   * @return bool
-   *   TRUE if the entity is new, or FALSE if the entity has already been saved.
-   *
-   * @see \Drupal\Core\Entity\EntityInterface::enforceIsNew()
-   */
-  public function isNew(): bool;
-
-  /**
    * Determine whether a given user is already registered.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
@@ -208,13 +231,5 @@ interface HostEntityInterface {
    *   TRUE if the user has already registered for the host entity.
    */
   public function isUserRegistered(AccountInterface $account): bool;
-
-  /**
-   * Gets the label of the entity.
-   *
-   * @return string|\Drupal\Core\StringTranslation\TranslatableMarkup|null
-   *   The label of the entity, or NULL if there is no label defined.
-   */
-  public function label(): string|TranslatableMarkup|null;
 
 }
