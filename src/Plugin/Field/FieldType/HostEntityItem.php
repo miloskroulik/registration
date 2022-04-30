@@ -89,14 +89,10 @@ class HostEntityItem extends FieldItemBase {
     if (!$this->isCalculated) {
       /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
       $registration = $this->getEntity();
-      try {
-        $entity_id = $registration->getHostEntityId();
-        $entity_type_id = $registration->getHostEntityTypeId();
-        $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
-        $this->set('entity', $storage->load($entity_id));
-      }
-      catch (\Exception $e) {
-      }
+      $entity_id = $registration->getHostEntityId();
+      $entity_type_id = $registration->getHostEntityTypeId();
+      $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
+      $this->set('entity', $storage->load($entity_id));
       $this->isCalculated = TRUE;
     }
   }
