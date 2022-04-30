@@ -2,8 +2,6 @@
 
 namespace Drupal\registration;
 
-use DateTimeZone;
-use Drupal;
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Datetime\DrupalDateTime;
@@ -355,7 +353,7 @@ class HostEntity implements HostEntityInterface {
 
       // Initialize the current time.
       $storage_format = 'Y-m-d\TH:i:s';
-      $storage_timezone = new DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
       $now = new DrupalDateTime('now', $storage_timezone);
 
       // Check open date.
@@ -467,7 +465,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * Returns the current user.
    *
-   * @return \Drupal\Core\Session\AccountInterface|Drupal\Core\Session\AccountProxy
+   * @return \Drupal\Core\Session\AccountInterface|\Drupal\Core\Session\AccountProxy
    *   The current user.
    */
   protected function currentUser(): AccountInterface|AccountProxy {
@@ -541,7 +539,7 @@ class HostEntity implements HostEntityInterface {
    *   The service container.
    */
   private function container(): ContainerInterface {
-    return Drupal::getContainer();
+    return \Drupal::getContainer();
   }
 
 }
