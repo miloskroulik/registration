@@ -6,7 +6,6 @@ use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\registration\HostEntity;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -53,7 +52,10 @@ class RegistrationFormFormatter extends FormatterBase {
     $elements = [];
     $cache_entities = [];
     if ($entity = $items->getEntity()) {
-      $host_entity = new HostEntity($entity);
+      /** @var \Drupal\registration\HostEntityInterface $host_entity */
+      $host_entity = $this->entityTypeManager
+        ->getHandler('registration', 'host_entity')
+        ->createHostEntity($entity);
       $settings = $host_entity->getSettings();
       $cache_entities[] = $settings;
       if (isset($items, $items[0])) {

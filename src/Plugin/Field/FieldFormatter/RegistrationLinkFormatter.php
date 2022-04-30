@@ -8,7 +8,6 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\registration\HostEntity;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -88,7 +87,10 @@ class RegistrationLinkFormatter extends FormatterBase {
     $elements = [];
     $cache_entities = [];
     if ($entity = $items->getEntity()) {
-      $host_entity = new HostEntity($entity);
+      /** @var \Drupal\registration\HostEntityInterface $host_entity */
+      $host_entity = $this->entityTypeManager
+        ->getHandler('registration', 'host_entity')
+        ->createHostEntity($entity);
       $settings = $host_entity->getSettings();
       $cache_entities[] = $settings;
       if (isset($items, $items[0])) {

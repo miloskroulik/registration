@@ -2,7 +2,6 @@
 
 namespace Drupal\registration\Entity;
 
-use Drupal;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -10,7 +9,6 @@ use Drupal\Core\Entity\EntityMalformedException;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\registration\HostEntity;
 use Drupal\registration\HostEntityInterface;
 use Drupal\user\UserInterface;
 use Drupal\workflows\StateInterface;
@@ -32,6 +30,7 @@ use Drupal\workflows\WorkflowInterface;
  *   bundle_label = @Translation("Registration type"),
  *   handlers = {
  *     "event" = "Drupal\registration\Event\RegistrationEvent",
+ *     "host_entity" = "Drupal\registration\RegistrationHostEntityHandler",
  *     "storage" = "Drupal\registration\RegistrationStorage",
  *     "storage_schema" = "Drupal\registration\RegistrationStorageSchema",
  *     "access" = "Drupal\registration\RegistrationAccessControlHandler",
@@ -130,7 +129,7 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     }
     // No author, must be an anonymous self registration.
     // Return the name of the anonymous site visitor.
-    return Drupal::config('user.settings')->get('anonymous');
+    return \Drupal::config('user.settings')->get('anonymous');
   }
 
   /**
@@ -150,7 +149,9 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     if (!isset($this->hostEntity)) {
       if (!$this->get('host_entity')->isEmpty()) {
         $entity = $this->get('host_entity')->first()->entity;
-        $this->hostEntity = new HostEntity($entity);
+        $this->hostEntity = \Drupal::entityTypeManager()
+          ->getHandler('registration', 'host_entity')
+          ->createHostEntity($entity);
       }
     }
     return $this->hostEntity;
@@ -183,7 +184,7 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     if ($host_entity = $this->getHostEntity()) {
       $entity_type = $host_entity->getEntity()->getEntityType();
       if ($bundle_type = $entity_type->getBundleEntityType()) {
-        return Drupal::entityTypeManager()
+        return \Drupal::entityTypeManager()
           ->getStorage($bundle_type)
           ->load($host_entity->bundle())
           ->label();
@@ -313,7 +314,7 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
 
     // Author default.
     if ($this->get('author_uid')->isEmpty()) {
-      $current_user = Drupal::service('current_user');
+      $current_user = \Drupal::service('current_user');
       if ($current_user->isAuthenticated()) {
         $this->set('author_uid', $current_user->id());
       }

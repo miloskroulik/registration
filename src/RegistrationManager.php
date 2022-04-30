@@ -124,7 +124,8 @@ class RegistrationManager implements RegistrationManagerInterface {
 
     // Wrap the entity if requested.
     if ($entity && !($entity instanceof RegistrationInterface) && $return_host_entity) {
-      $entity = new HostEntity($entity);
+      $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+      $entity = $handler->createHostEntity($entity);
     }
 
     return $entity;
