@@ -2,25 +2,17 @@
 
 namespace Drupal\registration\Form;
 
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\registration\RegistrationManagerInterface;
+use Drupal\registration\HostEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines the registration settings form.
  */
 abstract class RegistrationFormBase extends FormBase {
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The module handler.
@@ -39,15 +31,12 @@ abstract class RegistrationFormBase extends FormBase {
   /**
    * Creates a Registration Form object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RegistrationManagerInterface $registration_manager) {
-    $this->entityTypeManager = $entity_type_manager;
+  public function __construct(ModuleHandlerInterface $module_handler, RegistrationManagerInterface $registration_manager) {
     $this->moduleHandler = $module_handler;
     $this->registrationManager = $registration_manager;
   }
@@ -57,7 +46,6 @@ abstract class RegistrationFormBase extends FormBase {
    */
   public static function create(ContainerInterface $container): static {
     return new static(
-      $container->get('entity_type.manager'),
       $container->get('module_handler'),
       $container->get('registration.manager')
     );
@@ -69,14 +57,14 @@ abstract class RegistrationFormBase extends FormBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   The host entity, for example, a node.
+   * @return \Drupal\registration\HostEntityInterface|null
+   *   The host entity.
    */
-  protected function getHostEntity(FormStateInterface $form_state): EntityInterface {
+  protected function getHostEntity(FormStateInterface $form_state): ?HostEntityInterface {
     $host_entity = $form_state->get('host_entity');
     if (!$host_entity) {
       $route_match = $this->getRouteMatch();
-      $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
+      $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters(), TRUE);
       $form_state->set('host_entity', $host_entity);
     }
     return $host_entity;

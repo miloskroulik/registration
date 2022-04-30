@@ -40,7 +40,7 @@ class RegistrationListBuilder extends EntityListBuilder {
 
     // Get the attached column value.
     if ($host_entity = $entity->getHostEntity()) {
-      $host_entity = Link::fromTextAndUrl($host_entity->label(), $host_entity->toUrl());
+      $host_entity = Link::fromTextAndUrl($host_entity->label(), $host_entity->getEntity()->toUrl());
     }
 
     $row['id'] = Link::fromTextAndUrl($entity->id(), $entity->toUrl());

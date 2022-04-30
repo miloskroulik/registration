@@ -48,8 +48,8 @@ class RegisterForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state): array {
-    // Initialize entities needed by the form.
-    $this->setEntities($form_state);
+    // Initialize host entity needed by the form.
+    $this->setHostEntity($form_state);
 
     // Set cache directives so the form rebuilds when needed.
     $this->addCacheableDependencies($form, $form_state);
@@ -59,11 +59,11 @@ class RegisterForm extends ContentEntityForm {
 
     // Make sure registration is still allowed.
     $host_entity = $form_state->get('host_entity');
-    $settings = $form_state->get('settings');
+    $settings = $host_entity->getSettings();
     $count = $registration->getSpacesReserved();
     $errors = [];
     // @todo Should only admins be allowed to edit existing registration when new are closed?
-    if ($registration->isNew() && !$this->registrationManager->isEnabledForRegistration($host_entity, $count, $registration, $errors)) {
+    if ($registration->isNew() && !$host_entity->isEnabledForRegistration($count, $registration, $errors)) {
       foreach ($errors as $error) {
         $form['notice'][] = [
           '#markup' => $error,
@@ -150,7 +150,7 @@ class RegisterForm extends ContentEntityForm {
     if (!empty($form['count'])) {
       $capacity = $settings->getSetting('capacity');
       $limit = $settings->getSetting('maximum_spaces');
-      $remaining = $capacity - $this->registrationManager->getActiveSpacesReserved($host_entity, $registration);
+      $remaining = $capacity - $host_entity->getActiveSpacesReserved($registration);
       $max = 99999;
 
       // Plural format is not needed since the field is hidden
@@ -224,7 +224,7 @@ class RegisterForm extends ContentEntityForm {
     parent::validateForm($form, $form_state);
 
     $host_entity = $form_state->get('host_entity');
-    $settings = $form_state->get('settings');
+    $settings = $host_entity->getSettings();
 
     // Spaces to reserve.
     $spaces = 1;
@@ -238,7 +238,7 @@ class RegisterForm extends ContentEntityForm {
     // Test status on new registrations.
     if ($registration->isNew()) {
       $errors = [];
-      if (!$this->registrationManager->isEnabledForRegistration($host_entity, $spaces, $registration, $errors)) {
+      if (!$host_entity->isEnabledForRegistration($spaces, $registration, $errors)) {
         foreach ($errors as $error) {
           $form_state->setError($form, $error);
         }
@@ -246,7 +246,7 @@ class RegisterForm extends ContentEntityForm {
     }
     // Only check capacity for existing registrations that are active.
     elseif ($registration->isActive()) {
-      if (!$this->registrationManager->hasRoom($host_entity, $spaces, $registration)) {
+      if (!$host_entity->hasRoom($spaces, $registration)) {
         $form_state->setError($form, $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
           '%label' => $$host_entity->label(),
         ]));
@@ -260,7 +260,7 @@ class RegisterForm extends ContentEntityForm {
         if ($form_state->hasValue('anon_mail')) {
           $email = $form_state->getValue('anon_mail')[0]['value'];
           if (!$allow_multiple && $registration->isNew()) {
-            if ($this->registrationManager->isEmailRegistered($host_entity, $email)) {
+            if ($host_entity->isEmailRegistered($email)) {
               $form_state->setError($form['anon_mail'], $this->t('%mail is already registered for this event.', [
                 '%mail' => $email,
               ]));
@@ -275,7 +275,7 @@ class RegisterForm extends ContentEntityForm {
 
       case RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME:
         if (!$allow_multiple && $registration->isNew()) {
-          if ($this->registrationManager->isUserRegistered($host_entity, $this->currentUser())) {
+          if ($host_entity->isUserRegistered($this->currentUser())) {
             $form_state->setError($form, $this->t('You are already registered for this event.'));
           }
         }
@@ -288,7 +288,7 @@ class RegisterForm extends ContentEntityForm {
           $user = $this->entityTypeManager->getStorage('user')->load($uid);
           if ($user) {
             if (!$allow_multiple && $registration->isNew()) {
-              if ($this->registrationManager->isUserRegistered($host_entity, $user)) {
+              if ($host_entity->isUserRegistered($user)) {
                 $form_state->setError($form['user_uid'], $this->t('%user is already registered for this event.', [
                   '%user' => $user->getDisplayName(),
                 ]));
@@ -325,7 +325,7 @@ class RegisterForm extends ContentEntityForm {
 
     // Confirmation message.
     $host_entity = $form_state->get('host_entity');
-    $settings = $form_state->get('settings');
+    $settings = $host_entity->getSettings();
     $confirmation = $settings->getSetting('confirmation');
     if (!$confirmation) {
       $confirmation = 'The registration was saved.';
@@ -383,11 +383,11 @@ class RegisterForm extends ContentEntityForm {
       $values = [];
       // Fetch initial values from the host entity.
       $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
-      $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
+      $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters(), TRUE);
       $values['entity_type_id'] = $host_entity->getEntityTypeId();
       $values['entity_id'] = $host_entity->id();
       if ($bundle_key = $entity_type->getKey('bundle')) {
-        $values[$bundle_key] = $this->registrationManager->getRegistrationTypeBundle($host_entity);
+        $values[$bundle_key] = $host_entity->getRegistrationTypeBundle();
       }
 
       $entity = $this->entityTypeManager->getStorage($entity_type_id)->create($values);
@@ -414,7 +414,7 @@ class RegisterForm extends ContentEntityForm {
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->getEntity();
     $count = $registration->getSpacesReserved();
-    if ($this->registrationManager->isEnabledForRegistration($host_entity, $count, $registration)) {
+    if (!$host_entity->isNew() || $host_entity->isEnabledForRegistration($count, $registration)) {
       // Override the button label for the Save button.
       $actions = parent::actions($form, $form_state);
       $actions['submit']['#value'] = $this->t('Save Registration');
@@ -424,7 +424,7 @@ class RegisterForm extends ContentEntityForm {
         $actions['cancel'] = [
           '#type' => 'link',
           '#title' => $this->t('Cancel'),
-          '#url' => $host_entity->toUrl(),
+          '#url' => $host_entity->getEntity()->toUrl(),
           '#weight' => 20,
         ];
       }
@@ -445,36 +445,25 @@ class RegisterForm extends ContentEntityForm {
     $host_entity = $form_state->get('host_entity');
     $settings = $form_state->get('settings');
 
-    $this->registrationManager->addCacheableDependencies($form, $host_entity, [$settings]);
+    $host_entity->addCacheableDependencies($form, [$settings]);
   }
 
   /**
-   * Ensure the host entity and settings entity are set.
+   * Ensure the host entity is set.
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  protected function setEntities(FormStateInterface $form_state) {
+  protected function setHostEntity(FormStateInterface $form_state) {
     $host_entity = $form_state->get('host_entity');
-    if (!$host_entity) {
+    if (!isset($host_entity)) {
       $parameters = $this->getRouteMatch()->getParameters();
-      $entity = $host_entity = $this->registrationManager->getEntityFromParameters($parameters);
-      if ($entity instanceof RegistrationInterface) {
+      $host_entity = $this->registrationManager->getEntityFromParameters($parameters, TRUE);
+      if ($host_entity instanceof RegistrationInterface) {
         // Editing a registration. Get the host entity from the registration.
-        $host_entity = $entity->getHostEntity();
+        $host_entity = $host_entity->getHostEntity();
       }
       $form_state->set('host_entity', $host_entity);
-    }
-
-    $settings = $form_state->get('settings');
-    if (!$settings) {
-      /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
-      $storage = $this->entityTypeManager->getStorage('registration_settings');
-      $settings = $storage->loadSettingsForEntity($host_entity);
-      $form_state->set('settings', $settings);
     }
   }
 

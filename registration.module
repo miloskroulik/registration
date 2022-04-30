@@ -188,9 +188,9 @@ function registration_form_views_exposed_form_alter(array &$form, FormStateInter
     // Hide the manage registrations filter when there are only a few rows.
     $route_match = \Drupal::routeMatch();
     $registration_manager = \Drupal::service('registration.manager');
-    if ($host_entity = $registration_manager->getEntityFromParameters($route_match->getParameters())) {
+    if ($host_entity = $registration_manager->getEntityFromParameters($route_match->getParameters(), TRUE)) {
       // @todo Make the number 10 config settings based.
-      if ($registration_manager->getRegistrationCount($host_entity) < 10) {
+      if ($host_entity->getRegistrationCount() < 10) {
         $form['mail']['#access'] = FALSE;
         $form['actions']['#access'] = FALSE;
       }

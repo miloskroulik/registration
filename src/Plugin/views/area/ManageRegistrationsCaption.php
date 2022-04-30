@@ -2,7 +2,6 @@
 
 namespace Drupal\registration\Plugin\views\area;
 
-use Drupal;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
 
 /**
@@ -19,12 +18,12 @@ class ManageRegistrationsCaption extends AreaPluginBase {
    */
   public function render($empty = FALSE): array {
     if (!$empty || !empty($this->options['empty'])) {
-      $route_match = Drupal::routeMatch();
-      $registration_manager = Drupal::service('registration.manager');
-      if ($host_entity = $registration_manager->getEntityFromParameters($route_match->getParameters())) {
-        $settings = $registration_manager->getSettingsForHost($host_entity);
+      $route_match = \Drupal::routeMatch();
+      $registration_manager = \Drupal::service('registration.manager');
+      if ($host_entity = $registration_manager->getEntityFromParameters($route_match->getParameters(), TRUE)) {
+        $settings = $host_entity->getSettings();
         $capacity = $settings->getSetting('capacity');
-        $spaces =  $registration_manager->getActiveSpacesReserved($host_entity);
+        $spaces =  $host_entity->getActiveSpacesReserved();
         if ($capacity) {
           $caption = $this->formatPlural($capacity,
            'List of registrations for %label. @spaces of 1 space is filled.',
@@ -44,7 +43,7 @@ class ManageRegistrationsCaption extends AreaPluginBase {
         $build = [
           '#markup' => $caption,
         ];
-        $registration_manager->addCacheableDependencies($build, $host_entity, [$settings]);
+        $host_entity->addCacheableDependencies($build, [$settings]);
         return $build;
       }
     }

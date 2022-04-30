@@ -8,13 +8,11 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\PagerSelectExtender;
 use Drupal\Core\Database\Query\TableSortExtender;
 use Drupal\Core\Datetime\DateFormatterInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Link;
-use Drupal\Core\Render\Renderer;
 use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
-use Drupal\registration\Entity\RegistrationSettings;
+use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -48,13 +46,6 @@ class RegistrationController extends ControllerBase {
   protected RegistrationManagerInterface $registrationManager;
 
   /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\Renderer
-   */
-  protected Renderer $renderer;
-
-  /**
    * Constructs a RegistrationController object.
    *
    * @param \Drupal\Core\Database\Connection $database
@@ -63,14 +54,11 @@ class RegistrationController extends ControllerBase {
    *   The date formatter service.
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
-   * @param \Drupal\Core\Render\Renderer $renderer
-   *   The renderer.
    */
-  public function __construct(Connection $database, DateFormatterInterface $date_formatter, RegistrationManagerInterface $registration_manager, Renderer $renderer) {
+  public function __construct(Connection $database, DateFormatterInterface $date_formatter, RegistrationManagerInterface $registration_manager) {
     $this->database = $database;
     $this->dateFormatter = $date_formatter;
     $this->registrationManager = $registration_manager;
-    $this->renderer = $renderer;
   }
 
   /**
@@ -80,8 +68,7 @@ class RegistrationController extends ControllerBase {
     return new static(
       $container->get('database'),
       $container->get('date.formatter'),
-      $container->get('registration.manager'),
-      $container->get('renderer')
+      $container->get('registration.manager')
     );
   }
 
@@ -100,8 +87,8 @@ class RegistrationController extends ControllerBase {
   public function manageRegistrations(Request $request): array {
     $build = [];
     $cache_entities = [];
-    if ($host_entity = $this->registrationManager->getEntityFromParameters($request->attributes)) {
-      $settings = $this->registrationManager->getSettingsForHost($host_entity);
+    if ($host_entity = $this->registrationManager->getEntityFromParameters($request->attributes, TRUE)) {
+      $settings = $host_entity->getSettings();
       $cache_entities[] = $settings;
 
       // Use the built-in manage registrations view if available.
@@ -126,7 +113,7 @@ class RegistrationController extends ControllerBase {
 
       // Fallback to data table.
       if (empty($build)) {
-        $type = $this->registrationManager->getRegistrationTypeBundle($host_entity);
+        $type = $host_entity->getRegistrationTypeBundle();
         $access_result = AccessResult::allowedIfHasPermissions($this->currentUser(), [
           "administer registration",
           "view any registration",
@@ -134,18 +121,17 @@ class RegistrationController extends ControllerBase {
         ], 'OR');
 
         if ($access_result->isAllowed()) {
-          $build = $this->buildDataTable($host_entity, $settings);
+          $build = $this->buildDataTable($host_entity);
         }
         else {
           // The user cannot view registrations, so show a summary instead.
-          $build = $this->buildSummary($host_entity, $settings);
+          $build = $this->buildSummary($host_entity);
         }
       }
 
       // Set cache directives so the form rebuilds when needed.
-      $this->registrationManager->addCacheableDependencies(
+      $host_entity->addCacheableDependencies(
         $build,
-        $host_entity,
         $cache_entities
       );
     }
@@ -156,10 +142,8 @@ class RegistrationController extends ControllerBase {
   /**
    * Builds the Manage Registrations data table.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   * @param \Drupal\registration\HostEntityInterface $host_entity
    *   The host entity.
-   * @param \Drupal\registration\Entity\RegistrationSettings $settings
-   *   The registration settings entity.
    *
    * @return array
    *   A render array as expected by drupal_render().
@@ -167,9 +151,10 @@ class RegistrationController extends ControllerBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
-  protected function buildDataTable(EntityInterface $host_entity, RegistrationSettings $settings): array {
+  protected function buildDataTable(HostEntityInterface $host_entity): array {
+    $settings = $host_entity->getSettings();
     $capacity = $settings->getSetting('capacity');
-    $spaces =  $this->registrationManager->getActiveSpacesReserved($host_entity);
+    $spaces =  $host_entity->getActiveSpacesReserved();
     if ($capacity) {
       $caption = $this->formatPlural($capacity,
        'List of registrations for %label. @spaces of 1 space is filled.',
@@ -318,17 +303,16 @@ class RegistrationController extends ControllerBase {
   /**
    * Builds the Manage Registrations data table as a simple summary.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   * @param \Drupal\registration\HostEntityInterface $host_entity
    *   The host entity.
-   * @param \Drupal\registration\Entity\RegistrationSettings $settings
-   *   The registration settings entity.
    *
    * @return array
    *   A render array as expected by drupal_render().
    */
-  protected function buildSummary(EntityInterface $host_entity, RegistrationSettings $settings): array {
+  protected function buildSummary(HostEntityInterface $host_entity): array {
+    $settings = $host_entity->getSettings();
     $capacity = $settings->getSetting('capacity');
-    $spaces =  $this->registrationManager->getActiveSpacesReserved($host_entity);
+    $spaces =  $host_entity->getActiveSpacesReserved();
     if ($capacity) {
       $caption = $this->formatPlural($capacity,
        'Registration summary for %label: @spaces of 1 space is filled.',

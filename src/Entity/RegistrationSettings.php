@@ -5,9 +5,9 @@ namespace Drupal\registration\Entity;
 use Drupal;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityBase;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\registration\HostEntityInterface;
 
 /**
  * Defines the registration settings entity class.
@@ -83,8 +83,8 @@ class RegistrationSettings extends ContentEntityBase {
    * @return $this
    *   The settings entity.
    */
-  public function initFromConfig(EntityInterface $host_entity) {
-    // Get all of the fields for the settings entity.
+  public function initFromConfig(HostEntityInterface $host_entity): RegistrationSettings {
+    // Get all the fields for the settings entity.
     $fields = Drupal::service('entity_field.manager')
       ->getFieldDefinitions('registration_settings', 'registration_settings');
 
@@ -97,7 +97,7 @@ class RegistrationSettings extends ContentEntityBase {
     $entity_type_id = $host_entity->getEntityTypeId();
     $entity_type = Drupal::entityTypeManager()->getDefinition($entity_type_id);
     $registration_manager = Drupal::service('registration.manager');
-    $registration_field = $registration_manager->getRegistrationField($host_entity);
+    $registration_field = $host_entity->getRegistrationField();
 
     // Copy values from the registration field config to the settings entity.
     foreach ($fields as $key => $field) {

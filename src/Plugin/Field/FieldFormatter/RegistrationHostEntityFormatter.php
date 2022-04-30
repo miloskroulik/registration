@@ -67,6 +67,7 @@ class RegistrationHostEntityFormatter extends FormatterBase {
     $output_as_link = $this->getSetting('link');
 
     foreach ($items as $delta => $item) {
+      /** @var \Drupal\registration\HostEntityInterface $host_entity */
       $entity = $item->get('entity')->getValue();
       $label = $entity->label();
       // If the link should be displayed and the entity has a uri, display it.

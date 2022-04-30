@@ -43,12 +43,14 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
    *   The access result.
    */
   public function access(AccountInterface $account, RouteMatch $route_match): AccessResultInterface {
-    $entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
+    $entity = NULL;
+    $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters(), TRUE);
 
     // If the request has an entity with its registration field set,
     // then allow access if the user has the appropriate permission.
-    if ($entity) {
-      if ($type = $this->registrationManager->getRegistrationTypeBundle($entity)) {
+    if ($host_entity) {
+      if ($type = $host_entity->getRegistrationTypeBundle()) {
+        $entity = $host_entity->getEntity();
         $access =
              $account->hasPermission("administer registration")
           || $account->hasPermission("administer $type registration")

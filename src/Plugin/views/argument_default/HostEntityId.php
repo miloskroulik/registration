@@ -72,8 +72,8 @@ class HostEntityId extends ArgumentDefaultPluginBase implements CacheableDepende
    */
   public function getArgument() {
     $parameters = $this->routeMatch->getParameters();
-    if ($host_entity = $this->registrationManager->getEntityFromParameters($parameters)) {
-      return $host_entity->id();
+    if ($entity = $this->registrationManager->getEntityFromParameters($parameters)) {
+      return $entity->id();
     }
     return NULL;
   }

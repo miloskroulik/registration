@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\registration\RegistrationManagerInterface;
+use Drupal\registration\HostEntity;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -37,20 +37,12 @@ class RegistrationFormFormatter extends FormatterBase {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * The registration manager.
-   *
-   * @var \Drupal\registration\RegistrationManagerInterface
-   */
-  protected RegistrationManagerInterface $registrationManager;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): RegistrationFormFormatter {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->entityFormBuilder = $container->get('entity.form_builder');
     $instance->entityTypeManager = $container->get('entity_type.manager');
-    $instance->registrationManager = $container->get('registration.manager');
     return $instance;
   }
 
@@ -60,15 +52,16 @@ class RegistrationFormFormatter extends FormatterBase {
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
     $cache_entities = [];
-    if ($host_entity = $items->getEntity()) {
-      $settings = $this->registrationManager->getSettingsForHost($host_entity);
+    if ($entity = $items->getEntity()) {
+      $host_entity = new HostEntity($entity);
+      $settings = $host_entity->getSettings();
       $cache_entities[] = $settings;
       if (isset($items, $items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
           $registration_type = $this->entityTypeManager->getStorage('registration_type')->load($id);
           if ($registration_type) {
             $cache_entities[] = $registration_type;
-            if ($this->registrationManager->isEnabledForRegistration($host_entity)) {
+            if ($host_entity->isEnabledForRegistration()) {
               $registration = $this->entityTypeManager->getStorage('registration')->create([
                 'entity_type_id' => $host_entity->getEntityTypeId(),
                 'entity_id' => $host_entity->id(),
@@ -79,9 +72,8 @@ class RegistrationFormFormatter extends FormatterBase {
           }
         }
       }
-      $this->registrationManager->addCacheableDependencies(
+      $host_entity->addCacheableDependencies(
         $elements,
-        $host_entity,
         $cache_entities
       );
     }

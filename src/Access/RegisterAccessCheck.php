@@ -58,42 +58,34 @@ class RegisterAccessCheck implements AccessInterface {
    *   The access result.
    */
   public function access(AccountInterface $account, RouteMatch $route_match): AccessResultInterface {
-    // Initialize.
-    $field = NULL;
-    $settings = NULL;
-    $registration_type = NULL;
-
     // Retrieve the host entity.
-    $entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
+    $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters(), TRUE);
 
     // If the request has a host entity with its registration field set,
-    // and the host entity has the enable registrations setting checked,
+    // and the host entity has the "enable registrations" setting checked,
     // then allow access if the user has the appropriate permission. The
     // registration type must also have a workflow defined to allow access.
-    if ($entity && ($field = $this->registrationManager->getRegistrationField($entity))) {
-      if ($bundle = $this->registrationManager->getRegistrationTypeBundle($entity)) {
-        if ($registration_type = $this->registrationManager->getRegistrationType($entity)) {
-          if ($registration_type->getWorkflow()) {
-            $storage = $this->entityTypeManager->getStorage('registration_settings');
-            $settings = $storage->loadSettingsForEntity($entity);
-            $status = (bool) $settings->getSetting('status');
-            if ($status) {
-              // Registration is enabled for the host entity. Check if the account
-              // has create registration permissions for the registration type.
-              return $this->entityTypeManager
-                ->getAccessControlHandler('registration')
-                ->createAccess($bundle, $account, [], TRUE)
-                // Recalculate this result if the relevant entities are updated.
-                // This is crucial so the Register tab and form can display for
-                // some users and host entities, and not for others.
-                ->cachePerPermissions()
-                ->addCacheableDependency($registration_type)
-                ->addCacheableDependency($entity)
-                ->addCacheableDependency($settings)
-                ->addCacheableDependency($field);
-            }
-          }
-        }
+    $entity = $host_entity?->getEntity();
+    $field = $host_entity?->getRegistrationField();
+    $bundle = $host_entity?->getRegistrationTypeBundle();
+    $settings = $host_entity?->getSettings();
+    $registration_type = $host_entity?->getRegistrationType();
+    if ($field && $bundle && $settings && $registration_type?->getWorkflow()) {
+      $status = (bool) $settings->getSetting('status');
+      if ($status) {
+        // Registration is enabled for the host entity. Check if the account
+        // has create registration permissions for the registration type.
+        return $this->entityTypeManager
+          ->getAccessControlHandler('registration')
+          ->createAccess($bundle, $account, [], TRUE)
+          // Recalculate this result if the relevant entities are updated.
+          // This is crucial so the Register tab and form can display for
+          // some users and host entities, and not for others.
+          ->cachePerPermissions()
+          ->addCacheableDependency($registration_type)
+          ->addCacheableDependency($entity)
+          ->addCacheableDependency($settings)
+          ->addCacheableDependency($field);
       }
     }
 

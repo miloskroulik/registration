@@ -4,8 +4,8 @@ namespace Drupal\registration\Entity;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\registration\HostEntityInterface;
 use Drupal\workflows\StateInterface;
 use Drupal\user\UserInterface;
 use Drupal\workflows\WorkflowInterface;
@@ -73,10 +73,10 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
   /**
    * Gets the host entity.
    *
-   * @return \Drupal\Core\Entity\EntityInterface|null
+   * @return \Drupal\registration\HostEntityInterface|null
    *   The host entity, if available.
    */
-  public function getHostEntity(): ?EntityInterface;
+  public function getHostEntity(): ?HostEntityInterface;
 
   /**
    * Gets the entity ID of the host entity.
@@ -84,7 +84,7 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    * @return int
    *   The host entity ID.
    */
-  public function getHostEntityId(): int;
+  public function getHostEntityId(): int|string|null;
 
   /**
    * Gets the entity type ID of the host entity.

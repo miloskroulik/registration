@@ -1,9 +1,8 @@
 <?php
 
-namespace Drupal\registration\Mail;
+namespace Drupal\registration\Notify;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Session\AccountProxy;
@@ -11,11 +10,12 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
+use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationManagerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Defines the class for the registration mailer service.
+ * Defines the class for the registration notification service.
  */
 class RegistrationMailer implements RegistrationMailerInterface {
 
@@ -91,15 +91,15 @@ class RegistrationMailer implements RegistrationMailerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getEmailRecipientList(EntityInterface $host_entity, array $data = []): array {
+  public function getRecipientList(HostEntityInterface $host_entity, array $data = []): array {
     if (!empty($data['test'])) {
-      $registrations = [$this->registrationManager->generateSampleRegistration($host_entity)];
+      $registrations = [$host_entity->generateSampleRegistration()];
     }
     elseif (!empty($data['states'])) {
-      $registrations = $this->registrationManager->getRegistrationList($host_entity, $data['states']);
+      $registrations = $host_entity->getRegistrationList($data['states']);
     }
     else {
-      $registrations = $this->registrationManager->getRegistrationList($host_entity);
+      $registrations = $host_entity->getRegistrationList();
     }
 
     // The list is built as an associative array, indexed by email address.
@@ -130,7 +130,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
     // Allow other modules to alter the recipient list.
     $event = new RegistrationDataAlterEvent($recipients, [
       'host_entity' => $host_entity,
-      'settings' => $this->registrationManager->getSettingsForHost($host_entity),
+      'settings' => $host_entity->getSettings(),
     ]);
     $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_RECIPIENTS);
     return $event->getData();
@@ -139,9 +139,9 @@ class RegistrationMailer implements RegistrationMailerInterface {
   /**
    * {@inheritdoc}
    */
-  public function sendMail(EntityInterface $host_entity, array $data = []): int {
+  public function notify(HostEntityInterface $host_entity, array $data = []): int {
     $success_count = 0;
-    $settings = $this->registrationManager->getSettingsForHost($host_entity);
+    $settings = $host_entity->getSettings();
     $langcode = $this->currentUser->getPreferredLangcode(TRUE);
     $send = TRUE;
 
@@ -156,12 +156,12 @@ class RegistrationMailer implements RegistrationMailerInterface {
     ];
     $params['message'] = $this->renderer->render($build);
     $params['token_entities'] = [
-      $host_entity->getEntityTypeId() => $host_entity,
+      $host_entity->getEntityTypeId() => $host_entity->getEntity(),
       'registration_settings' => $settings,
     ];
 
     // Get the recipients and send to each.
-    $recipients =  $this->getEmailRecipientList($host_entity, $data);
+    $recipients =  $this->getRecipientList($host_entity, $data);
     foreach ($recipients as $email => $registrations) {
       // Convert singleton to array.
       if (!is_array($registrations)) {

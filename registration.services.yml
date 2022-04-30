@@ -46,8 +46,8 @@ services:
     tags:
       - { name: event_subscriber }
 
-  registration.mailer:
-    class: Drupal\registration\Mail\RegistrationMailer
+  registration.notifier:
+    class: Drupal\registration\Notify\RegistrationMailer
     arguments: [
       '@current_user',
       '@event_dispatcher',
@@ -61,12 +61,9 @@ services:
     class: Drupal\registration\RegistrationManager
     arguments: [
       '@current_user',
-      '@database',
-      '@event_dispatcher',
       '@entity_display.repository',
       '@entity_field.manager',
       '@entity_type.bundle.info',
       '@entity_type.manager',
-      '@renderer',
       '@router.route_provider',
     ]

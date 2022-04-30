@@ -2,9 +2,6 @@
 
 namespace Drupal\registration;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
-use Drupal\Core\Database\Connection;
-use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityInterface;
@@ -13,18 +10,11 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Render\Renderer;
 use Drupal\Core\Routing\RouteProviderInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
-use Drupal\registration\Event\RegistrationEvents;
-use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
-use Drupal\registration\Entity\RegistrationType;
-use Drupal\registration\Entity\RegistrationTypeInterface;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Route;
 
@@ -41,20 +31,6 @@ class RegistrationManager implements RegistrationManagerInterface {
    * @var \Drupal\Core\Session\AccountProxy
    */
   protected AccountProxy $currentUser;
-
-  /**
-   * The database service.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected Connection $database;
-
-  /**
-   * The event dispatcher.
-   *
-   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
-   */
-  protected ContainerAwareEventDispatcher $eventDispatcher;
 
   /**
    * The entity display repository.
@@ -85,13 +61,6 @@ class RegistrationManager implements RegistrationManagerInterface {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\Renderer
-   */
-  protected Renderer $renderer;
-
-  /**
    * The route provider.
    *
    * @var \Drupal\Core\Routing\RouteProviderInterface
@@ -103,10 +72,6 @@ class RegistrationManager implements RegistrationManagerInterface {
    *
    * @param \Drupal\Core\Session\AccountProxy $current_user
    *   The current user.
-   * @param \Drupal\Core\Database\Connection $database
-   *   The database.
-   * @param \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher $event_dispatcher
-   *   The event dispatcher.
    * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
    *   The entity display repository.
    * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
@@ -115,103 +80,16 @@ class RegistrationManager implements RegistrationManagerInterface {
    *   The entity type bundle info.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\Render\Renderer $renderer
-   *   The renderer.
    * @param \Drupal\Core\Routing\RouteProviderInterface $route_provider
    *   The route provider.
    */
-  public function __construct(AccountProxy $current_user, Connection $database, ContainerAwareEventDispatcher $event_dispatcher, EntityDisplayRepositoryInterface $entity_display_repository, EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager, Renderer $renderer, RouteProviderInterface $route_provider) {
+  public function __construct(AccountProxy $current_user, EntityDisplayRepositoryInterface $entity_display_repository, EntityFieldManager $entity_field_manager, EntityTypeBundleInfo $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager, RouteProviderInterface $route_provider) {
     $this->currentUser = $current_user;
-    $this->database = $database;
-    $this->eventDispatcher = $event_dispatcher;
     $this->entityDisplayRepository = $entity_display_repository;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->entityTypeManager = $entity_type_manager;
-    $this->renderer = $renderer;
     $this->routeProvider = $route_provider;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function addCacheableDependencies(array &$build, EntityInterface $host_entity, array $other_entities = []) {
-    // Rebuild if the host entity is updated.
-    $this->renderer->addCacheableDependency($build, $host_entity);
-
-    // Rebuild if other entities are updated.
-    foreach ($other_entities as $entity) {
-      if (isset($entity)) {
-        $this->renderer->addCacheableDependency($build, $entity);
-      }
-    }
-
-    // Rebuild when registrations are added and deleted.
-    // @todo Make this more granular.
-    $build['#cache']['tags'][] = 'registration_list';
-
-    // Rebuild per user or anonymous session.
-    if ($this->currentUser->isAnonymous()) {
-      $build['#cache']['contexts'][] = 'session';
-    }
-    else {
-      $build['#cache']['contexts'][] = 'user.permissions';
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function generateSampleRegistration(EntityInterface $host_entity): RegistrationInterface {
-    $values = [
-      'entity_type_id' => $host_entity->getEntityTypeId(),
-      'entity_id' => $host_entity->id(),
-      'type' => $this->getRegistrationTypeBundle($host_entity),
-      'user_uid' => $this->currentUser->id(),
-      'count' => 1,
-    ];
-    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
-    $registration = $this->entityTypeManager->getStorage('registration')->create($values);
-    return $registration;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getActiveSpacesReserved(EntityInterface $host_entity, RegistrationInterface $registration = NULL): int {
-    $states = [];
-
-    if ($registration_type = $this->getRegistrationType($host_entity)) {
-      $states = $registration_type->getActiveOrHeldStates();
-    }
-
-    // Ensure we have active states before querying against them.
-    if (empty($states)) {
-      return 0;
-    }
-
-    $query = $this->database->select('registration')
-      ->condition('entity_id', $host_entity->id())
-      ->condition('entity_type_id', $host_entity->getEntityTypeId())
-      ->condition('state', array_keys($states), 'IN');
-
-    if ($registration && !$registration->isNew()) {
-      $query->condition('registration_id', $registration->id(), '<>');
-    }
-
-    $query->addExpression('sum(count)', 'spaces');
-
-    $spaces = $query->execute()->fetchField();
-    $spaces = empty($spaces) ? 0 : $spaces;
-
-    // Allow other modules to alter the number of spaces reserved.
-    $event = new RegistrationDataAlterEvent($spaces, [
-      'host_entity' => $host_entity,
-      'settings' => $this->getSettingsForHost($host_entity),
-      'registration' => $registration,
-    ]);
-    $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_USAGE);
-    return $event->getData();
   }
 
   /**
@@ -232,7 +110,7 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getEntityFromParameters(ParameterBag $parameters): ?EntityInterface {
+  public function getEntityFromParameters(ParameterBag $parameters, bool $return_host_entity = FALSE): EntityInterface|HostEntityInterface|null {
     $entity = NULL;
 
     foreach ($parameters as $parameter) {
@@ -242,6 +120,11 @@ class RegistrationManager implements RegistrationManagerInterface {
           break;
         }
       }
+    }
+
+    // Wrap the entity if requested.
+    if ($entity && !($entity instanceof RegistrationInterface) && $return_host_entity) {
+      $entity = new HostEntity($entity);
     }
 
     return $entity;
@@ -312,7 +195,7 @@ class RegistrationManager implements RegistrationManagerInterface {
     $allow_multiple = $settings->getSetting('multiple_registrations');
     if ($this->currentUser->isAuthenticated()
       && $this->currentUser->hasPermission("create $type registration self")
-      && ($my_registration || $allow_multiple || !$this->isUserRegistered($host_entity, $this->currentUser))
+      && ($my_registration || $allow_multiple || !$host_entity->isUserRegistered($this->currentUser))
     ) {
       $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = $this->t('Myself');
     }
@@ -339,25 +222,6 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrationCount(EntityInterface $host_entity): int {
-    $query = $this->database->select('registration')
-      ->condition('entity_id', $host_entity->id())
-      ->condition('entity_type_id', $host_entity->getEntityTypeId());
-
-    $count = $query->countQuery()->execute()->fetchField();
-
-    // Allow other modules to alter the count.
-    $event = new RegistrationDataAlterEvent($count, [
-      'host_entity' => $host_entity,
-      'settings' => $this->getSettingsForHost($host_entity),
-    ]);
-    $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_COUNT);
-    return $event->getData();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getRegistrationEnabledEntityTypes(): array {
     $entity_types = [];
 
@@ -369,74 +233,6 @@ class RegistrationManager implements RegistrationManagerInterface {
     }
 
     return $entity_types;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRegistrationField(EntityInterface $host_entity): ?FieldDefinitionInterface {
-    $fields = $this->entityFieldManager->getFieldDefinitions($host_entity->getEntityTypeId(), $host_entity->bundle());
-    foreach ($fields as $field) {
-      if ($field->getType() == 'registration') {
-        return $field;
-      }
-    }
-    return NULL;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRegistrationList(EntityInterface $host_entity, array $states = []): array {
-    if (!empty($states)) {
-      $registrations = $this->entityTypeManager->getStorage('registration')->loadByProperties([
-        'entity_type_id' => $host_entity->getEntityTypeId(),
-        'entity_id' => $host_entity->id(),
-        'state' => $states,
-      ]);
-    }
-    else {
-      $registrations = $this->entityTypeManager->getStorage('registration')->loadByProperties([
-        'entity_type_id' => $host_entity->getEntityTypeId(),
-        'entity_id' => $host_entity->id(),
-      ]);
-    }
-    return $registrations;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRegistrationType(EntityInterface $host_entity): ?RegistrationTypeInterface {
-    $registration_type = NULL;
-
-    if ($bundle = $this->getRegistrationTypeBundle($host_entity)) {
-      $registration_type = RegistrationType::load($bundle);
-    }
-
-    return $registration_type;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRegistrationTypeBundle(EntityInterface $host_entity): ?string {
-    $bundle = NULL;
-
-    /** @var \Drupal\Core\Entity\FieldableEntityInterface $host_entity */
-    if ($field = $this->getRegistrationField($host_entity)) {
-      if (!$host_entity->get($field->getName())->isEmpty()) {
-        $value = $host_entity->get($field->getName())->getValue();
-        if (!empty($value)) {
-          $value = reset($value);
-          if (is_array($value) && isset($value['registration_type'])) {
-            $bundle = $value['registration_type'];
-          }
-        }
-      }
-    }
-
-    return $bundle;
   }
 
   /**
@@ -491,19 +287,6 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getSettingsForHost(EntityInterface $host_entity): ?RegistrationSettings {
-    $settings = NULL;
-    if ($this->getRegistrationTypeBundle($host_entity)) {
-      /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
-      $storage = $this->entityTypeManager->getStorage('registration_settings');
-      $settings = $storage->loadSettingsForEntity($host_entity);
-    }
-    return $settings;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function hasRegistrationField(EntityTypeInterface $entity_type, $bundle = NULL): bool {
     if ($entity_type->entityClassImplements(FieldableEntityInterface::class)) {
       $entity_type_id = $entity_type->id();
@@ -520,142 +303,6 @@ class RegistrationManager implements RegistrationManagerInterface {
       }
     }
     return FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasRoom(EntityInterface $host_entity, int $spaces = 1, RegistrationInterface $registration = NULL): bool {
-    $settings = $this->getSettingsForHost($host_entity);
-    $capacity = $settings->getSetting('capacity');
-    if ($capacity) {
-      $projected_usage = $this->getActiveSpacesReserved($host_entity, $registration) + $spaces;
-      if (($capacity - $projected_usage) < 0) {
-        return FALSE;
-      }
-    }
-    return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isEnabledForRegistration(EntityInterface $host_entity, int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool {
-    $settings = $this->getSettingsForHost($host_entity);
-    $enabled = $settings->getSetting('status');
-
-    // Only explore other settings if main status is enabled.
-    if ($enabled) {
-      // Check maximum allowed spaces per registration.
-      $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
-      if ($maximum_spaces && ($spaces > $maximum_spaces)) {
-        $enabled = FALSE;
-        $errors[] = $this->t('You may not register for more than @count spaces.', [
-          '@count' => $maximum_spaces,
-        ]);
-      }
-
-      // Check capacity.
-      if (!$this->hasRoom($host_entity, $spaces, $registration)) {
-        $enabled = FALSE;
-        $errors[] = $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
-          '%label' => $host_entity->label(),
-        ]);
-      }
-
-      // Initialize the current time.
-      $storage_format = 'Y-m-d\TH:i:s';
-      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
-      $now = new DrupalDateTime('now', $storage_timezone);
-
-      // Check open date.
-      $open = $settings->getSetting('open');
-      if ($open) {
-        $open = DrupalDateTime::createFromFormat($storage_format, $open, $storage_timezone);
-      }
-      if ($open && ($now < $open)) {
-        $enabled = FALSE;
-        $errors[] = $this->t('Registration for %label is not open yet.', [
-          '%label' => $host_entity->label(),
-        ]);
-      }
-
-      // Check close date.
-      $close = $settings->getSetting('close');
-      if ($close) {
-        $close = DrupalDateTime::createFromFormat($storage_format, $close, $storage_timezone);
-      }
-      if ($close && ($now >= $close)) {
-        $enabled = FALSE;
-        $errors[] = $this->t('Registration for %label is closed.', [
-          '%label' => $host_entity->label(),
-        ]);
-      }
-    }
-    else {
-      $errors[] = $this->t('Registration for %label is disabled.', [
-        '%label' => $host_entity->label(),
-      ]);
-    }
-
-    // Allow other modules to override the result.
-    $event = new RegistrationDataAlterEvent($enabled, [
-      'host_entity' => $host_entity,
-      'settings' => $settings,
-      'errors' => $errors,
-    ]);
-    $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_ENABLED);
-    return $event->getData();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isEmailRegistered(EntityInterface $host_entity, string $email): bool {
-    $states = [];
-
-    if ($registration_type = $this->getRegistrationType($host_entity)) {
-      $states = $registration_type->getActiveStates();
-    }
-
-    // Ensure we have active states before querying against them.
-    if (empty($states)) {
-      return FALSE;
-    }
-
-    $query = $this->database->select('registration')
-      ->condition('entity_id', $host_entity->id())
-      ->condition('entity_type_id', $host_entity->getEntityTypeId())
-      ->condition('anon_mail', $email)
-      ->condition('state', array_keys($states), 'IN');
-
-    $count = $query->countQuery()->execute()->fetchField();
-    return ($count > 0);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isUserRegistered(EntityInterface $host_entity, AccountInterface $account): bool {
-    $states = [];
-
-    if ($registration_type = $this->getRegistrationType($host_entity)) {
-      $states = $registration_type->getActiveStates();
-    }
-
-    // Ensure we have active states before querying against them.
-    if (empty($states)) {
-      return FALSE;
-    }
-
-    $query = $this->database->select('registration')
-      ->condition('entity_id', $host_entity->id())
-      ->condition('entity_type_id', $host_entity->getEntityTypeId())
-      ->condition('user_uid', $account->id())
-      ->condition('state', array_keys($states), 'IN');
-
-    $count = $query->countQuery()->execute()->fetchField();
-    return ($count > 0);
   }
 
   /**

@@ -30,8 +30,9 @@ class HostEntity extends FieldPluginBase {
 
     if ($registration instanceof RegistrationInterface) {
       if ($host_entity = $registration->getHostEntity()) {
+        $entity = $host_entity->getEntity();
         return [
-          '#markup' => Link::fromTextAndUrl($host_entity->label(), $host_entity->toUrl())->toString(),
+          '#markup' => Link::fromTextAndUrl($entity->label(), $entity->toUrl())->toString(),
         ];
       }
     }

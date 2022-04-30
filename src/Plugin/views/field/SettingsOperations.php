@@ -6,6 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\Url;
+use Drupal\registration\HostEntity;
 use Drupal\registration\RegistrationManagerInterface;
 use Drupal\views\Plugin\views\field\EntityOperations;
 use Drupal\views\ResultRow;
@@ -53,14 +54,15 @@ class SettingsOperations extends EntityOperations {
     $build = [];
     $operations = [];
 
-    /** @var \Drupal\registration\Entity\RegistrationSettings $entity */
-    $entity = $this->getEntity($values);
-    $entity_id = $entity->getHostEntityId();
-    $entity_type_id = $entity->getHostEntityTypeId();
+    /** @var \Drupal\registration\Entity\RegistrationSettings $settings_entity */
+    $settings_entity = $this->getEntity($values);
+    $entity_id = $settings_entity->getHostEntityId();
+    $entity_type_id = $settings_entity->getHostEntityTypeId();
 
     $storage = $this->entityTypeManager->getStorage($entity_type_id);
-    if ($host_entity = $storage->load($entity_id)) {
-      if ($type = $this->registrationManager->getRegistrationTypeBundle($host_entity)) {
+    if ($entity = $storage->load($entity_id)) {
+      $host_entity = new HostEntity($entity);
+      if ($type = $host_entity->getRegistrationTypeBundle()) {
         $access =
              $this->currentUser->hasPermission("administer registration")
           || $this->currentUser->hasPermission("administer $type registration")
@@ -68,7 +70,7 @@ class SettingsOperations extends EntityOperations {
         $access_result = AccessResult::allowedIf($access)
           // Recalculate this result if the relevant entities are updated.
           ->cachePerPermissions()
-          ->addCacheableDependency($host_entity);
+          ->addCacheableDependency($entity);
 
         if ($access_result->isAllowed()) {
           $url = Url::fromRoute("entity.$entity_type_id.registration.registration_settings", [

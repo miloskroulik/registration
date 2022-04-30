@@ -2,8 +2,8 @@
 
 namespace Drupal\registration;
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\registration\Entity\RegistrationSettings;
+use Drupal\registration\HostEntityInterface;
 
 /**
  * Defines the storage handler class for registration settings entities.
@@ -15,13 +15,13 @@ class RegistrationSettingsStorage extends RegistrationStorage {
    *
    * Creates one if settings do not exist yet.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   * @param \Drupal\registration\HostEntityInterface $host_entity
    *   The host entity.
    *
    * @return \Drupal\registration\Entity\RegistrationSettings
    *   The settings entity.
    */
-  public function loadSettingsForEntity(EntityInterface $host_entity): RegistrationSettings {
+  public function loadSettingsForHostEntity(HostEntityInterface $host_entity): RegistrationSettings {
     $values = [
       'entity_type_id' => $host_entity->getEntityTypeId(),
       'entity_id' => $host_entity->id(),

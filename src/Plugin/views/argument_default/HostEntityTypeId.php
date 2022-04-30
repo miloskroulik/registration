@@ -72,8 +72,8 @@ class HostEntityTypeId extends ArgumentDefaultPluginBase implements CacheableDep
    */
   public function getArgument() {
     $parameters = $this->routeMatch->getParameters();
-    if ($host_entity = $this->registrationManager->getEntityFromParameters($parameters)) {
-      return $host_entity->getEntityTypeId();
+    if ($entity = $this->registrationManager->getEntityFromParameters($parameters)) {
+      return $entity->getEntityTypeId();
     }
     return NULL;
   }

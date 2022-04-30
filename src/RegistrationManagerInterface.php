@@ -5,10 +5,8 @@ namespace Drupal\registration;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
-use Drupal\registration\Entity\RegistrationTypeInterface;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Route;
 
@@ -16,50 +14,6 @@ use Symfony\Component\Routing\Route;
  * Defines the interface for the registration manager service.
  */
 interface RegistrationManagerInterface {
-
-  /**
-   * Adds cache information to a render array for a given host entity.
-   *
-   * This allows it to rebuild for different users and when settings change.
-   * Used by registration forms and registration related field formatters.
-   *
-   * @param array $build
-   *   The render array to modify.
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   * @param \Drupal\Core\Entity\EntityInterface[] $other_entities
-   *   (optional) Other entities that should be added as dependencies.
-   */
-  public function addCacheableDependencies(array &$build, EntityInterface $host_entity, array $other_entities = []);
-
-  /**
-   * Generates a sample registration for use in tests and email preview.
-   *
-   * The registration is created but not saved, so it is ephemeral unless
-   * the caller subsequently saves it. Saving it is not recommended.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   *
-   * @return \Drupal\registration\Entity\RegistrationInterface
-   *   The generated registration.
-   */
-  public function generateSampleRegistration(EntityInterface $host_entity): RegistrationInterface;
-
-  /**
-   * Gets the reserved spaces in active registrations for a given host entity.
-   *
-   * Includes active and held states.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
-   *   (optional) If set, an existing registration to exclude from the count.
-   *
-   * @return int
-   *   The total number of reserved spaces for active registrations.
-   */
-  public function getActiveSpacesReserved(EntityInterface $host_entity, RegistrationInterface $registration = NULL): int;
 
   /**
    * Gets the base route name for an entity type.
@@ -82,13 +36,15 @@ interface RegistrationManagerInterface {
    *
    * @param \Symfony\Component\HttpFoundation\ParameterBag $parameters
    *   The parameter bag from a request object.
+   * @param bool $return_host_entity
+   *   (optional) Whether to return the entity or a wrapped host entity.
    *
-   * @return \Drupal\Core\Entity\EntityInterface|null
-   *   The entity, or NULL if not found.
+   * @return \Drupal\Core\Entity\EntityInterface|\Drupal\registration\HostEntityInterface|null
+   *   Either the entity, a wrapped host entity, or NULL if not found.
    *
    * @see https://www.drupal.org/docs/8/api/routing-system/parameters-in-routes/using-parameters-in-routes
    */
-  public function getEntityFromParameters(ParameterBag $parameters): ?EntityInterface;
+  public function getEntityFromParameters(ParameterBag $parameters, bool $return_host_entity = FALSE): EntityInterface|HostEntityInterface|null;
 
   /**
    * Gets a setting from registration fields associated with an entity type.
@@ -142,74 +98,12 @@ interface RegistrationManagerInterface {
   public function getRegistrantOptions(RegistrationInterface $registration, RegistrationSettings $settings): array;
 
   /**
-   * Gets the total number of registrations for the given host entity.
-   *
-   * Note that this is the number of registrations, not the spaces reserved.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   *
-   * @return int
-   *   The count of registrations (any status).
-   */
-  public function getRegistrationCount(EntityInterface $host_entity): int;
-
-  /**
    * Gets the entity types that have bundles with registration fields.
    *
    * @return \Drupal\Core\Entity\EntityTypeInterface[]
    *   An array of entity type definitions indexed by machine name.
    */
   public function getRegistrationEnabledEntityTypes(): array;
-
-  /**
-   * Gets the definition of the registration field for a host entity.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   *
-   * @return \Drupal\Core\Field\FieldDefinitionInterface|null
-   *   The field definition, if available.
-   */
-  public function getRegistrationField(EntityInterface $host_entity): ?FieldDefinitionInterface;
-
-  /**
-   * Gets the list of registrations for the given host entity.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   * @param array $states
-   *   (optional) An array of state IDs to filter on.
-   *   For example: ['completed', 'held']
-   *
-   * @return \Drupal\registration\Entity\Registration[]
-   *   The list of registrations.
-   */
-  public function getRegistrationList(EntityInterface $host_entity, array $states = []): array;
-
-  /**
-   * Gets the registration type for a host entity.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   *
-   * @return \Drupal\registration\Entity\RegistrationTypeInterface|null
-   *   The registration type, if available.
-   */
-  public function getRegistrationType(EntityInterface $host_entity): ?RegistrationTypeInterface;
-
-  /**
-   * Gets the value of the registration type field for a host entity.
-   *
-   * This is a Registration Type bundle machine name.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   *
-   * @return string|null
-   *   The bundle, if available.
-   */
-  public function getRegistrationTypeBundle(EntityInterface $host_entity): ?string;
 
   /**
    * Gets a registration related route for an entity type.
@@ -223,17 +117,6 @@ interface RegistrationManagerInterface {
    *   The generated route, if available.
    */
   public function getRoute(EntityTypeInterface $entity_type, string $route_id): ?Route;
-
-  /**
-   * Gets the registration settings entity for a given host entity.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   *
-   * @return \Drupal\registration\Entity\RegistrationSettings|null
-   *   The settings entity. A new entity is created (but not saved) if needed.
-   */
-  public function getSettingsForHost(EntityInterface $host_entity): ?RegistrationSettings;
 
   /**
    * Determines if an entity type has a bundle with a registration field.
@@ -251,68 +134,5 @@ interface RegistrationManagerInterface {
    *   is only returned if the specific bundle has a registration field.
    */
   public function hasRegistrationField(EntityTypeInterface $entity_type, string $bundle = NULL): bool;
-
-  /**
-   * Determines if a host entity has spaces remaining.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity, for example a node instance.
-   * @param int $spaces
-   *   (optional) The number of spaces requested. Defaults to 1.
-   * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
-   *   (optional) If set, an existing registration to exclude from the count.
-   *
-   * @return bool
-   *   TRUE if there are spaces remaining, FALSE otherwise.
-   */
-  public function hasRoom(EntityInterface $host_entity, int $spaces = 1, RegistrationInterface $registration = NULL): bool;
-
-  /**
-   * Determines whether new registrations are allowed for a host entity.
-   *
-   * This checks to make sure registrations are enabled in the settings, and
-   * ensures new registrations would occur within the open and close dates if
-   * those are set. If those checks pass and the host entity has room for
-   * more registrations, then new registrations are allowed.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity, for example a node instance.
-   * @param int $spaces
-   *   (optional) The number of spaces requested. Defaults to 1.
-   * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
-   *   (optional) If set, an existing registration to exclude from the count.
-   * @param array $errors
-   *   (optional) If set, any error messages are set into this array.
-   *
-   * @return bool
-   *   TRUE if new registrations are allowed, FALSE otherwise.
-   */
-  public function isEnabledForRegistration(EntityInterface $host_entity, int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool;
-
-  /**
-   * Determine whether an email address is registered for a given host entity.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   * @param string $email
-   *   The email address to check.
-   *
-   * @return bool
-   *   TRUE if the email address has already registered for the host entity.
-   */
-  public function isEmailRegistered(EntityInterface $host_entity, string $email): bool;
-
-  /**
-   * Determine whether a given user is registered for a given host entity.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
-   *   The host entity.
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   The user account.
-   *
-   * @return bool
-   *   TRUE if the user has already registered for the host entity.
-   */
-  public function isUserRegistered(EntityInterface $host_entity, AccountInterface $account): bool;
 
 }

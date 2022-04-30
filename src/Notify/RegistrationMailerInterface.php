@@ -1,18 +1,18 @@
 <?php
 
-namespace Drupal\registration\Mail;
+namespace Drupal\registration\Notify;
 
-use Drupal\Core\Entity\EntityInterface;
+use Drupal\registration\HostEntityInterface;
 
 /**
- * Defines the interface for the registration mailer service.
+ * Defines the interface for the registration notification service.
  */
 interface RegistrationMailerInterface {
 
   /**
-   * Gets the list of email addresses to send reminders and broadcast emails to.
+   * Gets the list of recipients to send notifications to.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   * @param \Drupal\registration\HostEntityInterface $host_entity
    *   The host entity.
    * @param array $data
    *   (optional)
@@ -38,22 +38,29 @@ interface RegistrationMailerInterface {
    *   array, and it will be passed to your event handlers.
    *
    * @return array
-   *   An associative array indexed by email address:
+   *   In this default implementation, the recipient list is an associative
+   *   array indexed by email address:
    *   [email_address => $registration_entity]
+   *
    *   If a user has registered for an event more than once, the registration
    *   entity will be replaced with an array of registration entities instead.
    *   The registration_entity can be NULL; this may occur if an event handler
    *   adds an email address to the list, but does not have a registration to
-   *   include.  In this case the email will be sent to the specified recipient,
+   *   include. In this case the specified recipient will still be notified,
    *   but tokens related to registrations will be removed from the message
    *   instead of being replaced.
+   *
+   *   Decorate this service provider to notify via text message or other means.
    */
-  public function getEmailRecipientList(EntityInterface $host_entity, array $data = []): array;
+  public function getRecipientList(HostEntityInterface $host_entity, array $data = []): array;
 
   /**
-   * Sends email to registrants associated with a given host entity.
+   * Sends a notification to registrants associated with a given host entity.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $host_entity
+   * In this default implementation, registrants are notified via email.
+   * Decorate this service provider to notify via text message or other means.
+   *
+   * @param \Drupal\registration\HostEntityInterface $host_entity
    *   The host entity.
    * @param array $data
    *   (optional) Data as documented above.
@@ -61,6 +68,6 @@ interface RegistrationMailerInterface {
    * @return int
    *   The number of emails sent.
    */
-  public function sendMail(EntityInterface $host_entity, array $data = []): int;
+  public function notify(HostEntityInterface $host_entity, array $data = []): int;
 
 }

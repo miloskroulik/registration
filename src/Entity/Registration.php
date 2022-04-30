@@ -6,11 +6,12 @@ use Drupal;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityMalformedException;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\registration\HostEntity;
+use Drupal\registration\HostEntityInterface;
 use Drupal\user\UserInterface;
 use Drupal\workflows\StateInterface;
 use Drupal\workflows\WorkflowInterface;
@@ -68,6 +69,13 @@ use Drupal\workflows\WorkflowInterface;
 class Registration extends ContentEntityBase implements RegistrationInterface {
 
   use EntityChangedTrait;
+
+  /**
+   * The host entity for the registration.
+   *
+   * @var \Drupal\registration\HostEntityInterface
+   */
+  protected HostEntityInterface $hostEntity;
 
   /**
    * {@inheritdoc}
@@ -138,17 +146,20 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getHostEntity(): ?EntityInterface {
-    if (!$this->get('host_entity')->isEmpty()) {
-      return $this->get('host_entity')->first()->entity;
+  public function getHostEntity(): ?HostEntityInterface {
+    if (!isset($this->hostEntity)) {
+      if (!$this->get('host_entity')->isEmpty()) {
+        $entity = $this->get('host_entity')->first()->entity;
+        $this->hostEntity = new HostEntity($entity);
+      }
     }
-    return NULL;
+    return $this->hostEntity;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getHostEntityId(): int {
+  public function getHostEntityId(): int|string|null {
     if (!$this->get('entity_id')->isEmpty()) {
       return (int) $this->get('entity_id')->first()->value;
     }
@@ -170,7 +181,7 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
    */
   public function getHostEntityTypeLabel(): ?string {
     if ($host_entity = $this->getHostEntity()) {
-      $entity_type = $host_entity->getEntityType();
+      $entity_type = $host_entity->getEntity()->getEntityType();
       if ($bundle_type = $entity_type->getBundleEntityType()) {
         return Drupal::entityTypeManager()
           ->getStorage($bundle_type)
@@ -339,9 +350,8 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
     // Ensure registrations are backed by stored settings.
     if (!$update) {
       $host_entity = $this->getHostEntity();
-      $storage = Drupal::entityTypeManager()->getStorage('registration_settings');
-      $settings = $storage->loadSettingsForEntity($host_entity);
-      if ($settings->isNew()) {
+      $settings = $host_entity?->getSettings();
+      if ($settings?->isNew()) {
         $settings->save();
       }
     }

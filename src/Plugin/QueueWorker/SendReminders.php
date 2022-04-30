@@ -6,7 +6,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\registration\Mail\RegistrationMailerInterface;
+use Drupal\registration\HostEntity;
+use Drupal\registration\Notify\RegistrationMailerInterface;
 use Drupal\registration\RegistrationManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -41,7 +42,7 @@ class SendReminders extends QueueWorkerBase implements ContainerFactoryPluginInt
   /**
    * The registration mailer.
    *
-   * @var \Drupal\registration\Mail\RegistrationMailerInterface
+   * @var \Drupal\registration\Notify\RegistrationMailerInterface
    */
   protected RegistrationMailerInterface $registrationMailer;
 
@@ -65,7 +66,7 @@ class SendReminders extends QueueWorkerBase implements ContainerFactoryPluginInt
    *   The entity type manager.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger.
-   * @param \Drupal\registration\Mail\RegistrationMailerInterface $registration_mailer
+   * @param \Drupal\registration\Notify\RegistrationMailerInterface $registration_mailer
    *   The registration mailer.
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
@@ -89,7 +90,7 @@ class SendReminders extends QueueWorkerBase implements ContainerFactoryPluginInt
       $plugin_definition,
       $container->get('entity_type.manager'),
       $container->get('registration.logger'),
-      $container->get('registration.mailer'),
+      $container->get('registration.notifier'),
       $container->get('registration.manager')
     );
   }
@@ -99,9 +100,10 @@ class SendReminders extends QueueWorkerBase implements ContainerFactoryPluginInt
    */
   public function processItem($data) {
     $storage = $this->entityTypeManager->getStorage($data['entity_type_id']);
-    $host_entity = $storage->load($data['entity_id']);
-    if ($host_entity) {
-      $registration_type = $this->registrationManager->getRegistrationType($host_entity);
+    $entity = $storage->load($data['entity_id']);
+    if ($entity) {
+      $host_entity = new HostEntity($entity);
+      $registration_type = $host_entity->getRegistrationType();
       $states = $registration_type->getActiveStates();
       if (empty($states)) {
         $this->logger->error('There are no active registration states configured. For a reminder email to be sent, an active registration state must be specified for the @type registration type.', [
@@ -114,7 +116,7 @@ class SendReminders extends QueueWorkerBase implements ContainerFactoryPluginInt
           '%label' => $host_entity->label(),
         ]);
         $data['states'] = array_keys($states);
-        $success_count = $this->registrationMailer->sendMail($host_entity, $data);
+        $success_count = $this->registrationMailer->notify($host_entity, $data);
         if (!$success_count) {
           $this->logger->warning('Reminder email for %label had no recipients.', [
             '%label' => $host_entity->label(),
@@ -123,7 +125,7 @@ class SendReminders extends QueueWorkerBase implements ContainerFactoryPluginInt
       }
 
       // Turn off the reminder now that is has been processed.
-      $settings = $this->registrationManager->getSettingsForHost($host_entity);
+      $settings = $host_entity->getSettings();
       $settings->set('send_reminder', FALSE);
       $settings->save();
     }

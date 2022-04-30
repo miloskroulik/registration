@@ -2,13 +2,14 @@
 
 namespace Drupal\registration\Form;
 
+use DateTimeZone;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\ContentEntityForm;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
+use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -82,7 +83,7 @@ class RegistrationSettingsForm extends ContentEntityForm {
     if ($send_reminder && !empty($reminder_date)) {
       if ($reminder_date instanceof DrupalDateTime) {
         // Ensure dates are compared using the storage timezone for both.
-        $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+        $storage_timezone = new DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
         $reminder_date->setTimezone($storage_timezone);
         $now = new DrupalDateTime('now', $storage_timezone);
         if ($reminder_date <= $now) {
@@ -109,19 +110,19 @@ class RegistrationSettingsForm extends ContentEntityForm {
   }
 
   /**
-   * Gets the host entity.
+   * Gets the unwrapped host entity.
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   The host entity, for example, a node.
+   * @return \Drupal\registration\HostEntityInterface
+   *   The host entity.
    */
-  protected function getHostEntity(FormStateInterface $form_state): EntityInterface {
+  protected function getHostEntity(FormStateInterface $form_state): HostEntityInterface {
     $host_entity = $form_state->get('host_entity');
     if (!$host_entity) {
       $route_match = $this->getRouteMatch();
-      $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
+      $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters(), TRUE);
       $form_state->set('host_entity', $host_entity);
     }
     return $host_entity;
@@ -132,15 +133,16 @@ class RegistrationSettingsForm extends ContentEntityForm {
    */
   public function getEntityFromRouteMatch(RouteMatchInterface $route_match, $entity_type_id) {
     if ($route_match->getRawParameter($entity_type_id) !== NULL) {
-      $entity = $route_match->getParameter($entity_type_id);
+      $settings_entity = $route_match->getParameter($entity_type_id);
     }
     else {
       // Fetch settings entity from the host entity.
-      $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters());
-      $entity = $this->entityTypeManager->getStorage($entity_type_id)->loadSettingsForEntity($host_entity);
+      $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters(), TRUE);
+      $storage = $this->entityTypeManager->getStorage($entity_type_id);
+      $settings_entity = $storage->loadSettingsForHostEntity($host_entity);
     }
 
-    return $entity;
+    return $settings_entity;
   }
 
 }
