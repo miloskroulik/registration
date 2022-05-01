@@ -5,7 +5,6 @@ namespace Drupal\registration\Plugin\Field\FieldFormatter;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\registration\RegistrationManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -29,19 +28,11 @@ class RegistrationTypeFormatter extends FormatterBase {
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * The registration manager.
-   *
-   * @var \Drupal\registration\RegistrationManagerInterface
-   */
-  protected RegistrationManagerInterface $registrationManager;
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): RegistrationTypeFormatter {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->entityTypeManager = $container->get('entity_type.manager');
-    $instance->registrationManager = $container->get('registration.manager');
     return $instance;
   }
 
@@ -51,10 +42,16 @@ class RegistrationTypeFormatter extends FormatterBase {
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
     $cache_entities = [];
-    if ($host_entity = $items->getEntity()) {
+    if ($entity = $items->getEntity()) {
+      /** @var \Drupal\registration\HostEntityInterface $host_entity */
+      $host_entity = $this->entityTypeManager
+        ->getHandler('registration', 'host_entity')
+        ->createHostEntity($entity);
       if (isset($items, $items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
-          $registration_type = $this->entityTypeManager->getStorage('registration_type')->load($id);
+          $registration_type = $this->entityTypeManager
+            ->getStorage('registration_type')
+            ->load($id);
           if ($registration_type) {
             $cache_entities[] = $registration_type;
             $elements[] = [
@@ -63,9 +60,8 @@ class RegistrationTypeFormatter extends FormatterBase {
           }
         }
       }
-      $this->registrationManager->addCacheableDependencies(
+      $host_entity->addCacheableDependencies(
         $elements,
-        $host_entity,
         $cache_entities
       );
     }

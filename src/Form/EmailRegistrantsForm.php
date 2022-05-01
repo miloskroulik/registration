@@ -233,11 +233,17 @@ class EmailRegistrantsForm extends RegistrationFormBase {
       $this->messenger()->addStatus($message);
 
       // Redirect to the Manage Registrations tab for the host entity.
-      $entity_id = $host_entity->id();
+      // Build the parameters to the route dynamically since they
+      // are only known at run time based on the host entity type.
+      // As an example, the route for a commerce product variation
+      // includes both the product ID and the product variation ID.
+      // We cannot assume the route parameters should only be based
+      // on the host entity type and host entity ID, as for nodes.
+      $parameters = $this->getRouteMatch()->getRawParameters()->all();
+
+      // Set the redirect URL.
       $entity_type_id = $host_entity->getEntityTypeId();
-      $url = Url::fromRoute("entity.$entity_type_id.registration.manage_registrations", [
-        $entity_type_id => $entity_id,
-      ]);
+      $url = Url::fromRoute("entity.$entity_type_id.registration.manage_registrations", $parameters);
       $form_state->setRedirectUrl($url);
     }
     else {
