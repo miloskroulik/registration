@@ -213,6 +213,9 @@ interface HostEntityInterface {
   /**
    * Determine whether an email address is already registered.
    *
+   * This checks the anonymous email field only. To check if a Drupal
+   * user account has registered, use the isUserRegistered function.
+   *
    * @param string $email
    *   The email address to check.
    *

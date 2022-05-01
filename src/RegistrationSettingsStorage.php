@@ -32,6 +32,8 @@ class RegistrationSettingsStorage extends RegistrationStorage {
       // Settings entity does not exist yet. Create it.
       $settings_entity = $this
         ->create($values)
+        // Initialize with default settings from field configuration.
+        // These values are defined on the form display for the field.
         ->initFromConfig($host_entity);
     }
     else {
