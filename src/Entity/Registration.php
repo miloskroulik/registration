@@ -72,9 +72,12 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
   /**
    * The host entity for the registration.
    *
-   * @var \Drupal\registration\HostEntityInterface
+   * This will likely never be NULL unless a migration imports a registration
+   * without a matching host entity in the destination database.
+   *
+   * @var \Drupal\registration\HostEntityInterface|NULL
    */
-  protected HostEntityInterface $hostEntity;
+  protected HostEntityInterface|NULL $hostEntity;
 
   /**
    * {@inheritdoc}
