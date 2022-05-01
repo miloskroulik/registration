@@ -150,6 +150,7 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
    */
   public function getHostEntity(): ?HostEntityInterface {
     if (!isset($this->hostEntity)) {
+      $this->hostEntity = NULL;
       if (!$this->get('host_entity')->isEmpty()) {
         $entity = $this->get('host_entity')->first()->entity;
         $this->hostEntity = \Drupal::entityTypeManager()
