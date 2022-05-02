@@ -53,6 +53,7 @@ services:
       '@event_dispatcher',
       '@registration.logger',
       '@plugin.manager.mail',
+      '@queue',
       '@registration.manager',
       '@renderer',
     ]

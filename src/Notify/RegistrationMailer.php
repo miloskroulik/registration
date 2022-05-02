@@ -4,6 +4,8 @@ namespace Drupal\registration\Notify;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Mail\MailManagerInterface;
+use Drupal\Core\Queue\QueueFactory;
+use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -50,6 +52,13 @@ class RegistrationMailer implements RegistrationMailerInterface {
   protected MailManagerInterface $mailManager;
 
   /**
+   * The queue.
+   *
+   * @var \Drupal\Core\Queue\QueueInterface
+   */
+  protected QueueInterface $queue;
+
+  /**
    * The registration manager.
    *
    * @var \Drupal\registration\RegistrationManagerInterface
@@ -74,16 +83,19 @@ class RegistrationMailer implements RegistrationMailerInterface {
    *   The logger.
    * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
    *   The mail manager.
+   * @param \Drupal\Core\Queue\QueueFactory $queue_factory
+   *   The queue factory.
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
    * @param \Drupal\Core\Render\Renderer $renderer
    *   The renderer.
    */
-  public function __construct(AccountProxy $current_user, ContainerAwareEventDispatcher $event_dispatcher, LoggerInterface $logger, MailManagerInterface $mail_manager, RegistrationManagerInterface $registration_manager, Renderer $renderer) {
+  public function __construct(AccountProxy $current_user, ContainerAwareEventDispatcher $event_dispatcher, LoggerInterface $logger, MailManagerInterface $mail_manager, QueueFactory $queue_factory, RegistrationManagerInterface $registration_manager, Renderer $renderer) {
     $this->currentUser = $current_user;
     $this->eventDispatcher = $event_dispatcher;
     $this->logger = $logger;
     $this->mailManager = $mail_manager;
+    $this->queue = $queue_factory->get('registration.notify');
     $this->registrationManager = $registration_manager;
     $this->renderer = $renderer;
   }
@@ -162,6 +174,8 @@ class RegistrationMailer implements RegistrationMailerInterface {
 
     // Get the recipients and send to each.
     $recipients = $this->getRecipientList($host_entity, $data);
+    // @todo Put the number 50 into global config.
+    $queue = (count($recipients) > 50);
     foreach ($recipients as $email => $registrations) {
       // Convert singleton to array.
       if (!is_array($registrations)) {
@@ -189,24 +203,45 @@ class RegistrationMailer implements RegistrationMailerInterface {
         $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_MAIL);
         $params = $event->getData();
 
-        // Send the mail and count successes.
-        $result = $this->mailManager->mail('registration', 'broadcast', $email, $langcode, $params, NULL, $send);
-        if ($result['result'] !== FALSE) {
+        if ($queue) {
+          $item = [
+            'label' => $host_entity->label(),
+            'langcode' => $langcode,
+            'registration' => $registration,
+            'params' => $params,
+            'target' => $email,
+          ];
+          $this->queue->createItem($item);
           $success_count++;
         }
         else {
-          $this->logger->error('Failed to send registration broadcast email for %label to %email.', [
-            '%label' => $host_entity->label(),
-            '%email' => $email,
-          ]);
+          // Send the mail and count successes.
+          $result = $this->mailManager->mail('registration', 'broadcast', $email, $langcode, $params, NULL, $send);
+          if ($result['result'] !== FALSE) {
+            $success_count++;
+          }
+          else {
+            $this->logger->error('Failed to send registration broadcast email for %label to %email.', [
+              '%label' => $host_entity->label(),
+              '%email' => $email,
+            ]);
+          }
         }
       }
     }
     if ($success_count) {
-      $this->logger->info('Registration broadcast for %label sent to @count recipient(s).', [
-        '%label' => $host_entity->label(),
-        '@count' => $success_count,
-      ]);
+      if ($queue) {
+        $this->logger->info('Queued registration broadcast for %label for @count recipient(s).', [
+          '%label' => $host_entity->label(),
+          '@count' => $success_count,
+        ]);
+      }
+      else {
+        $this->logger->info('Registration broadcast for %label sent to @count recipient(s).', [
+          '%label' => $host_entity->label(),
+          '@count' => $success_count,
+        ]);
+      }
     }
     return $success_count;
   }
