@@ -23,19 +23,19 @@ registration.type.*:
       type: string
       label: 'Hold expiration state'
 
-registration_settings:
-  config_object:
-    type: mapping
-    mapping:
-      set_and_forget:
-        type: boolean
-        label: 'Set and forget mode'
-      hide_filter:
-        type: integer
-        label: 'Manage Registrations filter threshold'
-      queue_notifications:
-        type: integer
-        label: 'Queue notifications threshold'
+registration.settings:
+  type: config_object
+  label: 'Registration settings'
+  mapping:
+    set_and_forget:
+      type: boolean
+      label: 'Set and forget mode'
+    hide_filter:
+      type: integer
+      label: 'Manage Registrations filter threshold'
+    queue_notifications:
+      type: integer
+      label: 'Queue notifications threshold'
 
 field.formatter.settings.registration_host_entity:
   type: mapping
@@ -79,3 +79,39 @@ field.widget.settings.registration_type:
     confirmation_redirect:
       type: string
       label: 'Confirmation redirect path'
+
+registration.state:
+  type: workflows.state
+  mapping:
+    active:
+      type: boolean
+      label: 'Active'
+    held:
+      type: boolean
+      label: 'Held'
+    show_on_form:
+      type: boolean
+      label: 'Show on form'
+    description:
+      type: string
+      label: 'Description'
+
+workflow.type_settings.registration:
+  type: mapping
+  mapping:
+    states:
+      type: sequence
+      label: 'Registration states'
+      orderby: key
+      sequence:
+        type: registration.state
+        label: 'States'
+    transitions:
+      type: sequence
+      orderby: key
+      sequence:
+        type: workflows.transition
+        label: 'Transitions'
+    default_registration_state:
+      type: string
+      label: 'Default registration state'
