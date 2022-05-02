@@ -10,10 +10,29 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+
+/**
+ * Implements hook_help().
+ */
+function registration_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.registration':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Entity Registration module provides user registration for events. Administrators enable registration by adding a Registration field to the appropriate content types and configuring default settings. Each event can have Open and Close dates that control when registration is open. Once open, Register links and forms appear on the site and site visitors can use those to register for the event. Each event is provided with a Manage Registrations listing that administrators can use to review and maintain the registrations.') . '</p>';
+      $output .= '<dl>';
+      $output .= '<dt>' . t('Fieldable') . '</dt>';
+      $output .= '<dd>' . t('All relevant entities such as Registration Types and Registration Settings are fieldable. These allow administrators to configure the fields that appear on the registration forms and settings forms.') . '</dd>';
+      $output .= '<dt>' . t('Integration') . '</dt>';
+      $output .= '<dd>' . t('If the Views module is enabled on the site then Views listings are automatically created when the Registration module is installed. These can be customized to control what appears on the Manage Registration listing and other administrative listings.') . '</dd>';
+      $output .= '</dl>';
+      return $output;
+  }
+}
 
 /**
  * Implements hook_cron().
