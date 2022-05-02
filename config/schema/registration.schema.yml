@@ -62,7 +62,7 @@ field.widget.settings.registration_type:
       type: boolean
       label: 'Send Reminder'
     reminder_template:
-      type: text
+      type: text_format
       label: 'Reminder Email Template'
     maximum_spaces:
       type: integer
