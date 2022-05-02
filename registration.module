@@ -187,10 +187,9 @@ function registration_form_views_exposed_form_alter(array &$form, FormStateInter
     $route_match = \Drupal::routeMatch();
     $registration_manager = \Drupal::service('registration.manager');
     if ($host_entity = $registration_manager->getEntityFromParameters($route_match->getParameters(), TRUE)) {
-      // @todo Make the number 10 config settings based.
-      if ($host_entity->getRegistrationCount() < 10) {
-        $form['mail']['#access'] = FALSE;
-        $form['actions']['#access'] = FALSE;
+      $config = \Drupal::config('registration.settings');
+      if ($host_entity->getRegistrationCount() < $config->get('hide_filter')) {
+        $form['#access'] = FALSE;
       }
     }
   }

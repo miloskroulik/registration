@@ -3,6 +3,8 @@
 namespace Drupal\registration\Notify;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
+use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
@@ -22,6 +24,13 @@ use Psr\Log\LoggerInterface;
 class RegistrationMailer implements RegistrationMailerInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * The current user service.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected ImmutableConfig $config;
 
   /**
    * The current user service.
@@ -75,6 +84,8 @@ class RegistrationMailer implements RegistrationMailerInterface {
   /**
    * Creates a RegistrationMailer object.
    *
+   * @param \Drupal\Core\Config\ConfigFactory $config_factory
+   *   The configuration factory.
    * @param \Drupal\Core\Session\AccountProxy $current_user
    *   The current user.
    * @param \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher $event_dispatcher
@@ -90,7 +101,8 @@ class RegistrationMailer implements RegistrationMailerInterface {
    * @param \Drupal\Core\Render\Renderer $renderer
    *   The renderer.
    */
-  public function __construct(AccountProxy $current_user, ContainerAwareEventDispatcher $event_dispatcher, LoggerInterface $logger, MailManagerInterface $mail_manager, QueueFactory $queue_factory, RegistrationManagerInterface $registration_manager, Renderer $renderer) {
+  public function __construct(ConfigFactory $config_factory, AccountProxy $current_user, ContainerAwareEventDispatcher $event_dispatcher, LoggerInterface $logger, MailManagerInterface $mail_manager, QueueFactory $queue_factory, RegistrationManagerInterface $registration_manager, Renderer $renderer) {
+    $this->config = $config_factory->get('registration.settings');
     $this->currentUser = $current_user;
     $this->eventDispatcher = $event_dispatcher;
     $this->logger = $logger;
@@ -174,8 +186,8 @@ class RegistrationMailer implements RegistrationMailerInterface {
 
     // Get the recipients and send to each.
     $recipients = $this->getRecipientList($host_entity, $data);
-    // @todo Put the number 50 into global config.
-    $queue = (count($recipients) > 50);
+    // Queue notifications depending on how many recipients there are.
+    $queue = (count($recipients) > $this->config->get('queue_notifications'));
     foreach ($recipients as $email => $registrations) {
       // Convert singleton to array.
       if (!is_array($registrations)) {

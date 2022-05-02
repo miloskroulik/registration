@@ -49,6 +49,7 @@ services:
   registration.notifier:
     class: Drupal\registration\Notify\RegistrationMailer
     arguments: [
+      '@config.factory',
       '@current_user',
       '@event_dispatcher',
       '@registration.logger',
