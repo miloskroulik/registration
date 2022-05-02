@@ -2,7 +2,8 @@ name: Entity Registration
 type: module
 description: 'Provides user registration for events.'
 package: Registration
-core_version_requirement: ^8.9 || ^9
+core_version_requirement: ^9.3
+php: 8.0
 configure: registration.admin_settings
 dependencies:
   - drupal:datetime
