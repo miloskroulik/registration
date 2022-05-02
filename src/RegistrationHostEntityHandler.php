@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityHandlerBase;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
- * Define the "host_entity" handler class for registrations.
+ * Defines the "host_entity" handler class for registrations.
  *
  * Using a handler allows other modules to override the host
  * entity functions and integrate with third party data sources.
@@ -16,7 +16,7 @@ use Drupal\Core\Entity\EntityInterface;
 class RegistrationHostEntityHandler extends EntityHandlerBase {
 
   /**
-   * Create a host entity object given a real entity.
+   * Creates a host entity object given a real entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The real entity.
