@@ -5,6 +5,8 @@
  * Views integration for Entity Registration.
  */
 
+use Drupal\Core\Entity\FieldableEntityInterface;
+
 /**
  * Implements hook_views_data().
  */
@@ -33,44 +35,46 @@ function registration_views_data() {
 function registration_views_data_alter(array &$data) {
   // Most registration fields are handled automatically by setting a
   // views_data class in the entity annotation. Derive additional data
-  // for relationships. These are added one per registration enabled
-  // entity type, since there is a different base table for each.
-  foreach (\Drupal::service('registration.manager')->getRegistrationEnabledEntityTypes() as $entity_type) {
-    $id = $entity_type->id();
-    $base_table = $entity_type->getBaseTable();
+  // for relationships. These are added one per fieldable entity type,
+  // since there is a different base table for each.
+  foreach (\Drupal::entityTypeManager()->getDefinitions() as $entity_type) {
+    if ($entity_type->entityClassImplements(FieldableEntityInterface::class)) {
+      $id = $entity_type->id();
+      $base_table = $entity_type->getBaseTable();
 
-    // Add a relationship from a host entity type to registrations.
-    $data[$base_table][$base_table . '_registration'] = [
-      'title' => t('@type registration', [
-        '@type' => $entity_type->getLabel(),
-      ]),
-      'help' => t('Relate @type to their registrations.', [
-        '@type' => $entity_type->getPluralLabel(),
-      ]),
-      'relationship' => [
-        'id' => "registration",
-        'label' => t('@id registration', [
-          '@id' => $id,
+      // Add a relationship from a host entity type to registrations.
+      $data[$base_table][$base_table . '_registration'] = [
+        'title' => t('@type registration', [
+          '@type' => $entity_type->getLabel(),
         ]),
-        'base' => 'registration',
-      ],
-    ];
-    // Add a relationship from a host entity type to registration settings.
-    $data[$base_table][$base_table . '_registration_settings'] = [
-      'title' => t('@type registration settings', [
-        '@type' => $entity_type->getLabel(),
-      ]),
-      'help' => t('Relate @type to their registration settings.', [
-        '@type' => $entity_type->getPluralLabel(),
-      ]),
-      'relationship' => [
-        'id' => "registration_settings",
-        'label' => t('@id registration settings', [
-          '@id' => $id,
+        'help' => t('Relate @type to their registrations.', [
+          '@type' => $entity_type->getPluralLabel(),
         ]),
-        'base' => 'registration_settings',
-      ],
-    ];
+        'relationship' => [
+          'id' => "registration",
+          'label' => t('@id registration', [
+            '@id' => $id,
+          ]),
+          'base' => 'registration',
+        ],
+      ];
+      // Add a relationship from a host entity type to registration settings.
+      $data[$base_table][$base_table . '_registration_settings'] = [
+        'title' => t('@type registration settings', [
+          '@type' => $entity_type->getLabel(),
+        ]),
+        'help' => t('Relate @type to their registration settings.', [
+          '@type' => $entity_type->getPluralLabel(),
+        ]),
+        'relationship' => [
+          'id' => "registration_settings",
+          'label' => t('@id registration settings', [
+            '@id' => $id,
+          ]),
+          'base' => 'registration_settings',
+        ],
+      ];
+    }
   }
 
   // Make views aware of custom field plugins.
