@@ -23,13 +23,12 @@ function registration_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.registration':
       $output = '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('The Entity Registration module provides user registration for events. Administrators enable registration by adding a Registration field to the appropriate content types and configuring default settings. Each event can have Open and Close dates that control when registration is open. Once open, Register links and forms appear on the site and site visitors can use those to register for the event. Each event is provided with a Manage Registrations listing that administrators can use to review and maintain the registrations.') . '</p>';
+      $output .= '<p>' . t('The Registration module provides user registration for events. Administrators enable registration by adding a Registration field to the appropriate content types and configuring default settings. Each event can have Open and Close dates that control when registration is open. Register links and forms appear for events with open registration, and site visitors can use those to register. Each event is provided with a Manage Registrations listing that administrators can use to review and maintain the registrations. Administrators can configure reminders to be sent to registrants on a per-event basis.') . '</p>';
       $output .= '<dl>';
-      $output .= '<dt>' . t('Fieldable') . '</dt>';
-      $output .= '<dd>' . t('All relevant entities such as Registration Types and Registration Settings are fieldable. These allow administrators to configure the fields that appear on the registration forms and settings forms.') . '</dd>';
-      $output .= '<dt>' . t('Integration') . '</dt>';
-      $output .= '<dd>' . t('If the Views module is enabled on the site then Views listings are automatically created when the Registration module is installed. These can be customized to control what appears on the Manage Registration listing and other administrative listings.') . '</dd>';
-      $output .= '</dl>';
+      $output .= '<dt>' . t('Configuration') . '</dt>';
+      $output .= '<dd>' . t('All relevant entities such as Registration Types and Registration Settings are fieldable. This allows administrators to configure the fields that appear on the Register and Settings forms. If the Views module is enabled then views listings are automatically created when the Registration module is installed. Site builders can customize these views to control what appears on the Manage Registrations and other administrative listings. The module leverages the core Workflows module to define the allowed registration states and transitions.') . '</dd>';
+      $output .= '<dt>' . t('Entity types') . '</dt>';
+      $output .= '<dd>' . t('Registration fields can be attached to any fieldable entity type, including any custom entity types that you define for your events. The most common use case would likely be creating an Event content type and enabling that for registration. If you have the Drupal Commerce module installed, you can add registration fields to Commerce products or product variations. However any fieldable entity can be used as the host.') . '</dd>';
       return $output;
   }
 }

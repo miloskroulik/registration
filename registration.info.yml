@@ -1,4 +1,4 @@
-name: Entity Registration
+name: Registration
 type: module
 description: 'Provides user registration for events.'
 package: Registration
