@@ -11,6 +11,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Notify registrants.
  *
+ * Process emails in the queue and send.
+ *
  * @QueueWorker(
  *  id = "registration.notify",
  *  title = @Translation("Notify registrants"),
