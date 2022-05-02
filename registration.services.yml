@@ -1,5 +1,12 @@
 services:
 
+  registration.cron.expire_held_registrations:
+    class: Drupal\registration\Cron\ExpireHeldRegistrations
+    arguments: [
+      '@entity_type.manager',
+      '@queue',
+    ]
+
   registration.cron.send_reminders:
     class: Drupal\registration\Cron\SendReminders
     arguments: [
@@ -8,10 +15,10 @@ services:
       '@queue',
     ]
 
-  registration.cron.expire_held_registrations:
-    class: Drupal\registration\Cron\ExpireHeldRegistrations
+  registration.cron.set_and_forget:
+    class: Drupal\registration\Cron\SetAndForget
     arguments: [
-      '@entity_type.manager',
+      '@database',
       '@queue',
     ]
 

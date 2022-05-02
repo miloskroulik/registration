@@ -17,13 +17,19 @@ use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Implements hook_cron().
+ *
+ * @see \Drupal\registration\Cron\ExpireHeldRegistrations
+ * @see \Drupal\registration\Cron\SendReminders
+ * @see \Drupal\registration\Cron\SetAndForget
  */
 function registration_cron() {
-  // @todo Add a Cron task for set-and-forget registration enable/disable
-  // based on open and close dates?  So admins do not have to check
-  // the box and have the Register tab visible for longer than necessary.
   \Drupal::service('registration.cron.send_reminders')->run();
   \Drupal::service('registration.cron.expire_held_registrations')->run();
+
+  $config = \Drupal::config('registration.settings');
+  if ($config->get('set_and_forget')) {
+    \Drupal::service('registration.cron.set_and_forget')->run();
+  }
 }
 
 /**
