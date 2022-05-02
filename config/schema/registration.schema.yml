@@ -80,6 +80,14 @@ field.widget.settings.registration_type:
       type: string
       label: 'Confirmation redirect path'
 
+field.value.registration:
+  type: mapping
+  label: 'Default value'
+  mapping:
+    registration_type:
+      type: string
+      label: 'Registration type'
+
 registration.state:
   type: workflows.state
   mapping:
