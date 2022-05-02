@@ -1,0 +1,81 @@
+# Schema for the configuration files of the Registration module.
+
+registration.type.*:
+  type: config_entity
+  label: 'Registration type settings'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    workflow_id:
+      type: string
+      label: 'Workflow'
+    defaultState:
+      type: string
+      label: 'Default state'
+    heldExpireTime:
+      type: integer
+      label: 'Hold expiration hours'
+    heldExpireState:
+      type: string
+      label: 'Hold expiration state'
+
+registration_settings:
+  config_object:
+    type: mapping
+    mapping:
+      set_and_forget:
+        type: boolean
+        label: 'Set and forget mode'
+      hide_filter:
+        type: integer
+        label: 'Manage Registrations filter threshold'
+      queue_notifications:
+        type: integer
+        label: 'Queue notifications threshold'
+
+field.formatter.settings.registration_host_entity:
+  type: mapping
+  label: 'Host entity display format settings'
+  mapping:
+    link:
+      type: boolean
+      label: 'Link'
+
+field.widget.settings.registration_type:
+  type: mapping
+  label: 'Registration type widget settings'
+  mapping:
+    hide_register_tab:
+      type: boolean
+      label: 'Hide Register Tab'
+    status:
+      type: boolean
+      label: 'Check to enable registrations.'
+    capacity:
+      type: integer
+      label: 'Capacity'
+    send_reminder:
+      type: boolean
+      label: 'Send Reminder'
+    reminder_template:
+      type: text
+      label: 'Reminder Email Template'
+    maximum_spaces:
+      type: integer
+      label: 'Spaces allowed'
+    multiple_registrations:
+      type: boolean
+      label: 'Allow multiple registrations'
+    from_address:
+      type: string
+      label: 'From Address'
+    confirmation:
+      type: string
+      label: 'Confirmation Message'
+    confirmation_redirect:
+      type: string
+      label: 'Confirmation redirect path'

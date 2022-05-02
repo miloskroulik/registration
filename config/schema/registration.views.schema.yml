@@ -1,0 +1,29 @@
+# Schema for the views plugins of the Registration module.
+
+views.area.manage_registrations_caption:
+  type: views_area
+  label: 'Manage registrations caption'
+views.area.manage_registrations_empty:
+  type: views_area
+  label: 'Manage resitrations empty message'
+
+views.argument.registration_host_entity_id:
+  type: views_argument
+  label: 'Host entity ID'
+views.argument.registration_host_entity_type_id:
+  type: views_argument
+  label: 'Host entity type ID'
+
+views.field.registration_host_entity:
+  type: views_field
+  label: 'Host entity'
+views.field.registration_settings_operations:
+  type: views_field
+  label: 'Registration settings operations'
+
+views.relationship.registration:
+  type: views_relationship
+  label: 'Registration'
+views.relationship.registration_settings:
+  type: views_relationship
+  label: 'Registration settings'
