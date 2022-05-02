@@ -31,9 +31,16 @@ class HostEntity extends FieldPluginBase {
     if ($registration instanceof RegistrationInterface) {
       if ($host_entity = $registration->getHostEntity()) {
         $entity = $host_entity->getEntity();
-        return [
-          '#markup' => Link::fromTextAndUrl($entity->label(), $entity->toUrl())->toString(),
-        ];
+        try {
+          return [
+            '#markup' => Link::fromTextAndUrl($entity->label(), $entity->toUrl())->toString(),
+          ];
+        }
+        catch (\Exception) {
+          // The toUrl function can throw an exception if the entity is
+          // malformed. Catching the exception allows the listing to render
+          // for other rows and host entities.
+        }
       }
     }
 
