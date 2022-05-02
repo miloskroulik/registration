@@ -3,7 +3,7 @@ type: module
 description: 'Provides user registration for events.'
 package: Registration
 core_version_requirement: ^8.9 || ^9
-configure: entity.registration_type.collection
+configure: registration.admin_settings
 dependencies:
   - drupal:datetime
   - drupal:field

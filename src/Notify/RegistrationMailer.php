@@ -181,7 +181,6 @@ class RegistrationMailer implements RegistrationMailerInterface {
       if (!is_array($registrations)) {
         $registrations = [$registrations];
       }
-      // @todo Send via a queue worker if there are very many.
       foreach ($registrations as $registration) {
         // Set registration entity for token replacement if available.
         if ($registration instanceof RegistrationInterface) {

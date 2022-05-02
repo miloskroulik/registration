@@ -18,4 +18,4 @@ entity.registration_type.edit_form:
 registration.admin_settings:
   route_name: registration.admin_settings
   base_route: registration.admin_settings
-  title: Edit
+  title: Global settings
