@@ -31,7 +31,7 @@ use Drupal\workflows\WorkflowInterface;
  *       "default" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
  *     },
  *   },
- *   config_prefix = "registration_type",
+ *   config_prefix = "type",
  *   admin_permission = "administer registration types",
  *   bundle_of = "registration",
  *   entity_keys = {
