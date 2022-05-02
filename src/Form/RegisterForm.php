@@ -418,7 +418,7 @@ class RegisterForm extends ContentEntityForm {
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->getEntity();
     $count = $registration->getSpacesReserved();
-    if (!$host_entity->isNew() || $host_entity->isEnabledForRegistration($count, $registration)) {
+    if (!$registration->isNew() || $host_entity->isEnabledForRegistration($count, $registration)) {
       // Override the button label for the Save button.
       $actions = parent::actions($form, $form_state);
       $actions['submit']['#value'] = $this->t('Save Registration');
