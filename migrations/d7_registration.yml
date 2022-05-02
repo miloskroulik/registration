@@ -1,0 +1,32 @@
+id: d7_registration
+label: Registrations
+audit: true
+migration_tags:
+  - Drupal 7
+  - Content
+deriver: Drupal\registration\Plugin\migrate\D7RegistrationDeriver
+source:
+  plugin: d7_registration
+process:
+  type: type
+  entity_type_id:
+    plugin: host_entity_type
+    source: entity_type
+  entity_id:
+    plugin: host_entity_migration_lookup
+    source: entity_id
+  anon_mail: anon_mail
+  count: count
+  user_uid: user_uid
+  author_uid: author_uid
+  state: state
+  created: created
+  changed: updated
+destination:
+  plugin: entity:registration
+migration_dependencies:
+  required:
+    - d7_user
+    - d7_registration_type
+  optional:
+    - d7_field_instance
