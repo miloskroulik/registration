@@ -73,11 +73,9 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
    * The host entity for the registration.
    *
    * This will likely never be NULL unless a migration imports a registration
-   * without a matching host entity in the destination database. Note the
-   * difference between an uninitialized class property and a null variable.
-   * @see https://www.php.net/manual/en/language.oop5.properties.php
+   * without a matching host entity in the destination database.
    *
-   * @var \Drupal\registration\HostEntityInterface|NULL
+   * @var \Drupal\registration\HostEntityInterface|null
    */
   protected HostEntityInterface|NULL $hostEntity;
 
