@@ -91,7 +91,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
    * {@inheritdoc}
    */
   public function workflowHasData(WorkflowInterface $workflow): bool {
-    return (bool) $this->entityTypeManager
+    $has_data = (bool) $this->entityTypeManager
       ->getStorage('registration')
       ->getQuery()
       ->condition('workflow', $workflow->id())
@@ -99,13 +99,28 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
       ->accessCheck(FALSE)
       ->range(0, 1)
       ->execute();
+
+    // If no registrations are using the workflow, check for registration types
+    // using it.
+    if (!$has_data) {
+      $has_data = (bool) $this->entityTypeManager
+        ->getStorage('registration_type')
+        ->getQuery()
+        ->condition('workflow_id', $workflow->id())
+        ->count()
+        ->accessCheck(FALSE)
+        ->range(0, 1)
+        ->execute();
+    }
+
+    return $has_data;
   }
 
   /**
    * {@inheritdoc}
    */
   public function workflowStateHasData(WorkflowInterface $workflow, StateInterface $state): bool {
-    return (bool) $this->entityTypeManager
+    $has_data = (bool) $this->entityTypeManager
       ->getStorage('registration')
       ->getQuery()
       ->condition('workflow', $workflow->id())
@@ -114,6 +129,26 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
       ->accessCheck(FALSE)
       ->range(0, 1)
       ->execute();
+
+    // If no registrations are using the state, check for registration types
+    // using it.
+    if (!$has_data) {
+      $query = $this->entityTypeManager
+        ->getStorage('registration_type')
+        ->getQuery()
+        ->condition('workflow_id', $workflow->id());
+      $orGroup = $query->orConditionGroup()
+        ->condition('defaultState', $state->id())
+        ->condition('heldExpireState', $state->id());
+      $has_data = (bool) $query
+        ->condition($orGroup)
+        ->count()
+        ->accessCheck(FALSE)
+        ->range(0, 1)
+        ->execute();
+    }
+
+    return $has_data;
   }
 
   /**

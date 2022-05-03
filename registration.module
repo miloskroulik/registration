@@ -222,6 +222,32 @@ function registration_form_views_exposed_form_alter(array &$form, FormStateInter
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function registration_form_workflow_delete_form_alter(array &$form,
+  FormStateInterface $form_state,
+ $form_id) {
+  // If there are no actions, the delete is not allowed. Alter the error
+  // message to mention registration types.
+  if (empty($form['actions'])) {
+    $form['description'] = ['#markup' => t('This workflow is in use. You cannot remove this workflow until you have removed all content using it and there are no registration types using it.')];
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function registration_form_workflow_state_delete_form_alter(array &$form,
+  FormStateInterface $form_state,
+ $form_id) {
+  // If there are no actions, the delete is not allowed. Alter the error
+  // message to mention registration types.
+  if (empty($form['actions'])) {
+    $form['description'] = ['#markup' => t('This workflow state is in use. You cannot remove this workflow state until you have removed all content using it and there are no registration types using it.')];
+  }
+}
+
+/**
  * Implements hook_field_widget_complete_WIDGET_TYPE_form_alter().
  */
 function registration_field_widget_complete_datetime_default_form_alter(&$field_widget_complete_form,
