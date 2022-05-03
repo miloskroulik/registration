@@ -156,7 +156,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
         if ($state->isShownOnForm()) {
           // If transitions should be checked, then ensure the current state,
           // if set, can transition to the new state.
-          if ( !$current_state
+          if (!$current_state
             || !$check_transitions
             || ($current_state->id() == $state->id())
             || $current_state->canTransitionTo($state->id())) {
