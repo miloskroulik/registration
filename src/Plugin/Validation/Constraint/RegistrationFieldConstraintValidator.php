@@ -3,6 +3,7 @@
 namespace Drupal\registration\Plugin\Validation\Constraint;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityDefinitionUpdateManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionListenerInterface;
 use Drupal\field\Entity\FieldConfig;
@@ -16,6 +17,13 @@ use Symfony\Component\Validator\ConstraintValidator;
  * Validates registration fields.
  */
 class RegistrationFieldConstraintValidator extends ConstraintValidator implements ContainerInjectionInterface {
+
+  /**
+   * The entity definition update manager.
+   *
+   * @var \Drupal\Core\Entity\EntityDefinitionUpdateManager
+   */
+  protected EntityDefinitionUpdateManager $entityUpdateManager;
 
   /**
    * The entity type manager.
@@ -41,6 +49,8 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
   /**
    * Constructs a new RegistrationFieldConstraintValidator.
    *
+   * @param \Drupal\Core\Entity\EntityDefinitionUpdateManager $entity_update_manager
+   *   The entity type manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Drupal\Core\Field\FieldDefinitionListenerInterface $field_definition_listener
@@ -48,7 +58,8 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
    * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
    *   The registration manager.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, FieldDefinitionListenerInterface $field_definition_listener, RegistrationManagerInterface $registration_manager) {
+  public function __construct(EntityDefinitionUpdateManager $entity_update_manager, EntityTypeManagerInterface $entity_type_manager, FieldDefinitionListenerInterface $field_definition_listener, RegistrationManagerInterface $registration_manager) {
+    $this->entityUpdateManager = $entity_update_manager;
     $this->entityTypeManager = $entity_type_manager;
     $this->fieldDefinitionListener = $field_definition_listener;
     $this->registrationManager = $registration_manager;
@@ -59,6 +70,7 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
    */
   public static function create(ContainerInterface $container): static {
     return new static(
+      $container->get('entity.definition_update_manager'),
       $container->get('entity_type.manager'),
       $container->get('field_definition.listener'),
       $container->get('registration.manager')
@@ -97,23 +109,33 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
       }
     }
     elseif ($value instanceof FieldStorageConfig) {
-      $field_config = $value;
-      if ($field_config->getType() == 'registration') {
+      $field_storage_config = $value;
+      if ($field_storage_config->getType() == 'registration') {
         // Field storage is being created for a registration field.
-        $entity_type_id = $field_config->get('entity_type');
+        $violation = FALSE;
+        $entity_type_id = $field_storage_config->get('entity_type');
         $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
         if ($entity_type_id == 'registration') {
           // Cannot add registration field to itself.
+          $violation = TRUE;
           $this->context->addViolation($constraint->disallowedTargetTypeMessage);
         }
         elseif ($entity_type_id == 'registration_settings') {
           // Cannot add registration field to settings.
+          $violation = TRUE;
           $this->context->addViolation($constraint->disallowedTargetSettingsMessage);
         }
 
         if (!$entity_type->getKey('id')) {
           // The entity type must have an "id" key, which is standard.
+          $violation = TRUE;
           $this->context->addViolation($constraint->missingIdKeyMessage);
+        }
+
+        // Cleanup after a violation by removing the storage that was created.
+        // Otherwise end up with "Mismatched entity and/or field definitions".
+        if ($violation) {
+          $this->entityUpdateManager->uninstallFieldStorageDefinition($field_storage_config);
         }
       }
     }
