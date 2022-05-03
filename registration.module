@@ -55,7 +55,7 @@ function registration_cron() {
  */
 function registration_entity_type_alter(array &$entity_types) {
   // Add validation constraints to the field config entity types.
-  // This prevents more than registration field on a bundle, etc.
+  // This prevents more than one registration field on a bundle, etc.
   $entity_types['field_config']->addConstraint('registration_field');
   $entity_types['field_storage_config']->addConstraint('registration_field');
 }
