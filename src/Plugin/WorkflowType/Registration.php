@@ -16,10 +16,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @WorkflowType(
  *   id = "registration",
  *   label = @Translation("Registration"),
- *   required_states = {
- *     "complete",
- *     "canceled",
- *   },
  *   forms = {
  *     "configure" = "\Drupal\registration\Form\RegistrationWorkflowForm",
  *     "state" = "\Drupal\registration\Form\RegistrationStateForm"

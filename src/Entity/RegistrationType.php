@@ -194,13 +194,22 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
    * {@inheritdoc}
    */
   public function getDefaultState(): string {
+    $workflow = $this->getWorkflow();
     if ($this->isNew()) {
       // Default new registration types to the global default for the workflow.
-      $workflow = $this->getWorkflow();
       $configuration = $workflow->getTypePlugin()->getConfiguration();
       return $configuration['default_registration_state'];
     }
     else {
+      // Ensure the default still exists.
+      try {
+        $state = $workflow->getTypePlugin()->getState($this->defaultState);
+      }
+      catch (\Exception) {
+        // The default no longer exists, take the first configured state.
+        $states = $workflow->getTypePlugin()->getConfiguration()['states'];
+        $this->defaultState = array_key_first($states);
+      }
       return $this->defaultState;
     }
   }

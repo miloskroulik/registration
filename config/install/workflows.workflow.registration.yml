@@ -55,6 +55,7 @@ type_settings:
       to: canceled
       weight: 2
       from:
+        - complete
         - pending
         - held
   default_registration_state: pending
