@@ -191,7 +191,7 @@ class RegisterForm extends ContentEntityForm {
     if (!empty($form['state'])) {
       $registration_type = $registration->getType();
       $current_state = $registration->getState();
-      $states = $registration_type->getStatesToShowOnForm($current_state);
+      $states = $registration_type->getStatesToShowOnForm($current_state, !$registration->isNew());
 
       $type = $registration_type->id();
       $form['state']['#access'] = !empty($states) && $this->currentUser()->hasPermission("edit $type registration state");

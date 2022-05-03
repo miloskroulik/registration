@@ -146,7 +146,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
   /**
    * {@inheritdoc}
    */
-  public function getStatesToShowOnForm(StateInterface $default_state = NULL): array {
+  public function getStatesToShowOnForm(StateInterface $current_state = NULL, bool $check_transitions = FALSE): array {
     $states = [];
 
     if ($workflow = $this->getWorkflow()) {
@@ -154,14 +154,21 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
       foreach ($all_states as $id => $state) {
         /** @var \Drupal\registration\RegistrationState $state */
         if ($state->isShownOnForm()) {
-          $states[$id] = $state;
+          // If transitions should be checked, then ensure the current state,
+          // if set, can transition to the new state.
+          if ( !$current_state
+            || !$check_transitions
+            || ($current_state->id() == $state->id())
+            || $current_state->canTransitionTo($state->id())) {
+            $states[$id] = $state;
+          }
         }
       }
     }
 
     // Ensure the default state is included, if set.
-    if ($default_state) {
-      $states[$default_state->id()] = $default_state;
+    if ($current_state) {
+      $states[$current_state->id()] = $current_state;
     }
 
     return $states;

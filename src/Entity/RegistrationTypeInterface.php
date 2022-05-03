@@ -38,13 +38,15 @@ interface RegistrationTypeInterface extends ConfigEntityInterface {
   /**
    * Gets the states to show on the registration form.
    *
-   * @param \Drupal\workflows\StateInterface|null $default_state
-   *   An optional default state that should be included in the return value.
+   * @param \Drupal\workflows\StateInterface|null $current_state
+   *   (optional) The current state that should be included in the return.
+   * @param bool $check_transitions
+   *   (optional) Whether transitions should be checked or not.
    *
    * @return array
    *   An array of states indexed by state ID, if any.
    */
-  public function getStatesToShowOnForm(StateInterface $default_state = NULL): array;
+  public function getStatesToShowOnForm(StateInterface $current_state = NULL, bool $check_transitions = FALSE): array;
 
   /**
    * Gets the workflow ID for the registration type.
