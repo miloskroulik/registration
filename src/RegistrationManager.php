@@ -147,7 +147,7 @@ class RegistrationManager implements RegistrationManagerInterface {
         $fields = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
         foreach ($fields as $field) {
           if ($field->getType() == 'registration') {
-            $value = $this->getFieldWidgetSetting($entity_type, $field, $key);
+            $value = $this->getFieldWidgetSetting($entity_type, $field, $key, $bundle);
             if (!is_null($value)) {
               $setting_value = $value;
             }
@@ -162,9 +162,8 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFieldWidgetSetting(EntityTypeInterface $entity_type, FieldDefinitionInterface $field, string $key): mixed {
+  public function getFieldWidgetSetting(EntityTypeInterface $entity_type, FieldDefinitionInterface $field, string $key, string $bundle): mixed {
     $entity_type_id = $entity_type->id();
-    $bundle = $field->getTargetBundle();
 
     // Check default first, then other form modes that exist.
     $form_modes = ['default' => ''];

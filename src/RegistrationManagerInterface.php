@@ -76,11 +76,13 @@ interface RegistrationManagerInterface {
    *   The field definition for a registration field.
    * @param string $key
    *   The setting name, for example "hide_register_tab".
+   * @param string $bundle
+   *   The bundle name. For entity types without bundles, use entity type ID.
    *
    * @return mixed
    *   The setting value. The data type depends on the key.
    */
-  public function getFieldWidgetSetting(EntityTypeInterface $entity_type, FieldDefinitionInterface $field, string $key): mixed;
+  public function getFieldWidgetSetting(EntityTypeInterface $entity_type, FieldDefinitionInterface $field, string $key, string $bundle): mixed;
 
   /**
    * Determines who can register when a registration is added or edited.

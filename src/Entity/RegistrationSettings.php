@@ -100,7 +100,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
 
     // Copy values from the registration field config to the settings entity.
     foreach ($fields as $key => $field) {
-      $value = $registration_manager->getFieldWidgetSetting($entity_type, $registration_field, $key);
+      $value = $registration_manager->getFieldWidgetSetting($entity_type, $registration_field, $key, $host_entity->bundle());
       $this->set($key, $value);
     }
 
