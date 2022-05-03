@@ -41,7 +41,7 @@ use Drupal\workflows\WorkflowInterface;
  *   config_export = {
  *     "id",
  *     "label",
- *     "workflow_id",
+ *     "workflow",
  *     "defaultState",
  *     "heldExpireTime",
  *     "heldExpireState"
@@ -61,7 +61,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
    *
    * @var string
    */
-  protected string $workflow_id = 'registration';
+  protected string $workflow = 'registration';
 
   /**
    * The default registration state.
@@ -178,7 +178,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
    * {@inheritdoc}
    */
   public function getWorkflowId(): string {
-    return $this->workflow_id;
+    return $this->workflow;
   }
 
   /**
@@ -193,7 +193,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
    * {@inheritdoc}
    */
   public function setWorkflowId($workflow_id): static {
-    $this->workflow_id = $workflow_id;
+    $this->workflow = $workflow_id;
     return $this;
   }
 

@@ -106,7 +106,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
       $has_data = (bool) $this->entityTypeManager
         ->getStorage('registration_type')
         ->getQuery()
-        ->condition('workflow_id', $workflow->id())
+        ->condition('workflow', $workflow->id())
         ->count()
         ->accessCheck(FALSE)
         ->range(0, 1)
@@ -136,7 +136,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
       $query = $this->entityTypeManager
         ->getStorage('registration_type')
         ->getQuery()
-        ->condition('workflow_id', $workflow->id());
+        ->condition('workflow', $workflow->id());
       $orGroup = $query->orConditionGroup()
         ->condition('defaultState', $state->id())
         ->condition('heldExpireState', $state->id());

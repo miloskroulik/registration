@@ -10,7 +10,7 @@ registration.type.*:
     label:
       type: label
       label: 'Label'
-    workflow_id:
+    workflow:
       type: string
       label: 'Workflow'
     defaultState:
