@@ -31,7 +31,7 @@ use Drupal\registration\HostEntityInterface;
  *   field_ui_base_route = "registration.admin_settings"
  * )
  */
-class RegistrationSettings extends ContentEntityBase {
+class RegistrationSettings extends ContentEntityBase implements HostEntityKeysInterface {
 
   /**
    * Gets the entity ID of the host entity that the settings are for.
@@ -123,6 +123,12 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDescription(t('The ID of the host entity this registration setting is attached to.'))
       ->setSetting('unsigned', TRUE);
 
+    $fields['host_entity'] = BaseFieldDefinition::create('registration_host_entity')
+      ->setLabel(t('Host entity'))
+      ->setDescription(t('The host entity for the registration.'))
+      ->setComputed(TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['status'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Enable'))
       ->setDescription(t('Check to enable registrations.'))
@@ -130,7 +136,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['capacity'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Capacity'))
@@ -141,7 +148,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'number',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['open'] = BaseFieldDefinition::create('datetime')
       ->setLabel(t('Open date'))
@@ -150,7 +158,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'datetime_default',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['close'] = BaseFieldDefinition::create('datetime')
       ->setLabel(t('Close date'))
@@ -159,7 +168,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'datetime_default',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['send_reminder'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Send reminder'))
@@ -168,7 +178,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['reminder_date'] = BaseFieldDefinition::create('datetime')
       ->setLabel(t('Reminder date'))
@@ -177,7 +188,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'datetime_default',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['reminder_template'] = BaseFieldDefinition::create('text_long')
       ->setLabel(t('Reminder template'))
@@ -186,7 +198,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'text_textarea',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['maximum_spaces'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Spaces allowed'))
@@ -197,7 +210,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'number',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['multiple_registrations'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Allow multiple registrations'))
@@ -206,7 +220,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['from_address'] = BaseFieldDefinition::create('string')
       ->setLabel(t('From address'))
@@ -215,7 +230,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['confirmation'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Confirmation message'))
@@ -224,7 +240,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['confirmation_redirect'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Confirmation redirect path'))
@@ -233,7 +250,8 @@ class RegistrationSettings extends ContentEntityBase {
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
       ])
-      ->setDisplayConfigurable('form', TRUE);
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     return $fields;
   }

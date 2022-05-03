@@ -79,22 +79,6 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
   public function getHostEntity(): ?HostEntityInterface;
 
   /**
-   * Gets the entity ID of the host entity.
-   *
-   * @return int
-   *   The host entity ID.
-   */
-  public function getHostEntityId(): int|string|NULL;
-
-  /**
-   * Gets the entity type ID of the host entity.
-   *
-   * @return string
-   *   The host entity type ID, for example "node".
-   */
-  public function getHostEntityTypeId(): string;
-
-  /**
    * Gets the entity type label of the host entity.
    *
    * If the entity type has bundles, the bundle label is returned instead.

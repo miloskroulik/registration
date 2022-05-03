@@ -65,7 +65,7 @@ use Drupal\workflows\WorkflowInterface;
  *   field_ui_base_route = "entity.registration_type.edit_form"
  * )
  */
-class Registration extends ContentEntityBase implements RegistrationInterface {
+class Registration extends ContentEntityBase implements HostEntityKeysInterface, RegistrationInterface {
 
   use EntityChangedTrait;
 

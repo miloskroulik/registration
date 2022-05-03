@@ -12,6 +12,9 @@ use Drupal\Core\TypedData\DataReferenceDefinition;
  *
  * This is a computed field used for rendering links to host entities.
  *
+ * UI has been disabled, since only registrations and registration settings
+ * entities should use this field.
+ *
  * @FieldType(
  *   id = "registration_host_entity",
  *   label = @Translation("Host entity"),
@@ -87,10 +90,11 @@ class HostEntityItem extends FieldItemBase {
    */
   protected function ensureCalculated() {
     if (!$this->isCalculated) {
-      /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
-      $registration = $this->getEntity();
-      $entity_id = $registration->getHostEntityId();
-      $entity_type_id = $registration->getHostEntityTypeId();
+      // The entity is either a registration or a registration settings entity.
+      $entity = $this->getEntity();
+      /** @var \Drupal\registration\Entity\HostEntityKeysInterface $entity */
+      $entity_id = $entity->getHostEntityId();
+      $entity_type_id = $entity->getHostEntityTypeId();
       $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
       $this->set('entity', $storage->load($entity_id));
       $this->isCalculated = TRUE;
