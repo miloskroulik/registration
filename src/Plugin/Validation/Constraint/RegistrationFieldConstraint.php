@@ -26,7 +26,14 @@ class RegistrationFieldConstraint extends Constraint {
    *
    * @var string
    */
-  public string $disallowedTargetMessage = 'A registration field cannot be added to a registration type.';
+  public string $disallowedTargetTypeMessage = 'A registration field cannot be added to a registration type.';
+
+  /**
+   * If the user tries to add a registration field to registration settings.
+   *
+   * @var string
+   */
+  public string $disallowedTargetSettingsMessage = 'A registration field cannot be added to registration settings.';
 
   /**
    * If the target entity type does not have an "id" key in its annotation.

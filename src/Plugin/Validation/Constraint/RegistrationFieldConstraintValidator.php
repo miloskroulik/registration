@@ -104,8 +104,13 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
         $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
         if ($entity_type_id == 'registration') {
           // Cannot add registration field to itself.
-          $this->context->addViolation($constraint->disallowedTargetMessage);
+          $this->context->addViolation($constraint->disallowedTargetTypeMessage);
         }
+        elseif ($entity_type_id == 'registration_settings') {
+          // Cannot add registration field to settings.
+          $this->context->addViolation($constraint->disallowedTargetSettingsMessage);
+        }
+
         if (!$entity_type->getKey('id')) {
           // The entity type must have an "id" key, which is standard.
           $this->context->addViolation($constraint->missingIdKeyMessage);
