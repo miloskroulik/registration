@@ -391,6 +391,10 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setLabel(t('Host entity'))
       ->setDescription(t('The host entity for the registration.'))
       ->setComputed(TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'registration_host_entity',
+      ])
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['anon_mail'] = BaseFieldDefinition::create('email')
@@ -408,6 +412,10 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setDisplayOptions('form', [
         'type' => 'number',
       ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'number_integer',
+      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -418,6 +426,10 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
       ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'author',
+      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -425,9 +437,9 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setLabel(t('Email address'))
       ->setDescription(t('The email (anonymous or authenticated) associated with this registration.'))
       ->setDisplayOptions('view', [
-        'label' => 'hidden',
+        'label' => 'inline',
         'type' => 'email_mailto',
-        'weight' => 0,
+        'weight' => -10,
       ])
       ->setDisplayConfigurable('view', TRUE);
 
@@ -437,6 +449,10 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setSetting('target_type', 'user')
       ->setRequired(TRUE)
       ->setReadOnly(TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'author',
+      ])
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['state'] = BaseFieldDefinition::create('string')
@@ -448,9 +464,8 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
         'type' => 'registration_state_default',
       ])
       ->setDisplayOptions('view', [
-        'label' => 'hidden',
+        'label' => 'inline',
         'type' => 'registration_state',
-        'weight' => 0,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -463,6 +478,10 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
         'type' => 'datetime_timestamp',
         'weight' => 10,
       ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'timestamp',
+      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -470,6 +489,10 @@ class Registration extends ContentEntityBase implements RegistrationInterface {
       ->setLabel(t('Changed'))
       ->setDescription(t('The time when the registration was last saved.'))
       ->setTranslatable(TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'timestamp',
+      ])
       ->setDisplayConfigurable('view', TRUE);
 
     return $fields;
