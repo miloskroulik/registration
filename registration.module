@@ -114,6 +114,7 @@ function registration_entity_operation(EntityInterface $entity): array {
   if (($entity instanceof RegistrationInterface) && $entity->access('view')) {
     // Add a View operation for registrations. This will be first, followed
     // by the Edit and Delete operations (if the user has those permissions).
+    // @todo Add a Cancel operation.
     $operations['view'] = [
       'title' => t('View'),
       'url' => Url::fromRoute('entity.registration.canonical', [
