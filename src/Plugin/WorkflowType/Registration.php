@@ -178,6 +178,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
           'to' => 'canceled',
           'weight' => 2,
           'from' => [
+            'complete',
             'pending',
             'held',
           ],
