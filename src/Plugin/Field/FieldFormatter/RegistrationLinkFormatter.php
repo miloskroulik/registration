@@ -95,7 +95,9 @@ class RegistrationLinkFormatter extends FormatterBase {
       $cache_entities[] = $settings;
       if (isset($items, $items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
-          $registration_type = $this->entityTypeManager->getStorage('registration_type')->load($id);
+          $registration_type = $this->entityTypeManager
+            ->getStorage('registration_type')
+            ->load($id);
           if ($registration_type) {
             $cache_entities[] = $registration_type;
             if ($host_entity->isEnabledForRegistration()) {

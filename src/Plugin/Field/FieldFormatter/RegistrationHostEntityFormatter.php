@@ -69,6 +69,10 @@ class RegistrationHostEntityFormatter extends FormatterBase {
     foreach ($items as $delta => $item) {
       /** @var \Drupal\registration\HostEntityInterface $host_entity */
       $entity = $item->get('entity')->getValue();
+      // Get the translated entity if it has one.
+      if ($entity->hasTranslation($langcode)) {
+        $entity = $entity->getTranslation($langcode);
+      }
       $label = $entity->label();
       // If the link should be displayed and the entity has a uri, display it.
       if ($output_as_link && !$entity->isNew() && $entity->access('view')) {

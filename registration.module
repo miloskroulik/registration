@@ -13,6 +13,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
+use Drupal\registration\RegistrationHelper;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 
@@ -124,6 +125,16 @@ function registration_entity_operation(EntityInterface $entity): array {
     ];
   }
   return $operations;
+}
+
+/**
+ * Implements hook_entity_operation_alter().
+ */
+function registration_entity_operation_alter(array &$operations, EntityInterface $entity) {
+  if ($entity instanceof RegistrationInterface) {
+    // Make registration operations links language aware.
+    RegistrationHelper::applyInterfaceLanguageToLinks($operations);
+  }
 }
 
 /**

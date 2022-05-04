@@ -7,10 +7,13 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
+use Drupal\registration\RegistrationHelper;
 use Drupal\registration\RegistrationManagerInterface;
 use Drupal\workflows\State;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -28,6 +31,13 @@ class RegisterForm extends ContentEntityForm {
   protected DateFormatterInterface $dateFormatter;
 
   /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected LanguageManagerInterface $languageManager;
+
+  /**
    * The registration manager.
    *
    * @var \Drupal\registration\RegistrationManagerInterface
@@ -40,6 +50,7 @@ class RegisterForm extends ContentEntityForm {
   public static function create(ContainerInterface $container): RegisterForm {
     $instance = parent::create($container);
     $instance->dateFormatter = $container->get('date.formatter');
+    $instance->languageManager = $container->get('language_manager');
     $instance->registrationManager = $container->get('registration.manager');
     return $instance;
   }
@@ -360,8 +371,13 @@ class RegisterForm extends ContentEntityForm {
       // No redirect in the settings.
       $registration = $this->getEntity();
       if ($registration->access('view', $this->currentUser())) {
-        // User has permission to view their registration.
-        $form_state->setRedirectUrl($registration->toUrl());
+        // User has permission to view their registration. Redirect to the
+        // registration page. Must be explicit about language here since
+        // registrations are not translatable (unlike most host entities).
+        $form_state->setRedirectUrl($registration->toUrl('canonical', [
+          'language' => $this->languageManager
+            ->getCurrentLanguage(LanguageInterface::TYPE_CONTENT),
+        ]));
       }
       else {
         // Fallback to redirecting to the host entity.
@@ -422,6 +438,9 @@ class RegisterForm extends ContentEntityForm {
       // Override the button label for the Save button.
       $actions = parent::actions($form, $form_state);
       $actions['submit']['#value'] = $this->t('Save Registration');
+
+      // Ensure language is taken into account for multilingual.
+      RegistrationHelper::applyInterfaceLanguageToLinks($actions);
 
       // Add a Cancel link for new registrations.
       if ($registration->isNew()) {

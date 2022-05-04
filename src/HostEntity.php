@@ -10,6 +10,8 @@ use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
@@ -70,6 +72,13 @@ class HostEntity implements HostEntityInterface {
   protected ContainerAwareEventDispatcher $eventDispatcher;
 
   /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected LanguageManagerInterface $languageManager;
+
+  /**
    * The renderer.
    *
    * @var \Drupal\Core\Render\Renderer
@@ -90,6 +99,16 @@ class HostEntity implements HostEntityInterface {
    *   The real entity being wrapped.
    */
   public function __construct(EntityInterface $entity) {
+    // Get the entity in the appropriate language.
+    $entity_language = $entity->language();
+    $content_language = $this->languageManager()
+      ->getCurrentLanguage(LanguageInterface::TYPE_CONTENT);
+    if ($entity_language->getId() != $content_language->getId()) {
+      $langcode = $content_language->getId();
+      if ($entity->hasTranslation($langcode)) {
+        $entity = $entity->getTranslation($langcode);
+      }
+    }
     $this->entity = $entity;
   }
 
@@ -523,6 +542,19 @@ class HostEntity implements HostEntityInterface {
       $this->eventDispatcher = $this->container()->get('event_dispatcher');
     }
     return $this->eventDispatcher;
+  }
+
+  /**
+   * Retrieves the language manager.
+   *
+   * @return \Drupal\Core\Language\LanguageManagerInterface
+   *   The language manager.
+   */
+  protected function languageManager(): LanguageManagerInterface {
+    if (!isset($this->languageManager)) {
+      $this->languageManager = $this->container()->get('language_manager');
+    }
+    return $this->languageManager;
   }
 
   /**
