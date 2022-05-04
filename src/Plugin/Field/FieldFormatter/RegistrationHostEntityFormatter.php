@@ -69,17 +69,21 @@ class RegistrationHostEntityFormatter extends FormatterBase {
     foreach ($items as $delta => $item) {
       /** @var \Drupal\registration\HostEntityInterface $host_entity */
       $entity = $item->get('entity')->getValue();
-      // Get the translated entity if it has one.
-      if ($entity->hasTranslation($langcode)) {
-        $entity = $entity->getTranslation($langcode);
-      }
+      // Get the translated entity if it has one. Let the host entity handler
+      // do the heavy lifting since the entity type may not be translatable
+      // and calling translation functions on it would throw exceptions.
+      $handler = \Drupal::entityTypeManager()->getHandler('registration', 'host_entity');
+      $host_entity = $handler->createHostEntity($entity, $langcode);
+      $entity = $host_entity->getEntity();
+
+      // Link title.
       $label = $entity->label();
       // If the link should be displayed and the entity has a uri, display it.
       if ($output_as_link && !$entity->isNew() && $entity->access('view')) {
         try {
           $uri = $entity->toUrl();
         }
-        catch (UndefinedLinkTemplateException $e) {
+        catch (UndefinedLinkTemplateException) {
           // This exception is thrown by \Drupal\Core\Entity\Entity::urlInfo()
           // and it means that the entity type doesn't have a link template nor
           // a valid "uri_callback", so don't bother trying to output a link for

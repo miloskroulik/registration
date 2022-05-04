@@ -13,19 +13,13 @@ use Drupal\Core\Entity\EntityInterface;
  *
  * @see \Drupal\registration\Entity\Registration
  */
-class RegistrationHostEntityHandler extends EntityHandlerBase {
+class RegistrationHostEntityHandler extends EntityHandlerBase implements RegistrationHostEntityHandlerInterface {
 
   /**
-   * Creates a host entity object given a real entity.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The real entity.
-   *
-   * @return \Drupal\registration\HostEntityInterface
-   *   The host entity. This is a wrapper and not a real entity.
+   * {@inheritdoc}
    */
-  public function createHostEntity(EntityInterface $entity): HostEntityInterface {
-    return new HostEntity($entity);
+  public function createHostEntity(EntityInterface $entity, string $langcode = NULL): HostEntityInterface {
+    return new HostEntity($entity, $langcode);
   }
 
 }

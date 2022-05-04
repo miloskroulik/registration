@@ -125,7 +125,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
 
     $fields['host_entity'] = BaseFieldDefinition::create('registration_host_entity')
       ->setLabel(t('Host entity'))
-      ->setDescription(t('The host entity for the registration.'))
+      ->setDescription(t('The host entity for the registration settings.'))
       ->setComputed(TRUE)
       ->setDisplayConfigurable('view', TRUE);
 

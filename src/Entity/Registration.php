@@ -153,9 +153,17 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
       $this->hostEntity = NULL;
       if (!$this->get('host_entity')->isEmpty()) {
         $entity = $this->get('host_entity')->first()->entity;
+        // Use the current language since the real entity loads as
+        // untranslated in the host_entity field item. Using the
+        // language here allows the host entity title to display
+        // in whatever language the user is currently in, which is
+        // desired for this use case.
+        $langcode = \Drupal::languageManager()
+          ->getCurrentLanguage()
+          ->getId();
         $this->hostEntity = \Drupal::entityTypeManager()
           ->getHandler('registration', 'host_entity')
-          ->createHostEntity($entity);
+          ->createHostEntity($entity, $langcode);
       }
     }
     return $this->hostEntity;

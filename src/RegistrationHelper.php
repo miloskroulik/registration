@@ -2,8 +2,6 @@
 
 namespace Drupal\registration;
 
-use Drupal\Core\Language\LanguageInterface;
-
 /**
  * Defines a utility class.
  */
@@ -28,8 +26,7 @@ class RegistrationHelper {
           if (!empty($link[$url_key])) {
             $options = $link[$url_key]->getOptions();
             if (isset($options['language'])) {
-              $interface_language = \Drupal::languageManager()
-                ->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE);
+              $interface_language = \Drupal::languageManager()->getCurrentLanguage();
               if ($options['language']->getId() != $interface_language->getId()) {
                 $options['language'] = $interface_language;
                 $link[$url_key]->setOptions($options);

@@ -125,6 +125,9 @@ class RegistrationManager implements RegistrationManagerInterface {
     // Wrap the entity if requested.
     if ($entity && !($entity instanceof RegistrationInterface) && $return_host_entity) {
       $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+      // Although the createHostEntity function takes a langcode parameter,
+      // it is not necessary here, since the entity loaded in the parameter
+      // bag has the appropriate language already set from the route match.
       $entity = $handler->createHostEntity($entity);
     }
 

@@ -55,7 +55,7 @@ class RegistrationFormFormatter extends FormatterBase {
       /** @var \Drupal\registration\HostEntityInterface $host_entity */
       $host_entity = $this->entityTypeManager
         ->getHandler('registration', 'host_entity')
-        ->createHostEntity($entity);
+        ->createHostEntity($entity, $langcode);
       $settings = $host_entity->getSettings();
       $cache_entities[] = $settings;
       if (isset($items, $items[0])) {

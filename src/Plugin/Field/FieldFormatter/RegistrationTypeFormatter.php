@@ -46,7 +46,7 @@ class RegistrationTypeFormatter extends FormatterBase {
       /** @var \Drupal\registration\HostEntityInterface $host_entity */
       $host_entity = $this->entityTypeManager
         ->getHandler('registration', 'host_entity')
-        ->createHostEntity($entity);
+        ->createHostEntity($entity, $langcode);
       if (isset($items, $items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
           $registration_type = $this->entityTypeManager

@@ -10,12 +10,11 @@ use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Language\LanguageInterface;
-use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\TypedData\TranslatableInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
@@ -72,13 +71,6 @@ class HostEntity implements HostEntityInterface {
   protected ContainerAwareEventDispatcher $eventDispatcher;
 
   /**
-   * The language manager.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected LanguageManagerInterface $languageManager;
-
-  /**
    * The renderer.
    *
    * @var \Drupal\Core\Render\Renderer
@@ -97,16 +89,22 @@ class HostEntity implements HostEntityInterface {
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The real entity being wrapped.
+   * @param string|null $langcode
+   *   (optional) The language the real entity should use, if available.
    */
-  public function __construct(EntityInterface $entity) {
-    // Get the entity in the appropriate language.
-    $entity_language = $entity->language();
-    $content_language = $this->languageManager()
-      ->getCurrentLanguage(LanguageInterface::TYPE_CONTENT);
-    if ($entity_language->getId() != $content_language->getId()) {
-      $langcode = $content_language->getId();
-      if ($entity->hasTranslation($langcode)) {
-        $entity = $entity->getTranslation($langcode);
+  public function __construct(EntityInterface $entity, string $langcode = NULL) {
+    // Get the entity in the appropriate language if requested. Since the
+    // entity type is not known until runtime, need to make sure it is
+    // translatable before proceeding.
+    if ($langcode) {
+      if ($entity->getEntityType()->entityClassImplements(TranslatableInterface::class)) {
+        if ($entity->isTranslatable() && ($entity->language()->getId() != $langcode)) {
+          // Switch to the requested language if the entity has a translation
+          // available.
+          if ($entity->hasTranslation($langcode)) {
+            $entity = $entity->getTranslation($langcode);
+          }
+        }
       }
     }
     $this->entity = $entity;
@@ -542,19 +540,6 @@ class HostEntity implements HostEntityInterface {
       $this->eventDispatcher = $this->container()->get('event_dispatcher');
     }
     return $this->eventDispatcher;
-  }
-
-  /**
-   * Retrieves the language manager.
-   *
-   * @return \Drupal\Core\Language\LanguageManagerInterface
-   *   The language manager.
-   */
-  protected function languageManager(): LanguageManagerInterface {
-    if (!isset($this->languageManager)) {
-      $this->languageManager = $this->container()->get('language_manager');
-    }
-    return $this->languageManager;
   }
 
   /**

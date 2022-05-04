@@ -7,7 +7,6 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
@@ -375,8 +374,7 @@ class RegisterForm extends ContentEntityForm {
         // registration page. Must be explicit about language here since
         // registrations are not translatable (unlike most host entities).
         $form_state->setRedirectUrl($registration->toUrl('canonical', [
-          'language' => $this->languageManager
-            ->getCurrentLanguage(LanguageInterface::TYPE_CONTENT),
+          'language' => $this->languageManager->getCurrentLanguage(),
         ]));
       }
       else {

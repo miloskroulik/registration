@@ -5,7 +5,6 @@ namespace Drupal\registration\Plugin\Field\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Link;
 use Drupal\registration\Entity\RegistrationInterface;
 
@@ -35,7 +34,7 @@ class RegistrationIdFormatter extends FormatterBase {
       if ($entity->access('view')) {
         $elements[] = [
           '#markup' => Link::fromTextAndUrl($entity->id(), $entity->toUrl('canonical', [
-            'language' => \Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_CONTENT),
+            'language' => \Drupal::languageManager()->getLanguage($langcode),
           ]))->toString(),
         ];
       }
