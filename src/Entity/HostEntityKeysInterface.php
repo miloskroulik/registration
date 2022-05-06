@@ -23,4 +23,16 @@ interface HostEntityKeysInterface {
    */
   public function getHostEntityTypeId(): string;
 
+  /**
+   * Gets the registration language code.
+   *
+   * This is the site language in use at the time of the registation. For
+   * example, if the site visitor registered on page /es/node/1, then the
+   * language code would be "es" (Spanish).
+   *
+   * @return string|null
+   *   The language code, if available.
+   */
+  public function getLangcode(): ?string;
+
 }

@@ -3,6 +3,7 @@
 namespace Drupal\registration\Plugin\views\field;
 
 use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
@@ -41,6 +42,15 @@ class HostEntity extends FieldPluginBase {
           // malformed. Catching the exception allows the listing to render
           // for other rows and host entities.
         }
+      }
+      // The entity does not exist and was likely deleted. Give some details.
+      else {
+        return [
+          '#markup' => new TranslatableMarkup('@type @id (deleted)', [
+            '@type' => $registration->getHostEntityTypeId(),
+            '@id' => $registration->getHostEntityId(),
+          ]),
+        ];
       }
     }
 

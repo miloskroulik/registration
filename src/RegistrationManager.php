@@ -13,6 +13,8 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 use Symfony\Component\HttpFoundation\ParameterBag;
@@ -95,6 +97,51 @@ class RegistrationManager implements RegistrationManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public static function addSettingsField(FieldConfig $field_config) {
+    $bundle = $field_config->get('bundle');
+    $entity_type_id = $field_config->get('entity_type');
+
+    // Reuse field storage if it was created for a different bundle. Otherwise
+    // create a new instance of storage.
+    $field_storage = FieldStorageConfig::loadByName($entity_type_id, 'registration_settings');
+    if (!$field_storage) {
+      $field_storage = FieldStorageConfig::create([
+        'field_name' => 'registration_settings',
+        'entity_type' => $entity_type_id,
+        'type' => 'registration_settings',
+      ]);
+      // Settings are stored in the settings entity table and not the field.
+      $field_storage->custom_storage = TRUE;
+      $field_storage->save();
+    }
+    // Create the companionfield and save it.
+    $field = FieldConfig::create([
+      'field_storage' => $field_storage,
+      'bundle' => $bundle,
+      'label' => 'Registration settings',
+    ]);
+    $field->save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function deleteSettingsField(FieldConfig $field_config) {
+    // Find the companion field and delete it.
+    $bundle = $field_config->get('bundle');
+    $entity_type_id = $field_config->get('entity_type');
+    if ($settings = self::getSettingsField($entity_type_id, $bundle)) {
+      $id = "$entity_type_id.$bundle.{$settings->getName()}";
+      $settings_field_config = \Drupal::entityTypeManager()
+        ->getStorage('field_config')
+        ->load($id);
+      $settings_field_config->delete();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getBaseRouteName(EntityTypeInterface $entity_type): ?string {
     $base_route = NULL;
 
@@ -150,7 +197,7 @@ class RegistrationManager implements RegistrationManagerInterface {
         $fields = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
         foreach ($fields as $field) {
           if ($field->getType() == 'registration') {
-            $value = $this->getFieldWidgetSetting($entity_type, $field, $key, $bundle);
+            $value = $this->getFormDisplaySetting($entity_type, $field, $key, $bundle);
             if (!is_null($value)) {
               $setting_value = $value;
             }
@@ -160,28 +207,6 @@ class RegistrationManager implements RegistrationManagerInterface {
     }
 
     return $setting_value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFieldWidgetSetting(EntityTypeInterface $entity_type, FieldDefinitionInterface $field, string $key, string $bundle): mixed {
-    $entity_type_id = $entity_type->id();
-
-    // Check default first, then other form modes that exist.
-    $form_modes = ['default' => ''];
-    $form_modes += $this->entityDisplayRepository->getFormModes($entity_type_id);
-    foreach (array_keys($form_modes) as $form_mode) {
-      $form_display = $this->entityDisplayRepository->getFormDisplay($entity_type_id, $bundle, $form_mode);
-      if ($form_display) {
-        $component = $form_display->getComponent($field->getName());
-        if (isset($component, $component['settings'], $component['settings'][$key])) {
-          return $component['settings'][$key];
-        }
-      }
-    }
-
-    return NULL;
   }
 
   /**
@@ -200,7 +225,7 @@ class RegistrationManager implements RegistrationManagerInterface {
       && $this->currentUser->hasPermission("create $type registration self")
       && ($my_registration || $allow_multiple || !$host_entity->isUserRegistered($this->currentUser))
     ) {
-      $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = $this->t('Myself');
+      $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = $this->t('Yourself');
     }
 
     // Other users:
@@ -396,6 +421,61 @@ class RegistrationManager implements RegistrationManagerInterface {
     }
 
     return $base_template;
+  }
+
+  /**
+   * Gets the value of a setting from a registration form display.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field
+   *   The field definition for a registration field.
+   * @param string $key
+   *   The setting name, for example "hide_register_tab".
+   * @param string $bundle
+   *   The bundle name. For entity types without bundles, use entity type ID.
+   *
+   * @return mixed
+   *   The setting value. The data type depends on the key.
+   */
+  protected function getFormDisplaySetting(EntityTypeInterface $entity_type, FieldDefinitionInterface $field, string $key, string $bundle): mixed {
+    $entity_type_id = $entity_type->id();
+
+    // Check default first, then other form modes that exist.
+    $form_modes = ['default' => ''];
+    $form_modes += $this->entityDisplayRepository->getFormModes($entity_type_id);
+    foreach (array_keys($form_modes) as $form_mode) {
+      $form_display = $this->entityDisplayRepository->getFormDisplay($entity_type_id, $bundle, $form_mode);
+      if ($form_display) {
+        $component = $form_display->getComponent($field->getName());
+        if (isset($component, $component['settings'], $component['settings'][$key])) {
+          return $component['settings'][$key];
+        }
+      }
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Gets the settings field for a given entity type and bundle.
+   *
+   * @param string $entity_type_id
+   *   The entity type ID, e.g. "node".
+   * @param string $bundle
+   *   The bundle name. For entity types without bundles, use entity type ID.
+   *
+   * @return \Drupal\Core\Field\FieldDefinitionInterface|null
+   *   The settings field definition, if available.
+   */
+  protected static function getSettingsField(string $entity_type_id, string $bundle): ?FieldDefinitionInterface {
+    $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions($entity_type_id, $bundle);
+    foreach ($fields as $field) {
+      if ($field->getType() == 'registration_settings') {
+        return $field;
+      }
+    }
+    return NULL;
   }
 
 }

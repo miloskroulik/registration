@@ -25,8 +25,12 @@ use Drupal\registration\HostEntityInterface;
  *     },
  *   },
  *   base_table = "registration_settings",
+ *   data_table = "registration_settings_field_data",
+ *   translatable = TRUE,
  *   entity_keys = {
  *     "id" = "settings_id",
+ *     "langcode" = "langcode",
+ *     "uuid" = "uuid",
  *   },
  *   field_ui_base_route = "registration.admin_settings"
  * )
@@ -60,6 +64,16 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getLangcode(): ?string {
+    if (!$this->get('langcode')->isEmpty()) {
+      return $this->get('langcode')->first()->value;
+    }
+    return NULL;
+  }
+
+  /**
    * Gets a settings value for a given key.
    *
    * @param string $key
@@ -77,31 +91,37 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
   }
 
   /**
-   * Initialize settings from field configuration.
+   * Initialize settings for a given host entity from field configuration.
+   *
+   * @param \Drupal\registration\HostEntityInterface $host_entity
+   *   The host entity.
+   * @param string|null $langcode
+   *   (optional) Force the language the settings should use.
    *
    * @return $this
    *   The settings entity.
    */
-  public function initFromConfig(HostEntityInterface $host_entity): RegistrationSettings {
+  public function initFromDefaults(HostEntityInterface $host_entity, string $langcode = NULL): RegistrationSettings {
     // Get all the fields for the settings entity.
     $fields = \Drupal::service('entity_field.manager')
       ->getFieldDefinitions('registration_settings', 'registration_settings');
 
-    // Exclude keys, these are already set.
-    unset($fields['settings_id']);
-    unset($fields['entity_type_id']);
-    unset($fields['entity_id']);
+    // Content entities are not allowed to set the default langcode.
+    // @see \Drupal\Core\Entity\ContentEntityBase
+    unset($fields['default_langcode']);
 
-    // Get the registration field.
-    $entity_type_id = $host_entity->getEntityTypeId();
-    $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
-    $registration_manager = \Drupal::service('registration.manager');
-    $registration_field = $host_entity->getRegistrationField();
+    // Get the settings field default values.
+    $settings_field = $host_entity->getSettingsField($langcode);
 
-    // Copy values from the registration field config to the settings entity.
+    /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
+    $entity = $host_entity->getEntity();
+    $default_value = $this->transform($settings_field->getDefaultValue($entity));
+
+    // Copy default values to the settings entity.
     foreach ($fields as $key => $field) {
-      $value = $registration_manager->getFieldWidgetSetting($entity_type, $registration_field, $key, $host_entity->bundle());
-      $this->set($key, $value);
+      if (isset($default_value[$key])) {
+        $this->set($key, $default_value[$key]);
+      }
     }
 
     return $this;
@@ -123,6 +143,12 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
       ->setDescription(t('The ID of the host entity this registration setting is attached to.'))
       ->setSetting('unsigned', TRUE);
 
+    $fields['langcode'] = BaseFieldDefinition::create('language')
+      ->setLabel(t('Language'))
+      ->setDescription(t('The language.'))
+      ->setTranslatable(TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['host_entity'] = BaseFieldDefinition::create('registration_host_entity')
       ->setLabel(t('Host entity'))
       ->setDescription(t('The host entity for the registration settings.'))
@@ -143,6 +169,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
       ->setLabel(t('Capacity'))
       ->setDescription(t('The maximum number of registrants. Leave at 0 for no limit.'))
       ->setRequired(TRUE)
+      ->setDefaultValue(0)
       ->setSetting('min', 0)
       ->setSetting('max', 99999)
       ->setDisplayOptions('form', [
@@ -195,6 +222,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
       ->setLabel(t('Reminder template'))
       ->setDescription(t('The reminder email template.'))
       ->setRequired(FALSE)
+      ->setTranslatable(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'text_textarea',
       ])
@@ -237,6 +265,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
       ->setLabel(t('Confirmation message'))
       ->setDescription(t('The message to display when someone registers. Leave blank for the default message.'))
       ->setRequired(FALSE)
+      ->setTranslatable(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
       ])
@@ -247,6 +276,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
       ->setLabel(t('Confirmation redirect path'))
       ->setDescription(t('Optional path to redirect to when someone registers. Leave blank to redirect to the registration itself if the user has permission or the host entity if they do not.'))
       ->setRequired(FALSE)
+      ->setTranslatable(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
       ])
@@ -273,6 +303,25 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
       $host_entity_tag = $this->getHostEntityTypeId() . ':' . $this->getHostEntityId();
       Cache::invalidateTags([$host_entity_tag]);
     }
+  }
+
+  /**
+   * Transforms a registration settings value from a serialized array.
+   *
+   * @param array $value
+   *   The serialized value inside an array.
+   *
+   * @return array
+   *   A normalized array of property values indexed by property name.
+   */
+  protected function transform(array $value): array {
+    $default_value = [];
+    if (isset($value[0], $value[0]['value'])) {
+      if (is_string($value[0]['value'])) {
+        $default_value = unserialize($value[0]['value']);
+      }
+    }
+    return $default_value;
   }
 
 }

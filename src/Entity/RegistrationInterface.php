@@ -73,10 +73,13 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
   /**
    * Gets the host entity.
    *
+   * @param string|null $langcode
+   *   (optional) The language the host entity should be returned in.
+   *
    * @return \Drupal\registration\HostEntityInterface|null
    *   The host entity, if available.
    */
-  public function getHostEntity(): ?HostEntityInterface;
+  public function getHostEntity(string $langcode = NULL): ?HostEntityInterface;
 
   /**
    * Gets the entity type label of the host entity.

@@ -52,33 +52,6 @@ field.widget.settings.registration_type:
     hide_register_tab:
       type: boolean
       label: 'Hide Register Tab'
-    status:
-      type: boolean
-      label: 'Check to enable registrations.'
-    capacity:
-      type: integer
-      label: 'Capacity'
-    send_reminder:
-      type: boolean
-      label: 'Send Reminder'
-    reminder_template:
-      type: text_format
-      label: 'Reminder Email Template'
-    maximum_spaces:
-      type: integer
-      label: 'Spaces allowed'
-    multiple_registrations:
-      type: boolean
-      label: 'Allow multiple registrations'
-    from_address:
-      type: string
-      label: 'From Address'
-    confirmation:
-      type: string
-      label: 'Confirmation Message'
-    confirmation_redirect:
-      type: string
-      label: 'Confirmation redirect path'
 
 field.value.registration:
   type: mapping
@@ -87,6 +60,15 @@ field.value.registration:
     registration_type:
       type: string
       label: 'Registration type'
+
+field.value.registration_settings:
+  type: mapping
+  label: 'Default value'
+  mapping:
+    value:
+      type: text
+      form_element_class: \Drupal\registration\FormElement\RegistrationSettings
+      label: 'Settings'
 
 registration.state:
   type: workflows.state

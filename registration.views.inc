@@ -71,7 +71,7 @@ function registration_views_data_alter(array &$data) {
           'label' => t('@id registration settings', [
             '@id' => $id,
           ]),
-          'base' => 'registration_settings',
+          'base' => 'registration_settings_field_data',
         ],
       ];
     }
@@ -87,7 +87,7 @@ function registration_views_data_alter(array &$data) {
       'id' => 'registration_host_entity',
     ],
   ];
-  $data['registration_settings']['settings_operations'] = [
+  $data['registration_settings_field_data']['settings_operations'] = [
     'title' => t('Settings operations'),
     'help' => t('Provides links to perform settings operations.'),
     'field' => [

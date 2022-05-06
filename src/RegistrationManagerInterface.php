@@ -4,7 +4,7 @@ namespace Drupal\registration;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 use Symfony\Component\HttpFoundation\ParameterBag;
@@ -14,6 +14,27 @@ use Symfony\Component\Routing\Route;
  * Defines the interface for the registration manager service.
  */
 interface RegistrationManagerInterface {
+
+  /**
+   * Adds a settings field when a registration field is added.
+   *
+   * This "companion" field is there so site builders can provide default
+   * values for registration settings.
+   *
+   * @param \Drupal\field\Entity\FieldConfig $field_config
+   *   The configuration for the registration field that was added.
+   */
+  public static function addSettingsField(FieldConfig $field_config);
+
+  /**
+   * Deletes a settings field when a registration field is deleted.
+   *
+   * This deletes the "companion" field that was added previously.
+   *
+   * @param \Drupal\field\Entity\FieldConfig $field_config
+   *   The configuration for the registration field that was deleted.
+   */
+  public static function deleteSettingsField(FieldConfig $field_config);
 
   /**
    * Gets the base route name for an entity type.
@@ -64,25 +85,6 @@ interface RegistrationManagerInterface {
    *   The setting value. The data type depends on the key.
    */
   public function getFieldConfigSetting(EntityTypeInterface $entity_type, string $key): mixed;
-
-  /**
-   * Gets the value of a setting from a registration field widget.
-   *
-   * The value is retrieved from the form display containing the widget.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type.
-   * @param \Drupal\Core\Field\FieldDefinitionInterface $field
-   *   The field definition for a registration field.
-   * @param string $key
-   *   The setting name, for example "hide_register_tab".
-   * @param string $bundle
-   *   The bundle name. For entity types without bundles, use entity type ID.
-   *
-   * @return mixed
-   *   The setting value. The data type depends on the key.
-   */
-  public function getFieldWidgetSetting(EntityTypeInterface $entity_type, FieldDefinitionInterface $field, string $key, string $bundle): mixed;
 
   /**
    * Determines who can register when a registration is added or edited.

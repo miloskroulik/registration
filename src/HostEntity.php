@@ -6,7 +6,6 @@ use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
-use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -52,9 +51,9 @@ class HostEntity implements HostEntityInterface {
   /**
    * The entity field manager.
    *
-   * @var \Drupal\Core\Entity\EntityFieldManager
+   * @var \Drupal\registration\RegistrationFieldManagerInterface
    */
-  protected EntityFieldManager $entityFieldManager;
+  protected RegistrationFieldManagerInterface $entityFieldManager;
 
   /**
    * The entity type manager.
@@ -98,6 +97,7 @@ class HostEntity implements HostEntityInterface {
     // translatable before proceeding.
     if ($langcode) {
       if ($entity->getEntityType()->entityClassImplements(TranslatableInterface::class)) {
+        /** @var \Drupal\Core\TypedData\TranslatableInterface $entity */
         if ($entity->isTranslatable() && ($entity->language()->getId() != $langcode)) {
           // Switch to the requested language if the entity has a translation
           // available.
@@ -236,7 +236,7 @@ class HostEntity implements HostEntityInterface {
       'registration' => $registration,
     ]);
     $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_USAGE);
-    return $event->getData();
+    return $event->getData() ?? 0;
   }
 
   /**
@@ -256,7 +256,7 @@ class HostEntity implements HostEntityInterface {
       'settings' => $this->getSettings(),
     ]);
     $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_COUNT);
-    return $event->getData();
+    return $event->getData() ?? 0;
   }
 
   /**
@@ -280,6 +280,7 @@ class HostEntity implements HostEntityInterface {
       $registrations = $this->entityTypeManager()->getStorage('registration')->loadByProperties([
         'entity_type_id' => $this->getEntityTypeId(),
         'entity_id' => $this->id(),
+        'langcode' => $this->getEntity()->language()->getId(),
         'state' => $states,
       ]);
     }
@@ -287,6 +288,7 @@ class HostEntity implements HostEntityInterface {
       $registrations = $this->entityTypeManager()->getStorage('registration')->loadByProperties([
         'entity_type_id' => $this->getEntityTypeId(),
         'entity_id' => $this->id(),
+        'langcode' => $this->getEntity()->language()->getId(),
       ]);
     }
     return $registrations;
@@ -351,6 +353,24 @@ class HostEntity implements HostEntityInterface {
       }
     }
     return $this->settings;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSettingsField(string $langcode = NULL): ?FieldDefinitionInterface {
+    $entity_type_id = $this->getEntityTypeId();
+    $bundle = $this->bundle();
+    if (!$langcode) {
+      $langcode = $this->getEntity()->language()->getId();
+    }
+    $fields = $this->entityFieldManager()->getFieldDefinitionsForLanguage($entity_type_id, $bundle, $langcode);
+    foreach ($fields as $field) {
+      if ($field->getType() == 'registration_settings') {
+        return $field;
+      }
+    }
+    return NULL;
   }
 
   /**
@@ -435,7 +455,7 @@ class HostEntity implements HostEntityInterface {
       'errors' => $errors,
     ]);
     $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_ENABLED);
-    return $event->getData();
+    return $event->getData() ?? FALSE;
   }
 
   /**
@@ -491,6 +511,21 @@ class HostEntity implements HostEntityInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getUntranslated(): ?HostEntityInterface {
+    $entity = $this->getEntity();
+    if ($entity->getEntityType()->entityClassImplements(TranslatableInterface::class)) {
+      /** @var \Drupal\Core\TypedData\TranslatableInterface $entity */
+      $untranslated = $entity->getUntranslated();
+      if ($untranslated->language()->getId() != $entity->language()->getId()) {
+        return new HostEntity($untranslated);
+      }
+    }
+    return NULL;
+  }
+
+  /**
    * Returns the current user.
    *
    * @return \Drupal\Core\Session\AccountInterface|\Drupal\Core\Session\AccountProxy
@@ -506,12 +541,12 @@ class HostEntity implements HostEntityInterface {
   /**
    * Retrieves the entity field manager.
    *
-   * @return \Drupal\Core\Entity\EntityFieldManager
+   * @return \Drupal\registration\RegistrationFieldManagerInterface
    *   The entity field manager.
    */
-  protected function entityFieldManager(): EntityFieldManager {
+  protected function entityFieldManager(): RegistrationFieldManagerInterface {
     if (!isset($this->entityFieldManager)) {
-      $this->entityFieldManager = $this->container()->get('entity_field.manager');
+      $this->entityFieldManager = $this->container()->get('registration.field_manager');
     }
     return $this->entityFieldManager;
   }
@@ -558,7 +593,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * Returns the service container.
    *
-   * This method is marked private to prevent sub-classes from retrieving
+   * This method is marked private to prevent subclasses from retrieving
    * services from the container through it. Instead,
    * \Drupal\Core\DependencyInjection\ContainerInjectionInterface should be used
    * for injecting services.

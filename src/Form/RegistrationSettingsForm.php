@@ -44,13 +44,15 @@ class RegistrationSettingsForm extends ContentEntityForm {
         $form['reminder_template']['token_tree'] = [
           '#theme' => 'token_tree_link',
           '#token_types' => [
-            $this->getHostEntity($form_state)->getEntityTypeId(),
             'registration',
             'registration_settings',
           ],
           '#global_types' => FALSE,
           '#weight' => 10,
         ];
+        if ($host_entity = $this->getHostEntity($form_state)) {
+          $form['reminder_template']['token_tree']['#token_types'][] = $host_entity->getEntityTypeId();
+        }
       }
     }
 
@@ -114,10 +116,10 @@ class RegistrationSettingsForm extends ContentEntityForm {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    *
-   * @return \Drupal\registration\HostEntityInterface
+   * @return \Drupal\registration\HostEntityInterface|null
    *   The host entity.
    */
-  protected function getHostEntity(FormStateInterface $form_state): HostEntityInterface {
+  protected function getHostEntity(FormStateInterface $form_state): ?HostEntityInterface {
     $host_entity = $form_state->get('host_entity');
     if (!$host_entity) {
       $route_match = $this->getRouteMatch();
@@ -137,6 +139,7 @@ class RegistrationSettingsForm extends ContentEntityForm {
     else {
       // Fetch settings entity from the host entity.
       $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters(), TRUE);
+      /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
       $storage = $this->entityTypeManager->getStorage($entity_type_id);
       $settings_entity = $storage->loadSettingsForHostEntity($host_entity);
     }

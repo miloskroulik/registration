@@ -13,7 +13,9 @@ use Drupal\registration\Entity\RegistrationTypeInterface;
 /**
  * Defines the interface for the host entity.
  *
- * This is a pseudo-entity wrapper around a real entity.
+ * This is a pseudo-entity wrapper around a real entity. It provides a
+ * mechanism for extending the functionality of content entities without
+ * having to override the content entity base class.
  */
 interface HostEntityInterface {
 
@@ -29,10 +31,10 @@ interface HostEntityInterface {
   public function bundle(): string;
 
   /**
-   * Gets the wrapped entity.
+   * Gets the wrapped real entity.
    *
    * @return \Drupal\Core\Entity\EntityInterface
-   *   The wrapped entity.
+   *   The wrapped real entity.
    */
   public function getEntity(): EntityInterface;
 
@@ -178,6 +180,27 @@ interface HostEntityInterface {
   public function getSettings(): ?RegistrationSettings;
 
   /**
+   * Gets the definition of the registration settings field.
+   *
+   * @param string|null $langcode
+   *   (optional) The language for the settings field.
+   *   If not set, the host entity language is used.
+   *
+   * @return \Drupal\Core\Field\FieldDefinitionInterface|null
+   *   The field definition, if available.
+   */
+  public function getSettingsField(string $langcode = NULL): ?FieldDefinitionInterface;
+
+  /**
+   * Gets the host entity for the untranslated real entity.
+   *
+   * @return \Drupal\registration\HostEntityInterface|null
+   *   The host entity for the untranslated real entity. Returns NULL unless
+   *   the real entity is a translated entity not in the site default language.
+   */
+  public function getUntranslated(): ?HostEntityInterface;
+
+  /**
    * Determines if a host entity has spaces remaining.
    *
    * @param int $spaces
@@ -211,7 +234,7 @@ interface HostEntityInterface {
   public function isEnabledForRegistration(int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool;
 
   /**
-   * Determine whether an email address is already registered.
+   * Determines whether an email address is already registered.
    *
    * This checks the anonymous email field only. To check if a Drupal
    * user account has registered, use the isUserRegistered function.
@@ -225,7 +248,7 @@ interface HostEntityInterface {
   public function isEmailRegistered(string $email): bool;
 
   /**
-   * Determine whether a given user is already registered.
+   * Determines whether a given user is already registered.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The user account.

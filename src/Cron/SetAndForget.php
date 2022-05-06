@@ -60,7 +60,7 @@ class SetAndForget {
     $this->queue->deleteQueue();
 
     // Registrations that should be enabled but aren't.
-    $query = $this->database->select('registration_settings', 'r')
+    $query = $this->database->select('registration_settings_field_data', 'r')
       ->fields('r')
       ->condition('status', 0)
       ->condition('open', $now_date, '<=')
@@ -76,7 +76,7 @@ class SetAndForget {
     }
 
     // Registrations that are enabled but shouldn't be.
-    $query = $this->database->select('registration_settings', 'r')
+    $query = $this->database->select('registration_settings_field_data', 'r')
       ->fields('r')
       ->condition('status', 1);
     $orGroup = $query->orConditionGroup()

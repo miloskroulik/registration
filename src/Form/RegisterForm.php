@@ -342,9 +342,9 @@ class RegisterForm extends ContentEntityForm {
     $settings = $host_entity->getSettings();
     $confirmation = $settings->getSetting('confirmation');
     if (!$confirmation) {
-      $confirmation = 'The registration was saved.';
+      $confirmation = $this->t('The registration was saved.');
     }
-    $this->messenger()->addStatus($this->t($confirmation));
+    $this->messenger()->addStatus($confirmation);
 
     // Redirect.
     $redirect = $settings->getSetting('confirmation_redirect');
@@ -371,8 +371,8 @@ class RegisterForm extends ContentEntityForm {
       $registration = $this->getEntity();
       if ($registration->access('view', $this->currentUser())) {
         // User has permission to view their registration. Redirect to the
-        // registration page. Must be explicit about language here since
-        // registrations are not translatable (unlike most host entities).
+        // registration page. Must be explicit about language here, otherwise
+        // would redirect to a page in the wrong language.
         $form_state->setRedirectUrl($registration->toUrl('canonical', [
           'language' => $this->languageManager->getCurrentLanguage(),
         ]));
@@ -407,6 +407,10 @@ class RegisterForm extends ContentEntityForm {
       if ($bundle_key = $entity_type->getKey('bundle')) {
         $values[$bundle_key] = $host_entity->getRegistrationTypeBundle();
       }
+      // Set the current language to record which language was used to register.
+      // This is better than using the content language since a translation
+      // might not be available for the host entity yet.
+      $values['langcode'] = $this->languageManager->getCurrentLanguage()->getId();
 
       $entity = $this->entityTypeManager->getStorage($entity_type_id)->create($values);
     }

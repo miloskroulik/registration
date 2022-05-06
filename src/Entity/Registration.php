@@ -53,7 +53,7 @@ use Drupal\workflows\WorkflowInterface;
  *   entity_keys = {
  *     "id" = "registration_id",
  *     "bundle" = "type",
- *     "uuid" = "uuid"
+ *     "uuid" = "uuid",
  *   },
  *   links = {
  *     "canonical" = "/registration/{registration}",
@@ -148,19 +148,18 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   /**
    * {@inheritdoc}
    */
-  public function getHostEntity(): ?HostEntityInterface {
+  public function getHostEntity(string $langcode = NULL): ?HostEntityInterface {
     if (!isset($this->hostEntity)) {
       $this->hostEntity = NULL;
       if (!$this->get('host_entity')->isEmpty()) {
         $entity = $this->get('host_entity')->first()->entity;
-        // Use the current language since the real entity loads as
-        // untranslated in the host_entity field item. Using the
-        // language here allows the host entity title to display
-        // in whatever language the user is currently in, which is
-        // desired for this use case.
-        $langcode = \Drupal::languageManager()
-          ->getCurrentLanguage()
-          ->getId();
+        // Check if a specific language was requested. If not then default
+        // to the current site language.
+        if (!$langcode) {
+          $langcode = \Drupal::languageManager()
+            ->getCurrentLanguage()
+            ->getId();
+        }
         $this->hostEntity = \Drupal::entityTypeManager()
           ->getHandler('registration', 'host_entity')
           ->createHostEntity($entity, $langcode);
@@ -204,6 +203,16 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
       else {
         return $entity_type->getLabel();
       }
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLangcode(): ?string {
+    if (!$this->get('langcode')->isEmpty()) {
+      return $this->get('langcode')->first()->value;
     }
     return NULL;
   }
@@ -352,6 +361,13 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
     if ($this->get('workflow')->isEmpty()) {
       $this->set('workflow', $this->getType()->getWorkflowId());
     }
+    // Language default.
+    if ($this->get('langcode')->isEmpty()) {
+      $langcode = \Drupal::languageManager()
+        ->getCurrentLanguage()
+        ->getId();
+      $this->set('langcode', $langcode);
+    }
   }
 
   /**
@@ -360,12 +376,40 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
 
+    $entity_type_manager = \Drupal::entityTypeManager();
+
     // Ensure registrations are backed by stored settings.
     if (!$update) {
+      $settings = NULL;
       $host_entity = $this->getHostEntity();
-      $settings = $host_entity?->getSettings();
-      if ($settings?->isNew()) {
-        $settings->save();
+      if ($langcode = $this->getLangcode()) {
+        $settings = $entity_type_manager
+          ->getStorage('registration_settings')
+          ->loadSettingsForHostEntity($host_entity, $langcode);
+        if ($settings->isNew()) {
+          $settings->save();
+        }
+      }
+
+      // Ensure the site default language has settings, if different than the
+      // current language.
+      if ($langcode = $settings?->getLangcode()) {
+        $default_langcode = \Drupal::languageManager()
+          ->getDefaultLanguage()
+          ->getId();
+        if ($langcode != $default_langcode) {
+          // Use the unstranslated entity which should match the site default
+          // language.
+          if ($untranslated = $host_entity->getUntranslated()) {
+            $host_entity = $untranslated;
+          }
+          $settings = $entity_type_manager
+            ->getStorage('registration_settings')
+            ->loadSettingsForHostEntity($host_entity, $default_langcode);
+          if ($settings->isNew()) {
+            $settings->save();
+          }
+        }
       }
     }
   }
@@ -391,6 +435,12 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
       ->setLabel(t('Entity ID'))
       ->setDescription(t('The ID of the host entity this registration is attached to.'))
       ->setSetting('unsigned', TRUE);
+
+    $fields['langcode'] = BaseFieldDefinition::create('language')
+      ->setLabel(t('Language'))
+      ->setDescription(t('The language used for the registration.'))
+      ->setTranslatable(TRUE)
+      ->setDisplayConfigurable('view', TRUE);
 
     $fields['host_entity'] = BaseFieldDefinition::create('registration_host_entity')
       ->setLabel(t('Host entity'))

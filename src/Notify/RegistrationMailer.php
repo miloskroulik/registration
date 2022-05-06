@@ -166,7 +166,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
   public function notify(HostEntityInterface $host_entity, array $data = []): int {
     $success_count = 0;
     $settings = $host_entity->getSettings();
-    $langcode = $this->currentUser->getPreferredLangcode(TRUE);
+    $user_langcode = $this->currentUser->getPreferredLangcode(TRUE);
     $send = TRUE;
 
     // Build parameters. These are common to every email sent.
@@ -214,6 +214,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
         $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_MAIL);
         $params = $event->getData();
 
+        $langcode = $registration->getLangcode() ?? $user_langcode;
         if ($queue) {
           $item = [
             'label' => $host_entity->label(),

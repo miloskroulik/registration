@@ -61,18 +61,6 @@ class RegistrationTypeWidget extends WidgetBase {
   public static function defaultSettings(): array {
     return [
       'hide_register_tab' => FALSE,
-      'status' => 0,
-      'capacity' => 0,
-      'open' => '',
-      'close' => '',
-      'send_reminder' => 0,
-      'reminder_date' => '',
-      'reminder_template' => '',
-      'maximum_spaces' => 1,
-      'multiple_registrations' => 0,
-      'from_address' => \Drupal::service('config.factory')->get('system.site')->get('mail'),
-      'confirmation' => 'Registration has been saved.',
-      'confirmation_redirect' => '',
     ] + parent::defaultSettings();
   }
 
@@ -87,91 +75,6 @@ class RegistrationTypeWidget extends WidgetBase {
       '#description' => $this->t('Hide the tab on the content displaying the registration form. The form can still be embedded or linked to by changing the field display settings.'),
       '#default_value' => (bool) $this->getSetting('hide_register_tab'),
     ];
-    $element['default_registration_settings'] = [
-      '#type' => 'item',
-      '#markup' => $this->t('<strong>Default Registration Settings:</strong>'),
-    ];
-    $element['status'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enable'),
-      '#description' => $this->t('Check to enable registrations.'),
-      '#default_value' => $this->getSetting('status'),
-    ];
-    $element['capacity'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Capacity'),
-      '#description' => $this->t('The maximum number of registrants. Leave at 0 for no limit.'),
-      '#min' => 0,
-      '#max' => 99999,
-      '#required' => TRUE,
-      '#default_value' => $this->getSetting('capacity'),
-    ];
-    $element['send_reminder'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Send Reminder'),
-      '#description' => $this->t('If checked, a reminder will be sent to registrants on the following date.'),
-      '#default_value' => (bool) $this->getSetting('send_reminder'),
-    ];
-    $default_value = '';
-    $default_format = filter_default_format();
-    $template = $this->getSetting('reminder_template');
-    if (!empty($template)) {
-      $default_value = $template['value'];
-      $default_format = $template['format'];
-    }
-    $element['reminder_template'] = [
-      '#type' => 'text_format',
-      '#title' => $this->t('Reminder Email Template'),
-      '#default_value' => $default_value,
-      '#format' => $default_format,
-    ];
-    if ($this->moduleHandler->moduleExists('token')) {
-      $element['token_tree_container']['token_tree'] = [
-        '#theme' => 'token_tree_link',
-        '#token_types' => [
-          $this->fieldDefinition->getTargetEntityTypeId(),
-          'registration',
-        ],
-        '#global_types' => FALSE,
-      ];
-    }
-    $element['maximum_spaces'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Spaces allowed'),
-      '#min' => 0,
-      '#max' => 9999,
-      '#required' => TRUE,
-      '#description' => $this->t('The maximum number of spaces allowed for each registrations. For no limit, use 0. (Default is 1)'),
-      '#default_value' => $this->getSetting('maximum_spaces'),
-    ];
-    $element['multiple_registrations'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Allow multiple registrations'),
-      '#description' => $this->t('If selected, each person can create multiple registrations for this event.'),
-      '#default_value' => $this->getSetting('multiple_registrations'),
-    ];
-    $element['from_address'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('From Address'),
-      '#description' => $this->t('From email address to use for confirmations, reminders, and broadcast emails.'),
-      '#default_value' => $this->getSetting('from_address'),
-    ];
-    $element['confirmation'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Confirmation Message'),
-      '#description' => $this->t('The message to display when someone registers. Leave blank for none.'),
-      '#size' => 60,
-      '#maxlength' => 120,
-      '#default_value' => $this->getSetting('confirmation'),
-    ];
-    $element['confirmation_redirect'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Confirmation redirect path'),
-      '#description' => $this->t('Optional path to redirect to when someone registers. Leave blank to redirect to the registration itself if the user has permission or the host entity if they do not.'),
-      '#size' => 60,
-      '#maxlength' => 120,
-      '#default_value' => $this->getSetting('confirmation_redirect'),
-    ];
     return $element;
   }
 
@@ -180,42 +83,12 @@ class RegistrationTypeWidget extends WidgetBase {
    */
   public function settingsSummary(): array {
     $summary = parent::settingsSummary();
-
     if ($this->getSetting('hide_register_tab')) {
-      $summary[] = $this->t('Hide the Register tab');
-      $summary[] = '';
+      $summary[] = $this->t('Hide the Register tab: Yes');
     }
-    $summary[] = $this->t('-- Default registration settings --');
-    $status = $this->getSetting('status');
-    if ($status) {
-      $summary[] = $this->t('Registration enabled');
+    else {
+      $summary[] = $this->t('Hide the Register tab: No');
     }
-    $capacity = $this->getSetting('capacity');
-    if ($capacity == 0) {
-      $capacity = $this->t('No limit');
-    }
-    $summary[] = $this->t('Capacity: @capacity', ['@capacity' => $capacity]);
-    if ($this->getSetting('send_reminder')) {
-      $summary[] = $this->t('Send reminders');
-    }
-    $template = $this->getSetting('reminder_template');
-    if (!empty($template) && !empty($template['value'])) {
-      $summary[] = $this->t('Reminder template is set');
-    }
-    $maximum_spaces = $this->getSetting('maximum_spaces');
-    if ($maximum_spaces == 0) {
-      $maximum_spaces = $this->t('No limit');
-    }
-    $summary[] = $this->t('Maximum spaces: @max', ['@max' => $maximum_spaces]);
-    if ($this->getSetting('multiple_registrations')) {
-      $summary[] = $this->t('Allow multiple registrations per user');
-    }
-    $summary[] = $this->t('From address: @address', ['@address' => $this->getSetting('from_address')]);
-    $summary[] = $this->t('Confirmation: @message', ['@message' => $this->getSetting('confirmation')]);
-    if ($this->getSetting('confirmation_redirect')) {
-      $summary[] = $this->t('Confirmation redirect: @redirect', ['@redirect' => $this->getSetting('confirmation_redirect')]);
-    }
-
     return $summary;
   }
 
