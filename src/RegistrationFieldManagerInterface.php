@@ -41,12 +41,12 @@ interface RegistrationFieldManagerInterface {
    *   \Drupal\Core\Entity\FieldableEntityInterface are supported.
    * @param string $bundle
    *   The bundle.
-   * @param string $langcode
+   * @param string|null $langcode
    *   The requested language.
    *
    * @return \Drupal\Core\Field\FieldDefinitionInterface[]
    *   The array of field definitions for the bundle, keyed by field name.
    */
-  public function getFieldDefinitionsForLanguage(string $entity_type_id, string $bundle, string $langcode): array;
+  public function getFieldDefinitionsForLanguage(string $entity_type_id, string $bundle, ?string $langcode): array;
 
 }

@@ -376,12 +376,11 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
 
-    $entity_type_manager = \Drupal::entityTypeManager();
-
     // Ensure registrations are backed by stored settings.
     if (!$update) {
       $settings = NULL;
       $host_entity = $this->getHostEntity();
+      $entity_type_manager = \Drupal::entityTypeManager();
       if ($langcode = $this->getLangcode()) {
         $settings = $entity_type_manager
           ->getStorage('registration_settings')
@@ -398,11 +397,6 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
           ->getDefaultLanguage()
           ->getId();
         if ($langcode != $default_langcode) {
-          // Use the unstranslated entity which should match the site default
-          // language.
-          if ($untranslated = $host_entity->getUntranslated()) {
-            $host_entity = $untranslated;
-          }
           $settings = $entity_type_manager
             ->getStorage('registration_settings')
             ->loadSettingsForHostEntity($host_entity, $default_langcode);

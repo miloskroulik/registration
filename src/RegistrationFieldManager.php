@@ -8,7 +8,7 @@ use Drupal\Core\Entity\EntityFieldManager;
 /**
  * Extends the discovery of entity fields.
  *
- * This is a work around to field definitions only being available for the
+ * This is a workaround to field definitions only being available for the
  * current site language in Drupal core.
  */
 class RegistrationFieldManager extends EntityFieldManager implements RegistrationFieldManagerInterface {
@@ -39,10 +39,16 @@ class RegistrationFieldManager extends EntityFieldManager implements Registratio
   /**
    * {@inheritdoc}
    */
-  public function getFieldDefinitionsForLanguage(string $entity_type_id, string $bundle, string $langcode): array {
+  public function getFieldDefinitionsForLanguage(string $entity_type_id, string $bundle, ?string $langcode): array {
+    // Default to the current language if not set.
+    if (!$langcode) {
+      $langcode = $this->languageManager->getCurrentLanguage()->getId();
+    }
+    // Use the standard entity field manager function if language matches.
     if ($langcode == $this->languageManager->getCurrentLanguage()->getId()) {
       return $this->getFieldDefinitions($entity_type_id, $bundle);
     }
+    // Language doesn't match.
     if (!isset($this->fieldDefinitions[$entity_type_id][$bundle][$langcode])) {
       $base_field_definitions = $this->getBaseFieldDefinitionsForLanguage($entity_type_id, $langcode);
       // Not prepared, try to load from cache.
