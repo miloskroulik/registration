@@ -98,7 +98,7 @@ class RegistrationSettingsWidget extends WidgetBase {
     $item = array_merge_recursive($item, $this->getSettings());
 
     // Build the settings entity form using a stub entity. This initializes
-    // it with all the fields present from its form display, but no defaults.
+    // it with all the fields present from its form display.
     $entity = $this->entityTypeManager->getStorage('registration_settings')->create($item);
     $entity_form = $this->entityFormBuilder->getForm($entity);
 
