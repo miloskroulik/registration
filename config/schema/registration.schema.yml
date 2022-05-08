@@ -60,15 +60,10 @@ field.value.registration:
     registration_type:
       type: string
       label: 'Registration type'
-
-field.value.registration_settings:
-  type: mapping
-  label: 'Default value'
-  mapping:
-    value:
-      type: text
+    registration_settings:
+      type: string
       form_element_class: \Drupal\registration\FormElement\RegistrationSettings
-      label: 'Settings'
+      label: 'Registration settings'
 
 registration.state:
   type: workflows.state

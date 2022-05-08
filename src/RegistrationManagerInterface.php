@@ -4,7 +4,6 @@ namespace Drupal\registration;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 use Symfony\Component\HttpFoundation\ParameterBag;
@@ -14,27 +13,6 @@ use Symfony\Component\Routing\Route;
  * Defines the interface for the registration manager service.
  */
 interface RegistrationManagerInterface {
-
-  /**
-   * Adds a settings field when a registration field is added.
-   *
-   * This "companion" field is there so site builders can provide default
-   * values for registration settings.
-   *
-   * @param \Drupal\field\Entity\FieldConfig $field_config
-   *   The configuration for the registration field that was added.
-   */
-  public static function addSettingsField(FieldConfig $field_config);
-
-  /**
-   * Deletes a settings field when a registration field is deleted.
-   *
-   * This deletes the "companion" field that was added previously.
-   *
-   * @param \Drupal\field\Entity\FieldConfig $field_config
-   *   The configuration for the registration field that was deleted.
-   */
-  public static function deleteSettingsField(FieldConfig $field_config);
 
   /**
    * Gets the base route name for an entity type.

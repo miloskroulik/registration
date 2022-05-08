@@ -242,6 +242,30 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function getDefaultSettings(string $langcode = NULL): array {
+    $entity_type_id = $this->getEntityTypeId();
+    $bundle = $this->bundle();
+    if (!$langcode) {
+      $langcode = $this->getEntity()->language()->getId();
+    }
+    $fields = $this->entityFieldManager()->getFieldDefinitionsForLanguage($entity_type_id, $bundle, $langcode);
+    foreach ($fields as $field) {
+      if ($field->getType() == 'registration') {
+        $settings = $field->getDefaultValueLiteral();
+        // Default settings are stored in configuration as a serialized array.
+        // @see \Drupal\registration\Plugin\Field\RegistrationItemFieldItemList
+        if (isset($settings[0], $settings[0]['registration_settings'])) {
+          return RegistrationHelper::flatten(unserialize($settings[0]['registration_settings']));
+        }
+        break;
+      }
+    }
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRegistrationCount(): int {
     $database = Database::getConnection();
     $query = $database->select('registration')
@@ -353,24 +377,6 @@ class HostEntity implements HostEntityInterface {
       }
     }
     return $this->settings;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSettingsField(string $langcode = NULL): ?FieldDefinitionInterface {
-    $entity_type_id = $this->getEntityTypeId();
-    $bundle = $this->bundle();
-    if (!$langcode) {
-      $langcode = $this->getEntity()->language()->getId();
-    }
-    $fields = $this->entityFieldManager()->getFieldDefinitionsForLanguage($entity_type_id, $bundle, $langcode);
-    foreach ($fields as $field) {
-      if ($field->getType() == 'registration_settings') {
-        return $field;
-      }
-    }
-    return NULL;
   }
 
   /**
@@ -508,21 +514,6 @@ class HostEntity implements HostEntityInterface {
 
     $count = $query->countQuery()->execute()->fetchField();
     return ($count > 0);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getUntranslated(): ?HostEntityInterface {
-    $entity = $this->getEntity();
-    if ($entity->getEntityType()->entityClassImplements(TranslatableInterface::class)) {
-      /** @var \Drupal\Core\TypedData\TranslatableInterface $entity */
-      $untranslated = $entity->getUntranslated();
-      if ($untranslated->language()->getId() != $entity->language()->getId()) {
-        return new HostEntity($untranslated);
-      }
-    }
-    return NULL;
   }
 
   /**

@@ -13,8 +13,6 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 use Symfony\Component\HttpFoundation\ParameterBag;
@@ -92,51 +90,6 @@ class RegistrationManager implements RegistrationManagerInterface {
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->entityTypeManager = $entity_type_manager;
     $this->routeProvider = $route_provider;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function addSettingsField(FieldConfig $field_config) {
-    $bundle = $field_config->get('bundle');
-    $entity_type_id = $field_config->get('entity_type');
-
-    // Reuse field storage if it was created for a different bundle. Otherwise
-    // create a new instance of storage.
-    $field_storage = FieldStorageConfig::loadByName($entity_type_id, 'registration_settings');
-    if (!$field_storage) {
-      $field_storage = FieldStorageConfig::create([
-        'field_name' => 'registration_settings',
-        'entity_type' => $entity_type_id,
-        'type' => 'registration_settings',
-      ]);
-      // Settings are stored in the settings entity table and not the field.
-      $field_storage->custom_storage = TRUE;
-      $field_storage->save();
-    }
-    // Create the companionfield and save it.
-    $field = FieldConfig::create([
-      'field_storage' => $field_storage,
-      'bundle' => $bundle,
-      'label' => 'Registration settings',
-    ]);
-    $field->save();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function deleteSettingsField(FieldConfig $field_config) {
-    // Find the companion field and delete it.
-    $bundle = $field_config->get('bundle');
-    $entity_type_id = $field_config->get('entity_type');
-    if ($settings = self::getSettingsField($entity_type_id, $bundle)) {
-      $id = "$entity_type_id.$bundle.{$settings->getName()}";
-      $settings_field_config = \Drupal::entityTypeManager()
-        ->getStorage('field_config')
-        ->load($id);
-      $settings_field_config->delete();
-    }
   }
 
   /**

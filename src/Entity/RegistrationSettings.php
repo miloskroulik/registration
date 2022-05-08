@@ -111,16 +111,12 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
     unset($fields['default_langcode']);
 
     // Get the settings field default values.
-    $settings_field = $host_entity->getSettingsField($langcode);
-
-    /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
-    $entity = $host_entity->getEntity();
-    $default_value = $this->transform($settings_field->getDefaultValue($entity));
+    $settings = $host_entity->getDefaultSettings($langcode);
 
     // Copy default values to the settings entity.
     foreach ($fields as $key => $field) {
-      if (isset($default_value[$key])) {
-        $this->set($key, $default_value[$key]);
+      if (isset($settings[$key])) {
+        $this->set($key, $settings[$key]);
       }
     }
 
@@ -303,25 +299,6 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
       $host_entity_tag = $this->getHostEntityTypeId() . ':' . $this->getHostEntityId();
       Cache::invalidateTags([$host_entity_tag]);
     }
-  }
-
-  /**
-   * Transforms a registration settings value from a serialized array.
-   *
-   * @param array $value
-   *   The serialized value inside an array.
-   *
-   * @return array
-   *   A normalized array of property values indexed by property name.
-   */
-  protected function transform(array $value): array {
-    $default_value = [];
-    if (isset($value[0], $value[0]['value'])) {
-      if (is_string($value[0]['value'])) {
-        $default_value = unserialize($value[0]['value']);
-      }
-    }
-    return $default_value;
   }
 
 }

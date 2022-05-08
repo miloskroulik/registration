@@ -38,4 +38,57 @@ class RegistrationHelper {
     }
   }
 
+  /**
+   * Expand a settings array.
+   *
+   * @param array $settings
+   *   The input settings array.
+   *
+   * @return array
+   *   An expanded array.
+   */
+  public static function expand(array $settings): array {
+    $result = [];
+    foreach ($settings as $field => $value) {
+      if (!is_array($value)) {
+        $value = [0 => ['value' => $value]];
+      }
+      $result[$field] = $value;
+    }
+    return $result;
+  }
+
+  /**
+   * Flattens a settings array.
+   *
+   * @param array $settings
+   *   The input settings array.
+   *
+   * @return array
+   *   The flattened array.
+   */
+  public static function flatten(array $settings): array {
+    $result = [];
+    foreach ($settings as $field => $value) {
+      if (is_array($value) && (count($value) == 1)) {
+        if (array_key_exists('value', $value)) {
+          $value = $value['value'];
+        }
+        elseif (isset($value[0], $value[0]['value'])) {
+          if (count($value[0]) == 1) {
+            // The "value" element is the only one, return it.
+            $value = $value[0]['value'];
+          }
+          else {
+            // This is likely a text field with both a value and a format. Need
+            // to return the array containing both.
+            $value = $value[0];
+          }
+        }
+      }
+      $result[$field] = $value;
+    }
+    return $result;
+  }
+
 }

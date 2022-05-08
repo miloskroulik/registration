@@ -17,6 +17,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   default_widget = "registration_type",
  *   default_formatter = "registration_type",
  *   cardinality = 1,
+ *   list_class = "\Drupal\registration\Plugin\Field\RegistrationItemFieldItemList",
  * )
  */
 class RegistrationItem extends FieldItemBase {

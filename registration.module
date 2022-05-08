@@ -16,7 +16,6 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\field\FieldConfigInterface;
 use Drupal\registration\Entity\RegistrationInterface;
-use Drupal\registration\RegistrationManager;
 use Drupal\registration\RegistrationHelper;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -169,9 +168,6 @@ function registration_entity_operation_alter(array &$operations, EntityInterface
 function registration_entity_insert(EntityInterface $entity) {
   if ($entity instanceof FieldConfig) {
     if ($entity->getType() == 'registration') {
-      // Add a settings field so site builders can provide default settings.
-      RegistrationManager::addSettingsField($entity);
-
       // Rebuild routes and local tasks when Registration fields are added.
       \Drupal::service("router.builder")->rebuild();
       \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
@@ -185,9 +181,6 @@ function registration_entity_insert(EntityInterface $entity) {
 function registration_entity_delete(EntityInterface $entity) {
   if ($entity instanceof FieldConfig) {
     if ($entity->getType() == 'registration') {
-      // Remove the settings field that was added automatically during insert.
-      RegistrationManager::deleteSettingsField($entity);
-
       // Rebuild routes and local tasks when Registration fields are deleted.
       \Drupal::service("router.builder")->rebuild();
       \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();

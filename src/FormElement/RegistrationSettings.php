@@ -10,17 +10,18 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\registration\RegistrationHelper;
 use Drupal\language\Config\LanguageConfigOverride;
 
 /**
  * Defines the registration settings element for configuration translation.
  *
- * This is a serialized field that needs to be unserialized for display and
- * serialized again for config storage. Without this custom form element,
- * the translator would be presented with a text field containing the
- * serialized data.
+ * Creates a custom translation form for registration fields so registration
+ * settings default values can be translated. This form is connected into the
+ * translation system through the "form_element_class" reference on the schema
+ * item "field.value.registration".
  *
- * @see \Drupal\registration\Plugin\Field\FieldType\RegistrationSettingsItem
+ * @see config/schema/registration.schema.yml
  */
 class RegistrationSettings extends FormElementBase {
 
@@ -54,12 +55,23 @@ class RegistrationSettings extends FormElementBase {
    */
   public function getSourceElement(LanguageInterface $source_language, $source_config): array {
     // Render display elements from the fields defined for the entity type.
-    $value = is_string($source_config) ? unserialize($source_config) : [];
+    $value = RegistrationHelper::flatten(unserialize($source_config));
 
     $element = [];
     foreach ($this->getTranslatableFields() as $field_definition) {
-      $build = [];
       $field_name = $field_definition->getName();
+      if (isset($value[$field_name])
+        && is_array($value[$field_name])
+        && (count($value[$field_name]) > 1)
+        && (array_key_exists(0, $value[$field_name]))
+      ) {
+        // A field value that is an array with multiple values having numeric
+        // keys is most likely a multivalued field. Currently there is no
+        // mechanism for translating multivalued configuration, so skip it.
+        // @todo Add support for translating multivalued text fields.
+        continue;
+      }
+      $build = [];
       switch ($field_definition->getType()) {
         case 'string':
         case 'string_long':
@@ -91,16 +103,24 @@ class RegistrationSettings extends FormElementBase {
    * {@inheritdoc}
    */
   public function getTranslationElement(LanguageInterface $translation_language, $source_config, $translation_config): array {
-    $value = is_string($translation_config) ? unserialize($translation_config) : [];
-    if (empty($value)) {
-      $value = is_string($source_config) ? unserialize($source_config) : [];
-    }
+    $value = RegistrationHelper::flatten(unserialize($translation_config));
 
     // Render form API elements for the fields defined for the entity type.
     // Must use #tree so the submitted values are part of the parent config.
     $element = ['#tree' => TRUE];
     foreach ($this->getTranslatableFields() as $field_definition) {
       $field_name = $field_definition->getName();
+      if (isset($value[$field_name])
+        && is_array($value[$field_name])
+        && (count($value[$field_name]) > 1)
+        && (array_key_exists(0, $value[$field_name]))
+      ) {
+        // A field value that is an array with multiple values having numeric
+        // keys is most likely a multivalued field. Currently there is no
+        // mechanism for translating multivalued configuration, so skip it.
+        // @todo Add support for translating multivalued text fields.
+        continue;
+      }
       switch ($field_definition->getType()) {
         case 'string':
           $element[$field_name] = [
@@ -135,7 +155,7 @@ class RegistrationSettings extends FormElementBase {
    * {@inheritdoc}
    */
   public function setConfig(Config $base_config, LanguageConfigOverride $config_translation, $config_values, $base_key = NULL) {
-    $config_values = serialize($config_values);
+    $config_values = serialize(RegistrationHelper::expand($config_values));
     parent::setConfig($base_config, $config_translation, $config_values, $base_key);
   }
 
@@ -149,12 +169,10 @@ class RegistrationSettings extends FormElementBase {
     $field_definitions = $this->entityFieldManager
       ->getFieldDefinitions('registration_settings', 'registration_settings');
 
-    $fields = array_filter($field_definitions, function (FieldDefinitionInterface $field_definition) {
+    return array_filter($field_definitions, function (FieldDefinitionInterface $field_definition) {
       // Take any translatable base field, or any field added via Field UI.
       return $field_definition->isTranslatable() || ($field_definition instanceof FieldConfig);
     });
-
-    return $fields;
   }
 
 }

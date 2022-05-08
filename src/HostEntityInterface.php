@@ -113,6 +113,18 @@ interface HostEntityInterface {
   public function getActiveSpacesReserved(RegistrationInterface $registration = NULL): int;
 
   /**
+   * Gets the default registration settings.
+   *
+   * @param string|null $langcode
+   *   (optional) The language for the settings field.
+   *   If not set, the host entity language is used.
+   *
+   * @return array
+   *   The default registration settings for.
+   */
+  public function getDefaultSettings(string $langcode = NULL): array;
+
+  /**
    * Gets the total number of registrations.
    *
    * Note that this is the number of registrations, not the spaces reserved.
@@ -178,27 +190,6 @@ interface HostEntityInterface {
    *   The settings entity. A new entity is created (but not saved) if needed.
    */
   public function getSettings(): ?RegistrationSettings;
-
-  /**
-   * Gets the definition of the registration settings field.
-   *
-   * @param string|null $langcode
-   *   (optional) The language for the settings field.
-   *   If not set, the host entity language is used.
-   *
-   * @return \Drupal\Core\Field\FieldDefinitionInterface|null
-   *   The field definition, if available.
-   */
-  public function getSettingsField(string $langcode = NULL): ?FieldDefinitionInterface;
-
-  /**
-   * Gets the host entity for the untranslated real entity.
-   *
-   * @return \Drupal\registration\HostEntityInterface|null
-   *   The host entity for the untranslated real entity. Returns NULL unless
-   *   the real entity is a translated entity not in the site default language.
-   */
-  public function getUntranslated(): ?HostEntityInterface;
 
   /**
    * Determines if a host entity has spaces remaining.
