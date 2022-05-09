@@ -15,6 +15,7 @@ use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\RegistrationHelper;
 use Drupal\registration\RegistrationManagerInterface;
 use Drupal\workflows\State;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -37,6 +38,13 @@ class RegisterForm extends ContentEntityForm {
   protected LanguageManagerInterface $languageManager;
 
   /**
+   * The logger.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected LoggerInterface $logger;
+
+  /**
    * The registration manager.
    *
    * @var \Drupal\registration\RegistrationManagerInterface
@@ -50,6 +58,7 @@ class RegisterForm extends ContentEntityForm {
     $instance = parent::create($container);
     $instance->dateFormatter = $container->get('date.formatter');
     $instance->languageManager = $container->get('language_manager');
+    $instance->logger = $container->get('registration.logger');
     $instance->registrationManager = $container->get('registration.manager');
     return $instance;
   }
@@ -97,6 +106,7 @@ class RegisterForm extends ContentEntityForm {
 
     // Show a message if there's one option as we're going to hide the field.
     if ((count($registrant_options) == 1) && !$this->currentUser()->isAnonymous()) {
+      $registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = $this->t('Yourself');
       $message = $this->t('You are registering: %who', ['%who' => current($registrant_options)]);
       $form['who_message'] = [
         '#markup' => '<div class="registration-who-msg">' . $message . '</div>',
@@ -329,15 +339,35 @@ class RegisterForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state): int {
+    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+    $registration = $this->getEntity();
+    $host_entity = $form_state->get('host_entity');
+
     // Set the user when self-registering.
     if ($form_state->getValue('who_is_registering') == RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME) {
-      $this->entity->set('user_uid', $this->currentUser()->id());
+      $registration->set('user_uid', $this->currentUser()->id());
     }
+
     // Save the registration.
-    $return = $this->entity->save();
+    $return = $registration->save();
+
+    // Log it.
+    if ($user = $registration->getUser()) {
+      $this->logger->info('@name registered for %label (ID #@id).', [
+        '@name' => $user->getDisplayName(),
+        '%label' => $host_entity->label(),
+        '@id' => $registration->id(),
+      ]);
+    }
+    else {
+      $this->logger->info('@email registered for %label (ID #@id).', [
+        '@email' => $registration->getEmail(),
+        '%label' => $host_entity->label(),
+        '@id' => $registration->id(),
+      ]);
+    }
 
     // Confirmation message.
-    $host_entity = $form_state->get('host_entity');
     $settings = $host_entity->getSettings();
     $confirmation = $settings->getSetting('confirmation');
     if (!$confirmation) {
@@ -367,7 +397,6 @@ class RegisterForm extends ContentEntityForm {
     }
     else {
       // No redirect in the settings.
-      $registration = $this->getEntity();
       if ($registration->access('view', $this->currentUser())) {
         // User has permission to view their registration. Redirect to the
         // registration page. Must be explicit about language here, otherwise
@@ -381,7 +410,7 @@ class RegisterForm extends ContentEntityForm {
         // The user should have permission to view the host
         // entity, otherwise it is unlikely they would be
         // able to reach the register page for that entity.
-        $form_state->setRedirectUrl($host_entity->toUrl());
+        $form_state->setRedirectUrl($host_entity->getEntity()->toUrl());
       }
     }
 

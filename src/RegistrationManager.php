@@ -178,7 +178,7 @@ class RegistrationManager implements RegistrationManagerInterface {
       && $this->currentUser->hasPermission("create $type registration self")
       && ($my_registration || $allow_multiple || !$host_entity->isUserRegistered($this->currentUser))
     ) {
-      $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = $this->t('Yourself');
+      $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = $this->t('Myself');
     }
 
     // Other users:
@@ -193,7 +193,7 @@ class RegistrationManager implements RegistrationManagerInterface {
     }
 
     // Anonymous self-registration:
-    if ($user_is_anonymous && $this->currentUser->hasPermission("create $type registration")) {
+    if ($user_is_anonymous && $this->currentUser->hasPermission("create $type registration self")) {
       $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON] = $this->t('Myself');
     }
 
