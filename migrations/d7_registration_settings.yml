@@ -61,4 +61,5 @@ destination:
   plugin: entity:registration_settings
 migration_dependencies:
   required: {  }
-  optional: {  }
+  optional:
+    - d7_node_complete

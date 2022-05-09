@@ -4,6 +4,8 @@ namespace Drupal\registration\Entity;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityMalformedException;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\registration\HostEntityInterface;
@@ -121,6 +123,20 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
     }
 
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    parent::preSave($storage);
+
+    // Ensure host entity fields are set.
+    foreach (['entity_type_id', 'entity_id'] as $field) {
+      if ($this->get($field)->isEmpty()) {
+        throw new EntityMalformedException(sprintf('Required registration settings field "%s" is empty.', $field));
+      }
+    }
   }
 
   /**

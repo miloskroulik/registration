@@ -12,7 +12,7 @@ use Drupal\migrate\Row;
  * Uses the host entity type to look up the ID in the appropriate migration.
  * This process plugin is necessary since the target type is unknown until
  * run time - the standard migration lookup requires the type to be known
- * in advance so it can be specified in the migration configuration file.
+ * in advance, so it can be specified in the migration configuration file.
  *
  * @MigrateProcessPlugin(
  *   id = "host_entity_migration_lookup"
@@ -36,6 +36,12 @@ class HostEntityMigrationLookup extends MigrationLookup {
       default:
         $migrations = $this->getSourcePlugins($entity_type_id . ':');
         $this->configuration['migration'] = $migrations;
+
+        // Handle both node and node complete migrations.
+        if ($entity_type_id == 'node') {
+          $migrations = $this->getSourcePlugins($entity_type_id . '_complete:');
+          $this->configuration['migration'] = array_merge($this->configuration['migration'], $migrations);
+        }
     }
 
     return parent::transform($value, $migrate_executable, $row, $destination_property);
@@ -54,9 +60,9 @@ class HostEntityMigrationLookup extends MigrationLookup {
     $all_definitions = \Drupal::service('plugin.manager.migration')
       ->getDefinitions();
     $definitions = [];
-    foreach ($all_definitions as $key => $value) {
-      if (strpos($key, $scan_mask) !== FALSE) {
-        $definitions[] = str_replace(':', '_', $key);
+    foreach ($all_definitions as $key => $definition) {
+      if (str_contains($key, $scan_mask)) {
+        $definitions[] = $definition['id'];
       }
     }
     return $definitions;

@@ -195,11 +195,13 @@ function registration_entity_presave(EntityInterface $entity) {
   // Validate new registration fields since Field UI skips constraints.
   if ($entity->isNew()) {
     if (($entity instanceof FieldConfig) || ($entity instanceof FieldStorageConfig)) {
-      $violations = $entity->getTypedData()->validate();
-      // Field UI catches axceptions thrown and displays the error to the user.
-      foreach ($violations as $violation) {
-        /** @var \Symfony\Component\Validator\ConstraintViolationInterface $violation */
-        throw new \InvalidArgumentException($violation->getMessage());
+      if ($entity->getType() == 'registration') {
+        $violations = $entity->getTypedData()->validate();
+        // Field UI catches axceptions thrown and displays the error to the user.
+        foreach ($violations as $violation) {
+          /** @var \Symfony\Component\Validator\ConstraintViolationInterface $violation */
+          throw new \InvalidArgumentException($violation->getMessage());
+        }
       }
     }
   }
@@ -303,5 +305,16 @@ function registration_mail($key, &$message, $params) {
   $message['headers']['Content-Type'] = 'text/html; charset=UTF-8; format=flowed; delsp=yes';
   if (!empty($message['params']['from'])) {
     $message['headers']['From'] = $message['params']['from'];
+  }
+}
+
+/**
+ * Implements hook_migration_plugins_alter().
+ */
+function registration_migration_plugins_alter(array &$migrations) {
+  if (isset($migrations['d7_field_instance'])) {
+    // Migrate registration types before field instances since the field
+    // instances have references to the regiration types as field bundles.
+    $migrations['d7_field_instance']['migration_dependencies']['optional'][] = 'd7_registration_type';
   }
 }

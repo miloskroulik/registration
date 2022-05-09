@@ -8,6 +8,7 @@ deriver: Drupal\registration\Plugin\migrate\D7RegistrationDeriver
 source:
   plugin: d7_registration
 process:
+  registration_id: registration_id
   type: type
   entity_type_id:
     plugin: host_entity_type
@@ -30,3 +31,4 @@ migration_dependencies:
     - d7_registration_type
   optional:
     - d7_field_instance
+    - d7_node_complete
