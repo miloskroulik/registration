@@ -3,7 +3,8 @@
 namespace Drupal\registration\Plugin\migrate\source;
 
 use Drupal\Core\Database\Query\SelectInterface;
-use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
+use Drupal\migrate\Row;
+use Drupal\migrate_drupal\Plugin\migrate\source\d7\FieldableEntity;
 
 /**
  * Drupal 7 registration source from database.
@@ -13,7 +14,7 @@ use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
  *   source_module = "registration"
  * )
  */
-class Registration extends DrupalSqlBase {
+class Registration extends FieldableEntity {
 
   /**
    * {@inheritdoc}
@@ -28,6 +29,21 @@ class Registration extends DrupalSqlBase {
     }
 
     return $query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function prepareRow(Row $row) {
+    $registration_id = $row->getSourceProperty('registration_id');
+    $type = $row->getSourceProperty('type');
+
+    // Get Field API field values.
+    foreach ($this->getFields('registration', $type) as $field_name => $field) {
+      $row->setSourceProperty($field_name, $this->getFieldValues('registration', $field_name, $registration_id));
+    }
+
+    return parent::prepareRow($row);
   }
 
   /**
