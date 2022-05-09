@@ -30,7 +30,7 @@ class RegistrationReminderTemplate extends ProcessPluginBase {
     $template = [];
     $template['value'] = $value;
     if (!empty($this->configuration['format'])) {
-      // USe the format specified in the migration configuration.
+      // Use the format specified in the migration configuration.
       $template['format'] = $this->configuration['format'];
     }
     else {
