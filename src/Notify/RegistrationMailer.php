@@ -214,8 +214,6 @@ class RegistrationMailer implements RegistrationMailerInterface {
         $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_MAIL);
         $params = $event->getData();
 
-        // @todo Use the preferred language of the registration user if not an
-        // anonymous registration.
         $langcode = $registration->getLangcode() ?? $user_langcode;
         if ($queue) {
           $item = [
