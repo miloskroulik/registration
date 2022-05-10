@@ -5,6 +5,8 @@ namespace Drupal\registration\Plugin\migrate\field;
 use Drupal\migrate_drupal\Plugin\migrate\field\FieldPluginBase;
 
 /**
+ * Migrates a registration field.
+ *
  * @MigrateField(
  *   id = "registration",
  *   core = {7},
