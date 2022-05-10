@@ -300,22 +300,20 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function getRegistrationList(array $states = []): array {
+    $properties = [
+      'entity_type_id' => $this->getEntityTypeId(),
+      'entity_id' => $this->id(),
+    ];
     if (!empty($states)) {
-      $registrations = $this->entityTypeManager()->getStorage('registration')->loadByProperties([
-        'entity_type_id' => $this->getEntityTypeId(),
-        'entity_id' => $this->id(),
-        'langcode' => $this->getEntity()->language()->getId(),
-        'state' => $states,
-      ]);
+      $properties['state'] = $states;
     }
-    else {
-      $registrations = $this->entityTypeManager()->getStorage('registration')->loadByProperties([
-        'entity_type_id' => $this->getEntityTypeId(),
-        'entity_id' => $this->id(),
-        'langcode' => $this->getEntity()->language()->getId(),
-      ]);
+    // Do not filter on language if it would be "undefined" since nothing would
+    // match.
+    $langcode = $this->getEntity()->language()->getId();
+    if ($langcode != 'und') {
+      $properties['langcode'] = $langcode;
     }
-    return $registrations;
+    return $this->entityTypeManager()->getStorage('registration')->loadByProperties($properties);
   }
 
   /**
