@@ -363,9 +363,19 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
     }
     // Language default.
     if ($this->get('langcode')->isEmpty()) {
-      $langcode = \Drupal::languageManager()
-        ->getCurrentLanguage()
-        ->getId();
+      $langcode = '';
+      // For an authenticated user registration, use the preterred language set
+      // in their account, if any.
+      if ($user = $this->getUser()) {
+        $langcode = $user->getPreferredLangcode(FALSE);
+      }
+      // If an anonymous registration, or the user does not have a language
+      // set in their account, then use the current language for the site.
+      if (empty($langcode)) {
+        $langcode = \Drupal::languageManager()
+          ->getCurrentLanguage()
+          ->getId();
+      }
       $this->set('langcode', $langcode);
     }
   }
