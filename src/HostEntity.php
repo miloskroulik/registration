@@ -252,12 +252,18 @@ class HostEntity implements HostEntityInterface {
     foreach ($fields as $field) {
       if ($field->getType() == 'registration') {
         $settings = $field->getDefaultValueLiteral();
-        // Default settings are stored in configuration as a serialized array.
-        // @see \Drupal\registration\Plugin\Field\RegistrationItemFieldItemList
+        // If the registration field has saved default values, return those.
         if (isset($settings[0], $settings[0]['registration_settings'])) {
+          // Default settings are stored in configuration as a serialized array.
+          // @see \Drupal\registration\Plugin\Field\RegistrationItemFieldItemList
           return RegistrationHelper::flatten(unserialize($settings[0]['registration_settings']));
         }
-        break;
+        else {
+          /** @var \Drupal\registration\Plugin\Field\RegistrationItemFieldItemList $item_list */
+          $item_list = $this->getEntity()->get($field->getName());
+          // No defaults have been saved to the field. Use fallback settings.
+          return RegistrationHelper::flatten($item_list->getFallbackSettings());
+        }
       }
     }
     return [];

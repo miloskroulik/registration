@@ -7,6 +7,7 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Field\FieldItemList;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
+use Drupal\registration\RegistrationHelper;
 
 /**
  * Defines an item list class for registration fields.
@@ -44,13 +45,16 @@ class RegistrationItemFieldItemList extends FieldItemList {
   }
 
   /**
-   * Gets default registration settings.
+   * Gets fallback default registration settings.
+   *
+   * These hardcoded values are a fallback when no default values have been
+   * assigned to a given registration field yet.
    *
    * @return array
    *   The default settings.
    */
-  protected function getDefaultSettings(): array {
-    $default_values = [
+  public function getFallbackSettings(): array {
+    $fallback_values = [
       'status' => FALSE,
       'capacity' => 0,
       'send_reminder' => FALSE,
@@ -60,12 +64,9 @@ class RegistrationItemFieldItemList extends FieldItemList {
       'confirmation' => 'Registration has been saved.',
     ];
 
-    $default_settings = [];
-    foreach ($default_values as $key => $value) {
-      $default_settings[$key] = [0 => ['value' => $value]];
-    }
-
-    return $default_settings;
+    // Return the values, expanded so the structure matches that used by field
+    // item lists.
+    return RegistrationHelper::expand($fallback_values);
   }
 
   /**
@@ -75,25 +76,26 @@ class RegistrationItemFieldItemList extends FieldItemList {
    *   The input settings array.
    *
    * @return array
-   *   The usable settings array.
+   *   The massaged settings array.
    */
   protected function massageFormValues(array $settings): array {
-    // Filter out nulls and blanks.
     $settings = array_map(function (mixed $item) {
       if (is_array($item)) {
+        // Loop through the property values and massage as needed. The
+        // properties that need massaging have a "value" key.
         foreach ($item as $key => $value) {
-          if (is_array($value)) {
-            if (array_key_exists('value', $value)) {
-              if (is_null($value['value']) || ($value['value'] === '')) {
-                unset($item[$key]);
-              }
-              // Convert dates to storage format and timezone (UTC).
-              elseif ($value['value'] instanceof DrupalDateTime) {
-                $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
-                $value['value']->setTimezone($storage_timezone);
-                $item[$key]['value'] = $value['value']
-                  ->format(DateTimeItemInterface::DATETIME_STORAGE_FORMAT);
-              }
+          if (is_array($value) && array_key_exists('value', $value)) {
+            // Filter out nulls and blanks.
+            if (is_null($value['value']) || ($value['value'] === '')) {
+              unset($item[$key]);
+            }
+
+            // Convert dates to storage format and timezone (UTC).
+            elseif ($value['value'] instanceof DrupalDateTime) {
+              $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+              $value['value']->setTimezone($storage_timezone);
+              $item[$key]['value'] = $value['value']
+                ->format(DateTimeItemInterface::DATETIME_STORAGE_FORMAT);
             }
           }
         }
@@ -101,7 +103,7 @@ class RegistrationItemFieldItemList extends FieldItemList {
       return $item;
     }, $settings);
 
-    // Remove any empty structure.
+    // Remove any empty remaining structure.
     return array_filter($settings);
   }
 
@@ -140,7 +142,7 @@ class RegistrationItemFieldItemList extends FieldItemList {
     else {
       $values[$entity_type_id] = unserialize($values[$entity_type_id]);
     }
-    $values[$entity_type_id] += $this->getDefaultSettings();
+    $values[$entity_type_id] += $this->getFallbackSettings();
     $values = $values[$entity_type_id];
 
     // Create an entity with the default values and retrieve its form display.
