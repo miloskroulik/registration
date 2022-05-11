@@ -9,6 +9,7 @@ use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\Render\Renderer;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\registration\Entity\RegistrationInterface;
@@ -167,7 +168,6 @@ class RegistrationMailer implements RegistrationMailerInterface {
     $success_count = 0;
     $settings = $host_entity->getSettings();
     $user_langcode = $this->currentUser->getPreferredLangcode(TRUE);
-    $send = TRUE;
 
     // Build parameters. These are common to every email sent.
     $params = [];
@@ -178,7 +178,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
       '#text' => $data['message']['value'],
       '#format' => $data['message']['format'],
     ];
-    $params['message'] = $this->renderer->render($build);
+    $params['message'] = new FormattableMarkup($this->renderer->render($build), []);
     $params['token_entities'] = [
       $host_entity->getEntityTypeId() => $host_entity->getEntity(),
       'registration_settings' => $settings,
@@ -228,7 +228,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
         }
         else {
           // Send the mail and count successes.
-          $result = $this->mailManager->mail('registration', 'broadcast', $email, $langcode, $params, NULL, $send);
+          $result = $this->mailManager->mail('registration', 'broadcast', $email, $langcode, $params);
           if ($result['result'] !== FALSE) {
             $success_count++;
           }

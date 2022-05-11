@@ -5,6 +5,7 @@
  * Provides user registration for events.
  */
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
@@ -297,12 +298,13 @@ function registration_field_widget_complete_datetime_default_form_alter(&$field_
  * Implements hook_mail().
  */
 function registration_mail($key, &$message, $params) {
+  // Replace tokens and set headers for HTML.
   $token = \Drupal::token();
   $langcode = $message['langcode'];
   $variables = $params['token_entities'];
   $options = ['langcode' => $langcode, 'clear' => TRUE];
   $message['subject'] = PlainTextOutput::renderFromHtml($token->replace($params['subject'], $variables, $options));
-  $message['body'][] = $token->replace($params['message'], $variables, $options);
+  $message['body'][] = new FormattableMarkup($token->replace($params['message'], $variables, $options), []);
   $message['headers']['Content-Type'] = 'text/html; charset=UTF-8; format=flowed; delsp=yes';
   if (!empty($message['params']['from'])) {
     $message['headers']['From'] = $message['params']['from'];
