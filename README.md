@@ -24,8 +24,13 @@ Registration does lots of things you are expecting from a registration system (l
 REQUIREMENTS
 ------------
 
-This module requires no modules outside of Drupal core.
+This module requires no modules outside of Drupal core. Upon installation it enables the following core modules if they are not enabled yet:
 
+* Datetime
+* Field
+* Text
+* User
+* Workflows
 
 INSTALLATION
 ------------
