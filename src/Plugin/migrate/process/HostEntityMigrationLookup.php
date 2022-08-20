@@ -26,46 +26,41 @@ class HostEntityMigrationLookup extends MigrationLookup {
   public function transform($value, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property): array|string|NULL {
     $entity_type_id = $row->getSourceProperty('entity_type');
     // Find migrations for the host entity type.
-    switch ($entity_type_id) {
-      case 'commerce_product':
-        // Commerce 1 products became Commerce 2 product variations.
-        $migrations = $this->getSourcePlugins('commerce1_product_variation:');
-        $this->configuration['migration'] = $migrations;
-        break;
+    $migrations = match ($entity_type_id) {
+      'commerce_product' => $this->getDestinationPlugins('commerce_product_variation'),
+      default => $this->getDestinationPlugins($entity_type_id),
+    };
 
-      default:
-        $migrations = $this->getSourcePlugins($entity_type_id . ':');
-        $this->configuration['migration'] = $migrations;
-
-        // Handle both node and node complete migrations.
-        if ($entity_type_id == 'node') {
-          $migrations = $this->getSourcePlugins($entity_type_id . '_complete:');
-          $this->configuration['migration'] = array_merge($this->configuration['migration'], $migrations);
-        }
-    }
+    $this->configuration['migration'] = $migrations;
 
     return parent::transform($value, $migrate_executable, $row, $destination_property);
   }
 
   /**
-   * Retrieve plugin IDs matching a scan mask.
+   * Retrieve migration plugins with the given destination entity type ID.
    *
-   * @param string $scan_mask
-   *   The scan mask.
+   * @param string $entity_type_id
+   *   The entity type ID.
    *
    * @return array
-   *   An array of plugin IDs.
+   *   An array of migration plugin IDs.
    */
-  protected function getSourcePlugins(string $scan_mask): array {
+  protected function getDestinationPlugins(string $entity_type_id): array {
     $all_definitions = \Drupal::service('plugin.manager.migration')
       ->getDefinitions();
     $definitions = [];
-    foreach ($all_definitions as $key => $definition) {
-      if (str_contains($key, $scan_mask)) {
-        $definitions[] = $definition['id'];
+    foreach ($all_definitions as $definition) {
+      if (isset($definition['destination'], $definition['destination']['plugin'])) {
+        if ($definition['destination']['plugin'] == ('entity:' . $entity_type_id)) {
+          $definitions[$definition['id']] = $definition['id'];
+        }
+        // Handle complete migrations, for example node_complete.
+        elseif ($definition['destination']['plugin'] == ('entity_complete:' . $entity_type_id)) {
+          $definitions[$definition['id']] = $definition['id'];
+        }
       }
     }
-    return $definitions;
+    return array_values($definitions);
   }
 
 }
