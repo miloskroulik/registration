@@ -38,6 +38,16 @@ function registration_views_data_alter(array &$data) {
   // for relationships. These are added one per fieldable entity type,
   // since there is a different base table for each.
   foreach (\Drupal::entityTypeManager()->getDefinitions() as $entity_type) {
+    // Skip registration entity types to avoid circular references.
+    $registration_entity_types = [
+      'registration',
+      'registration_settings',
+    ];
+    if (in_array($entity_type->id(), $registration_entity_types)) {
+      continue;
+    }
+
+    // Ensure the entity type is fieldable.
     if ($entity_type->entityClassImplements(FieldableEntityInterface::class)) {
       $id = $entity_type->id();
       $base_table = $entity_type->getBaseTable();
