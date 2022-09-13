@@ -34,37 +34,13 @@ class HostEntityId extends ArgumentDefaultPluginBase implements CacheableDepende
   protected RouteMatchInterface $routeMatch;
 
   /**
-   * Constructs a new HostEntityId instance.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
-   *   The registration manager.
-   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
-   *   The route match service.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RegistrationManagerInterface $registration_manager, RouteMatchInterface $route_match) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->registrationManager = $registration_manager;
-    $this->routeMatch = $route_match;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): HostEntityId {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('registration.manager'),
-      $container->get('current_route_match')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->registrationManager = $container->get('registration.manager');
+    $instance->routeMatch = $container->get('current_route_match');
+    return $instance;
   }
 
   /**

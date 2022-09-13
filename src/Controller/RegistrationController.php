@@ -46,30 +46,14 @@ class RegistrationController extends ControllerBase {
   protected RegistrationManagerInterface $registrationManager;
 
   /**
-   * Constructs a RegistrationController object.
-   *
-   * @param \Drupal\Core\Database\Connection $database
-   *   A database connection.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
-   *   The date formatter service.
-   * @param \Drupal\registration\RegistrationManagerInterface $registration_manager
-   *   The registration manager.
-   */
-  public function __construct(Connection $database, DateFormatterInterface $date_formatter, RegistrationManagerInterface $registration_manager) {
-    $this->database = $database;
-    $this->dateFormatter = $date_formatter;
-    $this->registrationManager = $registration_manager;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): RegistrationController {
-    return new static(
-      $container->get('database'),
-      $container->get('date.formatter'),
-      $container->get('registration.manager')
-    );
+    $instance = parent::create($container);
+    $instance->database = $container->get('database');
+    $instance->dateFormatter = $container->get('date.formatter');
+    $instance->registrationManager = $container->get('registration.manager');
+    return $instance;
   }
 
   /**
