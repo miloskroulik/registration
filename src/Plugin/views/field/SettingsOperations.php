@@ -45,33 +45,34 @@ class SettingsOperations extends EntityOperations {
     $operations = [];
 
     /** @var \Drupal\registration\Entity\RegistrationSettings $settings_entity */
-    $settings_entity = $this->getEntity($values);
-    $entity_id = $settings_entity->getHostEntityId();
-    $entity_type_id = $settings_entity->getHostEntityTypeId();
+    if ($settings_entity = $this->getEntity($values)) {
+      $entity_id = $settings_entity->getHostEntityId();
+      $entity_type_id = $settings_entity->getHostEntityTypeId();
 
-    $storage = $this->entityTypeManager->getStorage($entity_type_id);
-    if ($entity = $storage->load($entity_id)) {
-      /** @var \Drupal\registration\HostEntityInterface $host_entity */
-      $host_entity = $this->entityTypeManager
-        ->getHandler('registration', 'host_entity')
-        ->createHostEntity($entity);
-      if ($type = $host_entity->getRegistrationTypeBundle()) {
-        $access =
-             $this->currentUser->hasPermission("administer registration")
-          || $this->currentUser->hasPermission("administer $type registration");
-        $access_result = AccessResult::allowedIf($access)
-          // Recalculate this result if the relevant entities are updated.
-          ->cachePerPermissions()
-          ->addCacheableDependency($entity);
+      $storage = $this->entityTypeManager->getStorage($entity_type_id);
+      if ($entity = $storage->load($entity_id)) {
+        /** @var \Drupal\registration\HostEntityInterface $host_entity */
+        $host_entity = $this->entityTypeManager
+          ->getHandler('registration', 'host_entity')
+          ->createHostEntity($entity);
+        if ($type = $host_entity->getRegistrationTypeBundle()) {
+          $access =
+               $this->currentUser->hasPermission("administer registration")
+            || $this->currentUser->hasPermission("administer $type registration");
+          $access_result = AccessResult::allowedIf($access)
+            // Recalculate this result if the relevant entities are updated.
+            ->cachePerPermissions()
+            ->addCacheableDependency($entity);
 
-        if ($access_result->isAllowed()) {
-          $url = Url::fromRoute("entity.$entity_type_id.registration.registration_settings", [
-            $entity_type_id => $entity_id,
-          ]);
-          $operations['edit'] = [
-            'title' => $this->t('Edit settings'),
-            'url' => $this->ensureDestination($url),
-          ];
+          if ($access_result->isAllowed()) {
+            $url = Url::fromRoute("entity.$entity_type_id.registration.registration_settings", [
+              $entity_type_id => $entity_id,
+            ]);
+            $operations['edit'] = [
+              'title' => $this->t('Edit settings'),
+              'url' => $this->ensureDestination($url),
+            ];
+          }
         }
       }
     }
