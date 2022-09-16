@@ -2,7 +2,9 @@
 
 namespace Drupal\registration\Plugin\views\area;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a caption area handler.
@@ -14,37 +16,56 @@ use Drupal\views\Plugin\views\area\AreaPluginBase;
 class ManageRegistrationsCaption extends AreaPluginBase {
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected EntityTypeManagerInterface $entityTypeManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): ManageRegistrationsCaption {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    return $instance;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function render($empty = FALSE): array {
     if (!$empty || !empty($this->options['empty'])) {
-      $route_match = \Drupal::routeMatch();
-      $registration_manager = \Drupal::service('registration.manager');
-      if ($host_entity = $registration_manager->getEntityFromParameters($route_match->getParameters(), TRUE)) {
-        $settings = $host_entity->getSettings();
-        $capacity = $settings->getSetting('capacity');
-        $spaces = $host_entity->getActiveSpacesReserved();
-        if ($capacity) {
-          $caption = $this->formatPlural($capacity,
-           'List of registrations for %label. @spaces of 1 space is filled.',
-           'List of registrations for %label. @spaces of @count spaces are filled.', [
-             '%label' => $host_entity->label(),
-             '@capacity' => $capacity,
-             '@spaces' => $spaces,
-           ]);
+      $storage = $this->entityTypeManager->getStorage($this->view->args[0]);
+      if ($storage && ($entity = $storage->load($this->view->args[1]))) {
+        $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+        $host_entity = $handler->createHostEntity($entity);
+        if ($host_entity->getRegistrationTypeBundle()) {
+          $settings = $host_entity->getSettings();
+          $capacity = $settings->getSetting('capacity');
+          $spaces = $host_entity->getActiveSpacesReserved();
+          if ($capacity) {
+            $caption = $this->formatPlural($capacity,
+             'List of registrations for %label. @spaces of 1 space is filled.',
+             'List of registrations for %label. @spaces of @count spaces are filled.', [
+               '%label' => $host_entity->label(),
+               '@capacity' => $capacity,
+               '@spaces' => $spaces,
+             ]);
+          }
+          else {
+            $caption = $this->formatPlural($spaces,
+             'List of registrations for %label. 1 space is filled.',
+             'List of registrations for %label. @count spaces are filled.', [
+               '%label' => $host_entity->label(),
+             ]);
+          }
+          $build = [
+            '#markup' => $caption,
+          ];
+          $host_entity->addCacheableDependencies($build, [$settings]);
+          return $build;
         }
-        else {
-          $caption = $this->formatPlural($spaces,
-           'List of registrations for %label. 1 space is filled.',
-           'List of registrations for %label. @count spaces are filled.', [
-             '%label' => $host_entity->label(),
-           ]);
-        }
-        $build = [
-          '#markup' => $caption,
-        ];
-        $host_entity->addCacheableDependencies($build, [$settings]);
-        return $build;
       }
     }
     return [];
