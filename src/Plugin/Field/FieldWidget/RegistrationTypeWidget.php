@@ -38,7 +38,7 @@ class RegistrationTypeWidget extends WidgetBase {
   protected EntityTypeBundleInfo $entityTypeBundleInfo;
 
   /**
-   * The modile handler.
+   * The module handler.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
