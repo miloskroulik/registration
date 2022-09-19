@@ -183,6 +183,9 @@ class RegistrationMailer implements RegistrationMailerInterface {
       $host_entity->getEntityTypeId() => $host_entity->getEntity(),
       'registration_settings' => $settings,
     ];
+    if (!empty($data['token_entities'])) {
+      $params['token_entities'] += $data['token_entities'];
+    }
 
     // Get the recipients and send to each.
     $recipients = $this->getRecipientList($host_entity, $data);
