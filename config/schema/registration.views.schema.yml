@@ -5,7 +5,7 @@ views.area.manage_registrations_caption:
   label: 'Manage registrations caption'
 views.area.manage_registrations_empty:
   type: views_area
-  label: 'Manage resitrations empty message'
+  label: 'Manage registrations empty message'
 
 views.argument.registration_host_entity_id:
   type: views_argument
