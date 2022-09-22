@@ -89,10 +89,23 @@ interface HostEntityInterface {
   public function addCacheableDependencies(array &$build, array $other_entities = []);
 
   /**
+   * Creates a new registration.
+   *
+   * @param bool $save
+   *   Whether the new entity should be saved after being created.
+   *
+   * @return \Drupal\registration\Entity\RegistrationInterface
+   *   The new registration.
+   */
+  public function createRegistration(bool $save = FALSE): RegistrationInterface;
+
+  /**
    * Generates a sample registration for use in tests and email preview.
    *
-   * The registration is created but not saved, so it is ephemeral unless
-   * the caller subsequently saves it. Saving it is not recommended.
+   * Saving is optional but not recommended since it contains sample data.
+   *
+   * @param bool $save
+   *   Whether the new entity should be saved after being generated.
    *
    * @return \Drupal\registration\Entity\RegistrationInterface
    *   The generated registration.

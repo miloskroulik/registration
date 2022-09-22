@@ -182,17 +182,28 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function generateSampleRegistration(bool $save = FALSE): RegistrationInterface {
+  public function createRegistration(bool $save = FALSE): RegistrationInterface {
     $values = [
       'entity_type_id' => $this->getEntityTypeId(),
       'entity_id' => $this->id(),
       'type' => $this->getRegistrationTypeBundle(),
-      'user_uid' => $this->currentUser()->id(),
-      'mail' => $this->currentUser()->getEmail(),
       'count' => 1,
     ];
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->entityTypeManager()->getStorage('registration')->create($values);
+    if ($save) {
+      $registration->save();
+    }
+    return $registration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function generateSampleRegistration(bool $save = FALSE): RegistrationInterface {
+    $registration = $this->createRegistration();
+    $registration->set('user_uid', $this->currentUser()->id());
+    $registration->set('mail', $this->currentUser()->getEmail());
     if ($save) {
       $registration->save();
     }
