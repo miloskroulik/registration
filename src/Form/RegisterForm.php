@@ -75,10 +75,10 @@ class RegisterForm extends ContentEntityForm {
 
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->getEntity();
+    $form_state->set('registration', $registration);
 
     // Make sure registration is still allowed.
     $host_entity = $form_state->get('host_entity');
-    $settings = $host_entity->getSettings();
     $count = $registration->getSpacesReserved();
     $errors = [];
     if ($registration->isNew() && !$host_entity->isEnabledForRegistration($count, $registration, $errors)) {
@@ -93,144 +93,11 @@ class RegisterForm extends ContentEntityForm {
     // Initialize the form with fields.
     $form = parent::form($form, $form_state);
 
-    // Add the "Who is registering" field.
-    $registrant_options = $this->registrationManager->getRegistrantOptions($registration, $settings);
-    $default = NULL;
-    if (!$registration->isNew()) {
-      $default = $registration->getRegistrantType($this->currentUser());
-    }
-    elseif (count($registrant_options) == 1) {
-      $keys = array_keys($registrant_options);
-      $default = reset($keys);
-    }
-
-    // Show a message if there's one option as we're going to hide the field.
-    if ((count($registrant_options) == 1) && !$this->currentUser()->isAnonymous()) {
-      $registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = $this->t('Yourself');
-      $message = $this->t('You are registering: %who', ['%who' => current($registrant_options)]);
-      $form['who_message'] = [
-        '#markup' => '<div class="registration-who-msg">' . $message . '</div>',
-        '#weight' => -1,
-      ];
-    }
-
-    $form['who_is_registering'] = [
-      '#type' => 'select',
-      '#title' => $this->t('This registration is for:'),
-      '#options' => $registrant_options,
-      '#default_value' => $default,
-      '#required' => TRUE,
-      '#access' => (count($registrant_options) > 1),
-      '#weight' => -1,
-    ];
-
-    // The following checks for empty form fields, since the site admin
-    // may have hidden certain fields on the form via the form display.
-    // Set the User field visibility and required states.
-    if (!empty($form['user_uid'])) {
-      $form['user_uid']['#access'] = isset($registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER]);
-      $form['user_uid']['#states'] = [
-        'visible' => [
-          ':input[name="who_is_registering"]' => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER],
-        ],
-      ];
-      // @see https://www.drupal.org/project/drupal/issues/2855139
-      $form['user_uid']['widget'][0]['target_id']['#states'] = [
-        'required' => [
-          ':input[name="who_is_registering"]' => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER],
-        ],
-      ];
-    }
-
-    // Set the Email field visibility and required states.
-    if (!empty($form['anon_mail'])) {
-      $anonymous_allowed = isset($registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON]);
-      $form['anon_mail']['#access'] = $anonymous_allowed;
-      $form['anon_mail']['#states'] = [
-        'visible' => [
-          ':input[name="who_is_registering"]' => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON],
-        ],
-      ];
-      if ((count($registrant_options) == 1) && $anonymous_allowed) {
-        $form['anon_mail']['widget'][0]['value']['#required'] = TRUE;
-      }
-      else {
-        // @see https://www.drupal.org/project/drupal/issues/2855139
-        $form['anon_mail']['widget'][0]['value']['#states'] = [
-          'required' => [
-            ':input[name="who_is_registering"]' => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON],
-          ],
-        ];
-      }
-    }
-
-    // Update the Spaces field.
-    if (!empty($form['count'])) {
-      $capacity = $settings->getSetting('capacity');
-      $limit = $settings->getSetting('maximum_spaces');
-      $remaining = $capacity - $host_entity->getActiveSpacesReserved($registration);
-      $max = 99999;
-
-      // Plural format is not needed since the field is hidden
-      // unless the user can register for more than one space.
-      if ($capacity && $limit) {
-        $max = min($limit, $remaining);
-        $description = $this->t(
-          'The number of spaces you wish to reserve. @spaces_remaining spaces remaining. You may register up to @max spaces.', [
-            '@spaces_remaining' => $remaining,
-            '@max' => $max,
-          ]);
-      }
-      elseif ($capacity) {
-        $max = $remaining;
-        $description = $this->t('The number of spaces you wish to reserve. @spaces_remaining spaces remaining.', [
-          '@spaces_remaining' => $remaining,
-        ]);
-      }
-      elseif ($limit) {
-        $max = $limit;
-        $description = $this->t('The number of spaces you wish to reserve. You may register up to @max spaces.', [
-          '@max' => $limit,
-        ]);
-      }
-      else {
-        $description = $this->t('The number of spaces you wish to reserve.');
-      }
-
-      // Hide the element unless the user can register for more than one space.
-      $form['count']['#access'] = ($max > 1);
-
-      // @see https://www.drupal.org/project/drupal/issues/2855139
-      $form['count']['widget'][0]['value']['#description'] = $description;
-      $form['count']['widget'][0]['value']['#default_value'] = $registration->getSpacesReserved();
-      $form['count']['widget'][0]['value']['#max'] = $max;
-    }
-
-    // Update the Status field.
-    if (!empty($form['state'])) {
-      $registration_type = $registration->getType();
-      $current_state = $registration->getState();
-      $states = $registration_type->getStatesToShowOnForm($current_state, !$registration->isNew());
-
-      $type = $registration_type->id();
-      $form['state']['#access'] = !empty($states) && $this->currentUser()->hasPermission("edit $type registration state");
-      $form['state']['widget'][0]['#options'] = array_map([
-        State::class,
-        'labelCallback',
-      ], $states);
-      $form['state']['widget'][0]['#default_value'] = $registration->getState()->id();
-    }
-
-    // Update the created field.
-    $admin_theme = $this->currentUser()->hasPermission('view the administration theme');
-    if (!empty($form['created'])) {
-      // Hide for new registrations or non-admins.
-      if ($registration->isNew() || !$admin_theme) {
-        $form['created']['#access'] = FALSE;
-      }
-    }
+    // Alter the form.
+    self::alterRegisterForm($form, $form_state);
 
     // If an admin is editing an existing registration use the advanced form.
+    $admin_theme = $this->currentUser()->hasPermission('view the administration theme');
     if (!$registration->isNew() && $admin_theme) {
       $this->useAdvancedForm($form);
     }
@@ -444,6 +311,166 @@ class RegisterForm extends ContentEntityForm {
     }
 
     return $entity;
+  }
+
+  /**
+   * Alter the register form.
+   */
+  public static function alterRegisterForm(array &$form, FormStateInterface $form_state) {
+    $registration_manager = \Drupal::service('registration.manager');
+    $current_user = \Drupal::currentUser();
+
+    $registration = $form_state->get('registration');
+    $host_entity = $form_state->get('host_entity');
+    $settings = $host_entity->getSettings();
+
+    // Add the "Who is registering" field.
+    $registrant_options = $registration_manager->getRegistrantOptions($registration, $settings);
+    $default = NULL;
+    if (!$registration->isNew()) {
+      $default = $registration->getRegistrantType($current_user);
+    }
+    elseif (count($registrant_options) == 1) {
+      $keys = array_keys($registrant_options);
+      $default = reset($keys);
+    }
+
+    // Show a message if there's one option as we're going to hide the field.
+    if ((count($registrant_options) == 1) && !$current_user->isAnonymous()) {
+      $registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = t('Yourself');
+      $message = t('You are registering: %who', ['%who' => current($registrant_options)]);
+      $form['who_message'] = [
+        '#markup' => '<div class="registration-who-msg">' . $message . '</div>',
+        '#weight' => -1,
+      ];
+    }
+
+    $form['who_is_registering'] = [
+      '#type' => 'select',
+      '#title' => t('This registration is for:'),
+      '#options' => $registrant_options,
+      '#default_value' => $default,
+      '#required' => TRUE,
+      '#access' => (count($registrant_options) > 1),
+      '#weight' => -1,
+    ];
+
+    // Determine the field name for visibility.
+    $name = 'who_is_registering';
+    if (!empty($form['#parents'])) {
+      $parent_name = '';
+      foreach ($form['#parents'] as $index => $parent) {
+        $append = $index ? "[$parent]" : $parent;
+        $parent_name = $parent_name . $append;
+      }
+      $name = $parent_name . "[$name]";
+    }
+
+    // The following checks for empty form fields, since the site admin
+    // may have hidden certain fields on the form via the form display.
+    // Set the User field visibility and required states.
+    if (!empty($form['user_uid'])) {
+      $form['user_uid']['#access'] = isset($registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER]);
+      $form['user_uid']['#states'] = [
+        'visible' => [
+          ":input[name='$name']" => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER],
+        ],
+      ];
+      // @see https://www.drupal.org/project/drupal/issues/2855139
+      $form['user_uid']['widget'][0]['target_id']['#states'] = [
+        'required' => [
+          ":input[name='$name']" => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER],
+        ],
+      ];
+    }
+
+    // Set the Email field visibility and required states.
+    if (!empty($form['anon_mail'])) {
+      $anonymous_allowed = isset($registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON]);
+      $form['anon_mail']['#access'] = $anonymous_allowed;
+      $form['anon_mail']['#states'] = [
+        'visible' => [
+          ":input[name='$name']" => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON],
+        ],
+      ];
+      if ((count($registrant_options) == 1) && $anonymous_allowed) {
+        $form['anon_mail']['widget'][0]['value']['#required'] = TRUE;
+      }
+      else {
+        // @see https://www.drupal.org/project/drupal/issues/2855139
+        $form['anon_mail']['widget'][0]['value']['#states'] = [
+          'required' => [
+            ":input[name='$name']" => ['value' => RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON],
+          ],
+        ];
+      }
+    }
+
+    // Update the Spaces field.
+    if (!empty($form['count'])) {
+      $capacity = $settings->getSetting('capacity');
+      $limit = $settings->getSetting('maximum_spaces');
+      $remaining = $capacity - $host_entity->getActiveSpacesReserved($registration);
+      $max = 99999;
+
+      // Plural format is not needed since the field is hidden
+      // unless the user can register for more than one space.
+      if ($capacity && $limit) {
+        $max = min($limit, $remaining);
+        $description = t(
+          'The number of spaces you wish to reserve. @spaces_remaining spaces remaining. You may register up to @max spaces.', [
+            '@spaces_remaining' => $remaining,
+            '@max' => $max,
+          ]);
+      }
+      elseif ($capacity) {
+        $max = $remaining;
+        $description = t('The number of spaces you wish to reserve. @spaces_remaining spaces remaining.', [
+          '@spaces_remaining' => $remaining,
+        ]);
+      }
+      elseif ($limit) {
+        $max = $limit;
+        $description = t('The number of spaces you wish to reserve. You may register up to @max spaces.', [
+          '@max' => $limit,
+        ]);
+      }
+      else {
+        $description = t('The number of spaces you wish to reserve.');
+      }
+
+      // Hide the element unless the user can register for more than one space.
+      $form['count']['#access'] = ($max > 1);
+
+      // @see https://www.drupal.org/project/drupal/issues/2855139
+      $form['count']['widget'][0]['value']['#description'] = $description;
+      $form['count']['widget'][0]['value']['#default_value'] = $registration->getSpacesReserved();
+      $form['count']['widget'][0]['value']['#max'] = $max;
+    }
+
+    // Update the Status field.
+    if (!empty($form['state'])) {
+      $registration_type = $registration->getType();
+      $current_state = $registration->getState();
+      $states = $registration_type->getStatesToShowOnForm($current_state, !$registration->isNew());
+
+      $type = $registration_type->id();
+      $form['state']['#access'] = !empty($states) && $current_user->hasPermission("edit $type registration state");
+      $form['state']['widget'][0]['#options'] = array_map([
+        State::class,
+        'labelCallback',
+      ], $states);
+      $form['state']['widget'][0]['#default_value'] = $registration->getState()->id();
+    }
+
+    // Update the created field.
+    $admin_theme = $current_user->hasPermission('view the administration theme');
+    if (!empty($form['created'])) {
+      // Hide for new registrations or non-admins.
+      if ($registration->isNew() || !$admin_theme) {
+        $form['created']['#access'] = FALSE;
+      }
+    }
   }
 
   /**
