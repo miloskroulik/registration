@@ -34,7 +34,10 @@ use Drupal\registration\HostEntityInterface;
  *     "langcode" = "langcode",
  *     "uuid" = "uuid",
  *   },
- *   field_ui_base_route = "registration.admin_settings"
+ *   field_ui_base_route = "registration.admin_settings",
+ *   constraints = {
+ *     "MinimumCapacity" = {}
+ *   }
  * )
  */
 class RegistrationSettings extends ContentEntityBase implements HostEntityKeysInterface {
