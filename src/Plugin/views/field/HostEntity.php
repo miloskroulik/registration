@@ -18,6 +18,13 @@ class HostEntity extends FieldPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function clickSortable() {
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function query() {
     // Leave empty to avoid a query on this field.
   }
