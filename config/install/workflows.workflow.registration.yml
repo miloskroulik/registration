@@ -32,7 +32,7 @@ type_settings:
     pending:
       label: Pending
       description: 'Registration is pending.'
-      active: false
+      active: true
       held: false
       show_on_form: false
       weight: 0
