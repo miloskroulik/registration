@@ -27,7 +27,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
   use StringTranslationTrait;
 
   /**
-   * The current user service.
+   * The configuration.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
    */

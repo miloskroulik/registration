@@ -8,7 +8,7 @@ namespace Drupal\registration;
 class RegistrationHelper {
 
   /**
-   * Update an array of registration links with current language.
+   * Updates an array of registration links with current language.
    *
    * Used on entity operations and form action links, since both have the
    * same structure. Note the interface language is being used here, since
@@ -39,7 +39,7 @@ class RegistrationHelper {
   }
 
   /**
-   * Expand a settings array.
+   * Expands a settings array.
    *
    * @param array $settings
    *   The input settings array.
