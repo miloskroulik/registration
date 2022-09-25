@@ -86,7 +86,7 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    *
    * If the entity type has bundles, the bundle label is returned instead.
    *
-   * @return string
+   * @return string|null
    *   The host entity type or bundle label, for example "Event".
    */
   public function getHostEntityTypeLabel(): ?string;
@@ -172,5 +172,24 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    *   TRUE if the registration is in an active state, FALSE otherwise.
    */
   public function isActive(): bool;
+
+  /**
+   * Determines whether a registration is in a canceled state.
+   *
+   * Although canceled is not a direct state, it is assumed if the state is
+   * neither active nor held.
+   *
+   * @return bool
+   *   TRUE if the registration is in a canceled state, FALSE otherwise.
+   */
+  public function isCanceled(): bool;
+
+  /**
+   * Determines whether a registration is in a held state.
+   *
+   * @return bool
+   *   TRUE if the registration is in a held state, FALSE otherwise.
+   */
+  public function isHeld(): bool;
 
 }

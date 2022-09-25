@@ -323,6 +323,20 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   /**
    * {@inheritdoc}
    */
+  public function isCanceled(): bool {
+    return !$this->isActive() && !$this->isHeld();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isHeld(): bool {
+    return $this->getState()->isHeld();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
@@ -364,7 +378,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
     // Language default.
     if ($this->get('langcode')->isEmpty()) {
       $langcode = '';
-      // For an authenticated user registration, use the preterred language set
+      // For an authenticated user registration, use the preferred language set
       // in their account, if any.
       if ($user = $this->getUser()) {
         $langcode = $user->getPreferredLangcode(FALSE);
@@ -400,7 +414,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
         }
       }
 
-      // Ensure the site default language has settings, if different than the
+      // Ensure the site default language has settings, if different from the
       // current language.
       if ($langcode = $settings?->getLangcode()) {
         $default_langcode = \Drupal::languageManager()
