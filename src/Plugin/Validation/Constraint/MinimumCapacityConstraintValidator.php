@@ -24,7 +24,7 @@ class MinimumCapacityConstraintValidator extends ConstraintValidator implements 
   /**
    * Constructs the MinimumCapacityConstraintValidator object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager) {
