@@ -160,7 +160,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
         'pending' => [
           'label' => 'Pending',
           'description' => 'Registration is pending.',
-          'active' => FALSE,
+          'active' => TRUE,
           'held' => FALSE,
           'show_on_form' => FALSE,
           'weight' => 0,
