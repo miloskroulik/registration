@@ -138,7 +138,7 @@ class RegistrationSetStateAction extends ConfigurableActionBase implements Conta
       foreach ($all_states as $id => $state) {
         /** @var \Drupal\registration\RegistrationState $state */
         if ($state->isShownOnForm()) {
-            $states[$id] = $state;
+          $states[$id] = $state;
         }
       }
     }
