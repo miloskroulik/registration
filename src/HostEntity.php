@@ -411,6 +411,13 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function isConfiguredForRegistration(): bool {
+    return !is_null($this->getRegistrationTypeBundle());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isEnabledForRegistration(int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool {
     $settings = $this->getSettings();
     $enabled = $settings->getSetting('status');

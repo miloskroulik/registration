@@ -218,12 +218,26 @@ interface HostEntityInterface {
   public function hasRoom(int $spaces = 1, RegistrationInterface $registration = NULL): bool;
 
   /**
+   * Determines whether a host entity is configured for registration.
+   *
+   * A host entity is configured for registration if it has a registration
+   * field, and the field value is set to the name of a registration type.
+   *
+   * @return bool
+   *   TRUE if configured, FALSE otherwise.
+   */
+  public function isConfiguredForRegistration(): bool;
+
+  /**
    * Determines whether new registrations are allowed.
    *
    * This checks to make sure registrations are enabled in the settings, and
    * ensures new registrations would occur within the open and close dates if
    * those are set. If those checks pass and the host entity has room for
    * more registrations, then new registrations are allowed.
+   *
+   * This function should only be called for host entities that are already
+   * known to be configured for registration.
    *
    * @param int $spaces
    *   (optional) The number of spaces requested. Defaults to 1.
