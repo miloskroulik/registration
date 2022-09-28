@@ -50,7 +50,7 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
    * Constructs a new RegistrationFieldConstraintValidator.
    *
    * @param \Drupal\Core\Entity\EntityDefinitionUpdateManager $entity_update_manager
-   *   The entity type manager.
+   *   The entity update manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Drupal\Core\Field\FieldDefinitionListenerInterface $field_definition_listener

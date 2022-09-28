@@ -19,6 +19,15 @@ class RegistrationField extends FieldPluginBase {
   /**
    * {@inheritdoc}
    */
+  public function getFieldFormatterMap() {
+    return [
+      'registration_default' => 'registration_type',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getFieldWidgetMap(): array {
     return [
       'registration_select' => 'registration_type',
