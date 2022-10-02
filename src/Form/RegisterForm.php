@@ -109,6 +109,39 @@ class RegisterForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    // Cleanup the form state if the person registering has access to
+    // different types of registrations and had toggled both into the
+    // form at different points in time before submitting.
+    switch ($form_state->getValue('who_is_registering')) {
+      case RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON:
+        // Anonymous email. Clear the user if present.
+        if ($form_state->hasValue('user_uid')) {
+          $form_state->unsetValue('user_uid');
+          $this->entity->set('user_uid', NULL);
+        }
+        break;
+
+      case RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME:
+        // Self registration. Clear both anonymous email and user account.
+        if ($form_state->hasValue('anon_mail')) {
+          $form_state->unsetValue('anon_mail');
+          $this->entity->set('anon_mail', NULL);
+        }
+        if ($form_state->hasValue('user_uid')) {
+          $form_state->unsetValue('user_uid');
+          $this->entity->set('user_uid', $this->currentUser()->id());
+        }
+        break;
+
+      case RegistrationInterface:: REGISTRATION_REGISTRANT_TYPE_USER:
+        // User account. Clear the anonymous email if present.
+        if ($form_state->hasValue('anon_mail')) {
+          $form_state->unsetValue('anon_mail');
+          $this->entity->set('anon_mail', NULL);
+        }
+        break;
+    }
+
     // The parent validation includes entity validation, which handles most of
     // the validation checks through a constraint.
     // @see \Drupal\registration\Plugin\Validation\Constraint\RegistrationConstraintValidator
