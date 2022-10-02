@@ -52,10 +52,11 @@ class MinimumCapacityConstraintValidator extends ConstraintValidator implements 
         $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
         $host_entity = $handler->createHostEntity($entity);
         if ($settings->getSetting('capacity') < $host_entity->getActiveSpacesReserved()) {
-          $this->context->addViolation($constraint->message, [
+          $this->context->buildViolation($constraint->message, [
             '@type' => $host_entity->getRegistrationTypeBundle(),
             '@capacity' => $host_entity->getActiveSpacesReserved(),
-          ]);
+          ])->atPath('capacity')
+            ->addViolation();
         }
       }
     }

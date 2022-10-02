@@ -109,63 +109,17 @@ class RegisterForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    // The parent validation includes entity validation, which handles most of
+    // the validation checks through a constraint.
+    // @see \Drupal\registration\Plugin\Validation\Constraint\RegistrationConstraintValidator
     parent::validateForm($form, $form_state);
 
-    $host_entity = $form_state->get('host_entity');
-    $settings = $host_entity->getSettings();
-
-    // Spaces to reserve.
-    $spaces = 1;
-    if ($form_state->hasValue('count')) {
-      $spaces = $form_state->getValue('count')[0]['value'];
-    }
-
-    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
-    $registration = $this->getEntity();
-
-    // Test status on new registrations.
-    if ($registration->isNew()) {
-      $errors = [];
-      if (!$host_entity->isEnabledForRegistration($spaces, $registration, $errors)) {
-        foreach ($errors as $error) {
-          $form_state->setError($form, $error);
-        }
-      }
-    }
-    // Only check capacity for existing registrations that are active.
-    elseif ($registration->isActive()) {
-      if (!$host_entity->hasRoom($spaces, $registration)) {
-        $form_state->setError($form, $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
-          '%label' => $$host_entity->label(),
-        ]));
-      }
-    }
-
     // Validate according to who is registering.
-    $allow_multiple = $settings->getSetting('multiple_registrations');
     switch ($form_state->getValue('who_is_registering')) {
       case RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON:
-        if ($form_state->hasValue('anon_mail')) {
-          $email = $form_state->getValue('anon_mail')[0]['value'];
-          if (!$allow_multiple && $registration->isNew()) {
-            if ($host_entity->isEmailRegistered($email)) {
-              $form_state->setError($form['anon_mail'], $this->t('%mail is already registered for this event.', [
-                '%mail' => $email,
-              ]));
-            }
-          }
-        }
-        else {
+        if (!$form_state->hasValue('anon_mail')) {
           // The site admin may need to add the email field to the form display.
           $form_state->setError($form, $this->t('Email address is required.'));
-        }
-        break;
-
-      case RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME:
-        if (!$allow_multiple && $registration->isNew()) {
-          if ($host_entity->isUserRegistered($this->currentUser())) {
-            $form_state->setError($form, $this->t('You are already registered for this event.'));
-          }
         }
         break;
 
@@ -174,24 +128,16 @@ class RegisterForm extends ContentEntityForm {
           $uid = $form_state->getValue('user_uid')[0]['target_id'];
           /** @var \Drupal\user\UserInterface $user */
           $user = $this->entityTypeManager->getStorage('user')->load($uid);
-          if ($user) {
-            if (!$allow_multiple && $registration->isNew()) {
-              if ($host_entity->isUserRegistered($user)) {
-                $form_state->setError($form['user_uid'],
-                  $this->t('%user is already registered for this event.', [
-                    '%user' => $user->getDisplayName(),
-                  ]));
-              }
+          if (!$user) {
+            if ($this->currentUser()->hasPermission('access user profiles')) {
+              // The user may have been deleted just before saving this
+              // registration.
+              $form_state->setError($form['user_uid'], $this->t('The selected user is no longer available.'));
             }
-          }
-          elseif ($this->currentUser()->hasPermission('access user profiles')) {
-            // The user may have been deleted just before saving this
-            // registration.
-            $form_state->setError($form['user_uid'], $this->t('The selected user is no longer available.'));
-          }
-          else {
-            // General failure. Possible permissions issue.
-            $form_state->setError($form['user_uid'], $this->t('Registration Failed.'));
+            else {
+              // General failure. Possible permissions issue.
+              $form_state->setError($form['user_uid'], $this->t('Registration Failed.'));
+            }
           }
         }
         else {
@@ -213,6 +159,14 @@ class RegisterForm extends ContentEntityForm {
     // Set the user when self-registering.
     if ($form_state->getValue('who_is_registering') == RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME) {
       $registration->set('user_uid', $this->currentUser()->id());
+    }
+
+    // Ensure either user or anonymous email is set, but not both.
+    if ($form_state->getValue('who_is_registering') == RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON) {
+      $registration->set('user_uid', NULL);
+    }
+    else {
+      $registration->set('anon_mail', NULL);
     }
 
     // Save the registration.
@@ -326,6 +280,13 @@ class RegisterForm extends ContentEntityForm {
 
     // Add the "Who is registering" field.
     $registrant_options = $registration_manager->getRegistrantOptions($registration, $settings);
+    if (empty($registrant_options)) {
+      $form['notice'] = [
+        '#markup' => t('No valid registration options exist. Registration permissions may need to be adjusted.'),
+        '#weight' => -1,
+      ];
+    }
+
     $default = NULL;
     if (!$registration->isNew()) {
       $default = $registration->getRegistrantType($current_user);
@@ -417,11 +378,18 @@ class RegisterForm extends ContentEntityForm {
       // unless the user can register for more than one space.
       if ($capacity && $limit) {
         $max = min($limit, $remaining);
-        $description = t(
-          'The number of spaces you wish to reserve. @spaces_remaining spaces remaining. You may register up to @max spaces.', [
+        if ($max == $remaining) {
+          $description = t('The number of spaces you wish to reserve. @spaces_remaining spaces remaining.', [
             '@spaces_remaining' => $remaining,
-            '@max' => $max,
           ]);
+        }
+        else {
+          $description = t(
+            'The number of spaces you wish to reserve. @spaces_remaining spaces remaining. You may register up to @max spaces.', [
+              '@spaces_remaining' => $remaining,
+              '@max' => $max,
+            ]);
+        }
       }
       elseif ($capacity) {
         $max = $remaining;
@@ -445,7 +413,13 @@ class RegisterForm extends ContentEntityForm {
       // @see https://www.drupal.org/project/drupal/issues/2855139
       $form['count']['widget'][0]['value']['#description'] = $description;
       $form['count']['widget'][0]['value']['#default_value'] = $registration->getSpacesReserved();
-      $form['count']['widget'][0]['value']['#max'] = $max;
+
+      // Set a maximum in the widget, as long as the max is valid. In some rare
+      // cases the maximum could be negative if the form is being rendered
+      // after the capacity limit was changed or new registrations were saved.
+      if ($max > 0) {
+        $form['count']['widget'][0]['value']['#max'] = $max;
+      }
     }
 
     // Update the Status field.

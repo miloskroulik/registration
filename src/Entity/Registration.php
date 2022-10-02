@@ -62,7 +62,10 @@ use Drupal\workflows\WorkflowInterface;
  *     "collection" = "/admin/people/registrations"
  *   },
  *   bundle_entity_type = "registration_type",
- *   field_ui_base_route = "entity.registration_type.edit_form"
+ *   field_ui_base_route = "entity.registration_type.edit_form",
+ *   constraints = {
+ *     "RegistrationConstraint" = {}
+ *   }
  * )
  */
 class Registration extends ContentEntityBase implements HostEntityKeysInterface, RegistrationInterface {
