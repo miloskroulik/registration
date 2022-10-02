@@ -481,20 +481,6 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
       ])
       ->setDisplayConfigurable('form', TRUE);
 
-    $fields['count'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Spaces'))
-      ->setDescription(t('How many spaces the registration should use towards the total capacity for the event.'))
-      ->setSetting('min', 1)
-      ->setDisplayOptions('form', [
-        'type' => 'number',
-      ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'number_integer',
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
-
     $fields['user_uid'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('User'))
       ->setDescription(t('Select a user by typing their username to get a list of matches.'))
@@ -505,6 +491,20 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'author',
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['count'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Spaces'))
+      ->setDescription(t('How many spaces the registration should use towards the total capacity for the event.'))
+      ->setSetting('min', 1)
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'number_integer',
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
