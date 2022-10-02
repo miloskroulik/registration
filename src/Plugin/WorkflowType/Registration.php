@@ -32,7 +32,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * Constructs a ContentModeration object.
+   * Constructs a Registration object.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -51,7 +51,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition):Registration {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): Registration {
     return new static(
       $configuration,
       $plugin_id,
@@ -68,18 +68,25 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
     $properties = [
       'description',
       'active',
+      'canceled',
       'held',
       'show_on_form',
     ];
     $use_properties = TRUE;
     foreach ($properties as $property) {
       if (!isset($this->configuration['states'][$state->id()][$property])) {
-        $use_properties = FALSE;
-        break;
+        // Special handling for canceled which was added later.
+        if ($property == 'canceled') {
+          $this->configuration['states'][$state->id()][$property] = ($state->id() == 'canceled');
+        }
+        else {
+          $use_properties = FALSE;
+          break;
+        }
       }
     }
     if ($use_properties) {
-      $state = new RegistrationState($state, $this->configuration['states'][$state->id()]['description'], $this->configuration['states'][$state->id()]['active'], $this->configuration['states'][$state->id()]['held'], $this->configuration['states'][$state->id()]['show_on_form']);
+      $state = new RegistrationState($state, $this->configuration['states'][$state->id()]['description'], $this->configuration['states'][$state->id()]['active'], $this->configuration['states'][$state->id()]['canceled'], $this->configuration['states'][$state->id()]['held'], $this->configuration['states'][$state->id()]['show_on_form']);
     }
     else {
       $state = new RegistrationState($state);
@@ -161,6 +168,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
           'label' => 'Pending',
           'description' => 'Registration is pending.',
           'active' => TRUE,
+          'canceled' => FALSE,
           'held' => FALSE,
           'show_on_form' => FALSE,
           'weight' => 0,
@@ -169,6 +177,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
           'label' => 'Held',
           'description' => 'Registration is held.',
           'active' => FALSE,
+          'canceled' => FALSE,
           'held' => TRUE,
           'show_on_form' => FALSE,
           'weight' => 1,
@@ -177,6 +186,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
           'label' => 'Complete',
           'description' => 'Registration has been completed.',
           'active' => TRUE,
+          'canceled' => FALSE,
           'held' => FALSE,
           'show_on_form' => FALSE,
           'weight' => 2,
@@ -185,6 +195,7 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
           'label' => 'Canceled',
           'description' => 'Registration has been canceled.',
           'active' => FALSE,
+          'canceled' => TRUE,
           'held' => FALSE,
           'show_on_form' => FALSE,
           'weight' => 3,

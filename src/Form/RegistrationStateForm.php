@@ -34,6 +34,12 @@ class RegistrationStateForm extends WorkflowTypeStateFormBase {
       '#description' => $this->t('Determines if registrations should be considered active when in this state.'),
       '#default_value' => isset($state) && $state->isActive(),
     ];
+    $form['canceled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Canceled'),
+      '#description' => $this->t('Determines if registrations should be considered canceled when in this state.'),
+      '#default_value' => isset($state) && $state->isCanceled(),
+    ];
     $form['held'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Held'),

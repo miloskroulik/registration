@@ -12,6 +12,7 @@ type_settings:
       label: Canceled
       description: 'Registration has been canceled.'
       active: false
+      canceled: true
       held: false
       show_on_form: false
       weight: 3
@@ -19,6 +20,7 @@ type_settings:
       label: Complete
       description: 'Registration has been completed.'
       active: true
+      canceled: false
       held: false
       show_on_form: false
       weight: 2
@@ -26,6 +28,7 @@ type_settings:
       label: Held
       description: 'Registration is held.'
       active: false
+      canceled: false
       held: true
       show_on_form: false
       weight: 1
@@ -33,6 +36,7 @@ type_settings:
       label: Pending
       description: 'Registration is pending.'
       active: true
+      canceled: false
       held: false
       show_on_form: false
       weight: 0

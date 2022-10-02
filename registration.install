@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Registration module.
+ */
+
+/**
+ * Adds a canceled state to the default registration workflow.
+ */
+function registration_update_9001() {
+  $storage = \Drupal::entityTypeManager()->getStorage('workflow');
+  if ($workflow = $storage->load('registration')) {
+    // Re-saving the workflow adds the canceled flag to each state.
+    $workflow->save();
+  }
+}

@@ -327,7 +327,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    * {@inheritdoc}
    */
   public function isCanceled(): bool {
-    return !$this->isActive() && !$this->isHeld();
+    return $this->getState()->isCanceled();
   }
 
   /**
