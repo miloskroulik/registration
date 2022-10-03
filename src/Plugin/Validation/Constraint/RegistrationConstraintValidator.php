@@ -175,15 +175,22 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
             }
           }
 
-          // Check the user account when registering someone else.
+          // Check the user account.
           elseif ($user = $registration->getUser()) {
             if ($host_entity->isUserRegistered($user)) {
-              $this->context
-                ->buildViolation($constraint->userAlreadyRegisteredMessage, [
-                  '%user' => $user->getDisplayName(),
-                ])
-                ->atPath('user_uid')
-                ->addViolation();
+              if ($user->id() == $this->currentUser->id()) {
+                $this->context
+                  ->buildViolation($constraint->youAreAlreadyRegisteredMessage)
+                  ->addViolation();
+              }
+              else {
+                $this->context
+                  ->buildViolation($constraint->userAlreadyRegisteredMessage, [
+                    '%user' => $user->getDisplayName(),
+                  ])
+                  ->atPath('user_uid')
+                  ->addViolation();
+              }
             }
           }
 
