@@ -129,8 +129,9 @@ class RegisterForm extends ContentEntityForm {
         }
         if ($form_state->hasValue('user_uid')) {
           $form_state->unsetValue('user_uid');
-          $this->entity->set('user_uid', $this->currentUser()->id());
         }
+        // Validate the current user.
+        $this->entity->set('user_uid', $this->currentUser()->id());
         break;
 
       case RegistrationInterface:: REGISTRATION_REGISTRANT_TYPE_USER:
