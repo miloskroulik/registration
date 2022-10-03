@@ -95,9 +95,9 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
       $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
       if ($maximum_spaces && ($spaces > $maximum_spaces)) {
         $this->context
-          ->buildViolation($constraint->tooManySpacesMessage, [
-            '@count' => $maximum_spaces,
-          ])
+          ->buildViolation($constraint->tooManySpacesMessage)
+          ->setParameter('@count', $maximum_spaces)
+          ->setPlural((int) $maximum_spaces)
           ->atPath('count')
           ->addViolation();
       }

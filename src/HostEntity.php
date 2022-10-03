@@ -428,9 +428,11 @@ class HostEntity implements HostEntityInterface {
       $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
       if ($maximum_spaces && ($spaces > $maximum_spaces)) {
         $enabled = FALSE;
-        $errors[] = $this->t('You may not register for more than @count spaces.', [
-          '@count' => $maximum_spaces,
-        ]);
+        $errors[] = $this->formatPlural($maximum_spaces,
+          'You may not register for more than 1 space.',
+          'You may not register for more than @count spaces.', [
+            '@count' => $maximum_spaces,
+          ]);
       }
 
       // Check capacity.

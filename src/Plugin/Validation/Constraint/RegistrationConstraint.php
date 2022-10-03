@@ -36,7 +36,7 @@ class RegistrationConstraint extends Constraint {
    *
    * @var string
    */
-  public string $tooManySpacesMessage = "You may not register for more than @count spaces.";
+  public string $tooManySpacesMessage = "You may not register for more than 1 space.|You may not register for more than @count spaces.";
 
   /**
    * Would exceed event capacity.
