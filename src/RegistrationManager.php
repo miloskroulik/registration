@@ -2,6 +2,7 @@
 
 namespace Drupal\registration;
 
+use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityInterface;
@@ -15,6 +16,9 @@ use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
+use Drupal\registration\Event\RegistrationEvents;
+use Drupal\registration\Event\RegistrationDataAlterEvent;
+use Drupal\user\UserInterface;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Route;
 
@@ -284,6 +288,24 @@ class RegistrationManager implements RegistrationManagerInterface {
       }
     }
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function userHasRegistrations(UserInterface $user): bool {
+    $database = Database::getConnection();
+    $query = $database->select('registration')
+      ->condition('user_uid', $user->id());
+
+    $count = $query->countQuery()->execute()->fetchField();
+
+    // Allow other modules to alter the count.
+    $event = new RegistrationDataAlterEvent($count, [
+      'user' => $user,
+    ]);
+    \Drupal::service('event_dispatcher')->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_COUNT);
+    return $event->getData() ?? 0;
   }
 
   /**

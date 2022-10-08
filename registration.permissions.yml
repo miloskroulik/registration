@@ -6,6 +6,9 @@ administer registration:
   title: 'Administer registrations'
   description: 'View, edit, delete and manage all registrations, regardless of type.'
   restrict access: true
+view own registration:
+  title: 'View own registrations'
+  description: 'View own registrations, regardless of type.'
 
 permission_callbacks:
   - \Drupal\registration\RegistrationPermissionProvider::buildPermissions

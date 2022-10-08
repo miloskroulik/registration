@@ -124,7 +124,7 @@ class RegistrationPermissionProvider implements ContainerInjectionInterface {
       'title' => $this->t('View @type', [
         '@type' => $plural_label,
       ]),
-      'description' => $this->t('View all @type regardless of type.', [
+      'description' => $this->t('View all @type, regardless of type.', [
         '@type' => $plural_label,
       ]),
     ];

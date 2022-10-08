@@ -54,12 +54,12 @@ Configuration for the Drupal 9 version of the module is similar to the Drupal 7 
 1. Configure the Display for the content type you added the Registration field to.  Choose Registration form, Registration link or Registration type as the field formatter for the registration field. If you choose form, registration is done "inline" on the content type display.  If you choose link then the user registers from a separate page.  If you choose type then you will most likely want to enable the Register tab, otherwise the user will not be able to register.
 1. When you add or edit an entity, select the registration type you want to use for the entity.
 1. Registrations are now enabled for the entity and you can configure the registration settings via a local task.
+1. Extend your registration types with additional fields as needed. For example, if your site allows users to register for classes, it may be useful to add biographical data such as First name and Last name fields to your registration type. These fields automatically appear on the registration form.
 
 The following are optional tasks that work differently compared to the Drupal 7 version of the module (see the next section for a full description of the differences between versions).
 
 1. (Optional) Adjust the default registration states at /admin/config/workflow/workflows. This link is available via the Workflow menu item in the Configuration menu of Drupal administration.
 1. (Optional) Adjust general module settings at /admin/structure/registration-settings. This link is available from the main Configuration page of Drupal administation.
-1. (Optional) Registrations are fully fieldable, so optionally extend your registration types with additional fields. For example, if your site allows users to register for classes, it may be useful to add biographical data such as First name and Last name fields to your registration type. These fields automatically appear on the registration form.
 
 
 DIFFERENCES FROM DRUPAL 7 VERSION
@@ -67,7 +67,7 @@ DIFFERENCES FROM DRUPAL 7 VERSION
 There are some important differences between the Drupal 7 and Drupal 9 versions of the module.
 
 1. The Drupal 9 version is a complete rewrite of the module and accordingly uses Drupal 9 concepts such as separating Form Display from Field settings, custom plugins, services, class inheritance and dependency injection.
-1. The Drupal 9 version uses some PHP 8 programming constructs and accordingly requires PHP 8. This decision was also made because PHP 7 will be deprecated within a few months of the first release of the Drupal 9 version.
+1. The Drupal 9 version uses some PHP 8 programming constructs and thus requires PHP 8. This decision was also made because PHP 7 will be deprecated within a few months of the first release of the Drupal 9 version.
 1. In the Drupal 9 version registration states are created and configured using the core Workflow module. You can even create your own Workflow and use it in your Registration types if you have a highly custom registration workflow. The default workflow that is created during module installation will work for the most common use cases.
 1. In the Drupal 9 version registration listings are provided as customizable views if you have the Views module installed. Listings are presented in traditional tables if the Views module is not installed.
 1. The Drupal 7 version includes three submodules - entity access, views and waitlist. In the Drupal 9 version the functionality in the views submodule is included in the main module. The entity access and waitlist submodules have not been created yet and may be added in the future if requested by the community.

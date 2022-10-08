@@ -39,12 +39,13 @@ class RegistrationDataAlterEvent extends Event {
    * @param array $context
    *   The context in which the data was derived:
    *   [
-   *     'host_entity' => \Drupal\Core\Entity\EntityInterface,
+   *     'host_entity' => \Drupal\registration\HostEntityInterface,
    *     'settings' => \Drupal\registration\Entity\RegistrationSettings,
-   *     'registration' => \Drupal\registration\Entity\RegistrationInterface
+   *     'registration' => \Drupal\registration\Entity\RegistrationInterface,
+   *     'user' => \Drupal\user\UserInterface
    *   ]
-   *   The host_entity and settings elements are always present.
-   *   The registration element is only present for a few events.
+   *   The host_entity and settings elements are usually present.
+   *   The registration and user elements are only present for a few events.
    */
   public function __construct(mixed $data, array $context) {
     $this->data = $data;

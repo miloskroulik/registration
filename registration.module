@@ -8,6 +8,7 @@
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -215,6 +216,13 @@ function registration_entity_presave(EntityInterface $entity) {
     }
     else {
       $entity->set('mail', $entity->getAnonymousEmail());
+    }
+
+    // If the registration user was updated, clear cache tags for the old user.
+    if (!$entity->isNew() && ($entity->getUserId() != $entity->original->getUserId())) {
+      if ($user = $entity->original->getUser()) {
+        Cache::invalidateTags(['registration.user:' . $user->id()]);
+      }
     }
   }
 }

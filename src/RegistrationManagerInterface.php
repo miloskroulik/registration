@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
+use Drupal\user\UserInterface;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Route;
 
@@ -116,5 +117,16 @@ interface RegistrationManagerInterface {
    *   is only returned if the specific bundle has a registration field.
    */
   public function hasRegistrationField(EntityTypeInterface $entity_type, string $bundle = NULL): bool;
+
+  /**
+   * Determines if a user has any registrations.
+   *
+   * @param \Drupal\user\UserInterface $user
+   *   The user entity.
+   *
+   * @return bool
+   *   TRUE if the user has registrations (of any type), FALSE otherwise.
+   */
+  public function userHasRegistrations(UserInterface $user): bool;
 
 }

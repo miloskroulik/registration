@@ -90,3 +90,19 @@ services:
       '@entity_type.manager',
       '@router.route_provider',
     ]
+
+  registration.user_registrations_access_checker:
+    class: Drupal\registration\Access\UserRegistrationsAccessCheck
+    arguments: [
+      '@registration.manager',
+    ]
+    tags:
+      - { name: access_check, applies_to: _user_registrations_access_check }
+
+  registration.exception_subscriber:
+    class: Drupal\registration\EventSubscriber\ExceptionSubscriber
+    arguments: [
+      '@registration.manager',
+    ]
+    tags:
+      - { name: event_subscriber }

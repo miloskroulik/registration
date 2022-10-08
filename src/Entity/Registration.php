@@ -438,6 +438,19 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   /**
    * {@inheritdoc}
    */
+  public function getCacheTagsToInvalidate() {
+    $tags = parent::getCacheTagsToInvalidate();
+    if (!$this->isNew() && ($user = $this->getUser())) {
+      // Invalidate the registration user so the user registrations task
+      // rebuilds as needed.
+      $tags[] = 'registration.user:' . $user->id();
+    }
+    return $tags;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {
     $fields = parent::baseFieldDefinitions($entity_type);
 

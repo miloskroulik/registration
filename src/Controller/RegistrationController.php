@@ -14,6 +14,7 @@ use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationManagerInterface;
+use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -119,6 +120,75 @@ class RegistrationController extends ControllerBase {
         $build,
         $cache_entities
       );
+    }
+
+    return $build;
+  }
+
+  /**
+   * Displays the Users Registrations task.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   *
+   * @return array
+   *   A render array as expected by drupal_render().
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityMalformedException
+   */
+  public function userRegistrations(Request $request): array {
+    $build = [];
+    $view = NULL;
+
+    /** @var \Drupal\user\UserInterface $user */
+    if ($user = $this->registrationManager->getEntityFromParameters($request->attributes)) {
+      // Use the built-in user registrations view if available.
+      if ($this->moduleHandler()->moduleExists('views')) {
+        if ($view = $this->entityTypeManager()->getStorage('view')->load('user_registrations')) {
+          $display = 'block_1';
+          if ($view->getExecutable()->access($display)) {
+            $build = [
+              '#type' => 'view',
+              '#name' => 'user_registrations',
+              '#display_id' => $display,
+              '#arguments' => [
+                $user->id(),
+              ],
+            ];
+          }
+        }
+      }
+
+      // Fallback to data table.
+      if (empty($build)) {
+        $access_result = AccessResult::allowedIfHasPermissions($this->currentUser(), [
+          "administer registration",
+          "view any registration",
+        ], 'OR');
+        if (!$access_result->isAllowed() && $this->currentUser()->isAuthenticated() && ($user->id() == $this->currentUser()->id())) {
+          $access_result = AccessResult::allowedIfHasPermissions($this->currentUser(), [
+            "view own registration",
+          ]);
+        }
+        if ($access_result->isAllowed()) {
+          $build = $this->buildUserDataTable($user);
+        }
+      }
+
+      // Set cache directives so the form rebuilds when needed.
+      $renderer = \Drupal::service('renderer');
+      $renderer->addCacheableDependency($build, $user);
+      if ($view) {
+        $renderer->addCacheableDependency($build, $view);
+      }
+
+      // Rebuild when registrations for this user are added and deleted.
+      $build['#cache']['tags'][] = 'registration.user:' . $user->id();
+
+      // Rebuild when user permissions change.
+      $build['#cache']['contexts'][] = 'user.permissions';
     }
 
     return $build;
@@ -279,6 +349,100 @@ class RegistrationController extends ControllerBase {
       '#empty' => $this->t('There are no registrants for %name', [
         '%name' => $host_entity->label(),
       ]),
+    ];
+    $build['registration_pager'] = ['#type' => 'pager'];
+
+    return $build;
+  }
+
+  /**
+   * Builds the User Registrations data table.
+   *
+   * @param \Drupal\user\UserInterface $user
+   *   The user whose registrations are being displayed.
+   *
+   * @return array
+   *   A render array as expected by drupal_render().
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Core\Entity\EntityMalformedException
+   */
+  protected function buildUserDataTable(UserInterface $user): array {
+    $header = [
+      [
+        'data' => $this->t('Id'),
+        'field' => 'r.registration_id',
+        'class' => [RESPONSIVE_PRIORITY_LOW],
+      ],
+      [
+        'data' => $this->t('Type'),
+        'field' => 'r.type',
+        'class' => [RESPONSIVE_PRIORITY_LOW],
+      ],
+      [
+        'data' => $this->t('Spaces'),
+        'field' => 'r.count',
+        'class' => [RESPONSIVE_PRIORITY_MEDIUM],
+        'initial_click_sort' => 'desc',
+      ],
+      [
+        'data' => $this->t('Created'),
+        'field' => 'r.created',
+        'sort' => 'desc',
+        'class' => [RESPONSIVE_PRIORITY_MEDIUM],
+      ],
+      [
+        'data' => $this->t('Status'),
+        'field' => 'r.state',
+        'class' => [RESPONSIVE_PRIORITY_MEDIUM],
+      ],
+      [
+        'data' => $this->t('Operations'),
+        'class' => [RESPONSIVE_PRIORITY_LOW],
+      ],
+    ];
+
+    $rows = [];
+
+    $registration_storage = $this->entityTypeManager()->getStorage('registration');
+
+    /** @var \Drupal\Core\Database\Query\TableSortExtender $query */
+    $query = $this->database->select('registration', 'r')
+      ->extend(PagerSelectExtender::class)
+      ->extend(TableSortExtender::class);
+    $query->fields('r', [
+      'registration_id',
+    ]);
+    $query->condition('r.user_uid', $user->id());
+    $query->addTag('registration_access');
+    $result = $query
+      ->limit(20)
+      ->orderByHeader($header)
+      ->execute();
+
+    // Add the rows to the table.
+    foreach ($result as $record) {
+      /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+      $registration = $registration_storage->load($record->registration_id);
+
+      $rows[] = [
+        'data' => [
+          ['data' => Link::fromTextAndUrl($registration->id(), $registration->toUrl())],
+          ['data' => $registration->getType()->label()],
+          ['data' => $registration->getSpacesReserved()],
+          ['data' => $this->dateFormatter->format($registration->getCreatedTime(), 'short')],
+          ['data' => $registration->getState()->label()],
+          ['data' => $this->getOperations($registration)],
+        ],
+      ];
+    }
+
+    // Build the table.
+    $build['registration_table'] = [
+      '#type' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
     ];
     $build['registration_pager'] = ['#type' => 'pager'];
 

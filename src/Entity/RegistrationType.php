@@ -2,7 +2,9 @@
 
 namespace Drupal\registration\Entity;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\workflows\StateInterface;
 use Drupal\workflows\WorkflowInterface;
 
@@ -85,6 +87,20 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
    * @var string
    */
   protected string $heldExpireState = 'canceled';
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access($operation, AccountInterface $account = NULL, $return_as_object = FALSE) {
+    if ($operation == 'view label') {
+      // Allow site visitors to see the labels of registration types.
+      $access_result = AccessResult::allowed();
+
+      return $return_as_object ? $access_result : $access_result->isAllowed();
+    }
+
+    return parent::access($operation, $account, $return_as_object);
+  }
 
   /**
    * {@inheritdoc}
