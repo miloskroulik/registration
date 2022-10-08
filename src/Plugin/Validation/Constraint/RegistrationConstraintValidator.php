@@ -79,15 +79,24 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
 
       $settings = $host_entity->getSettings();
 
-      // Check the main status setting.
-      $enabled = $settings->getSetting('status');
-      if (!$enabled) {
-        $this->context
-          ->buildViolation($constraint->disabledMessage, [
-            '@%label' => $host_entity->label(),
-          ])
-          ->addViolation();
-        return;
+      // Check the main status setting for new registrations. Allow an
+      // administrator to edit registrations even when the main setting is
+      // disabled.
+      $type = $host_entity->getRegistrationTypeBundle();
+      $admin =
+             $this->currentUser->hasPermission("administer registration")
+          || $this->currentUser->hasPermission("administer $type registration");
+
+      if ($registration->isNew() || !$admin) {
+        $enabled = (bool) $settings->getSetting('status');
+        if (!$enabled) {
+          $this->context
+            ->buildViolation($constraint->disabledMessage, [
+              '@%label' => $host_entity->label(),
+            ])
+            ->addViolation();
+          return;
+        }
       }
 
       // Check maximum allowed spaces per registration.
