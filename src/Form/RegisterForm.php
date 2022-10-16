@@ -332,7 +332,9 @@ class RegisterForm extends ContentEntityForm {
 
     // Show a message if there's one option as we're going to hide the field.
     if ((count($registrant_options) == 1) && !$current_user->isAnonymous()) {
-      $registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = t('Yourself');
+      if (isset($registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME])) {
+        $registrant_options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = t('Yourself');
+      }
       $message = t('You are registering: %who', ['%who' => current($registrant_options)]);
       $form['who_message'] = [
         '#markup' => '<div class="registration-who-msg">' . $message . '</div>',
