@@ -562,9 +562,8 @@ class RegisterForm extends ContentEntityForm {
    *
    * @param array $form
    *   An associative array containing the structure of the form.
-   *   The current state of the form.
    */
-  protected function useAdvancedForm(array &$form): array {
+  protected function useAdvancedForm(array &$form) {
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->entity;
 
@@ -633,8 +632,6 @@ class RegisterForm extends ContentEntityForm {
     if (isset($form['created'])) {
       $form['created']['#group'] = 'author';
     }
-
-    return $form;
   }
 
 }
