@@ -5,12 +5,11 @@ namespace Drupal\registration\Plugin\QueueWorker;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Automatically maintains the "status" field on the per-sentity Settings form.
+ * Automatically maintains the "status" field on the per-entity Settings form.
  *
  * @QueueWorker(
  *  id = "registration.set_and_forget",
@@ -79,13 +78,13 @@ class SetAndForget extends QueueWorkerBase implements ContainerFactoryPluginInte
       $settings->set('status', $data['new_status']);
       $settings->save();
       if (!empty($data['new_status'])) {
-        $this->logger->notice(new TranslatableMarkup('Automatically set status to "enabled" for @type @id.'), [
+        $this->logger->notice('Automatically set status to "enabled" for @type @id.', [
           '@type' => $settings->getHostEntityTypeId(),
           '@id' => $settings->getHostEntityId(),
         ]);
       }
       else {
-        $this->logger->notice(new TranslatableMarkup('Automatically set status to "disabled" for @type @id.'), [
+        $this->logger->notice('Automatically set status to "disabled" for @type @id.', [
           '@type' => $settings->getHostEntityTypeId(),
           '@id' => $settings->getHostEntityId(),
         ]);
