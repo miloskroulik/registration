@@ -71,6 +71,9 @@ registration.state:
     active:
       type: boolean
       label: 'Active'
+    canceled:
+      type: boolean
+      label: 'Canceled'
     held:
       type: boolean
       label: 'Held'
@@ -80,6 +83,10 @@ registration.state:
     description:
       type: string
       label: 'Description'
+
+action.configuration.registration_views_set_state_action:
+  type: action_configuration_default
+  label: 'Configuration for the set registration state action'
 
 workflow.type_settings.registration:
   type: mapping
