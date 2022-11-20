@@ -203,20 +203,31 @@ class RegisterForm extends ContentEntityForm {
       $registration->set('anon_mail', NULL);
     }
 
+    // Track if new for logging.
+    $is_new = $registration->isNew();
+
     // Save the registration.
     $return = $registration->save();
 
     // Log it.
-    if ($user = $registration->getUser()) {
-      $this->logger->info('@name registered for %label (ID #@id).', [
-        '@name' => $user->getDisplayName(),
-        '%label' => $host_entity->label(),
-        '@id' => $registration->id(),
-      ]);
+    if ($is_new) {
+      if ($user = $registration->getUser()) {
+        $this->logger->info('@name registered for %label (ID #@id).', [
+          '@name' => $user->getDisplayName(),
+          '%label' => $host_entity->label(),
+          '@id' => $registration->id(),
+        ]);
+      }
+      else {
+        $this->logger->info('@email registered for %label (ID #@id).', [
+          '@email' => $registration->getEmail(),
+          '%label' => $host_entity->label(),
+          '@id' => $registration->id(),
+        ]);
+      }
     }
     else {
-      $this->logger->info('@email registered for %label (ID #@id).', [
-        '@email' => $registration->getEmail(),
+      $this->logger->info('The registration for %label (ID #@id) was saved.', [
         '%label' => $host_entity->label(),
         '@id' => $registration->id(),
       ]);
