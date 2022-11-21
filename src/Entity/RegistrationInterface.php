@@ -176,9 +176,6 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
   /**
    * Determines whether a registration is in a canceled state.
    *
-   * Although canceled is not a direct state, it is assumed if the state is
-   * neither active nor held.
-   *
    * @return bool
    *   TRUE if the registration is in a canceled state, FALSE otherwise.
    */

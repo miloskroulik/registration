@@ -22,7 +22,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   },
  * )
  */
-class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInterface {
+class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInterface, RegistrationInterface {
 
   /**
    * The entity type manager.
@@ -242,6 +242,26 @@ class Registration extends WorkflowTypeBase implements ContainerFactoryPluginInt
     // Ensure that states are ordered consistently.
     ksort($configuration['states']);
     return $configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCanceledState(): ?string {
+    foreach ($this->getStates() as $state) {
+      /** @var \Drupal\registration\RegistrationState $state */
+      if ($state->isCanceled()) {
+        return $state->id();
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasCanceledState(): bool {
+    return !is_null($this->getCanceledState());
   }
 
 }

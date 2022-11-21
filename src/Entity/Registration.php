@@ -38,6 +38,7 @@ use Drupal\workflows\WorkflowInterface;
  *     "views_data" = "Drupal\views\EntityViewsData",
  *     "form" = {
  *       "default" = "Drupal\registration\Form\RegisterForm",
+ *       "cancel" = "Drupal\registration\Form\RegistrationCancelForm",
  *       "edit" = "Drupal\registration\Form\RegisterForm",
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm",
  *       "register" = "Drupal\registration\Form\RegisterForm",
@@ -57,6 +58,7 @@ use Drupal\workflows\WorkflowInterface;
  *   },
  *   links = {
  *     "canonical" = "/registration/{registration}",
+ *     "cancel-form" = "/registration/{registration}/cancel",
  *     "edit-form" = "/registration/{registration}/edit",
  *     "delete-form" = "/registration/{registration}/delete",
  *     "collection" = "/admin/people/registrations"

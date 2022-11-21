@@ -62,6 +62,7 @@ services:
   registration.route_subscriber:
     class: Drupal\registration\Routing\RouteSubscriber
     arguments: [
+      '@entity_type.manager',
       '@registration.manager',
     ]
     tags:
