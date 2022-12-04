@@ -47,11 +47,8 @@ function registration_workflow_entity_update(EntityInterface $entity) {
   // Flush the render cache when workflows are updated, as the list of
   // available registration entity operations could change.
   if ($entity instanceof WorkflowInterface) {
-    foreach (Cache::getBins() as $service_id => $cache_backend) {
-      if ($service_id == 'render') {
-        $cache_backend->deleteAll();
-      }
-    }
+    $bins = Cache::getBins();
+    $bins['render']->deleteAll();
   }
 }
 
