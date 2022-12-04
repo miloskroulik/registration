@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Registration Workflow module.
+ */
+
+use Drupal\Core\Cache\Cache;
+
+/**
+ * Implements hook_install().
+ */
+function registration_workflow_install() {
+  // Clear render cache on installation so entity operations rebuild.
+  $bins = Cache::getBins();
+  $bins['render']->deleteAll();
+}
