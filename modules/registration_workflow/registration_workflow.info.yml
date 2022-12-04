@@ -1,0 +1,8 @@
+name: Registration Workflow
+type: module
+description: 'Provides permissions and operations for registration workflow transitions.'
+package: Registration
+core_version_requirement: ^9.3 || ^10
+php: 8.0
+dependencies:
+  - registration:registration

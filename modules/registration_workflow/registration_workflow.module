@@ -1,0 +1,117 @@
+<?php
+
+/**
+ * @file
+ * Provides permissions and operations for workflow transitions.
+ */
+
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
+use Drupal\registration\Entity\RegistrationInterface;
+use Drupal\workflows\WorkflowInterface;
+
+/**
+ * Implements hook_entity_operation().
+ */
+function registration_workflow_entity_operation(EntityInterface $entity): array {
+  $operations = [];
+
+  // Add a cancel operation for registrations. The route has a custom access
+  // checker that will ensure the operation is only displayed if the user has
+  // permission to cancel registrations and the registration is not already
+  // canceled.
+  if ($entity instanceof RegistrationInterface) {
+    $url = Url::fromRoute('registration_workflow.transition', [
+      'registration' => $entity->id(),
+      'transition' => 'cancel',
+    ]);
+    if ($url->access()) {
+      $operations['cancel'] = [
+        'title' => t('Cancel'),
+        'url' => $url->mergeOptions([
+          'query' => \Drupal::destination()->getAsArray(),
+        ]),
+        'weight' => 10,
+      ];
+    }
+  }
+
+  return $operations;
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function registration_workflow_entity_update(EntityInterface $entity) {
+  // Flush the render cache when workflows are updated, as the list of
+  // available registration entity operations could change.
+  if ($entity instanceof WorkflowInterface) {
+    foreach (Cache::getBins() as $service_id => $cache_backend) {
+      if ($service_id == 'render') {
+        $cache_backend->deleteAll();
+      }
+    }
+  }
+}
+
+/**
+ * Prepares variables for a registration.
+ *
+ * Default template: registration.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - elements: An associative array containing rendered fields.
+ *   - attributes: HTML attributes for the containing element.
+ */
+function registration_workflow_preprocess_registration(array &$variables) {
+  // Add operations buttons when the registration is displayed on its own page.
+  if ($variables['elements']['#view_mode'] == 'full') {
+    /** @var Drupal\registration\Entity\RegistrationInterface $registration */
+    $registration = $variables['elements']['#registration'];
+    $transitions = \Drupal::service('registration_workflow.validation')->getValidTransitions($registration);
+
+    // Render a button for each transition. Exclude cancel since it is already
+    // rendered as an entity operation in registration listings.
+    unset($transitions['cancel']);
+    foreach ($transitions as $transition) {
+      $url = Url::fromRoute('registration_workflow.transition', [
+        'registration' => $registration->id(),
+        'transition' => $transition->id(),
+      ]);
+      // Ensure the user has access to perform the transition.
+      if ($url->access()) {
+        $url->mergeOptions([
+          'query' => \Drupal::destination()->getAsArray(),
+        ]);
+        // Append to the bottom of the registration template.
+        if (empty($variables['registration']['transition'])) {
+          $variables['registration']['transition'] = [
+            '#prefix' => '<p>',
+            '#type' => 'container',
+            '#weight' => 50,
+            // Rebuild if user permissions change.
+            '#cache' => [
+              'contexts' => [
+                'user.permissions',
+              ],
+            ],
+          ];
+        }
+        $variables['registration']['transition'][$transition->id()] = [
+          '#type' => 'link',
+          '#url' => $url,
+          '#title' => t('@transition registration', [
+            '@transition' => $transition->label(),
+          ]),
+          '#attributes' => [
+            'class' => [
+              'button',
+            ],
+          ],
+        ];
+      }
+    }
+  }
+}

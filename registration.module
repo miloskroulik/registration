@@ -21,7 +21,6 @@ use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\RegistrationHelper;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\workflows\WorkflowInterface;
 
 /**
  * Implements hook_help().
@@ -151,18 +150,6 @@ function registration_entity_operation(EntityInterface $entity): array {
       'weight' => -1,
     ];
   }
-  if (($entity instanceof RegistrationInterface) && $entity->access('cancel')) {
-    // Add a Cancel operation for registrations. The entity access check
-    // ensures there is a corresponding workflow state and that the entity is
-    // not already canceled.
-    $operations['cancel'] = [
-      'title' => t('Cancel'),
-      'url' => Url::fromRoute('entity.registration.cancel', [
-        'registration' => $entity->id(),
-      ])->mergeOptions(['query' => \Drupal::destination()->getAsArray()]),
-      'weight' => 10,
-    ];
-  }
   return $operations;
 }
 
@@ -251,11 +238,6 @@ function registration_entity_update(EntityInterface $entity) {
       \Drupal::service("router.builder")->rebuild();
       \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
     }
-  }
-  // Rebuild registration listings when workflows are updated, as the list of
-  // available entity operations could change.
-  if ($entity instanceof WorkflowInterface) {
-    Cache::invalidateTags(['registration_list']);
   }
 }
 

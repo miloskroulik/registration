@@ -1,0 +1,14 @@
+services:
+  registration_workflow.state_transition_access_checker:
+    class: Drupal\registration_workflow\Access\StateTransitionAccessCheck
+    arguments: [
+      '@registration_workflow.validation',
+    ]
+    tags:
+      - { name: access_check, applies_to: _state_transition_access_check }
+
+  registration_workflow.validation:
+    class: Drupal\registration_workflow\StateTransitionValidation
+    arguments: [
+      '@current_user',
+    ]

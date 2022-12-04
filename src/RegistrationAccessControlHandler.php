@@ -26,12 +26,6 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
       $result = $this->checkEntityUserPermissions($entity, $operation, $account);
     }
 
-    // Add a special check for the cancel operation to ensure the entity can be
-    // canceled.
-    if ($result->isAllowed() && ($operation == 'cancel')) {
-      $result = $this->checkCancelAccess($entity);
-    }
-
     // Ensure that access is evaluated again when the entity changes.
     return $result->addCacheableDependency($entity);
   }
@@ -76,40 +70,6 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
     // The "own" permission is based on the current user's ID, so the result
     // must be cached per user.
     return $own_result->cachePerUser();
-  }
-
-  /**
-   * Checks the entity cancel access.
-   *
-   * Allows cancel access if the entity workflow has a Canceled state and there
-   * is a valid transition from the entity current state to the Canceled state
-   * and the entity is not already canceled.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity for which to check access.
-   *
-   * @return \Drupal\Core\Access\AccessResultInterface
-   *   The access result.
-   */
-  protected function checkCancelAccess(EntityInterface $entity): AccessResultInterface {
-    /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
-    $workflow = $entity->getWorkflow()->getTypePlugin();
-    /** @var \Drupal\registration\Plugin\WorkflowType\RegistrationInterface $workflow */
-    if ($workflow->hasCanceledState()) {
-      $new_state = $workflow->getCanceledState();
-      $old_state = $entity->getState()->id();
-      try {
-        $transition = $workflow->getTransitionFromStateToState($old_state, $new_state);
-        $can_cancel = !is_null($transition);
-      }
-      catch (\InvalidArgumentException $e) {
-        $can_cancel = FALSE;
-      }
-      return AccessResult::allowedIf($can_cancel && !$entity->isCanceled());
-    }
-    else {
-      return AccessResult::forbidden();
-    }
   }
 
   /**
