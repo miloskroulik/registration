@@ -60,6 +60,7 @@ The following are optional tasks that work differently compared to the Drupal 7 
 
 1. (Optional) Adjust the default registration states at /admin/config/workflow/workflows. This link is available via the Workflow menu item in the Configuration menu of Drupal administration.
 1. (Optional) Adjust general module settings at /admin/structure/registration-settings. This link is available from the main Configuration page of Drupal administation.
+1. (Optional) Enable the Registration Workflow submodule to add permissions and operations for workflow transitions.
 
 
 DIFFERENCES FROM DRUPAL 7 VERSION
@@ -70,7 +71,7 @@ There are some important differences between the Drupal 7 and Drupal 9 versions 
 1. The Drupal 9 version uses some PHP 8 programming constructs and thus requires PHP 8. This decision was also made because PHP 7 will be deprecated within a few months of the first release of the Drupal 9 version.
 1. In the Drupal 9 version registration states are created and configured using the core Workflow module. You can even create your own Workflow and use it in your Registration types if you have a highly custom registration workflow. The default workflow that is created during module installation will work for the most common use cases.
 1. In the Drupal 9 version registration listings are provided as customizable views if you have the Views module installed. Listings are presented in traditional tables if the Views module is not installed.
-1. The Drupal 7 version includes three submodules - entity access, views and waitlist. In the Drupal 9 version the functionality in the views submodule is included in the main module. The entity access and waitlist submodules have not been created yet and may be added in the future if requested by the community.
+1. The Drupal 7 version includes three submodules - entity access, views and waitlist. In the Drupal 9 version the functionality in the views submodule is included in the main module. The entity access and waitlist submodules have not been created yet and may be added in the future if requested by the community. The Drupal 9 version includes a workflow submodule that adds permissions and operations for workflow transitions.
 
 MAINTAINERS
 -----------
