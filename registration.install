@@ -15,3 +15,14 @@ function registration_update_9001() {
     $workflow->save();
   }
 }
+
+/**
+ * Changes the maximum spaces setting to allow zero (unlimited) value.
+ */
+function registration_update_9002() {
+  $entity_definition_update_manager = \Drupal::service('entity.definition_update_manager');
+  if ($field_definition = $entity_definition_update_manager->getFieldStorageDefinition('maximum_spaces', 'registration_settings')) {
+    $field_definition->setSetting('min', 0);
+    $entity_definition_update_manager->updateFieldStorageDefinition($field_definition);
+  }
+}
