@@ -63,7 +63,7 @@ class RegistrationTypeDeleteConfirm extends EntityDeleteForm {
         $num_entities += count($entities);
       }
       if ($num_entities) {
-        $caption = '<p>' . $this->formatPlural($num_entities, '%type is used by 1 @entity_type entity on your site. You cannot delete this registration type until you have deleted that entity.', '%type is used by @count @entity_type entities on your site. You cannot delete %type until you have edited these @entity_type entities to remove this reference.', [
+        $caption = '<p>' . $this->formatPlural($num_entities, '%type is used by 1 @entity_type entity on your site. You cannot delete this registration type until you have edited that entity to remove the reference to this registration type.', '%type is used by @count @entity_type entities on your site. You cannot delete %type until you have edited these @entity_type entities to remove the reference to %type.', [
           '@entity_type' => $entity_type->getLabel(),
           '%type' => $this->entity->label(),
         ]) . '</p>';
