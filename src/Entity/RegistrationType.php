@@ -27,7 +27,7 @@ use Drupal\workflows\WorkflowInterface;
  *     "form" = {
  *       "add" = "Drupal\registration\Form\RegistrationTypeForm",
  *       "edit" = "Drupal\registration\Form\RegistrationTypeForm",
- *       "delete" = "Drupal\Core\Entity\EntityDeleteForm"
+ *       "delete" = "Drupal\registration\Form\RegistrationTypeDeleteConfirm"
  *     },
  *     "route_provider" = {
  *       "default" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
