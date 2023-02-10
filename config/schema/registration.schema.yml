@@ -45,6 +45,14 @@ field.formatter.settings.registration_host_entity:
       type: boolean
       label: 'Link'
 
+field.formatter.settings.registration_link:
+  type: mapping
+  label: 'Registration link format settings'
+  mapping:
+    label:
+      type: string
+      label: 'Label'
+
 field.widget.settings.registration_type:
   type: mapping
   label: 'Registration type widget settings'
