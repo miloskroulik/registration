@@ -4,7 +4,6 @@ namespace Drupal\registration\Cron;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
@@ -24,13 +23,6 @@ class SendReminders {
   protected Connection $database;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
    * The queue.
    *
    * @var \Drupal\Core\Queue\QueueInterface
@@ -42,14 +34,11 @@ class SendReminders {
    *
    * @param \Drupal\Core\Database\Connection $database
    *   The database.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    * @param \Drupal\Core\Queue\QueueFactory $queue_factory
    *   The queue factory.
    */
-  public function __construct(Connection $database, EntityTypeManagerInterface $entity_type_manager, QueueFactory $queue_factory) {
+  public function __construct(Connection $database, QueueFactory $queue_factory) {
     $this->database = $database;
-    $this->entityTypeManager = $entity_type_manager;
     $this->queue = $queue_factory->get('registration.send_reminders');
   }
 
