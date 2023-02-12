@@ -316,7 +316,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrationList(array $states = []): array {
+  public function getRegistrationList(array $states = [], string $langcode = NULL): array {
     $properties = [
       'entity_type_id' => $this->getEntityTypeId(),
       'entity_id' => $this->id(),
@@ -324,9 +324,13 @@ class HostEntity implements HostEntityInterface {
     if (!empty($states)) {
       $properties['state'] = $states;
     }
+
+    // Filter on host entity language if a language code was not specified.
+    if (!$langcode) {
+      $langcode = $this->getEntity()->language()->getId();
+    }
     // Do not filter on language if it would be "undefined" since nothing would
     // match.
-    $langcode = $this->getEntity()->language()->getId();
     if ($langcode != 'und') {
       $properties['langcode'] = $langcode;
     }

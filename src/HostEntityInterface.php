@@ -161,11 +161,14 @@ interface HostEntityInterface {
    * @param array $states
    *   (optional) An array of state IDs to filter on.
    *   For example: ['completed', 'held'].
+   * @param string|null $langcode
+   *   (optional) The language code to filter on.
+   *   If no language code is provided, the host entity language is used.
    *
    * @return \Drupal\registration\Entity\Registration[]
    *   The list of registrations.
    */
-  public function getRegistrationList(array $states = []): array;
+  public function getRegistrationList(array $states = [], string $langcode = NULL): array;
 
   /**
    * Gets the registration type.

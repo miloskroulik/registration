@@ -117,14 +117,16 @@ class RegistrationMailer implements RegistrationMailerInterface {
    * {@inheritdoc}
    */
   public function getRecipientList(HostEntityInterface $host_entity, array $data = []): array {
+    $langcode = !empty($data['langcode']) ? $data['langcode'] : NULL;
+
     if (!empty($data['test'])) {
       $registrations = [$host_entity->generateSampleRegistration()];
     }
     elseif (!empty($data['states'])) {
-      $registrations = $host_entity->getRegistrationList($data['states']);
+      $registrations = $host_entity->getRegistrationList($data['states'], $langcode);
     }
     else {
-      $registrations = $host_entity->getRegistrationList();
+      $registrations = $host_entity->getRegistrationList([], $langcode);
     }
 
     // The list is built as an associative array, indexed by email address.
@@ -165,6 +167,14 @@ class RegistrationMailer implements RegistrationMailerInterface {
    * {@inheritdoc}
    */
   public function notify(HostEntityInterface $host_entity, array $data = []): int {
+    // Ensure email subject and message are present. The data variable is
+    // optional in the function signature because other implementations may
+    // not need it. But in this default implementation for sending an email,
+    // subject and message are required.
+    if (!isset($data['subject']) || !isset($data['message']))  {
+      throw new \InvalidArgumentException("Email notifications require subject and message data.");
+    }
+
     $success_count = 0;
     $settings = $host_entity->getSettings();
     $user_langcode = $this->currentUser->getPreferredLangcode(TRUE);
