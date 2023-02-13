@@ -4,11 +4,29 @@ namespace Drupal\registration\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Allows the site admin to configure global registration settings.
  */
 class RegistrationAdminForm extends ConfigFormBase {
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected LanguageManagerInterface $languageManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): RegistrationAdminForm {
+    $instance = parent::create($container);
+    $instance->languageManager = $container->get('language_manager');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -58,6 +76,29 @@ class RegistrationAdminForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
+    $form['multilingual'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Multilingual'),
+      '#access' => $this->languageManager->isMultilingual(),
+    ];
+    $form['multilingual']['sync_registration_settings'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Synchronize registration settings'),
+      '#default_value' => $config->get('sync_registration_settings'),
+      '#description' => $this->t('Synchronizes untranslatable field values for registration settings across all language variants. For example, if you set the capacity for an event to 100 using the English version of the registration settings form, the capacity for people registering using a different language would automatically be set to 100 to match. An event subscriber can be used to customize the fields to which this applies. By default, it applies to all fields that are not strings or text, such as numeric and date fields. Most multilingual sites should enable this option, unless there should be different settings depending on the language used during registration.'),
+    ];
+    $form['multilingual']['sync_registration_settings_all_fields'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Synchronize all fields'),
+      '#default_value' => $config->get('sync_registration_settings_all_fields'),
+      '#description' => $this->t('Synchronizes all registration settings fields, including translatable fields, across all language variants. This setting is designed for use when there is a single content language, and one or more additional languages are installed for site administration only. Most multilingual sites should leave this option disabled.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="sync_registration_settings"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
     return $form;
   }
 
@@ -71,6 +112,8 @@ class RegistrationAdminForm extends ConfigFormBase {
       ->set('set_and_forget', $form_state->getValue('set_and_forget'))
       ->set('hide_filter', $form_state->getValue('hide_filter'))
       ->set('queue_notifications', $form_state->getValue('queue_notifications'))
+      ->set('sync_registration_settings', $form_state->getValue('sync_registration_settings'))
+      ->set('sync_registration_settings_all_fields', $form_state->getValue('sync_registration_settings_all_fields'))
       ->save();
   }
 

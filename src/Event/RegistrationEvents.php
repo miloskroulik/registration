@@ -133,6 +133,17 @@ final class RegistrationEvents {
   const REGISTRATION_DELETE = 'registration.registration.delete';
 
   /**
+   * Name of the event fired to allow alter of sync fields.
+   *
+   * This event is only fired for multilingual installations.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_SETTINGS_ALTER_SYNC_FIELDS = 'registration.registration_settings.alter.sync_fields';
+
+  /**
    * Name of the event fired after loading registration settings.
    *
    * @Event

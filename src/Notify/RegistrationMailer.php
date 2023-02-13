@@ -171,7 +171,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
     // optional in the function signature because other implementations may
     // not need it. But in this default implementation for sending an email,
     // subject and message are required.
-    if (!isset($data['subject']) || !isset($data['message']))  {
+    if (!isset($data['subject']) || !isset($data['message'])) {
       throw new \InvalidArgumentException("Email notifications require subject and message data.");
     }
 

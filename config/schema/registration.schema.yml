@@ -36,6 +36,12 @@ registration.settings:
     queue_notifications:
       type: integer
       label: 'Queue notifications threshold'
+    sync_registration_settings:
+      type: boolean
+      label: 'Synchronize registration settings'
+    sync_registration_settings_all_fields:
+      type: boolean
+      label: 'Synchronize all fields'
 
 field.formatter.settings.registration_host_entity:
   type: mapping

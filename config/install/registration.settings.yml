@@ -1,3 +1,5 @@
 set_and_forget: true
 hide_filter: 10
 queue_notifications: 50
+sync_registration_settings: true
+sync_registration_settings_all_fields: false

@@ -92,8 +92,9 @@ class RegistrationSchedule {
           ];
           $this->queue->createItem($data);
 
-          // Mark the item as queued for the next 48 hours. This is sufficient to
-          // prevent duplicate processing as long as cron runs at least once a day.
+          // Mark the item as queued for the next 48 hours. This is sufficient
+          // to prevent duplicate processing as long as cron runs at least once
+          // a day.
           $key_value_store->setWithExpire($key, 'queued', 60 * 60 * 48);
         }
       }

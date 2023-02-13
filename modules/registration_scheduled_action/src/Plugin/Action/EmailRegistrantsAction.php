@@ -136,12 +136,7 @@ class EmailRegistrantsAction extends ConfigurableEmailActionBase implements Quer
   protected function getHostEntity(mixed $object): ?HostEntityInterface {
     $storage = $this->entityTypeManager->getStorage('registration_settings');
     if ($settings = $storage->load($object->settings_id)) {
-      if (!$settings->get('host_entity')->isEmpty()) {
-        if ($entity = $settings->get('host_entity')->entity) {
-          $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
-          return $handler->createHostEntity($entity, $settings->getLangcode());
-        }
-      }
+      return $settings->getHostEntity();
     }
     return NULL;
   }
