@@ -71,7 +71,16 @@ There are some important differences between the Drupal 7 and Drupal 9 versions 
 1. The Drupal 9 version uses some PHP 8 programming constructs and thus requires PHP 8. This decision was also made because PHP 7 will be deprecated within a few months of the first release of the Drupal 9 version.
 1. In the Drupal 9 version registration states are created and configured using the core Workflow module. You can even create your own Workflow and use it in your Registration types if you have a highly custom registration workflow. The default workflow that is created during module installation will work for the most common use cases.
 1. In the Drupal 9 version registration listings are provided as customizable views if you have the Views module installed. Listings are presented in traditional tables if the Views module is not installed.
-1. The Drupal 7 version includes three submodules - entity access, views and waitlist. In the Drupal 9 version the functionality in the views submodule is included in the main module. The entity access and waitlist submodules have not been created yet and may be added in the future if requested by the community. The Drupal 9 version includes a workflow submodule that adds permissions and operations for workflow transitions.
+1. The Drupal 7 version includes three submodules - entity access, views and waitlist. In the Drupal 9 version the functionality in the views submodule is included in the main module. The entity access and waitlist submodules have not been created yet and may be added in the future if requested by the community. The Drupal 9 version includes a workflow submodule that adds permissions and operations for workflow transitions, and a scheduled actions submodule allowing you to send emails at scheduled intervals.
+
+MULTILINGUAL CONSIDERATIONS
+-----------
+
+The Drupal 9 version includes full support for multilingual sites. Although registrations are not translatable entities, each registration has a language field indicating the language used to create it. This allows you to craft different reminder emails for each language and target just the registrants for a given language.
+
+Registration settings can also vary per language. In many cases, untranslatable settings fields, such as the capacity for a given registration event, should be the same across all language variants. Visit the global settings page at /admin/structure/registration-settings to control how registration settings are handled across languages. This feature is only visible to sites with multiple languages installed.
+
+Note that some listings, such as the Registration Summary at /admin/people/registration-summary, only display registrations in the current interface language by default. This may not be appropriate for every multilingual site. You can customize the listings as needed for your use case.
 
 MAINTAINERS
 -----------
