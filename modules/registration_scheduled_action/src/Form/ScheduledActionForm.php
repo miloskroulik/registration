@@ -95,6 +95,7 @@ class ScheduledActionForm extends EntityForm {
       '#size' => 3,
       '#required' => TRUE,
       '#default_value' => $scheduled_action->getDateTime(),
+      '#suffix' => $this->t('Enter the schedule relative to the selected action date.'),
     ];
     $form['plugin_id'] = [
       '#type' => 'select',
@@ -118,6 +119,12 @@ class ScheduledActionForm extends EntityForm {
       $form_state->setValue('plugin_id', $scheduled_action->getPluginId());
       $form_state->setValue('configuration', $scheduled_action->getPluginConfiguration());
     }
+    // Display the plugin date.
+    $form['configuration']['plugin_date'] = [
+      '#title' => $this->t('Date'),
+      '#type' => 'item',
+      '#access' => $form_state->hasValue('plugin_id'),
+    ];
     // Add the configuration form if the selected plugin is configurable.
     if ($plugin_id = $form_state->getValue('plugin_id')) {
       $plugin = $this->pluginManager->createInstance($plugin_id);
@@ -126,6 +133,7 @@ class ScheduledActionForm extends EntityForm {
         $plugin->setConfiguration($configuration);
         $plugin_form = $plugin->buildConfigurationForm([], $form_state);
         $form['configuration'] += $plugin_form;
+        $form['configuration']['plugin_date']['#markup'] = $plugin->getDateFieldLabel();
       }
     }
     $form['status'] = [
