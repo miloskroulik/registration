@@ -87,6 +87,29 @@ function registration_views_data_alter(array &$data) {
     }
   }
 
+  /** @var \Drupal\registration\RegistrationManagerInterface $registration_manager */
+  $registration_manager = \Drupal::service('registration.manager');
+  // Add a relationship from the registration to each enabled host entity type.
+  foreach ($registration_manager->getRegistrationEnabledEntityTypes() as $entity_type) {
+    $args = ['@type' => $entity_type->getLabel()];
+    $data['registration']['host_entity_' . $entity_type->id()] = [
+      'relationship' => [
+        'title' => t('Host entity: @type', $args),
+        'label' => t('Host entity: @type', $args),
+        'group' => t('Registration'),
+        'help' => t('The @type entity that is associated through the host entity of the registration.', $args),
+        'id' => 'standard',
+        'base' => $entity_type->getDataTable() ?: $entity_type->getBaseTable(),
+        'entity type' => $entity_type->id(),
+        'base field' => $entity_type->getKey('id'),
+        'relationship field' => 'entity_id',
+        'extra' => [
+          ['left_field' => 'entity_type_id', 'value' => $entity_type->id()],
+        ],
+      ],
+    ];
+  }
+
   // Make views aware of custom field plugins.
   $data['registration']['host_entity'] = [
     'title' => t('Host entity'),
