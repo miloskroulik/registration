@@ -1,4 +1,4 @@
-# Schema for the configuration files of the Registration module.
+# Schema for the configuration files of the Registration Scheduled Action module.
 
 registration_scheduled_action.registration_scheduled_action.*:
   type: config_entity
