@@ -112,7 +112,7 @@ class ScheduledAction extends ConfigEntityBase implements ScheduledActionInterfa
    */
   public function getDateTimeArrayForQuery(): ?array {
     if ($datetime = $this->getDateTime()) {
-      $storage_format = 'Y-m-d\TH:i:s';
+      $storage_format = DateTimeItemInterface::DATETIME_STORAGE_FORMAT;
       $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
 
       // Get the first date relative to the current date.

@@ -51,7 +51,7 @@ class SetAndForget {
    */
   public function run() {
     // Establish the current time in the storage timezone and format.
-    $storage_format = 'Y-m-d\TH:i:s';
+    $storage_format = DateTimeItemInterface::DATETIME_STORAGE_FORMAT;
     $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
     $now = new DrupalDateTime('now', $storage_timezone);
     $now_date = $now->format($storage_format);

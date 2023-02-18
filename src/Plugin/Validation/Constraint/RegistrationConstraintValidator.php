@@ -132,7 +132,7 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
 
       // Check against open and close dates for new registrations.
       if ($registration->isNew()) {
-        $storage_format = 'Y-m-d\TH:i:s';
+        $storage_format = DateTimeItemInterface::DATETIME_STORAGE_FORMAT;
         $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
 
         $registration_date = new DrupalDateTime('now', $storage_timezone);

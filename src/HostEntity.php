@@ -448,7 +448,7 @@ class HostEntity implements HostEntityInterface {
       }
 
       // Initialize the current time.
-      $storage_format = 'Y-m-d\TH:i:s';
+      $storage_format = DateTimeItemInterface::DATETIME_STORAGE_FORMAT;
       $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
       $now = new DrupalDateTime('now', $storage_timezone);
 
