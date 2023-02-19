@@ -59,8 +59,10 @@ Configuration for the Drupal 9 version of the module is similar to the Drupal 7 
 The following are optional tasks that work differently compared to the Drupal 7 version of the module (see the next section for a full description of the differences between versions).
 
 1. (Optional) Adjust the default registration states at /admin/config/workflow/workflows. This link is available via the Workflow menu item in the Configuration menu of Drupal administration.
-1. (Optional) Adjust general module settings at /admin/structure/registration-settings. This link is available from the main Configuration page of Drupal administation.
+1. (Optional) Adjust general module settings at /admin/structure/registration-settings. This link is available from the main Configuration page of Drupal administration. If you want registration related emails to be sent as HTML, you need to visit this page.
 1. (Optional) Enable the Registration Workflow submodule to add permissions and operations for workflow transitions.
+1. (Optional) Enable the Registration Scheduled Action submodule to setup scheduled emails based on registration settings dates in your system. See the README file in that submodule folder for more information.
+
 
 
 DIFFERENCES FROM DRUPAL 7 VERSION
