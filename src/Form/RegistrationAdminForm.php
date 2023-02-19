@@ -76,6 +76,17 @@ class RegistrationAdminForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
+    $form['mail_handling'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Mail handling'),
+    ];
+    $form['mail_handling']['html_email'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Send email as HTML'),
+      '#default_value' => $config->get('html_email'),
+      '#description' => $this->t('Adds "text/html; charset=UTF-8; format=flowed; delsp=yes" as a Content-Type header.'),
+    ];
+
     $form['multilingual'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Multilingual'),
@@ -112,6 +123,7 @@ class RegistrationAdminForm extends ConfigFormBase {
       ->set('set_and_forget', $form_state->getValue('set_and_forget'))
       ->set('hide_filter', $form_state->getValue('hide_filter'))
       ->set('queue_notifications', $form_state->getValue('queue_notifications'))
+      ->set('html_email', $form_state->getValue('html_email'))
       ->set('sync_registration_settings', $form_state->getValue('sync_registration_settings'))
       ->set('sync_registration_settings_all_fields', $form_state->getValue('sync_registration_settings_all_fields'))
       ->save();
