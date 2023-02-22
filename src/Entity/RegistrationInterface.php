@@ -148,6 +148,14 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
   public function getState(): StateInterface;
 
   /**
+   * Gets the registration completed timestamp.
+   *
+   * @return int
+   *   The registration completed timestamp, if available.
+   */
+  public function getCompletedTime(): ?int;
+
+  /**
    * Gets the registration creation timestamp.
    *
    * @return int
@@ -180,6 +188,14 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    *   TRUE if the registration is in a canceled state, FALSE otherwise.
    */
   public function isCanceled(): bool;
+
+  /**
+   * Determines whether a registration is in the workflow complete state.
+   *
+   * @return bool
+   *   TRUE if the registration is in the workflow state, FALSE otherwise.
+   */
+  public function isComplete(): bool;
 
   /**
    * Determines whether a registration is in a held state.

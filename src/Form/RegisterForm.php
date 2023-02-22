@@ -592,6 +592,10 @@ class RegisterForm extends ContentEntityForm {
     if (!$registration->isNew()) {
       $last_saved = $this->dateFormatter->format($registration->getChangedTime(), 'short');
     }
+    $completed = $this->t('Not completed yet');
+    if (!$registration->isNew() && $registration->isComplete()) {
+      $completed = $this->dateFormatter->format($registration->getCompletedTime(), 'short');
+    }
     $form['meta'] = [
       '#attributes' => ['class' => ['entity-meta__header']],
       '#type' => 'container',
@@ -605,6 +609,14 @@ class RegisterForm extends ContentEntityForm {
         '#attributes' => [
           'class' => ['entity-meta__title'],
         ],
+      ],
+      'completed' => [
+        '#type' => 'item',
+        '#wrapper_attributes' => [
+          'class' => ['entity-meta__last-saved', 'container-inline'],
+        ],
+        '#markup' => '<h4 class="label inline">' . $this->t('Completed') . '</h4> ' . $completed,
+        '#access' => !$registration->isNew() && $registration->isComplete() && ($registration->getChangedTime() != $registration->getCompletedTime()),
       ],
       'changed' => [
         '#type' => 'item',

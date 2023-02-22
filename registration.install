@@ -5,6 +5,8 @@
  * Install, update and uninstall functions for the Registration module.
  */
 
+use Drupal\Core\Field\BaseFieldDefinition;
+
 /**
  * Adds a canceled state to the default registration workflow.
  */
@@ -25,4 +27,17 @@ function registration_update_9002() {
     $field_definition->setSetting('min', 0);
     $entity_definition_update_manager->updateFieldStorageDefinition($field_definition);
   }
+}
+
+/**
+ * Adds a completed timestamp base field to the registration entity.
+ */
+function registration_update_9003() {
+  $field_storage_definition = BaseFieldDefinition::create('timestamp')
+    ->setLabel(t('Completed'))
+    ->setDescription(t('The time when the registration was completed.'))
+    ->setTranslatable(TRUE);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('completed', 'registration', 'registration', $field_storage_definition);
 }

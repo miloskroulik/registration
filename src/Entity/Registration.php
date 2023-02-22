@@ -304,6 +304,16 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   /**
    * {@inheritdoc}
    */
+  public function getCompletedTime(): ?int {
+    if (!$this->get('completed')->isEmpty()) {
+      return $this->get('completed')->value;
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCreatedTime(): int {
     return $this->get('created')->value;
   }
@@ -328,6 +338,23 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function isCanceled(): bool {
     return $this->getState()->isCanceled();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isComplete(): bool {
+    // Unlike other states, only one complete state per workflow can be
+    // configured. Workflows that need more than one complete state can
+    // override this method.
+    $is_complete = FALSE;
+    $plugin = $this->getWorkflow()->getTypePlugin();
+    $configuration = $plugin->getConfiguration();
+    if (!empty($configuration['complete_registration_state'])) {
+      $complete_state = $configuration['complete_registration_state'];
+      $is_complete = ($this->getState()->id() == $complete_state);
+    }
+    return $is_complete;
   }
 
   /**
@@ -377,6 +404,19 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
     // Workflow default.
     if ($this->get('workflow')->isEmpty()) {
       $this->set('workflow', $this->getType()->getWorkflowId());
+    }
+    // Completed timestamp.
+    if ($this->get('completed')->isEmpty()) {
+      // Check if a new registration is starting out in complete state.
+      if ($this->isNew() && $this->isComplete()) {
+        $this->set('completed', \Drupal::time()->getRequestTime());
+      }
+      elseif ($this->original) {
+        // Check if an updated registration is transitioning to complete state.
+        if (!$this->original->isComplete() && $this->isComplete()) {
+          $this->set('completed', \Drupal::time()->getRequestTime());
+        }
+      }
     }
     // Language default.
     if ($this->get('langcode')->isEmpty()) {
@@ -577,6 +617,16 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
       ->setDescription(t('The time when the registration was last saved.'))
+      ->setTranslatable(TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'timestamp',
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['completed'] = BaseFieldDefinition::create('timestamp')
+      ->setLabel(t('Completed'))
+      ->setDescription(t('The time when the registration was completed.'))
       ->setTranslatable(TRUE)
       ->setDisplayOptions('view', [
         'label' => 'inline',

@@ -63,3 +63,4 @@ type_settings:
         - pending
         - held
   default_registration_state: pending
+  complete_registration_state: complete

@@ -124,3 +124,6 @@ workflow.type_settings.registration:
     default_registration_state:
       type: string
       label: 'Default registration state'
+    complete_registration_state:
+      type: string
+      label: 'Complete registration state'
