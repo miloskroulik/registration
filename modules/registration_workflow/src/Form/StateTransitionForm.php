@@ -47,8 +47,10 @@ class StateTransitionForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion(): TranslatableMarkup {
+    $workflow = $this->registration->getWorkflow();
+    $transition = $workflow->getTypePlugin()->getTransition($this->transition);
     return $this->t('Are you sure you want to @transition registration #@registration_id?', [
-      '@transition' => $this->transition,
+      '@transition' => $transition->label(),
       '@registration_id' => $this->registration->id(),
     ]);
   }
@@ -71,8 +73,10 @@ class StateTransitionForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelText(): TranslatableMarkup {
+    $workflow = $this->registration->getWorkflow();
+    $transition = $workflow->getTypePlugin()->getTransition($this->transition);
     return $this->t('No, do not @transition the registration', [
-      '@transition' => $this->transition,
+      '@transition' => $transition->label(),
     ]);
   }
 
