@@ -418,7 +418,7 @@ class RegisterForm extends ContentEntityForm {
     if (!empty($form['count'])) {
       $capacity = $settings->getSetting('capacity');
       $limit = $settings->getSetting('maximum_spaces');
-      $remaining = $capacity - $host_entity->getActiveSpacesReserved($registration);
+      $remaining = $host_entity->getSpacesRemaining($registration);
       $max = 99999;
 
       // Plural format is not needed since the field is hidden

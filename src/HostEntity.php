@@ -253,6 +253,16 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function getSpacesRemaining(RegistrationInterface $registration = NULL): ?int {
+    if ($capacity = $this->getSetting('capacity')) {
+      return $capacity - $this->getActiveSpacesReserved($registration);
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDefaultSettings(string $langcode = NULL): array {
     $entity_type_id = $this->getEntityTypeId();
     $bundle = $this->bundle();
@@ -447,17 +457,8 @@ class HostEntity implements HostEntityInterface {
         ]);
       }
 
-      // Initialize the current time.
-      $storage_format = DateTimeItemInterface::DATETIME_STORAGE_FORMAT;
-      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
-      $now = new DrupalDateTime('now', $storage_timezone);
-
       // Check open date.
-      $open = $settings->getSetting('open');
-      if ($open) {
-        $open = DrupalDateTime::createFromFormat($storage_format, $open, $storage_timezone);
-      }
-      if ($open && ($now < $open)) {
+      if ($this->isBeforeOpen()) {
         $enabled = FALSE;
         $errors[] = $this->t('Registration for %label is not open yet.', [
           '%label' => $this->label(),
@@ -465,11 +466,7 @@ class HostEntity implements HostEntityInterface {
       }
 
       // Check close date.
-      $close = $settings->getSetting('close');
-      if ($close) {
-        $close = DrupalDateTime::createFromFormat($storage_format, $close, $storage_timezone);
-      }
-      if ($close && ($now >= $close)) {
+      if ($this->isAfterClose()) {
         $enabled = FALSE;
         $errors[] = $this->t('Registration for %label is closed.', [
           '%label' => $this->label(),
@@ -542,6 +539,38 @@ class HostEntity implements HostEntityInterface {
 
     $count = $query->countQuery()->execute()->fetchField();
     return ($count > 0);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isBeforeOpen(): bool {
+    // Initialize the current time.
+    $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+    $now = new DrupalDateTime('now', $storage_timezone);
+
+    // Check open date.
+    $open = $this->getSetting('open');
+    if ($open) {
+      $open = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $open, $storage_timezone);
+    }
+    return ($open && ($now < $open));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isAfterClose(): bool {
+    // Initialize the current time.
+    $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+    $now = new DrupalDateTime('now', $storage_timezone);
+
+    // Check close date.
+    $close = $this->getSetting('close');
+    if ($close) {
+      $close = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $close, $storage_timezone);
+    }
+    return ($close && ($now >= $close));
   }
 
   /**

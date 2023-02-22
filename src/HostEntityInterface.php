@@ -126,6 +126,18 @@ interface HostEntityInterface {
   public function getActiveSpacesReserved(RegistrationInterface $registration = NULL): int;
 
   /**
+   * Gets the spaces remaining.
+   *
+   * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
+   *   (optional) If set, an existing registration to exclude from the spaces
+   *   reserved when calculating the spaces remaining.
+   *
+   * @return int|null
+   *   The number of spaces remaining, or NULL if the capacity is unlimited (0).
+   */
+  public function getSpacesRemaining(RegistrationInterface $registration = NULL): ?int;
+
+  /**
    * Gets the default registration settings.
    *
    * @param string|null $langcode
@@ -278,5 +290,25 @@ interface HostEntityInterface {
    *   TRUE if the user has already registered for the host entity.
    */
   public function isUserRegistered(AccountInterface $account): bool;
+
+  /**
+   * Determines whether it is currently before the open date.
+   *
+   * Returns FALSE if an open date is not configured.
+   *
+   * @return bool
+   *   TRUE if it is currently before the open date.
+   */
+  public function isBeforeOpen(): bool;
+
+  /**
+   * Determines whether it is currently after the close date.
+   *
+   * Returns FALSE if a close date is not configured.
+   *
+   * @return bool
+   *   TRUE if it is currently after the close date.
+   */
+  public function isAfterClose(): bool;
 
 }
