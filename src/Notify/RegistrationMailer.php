@@ -224,6 +224,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
           'host_entity' => $host_entity,
           'settings' => $settings,
           'registration' => $registration,
+          'data' => $data,
         ]);
         $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_MAIL);
         $params = $event->getData();
