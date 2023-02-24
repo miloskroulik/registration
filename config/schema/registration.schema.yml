@@ -105,6 +105,57 @@ action.configuration.registration_views_set_state_action:
   type: action_configuration_default
   label: 'Configuration for the set registration state action'
 
+block.settings.registration_status:*:
+  type: block_settings
+  label: 'Registration status block'
+  mapping:
+    remaining_spaces_single:
+      type: string
+      label: 'Remaining spaces singular'
+    remaining_spaces_plural:
+      type: string
+      label: 'Remaining spaces plural'
+    enabled:
+      type: mapping
+      label: 'Registration is enabled'
+      mapping:
+        value:
+          type: string
+        format:
+          type: string
+    disabled_before_open:
+      type: mapping
+      label: 'Registration is not open yet'
+      mapping:
+        value:
+          type: string
+        format:
+          type: string
+    disabled_after_close:
+      type: mapping
+      label: 'Registration is closed'
+      mapping:
+        value:
+          type: string
+        format:
+          type: string
+    disabled_capacity:
+      type: mapping
+      label: 'Registration is full'
+      mapping:
+        value:
+          type: string
+        format:
+          type: string
+    disabled:
+      type: mapping
+      label: 'Registration is disabled'
+      mapping:
+        value:
+          type: string
+        format:
+          type: string
+
 workflow.type_settings.registration:
   type: mapping
   mapping:
