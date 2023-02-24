@@ -57,6 +57,17 @@ final class RegistrationEvents {
   const REGISTRATION_ALTER_RECIPIENTS = 'registration.alter.recipients';
 
   /**
+   * Name of the event fired to allow alter of spaces remaining.
+   *
+   * This is the capacity minus the number of spaces currently reserved.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_SPACES_REMAINING = 'registration.alter.remaining';
+
+  /**
    * Name of the event fired to allow alter of registration usage.
    *
    * This is the number of spaces currently reserved.

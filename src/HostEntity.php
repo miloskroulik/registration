@@ -255,7 +255,15 @@ class HostEntity implements HostEntityInterface {
    */
   public function getSpacesRemaining(RegistrationInterface $registration = NULL): ?int {
     if ($capacity = $this->getSetting('capacity')) {
-      return $capacity - $this->getActiveSpacesReserved($registration);
+      // Allow other modules to alter the number of spaces remaining.
+      $spaces_remaining = $capacity - $this->getActiveSpacesReserved($registration);
+      $event = new RegistrationDataAlterEvent($spaces_remaining, [
+        'host_entity' => $this,
+        'settings' => $this->getSettings(),
+        'registration' => $registration,
+      ]);
+      $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_SPACES_REMAINING);
+      return $event->getData() ?? NULL;
     }
     return NULL;
   }
