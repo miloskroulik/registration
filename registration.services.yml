@@ -1,5 +1,15 @@
 services:
 
+  cache_context.host_entity:
+    class: Drupal\registration\Cache\Context\HostEntityCacheContext
+    arguments: [
+      '@context.repository',
+      '@entity_type.manager',
+      '@registration.manager',
+    ]
+    tags:
+      - { name: cache.context}
+
   registration.cron.expire_held_registrations:
     class: Drupal\registration\Cron\ExpireHeldRegistrations
     arguments: [
