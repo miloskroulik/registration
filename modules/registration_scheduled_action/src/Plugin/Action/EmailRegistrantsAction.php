@@ -80,6 +80,14 @@ class EmailRegistrantsAction extends ConfigurableEmailActionBase implements Quer
   /**
    * {@inheritdoc}
    */
+  public function getAllowedPositions(): array {
+    // Registrants can be emailed before or after the settings close date.
+    return ['before', 'after'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDateFieldLabel(): string {
     return $this->t('Registration settings close date');
   }

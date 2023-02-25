@@ -74,6 +74,15 @@ class EmailConfirmationAction extends ConfigurableEmailActionBase implements Que
   /**
    * {@inheritdoc}
    */
+  public function getAllowedPositions(): array {
+    // Registration confirmation emails can only be sent after registration
+    // is completed, as the field never holds a future date.
+    return ['after'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDateFieldLabel(): string {
     return $this->t('Registration completed');
   }

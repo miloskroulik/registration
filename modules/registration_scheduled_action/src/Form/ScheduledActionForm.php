@@ -166,6 +166,36 @@ class ScheduledActionForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+
+    /** @var \Drupal\registration_scheduled_action\Entity\ScheduledActionInterface $scheduled_action */
+    $scheduled_action = $this->entity;
+    $plugin_id = $values['plugin_id'];
+    $selected_plugin = \Drupal::service('plugin.manager.action')->createInstance($plugin_id);
+
+    // Ensure the provided date and time are alllowed by the selected plugin.
+    $position = $values['datetime']['values']['position'];
+    $allowed_positions = $selected_plugin->getAllowedPositions();
+
+    // Ensure at least one position is allowed.
+    if (empty($allowed_positions)) {
+      throw new \InvalidArgumentException("The selected plugin returned an invalid positions array.");
+    }
+
+    if (!in_array($position, $allowed_positions)) {
+      if ($position == 'before') {
+        $form_state->setErrorByName('datetime', $this->t('"Before" is not allowed for the selected action.'));
+      }
+      else {
+        $form_state->setErrorByName('datetime', $this->t('"After" is not allowed for the selected action.'));
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function save(array $form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
 

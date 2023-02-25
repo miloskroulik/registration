@@ -11,6 +11,22 @@ use Drupal\registration_scheduled_action\Entity\ScheduledActionInterface;
 interface QueryableActionInterface {
 
   /**
+   * Gets the allowed relative date positions for the plugin.
+   *
+   * This should be an array containing up to two elements:
+   * ['before', 'after']
+   *
+   * If the plugin does not make sense in both a "before" and "after" context
+   * with respect to the dates involved, return an array with a single element.
+   *
+   * An exception is thrown if an empty array is returned.
+   *
+   * @return array
+   *   The allowed positions.
+   */
+  public function getAllowedPositions(): array;
+
+  /**
    * Gets the date field label.
    *
    * This is the display name of the date field that is used to drive the query
