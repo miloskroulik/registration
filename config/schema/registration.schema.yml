@@ -101,6 +101,10 @@ registration.state:
       type: string
       label: 'Description'
 
+action.configuration.registration_send_email_action:
+  type: action_configuration_default
+  label: 'Configuration for the registration send email action'
+
 action.configuration.registration_views_set_state_action:
   type: action_configuration_default
   label: 'Configuration for the set registration state action'

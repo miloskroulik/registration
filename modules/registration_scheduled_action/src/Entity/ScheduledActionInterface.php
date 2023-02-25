@@ -43,10 +43,27 @@ interface ScheduledActionInterface extends ConfigEntityInterface {
    * cron is set up to run, the closer the action executes to the requested
    * time.
    *
+   * The two elements are returned in the standard date storage format of
+   * Y-m-d\TH:i:s (ISO varchar) and in the standard storage timezone (UTC).
+   *
    * @return array|null
    *   The datetime array, if available.
+   *
+   * @see \Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface::DATETIME_STORAGE_FORMAT
+   * @see \Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface::STORAGE_TIMEZONE
    */
   public function getDateTimeArrayForQuery(): ?array;
+
+  /**
+   * Gets the timestamp array for a scheduled action for use in a query.
+   *
+   * This is the same as getDateTimeArrayForQuery but returns the elements as
+   * Unix timestamps instead of in ISO format.
+   *
+   * @return array|null
+   *   The timestamp array, if available.
+   */
+  public function getTimestampArrayForQuery(): ?array;
 
   /**
    * Gets the datetime for a scheduled action for use in a display.

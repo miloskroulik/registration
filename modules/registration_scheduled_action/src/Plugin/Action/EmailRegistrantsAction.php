@@ -94,6 +94,16 @@ class EmailRegistrantsAction extends ConfigurableEmailActionBase implements Quer
   /**
    * {@inheritdoc}
    */
+  public function getKeyValueStoreExpirationTime(): int {
+    // Store key value entries for 48 hours to prevent re-processing of items
+    // within that period. By the time entries expire, the query filter will
+    // be selecting different items.
+    return 60 * 60 * 48;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getQuery(ScheduledActionInterface $scheduled_action): SelectInterface {
     $query = $this->database
       ->select('registration_settings_field_data', 'r')

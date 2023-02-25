@@ -129,6 +129,16 @@ class ScheduledAction extends ConfigEntityBase implements ScheduledActionInterfa
         $php_date_time->sub($interval);
         $date2 = DrupalDateTime::createFromDateTime($php_date_time);
       }
+      elseif ($datetime['type'] == 'minutes') {
+        // For minutes, adjust the second date by 1 hour, to allow sites with
+        // cron running once per hour to get matches. If cron is set to run more
+        // often, the more accurate the timing will be.
+        $php_date_time = $date1->getPhpDateTime();
+        $interval = new \DateInterval('PT1H');
+        $interval->invert = ($datetime['position'] == 'before');
+        $php_date_time->sub($interval);
+        $date2 = DrupalDateTime::createFromDateTime($php_date_time);
+      }
       else {
         // Adjust the second date by one period relative to the first date.
         $length = $datetime['length'];
@@ -150,6 +160,24 @@ class ScheduledAction extends ConfigEntityBase implements ScheduledActionInterfa
     }
 
     // Return NULL if the action does not have a valid schedule yet.
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTimestampArrayForQuery(): ?array {
+    if ($datetime_array = $this->getDateTimeArrayForQuery()) {
+      $storage_format = DateTimeItemInterface::DATETIME_STORAGE_FORMAT;
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      $date1 = DrupalDateTime::createFromFormat($storage_format, $datetime_array[0], $storage_timezone);
+      $php_date_time = $date1->getPhpDateTime();
+      $timestamp1 = $php_date_time->getTimestamp();
+      $date2 = DrupalDateTime::createFromFormat($storage_format, $datetime_array[1], $storage_timezone);
+      $php_date_time = $date2->getPhpDateTime();
+      $timestamp2 = $php_date_time->getTimestamp();
+      return [$timestamp1, $timestamp2];
+    }
     return NULL;
   }
 

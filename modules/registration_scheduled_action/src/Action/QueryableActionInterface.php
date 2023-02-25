@@ -41,6 +41,22 @@ interface QueryableActionInterface {
   public function getKeyValueStoreCollectionName(): string;
 
   /**
+   * Gets the expiration time for entries in the key value store.
+   *
+   * This is the number of seconds that entries can exist for the given plugin,
+   * before they expire and can be removed during cron runs.
+   *
+   * The number returned should represent at least 2 days at a minimum. If a
+   * given plugin selects records across a longer time range, then the
+   * expiration time should be at least that long to avoid re-processing when
+   * the key value store entries expire.
+   *
+   * @return int
+   *   The expiration time, in seconds.
+   */
+  public function getKeyValueStoreExpirationTime(): int;
+
+  /**
    * Gets the query for the action.
    *
    * @param \Drupal\registration_scheduled_action\Entity\ScheduledActionInterface $scheduled_action
