@@ -170,11 +170,10 @@ class ScheduledActionForm extends EntityForm {
     $values = $form_state->getValues();
 
     /** @var \Drupal\registration_scheduled_action\Entity\ScheduledActionInterface $scheduled_action */
-    $scheduled_action = $this->entity;
     $plugin_id = $values['plugin_id'];
     $selected_plugin = \Drupal::service('plugin.manager.action')->createInstance($plugin_id);
 
-    // Ensure the provided date and time are alllowed by the selected plugin.
+    // Ensure the provided date and time are allowed by the selected plugin.
     $position = $values['datetime']['values']['position'];
     $allowed_positions = $selected_plugin->getAllowedPositions();
 
