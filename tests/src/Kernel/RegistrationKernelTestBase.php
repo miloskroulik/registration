@@ -83,7 +83,6 @@ abstract class RegistrationKernelTestBase extends EntityKernelTestBase {
     ]);
     $node_type->save();
 
-    /** @var \Drupal\registration\Entity\RegistrationTypeInterface $registration_type */
     $registration_type = RegistrationType::create([
       'id' => 'conference',
       'label' => 'Conference',
@@ -93,6 +92,7 @@ abstract class RegistrationKernelTestBase extends EntityKernelTestBase {
       'heldExpireState' => 'canceled',
     ]);
     $registration_type->save();
+    /** @var \Drupal\registration\Entity\RegistrationTypeInterface $registration_type */
     $registration_type = $this->reloadEntity($registration_type);
     $this->regType = $registration_type;
   }
