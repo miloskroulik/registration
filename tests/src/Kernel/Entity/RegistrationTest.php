@@ -102,14 +102,13 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $this->assertEquals(FALSE, $registration->isHeld());
 
     $registration->setCreatedTime(635879700);
-    $this->assertEquals(635879700, $registration->getCreatedTime());
     $registration->save();
     $this->assertEquals(635879700, $registration->getCreatedTime());
 
     $registration->set('state', 'complete');
-    $this->assertEquals(TRUE, $registration->isComplete());
     $registration->save();
     $this->assertEquals(TRUE, $registration->isComplete());
+    $this->assertEquals(\Drupal::time()->getRequestTime(), $registration->getCompletedTime());
   }
 
 }
