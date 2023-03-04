@@ -1,0 +1,6 @@
+name: Registration Test
+type: module
+description: 'Test module for Registration.'
+package: Testing
+dependencies:
+  - registration:registration

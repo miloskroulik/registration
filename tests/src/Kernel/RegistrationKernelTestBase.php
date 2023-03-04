@@ -25,6 +25,7 @@ abstract class RegistrationKernelTestBase extends EntityKernelTestBase {
     'datetime',
     'node',
     'registration',
+    'registration_test',
     'workflows',
   ];
 
