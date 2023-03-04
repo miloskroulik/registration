@@ -5,7 +5,6 @@ namespace Drupal\Tests\registration\Kernel\Entity;
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\registration\Entity\Registration;
-use Drupal\user\UserInterface;
 
 /**
  * Tests the Registration Settings entity.
