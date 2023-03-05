@@ -60,7 +60,7 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertEquals($node, $host_entity->getEntity());
     $this->assertEquals($node->getEntityTypeId(), $host_entity->getEntityTypeId());
     $this->assertEquals($node->id(), $host_entity->id());
-    $this->assertEquals(FALSE, $host_entity->isNew());
+    $this->assertFalse($host_entity->isNew());
     $this->assertEquals('My event', $host_entity->label());
 
     $new_registration = $host_entity->createRegistration();
@@ -93,27 +93,27 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertEquals(3, $host_entity->getRegistrationCount());
 
     $settings = $host_entity->getDefaultSettings();
-    $this->assertEquals(TRUE, $settings['status']);
+    $this->assertTrue($settings['status']);
     $this->assertEquals(5, $settings['capacity']);
     $this->assertEquals(2, $settings['maximum_spaces']);
 
     $this->assertEquals('event_registration', $host_entity->getRegistrationField()->getName());
     $registration_list = $host_entity->getRegistrationList();
-    $this->assertEquals(3, count($registration_list));
+    $this->assertCount(3, $registration_list);
 
     // Four spaces are reserved and 1 space is remaining.
-    $this->assertEquals(TRUE, $host_entity->hasRoom());
-    $this->assertEquals(FALSE, $host_entity->hasRoom(2));
+    $this->assertTrue($host_entity->hasRoom());
+    $this->assertFalse($host_entity->hasRoom(2));
     // An existing registration with two spaces can be saved with one more.
-    $this->assertEquals(TRUE, $host_entity->hasRoom(3, $new_registration));
+    $this->assertTrue($host_entity->hasRoom(3, $new_registration));
     // A registration with one space cannot be saved requesting three spaces.
-    $this->assertEquals(FALSE, $host_entity->hasRoom(3, $sample_registration));
+    $this->assertFalse($host_entity->hasRoom(3, $sample_registration));
 
-    $this->assertEquals(TRUE, $host_entity->isEmailRegistered('test@example.com'));
-    $this->assertEquals(FALSE, $host_entity->isEmailRegistered('test2@example.com'));
+    $this->assertTrue($host_entity->isEmailRegistered('test@example.com'));
+    $this->assertFalse($host_entity->isEmailRegistered('test2@example.com'));
 
     $user = $this->createUser([], ['administer registration']);
-    $this->assertEquals(FALSE, $host_entity->isUserRegistered($user));
+    $this->assertFalse($host_entity->isUserRegistered($user));
     $registration = Registration::create([
       'type' => 'conference',
       'entity_type_id' => 'node',
@@ -121,36 +121,36 @@ class HostEntityTest extends RegistrationKernelTestBase {
       'user_uid' => $user->id(),
     ]);
     $registration->save();
-    $this->assertEquals(TRUE, $host_entity->isUserRegistered($user));
+    $this->assertTrue($host_entity->isUserRegistered($user));
 
     // Out of room.
-    $this->assertEquals(FALSE, $host_entity->isEnabledForRegistration());
+    $this->assertFalse($host_entity->isEnabledForRegistration());
 
     // Add more capacity.
     $settings = $host_entity->getSettings();
     $settings->set('capacity', 10);
     $settings->save();
-    $this->assertEquals(TRUE, $host_entity->isEnabledForRegistration());
+    $this->assertTrue($host_entity->isEnabledForRegistration());
 
     // Before open and after close.
-    $this->assertEquals(FALSE, $host_entity->isBeforeOpen());
-    $this->assertEquals(FALSE, $host_entity->isAfterClose());
+    $this->assertFalse($host_entity->isBeforeOpen());
+    $this->assertFalse($host_entity->isAfterClose());
     $settings->set('open', '2220-01-01T00:00:00');
     $settings->save();
-    $this->assertEquals(TRUE, $host_entity->isBeforeOpen());
+    $this->assertTrue($host_entity->isBeforeOpen());
     $settings->set('close', '2020-01-01T00:00:00');
     $settings->save();
-    $this->assertEquals(TRUE, $host_entity->isAfterClose());
-    $this->assertEquals(FALSE, $host_entity->isEnabledForRegistration());
+    $this->assertTrue($host_entity->isAfterClose());
+    $this->assertFalse($host_entity->isEnabledForRegistration());
 
     $settings->set('open', NULL);
     $settings->set('close', NULL);
     $settings->save();
-    $this->assertEquals(TRUE, $host_entity->isEnabledForRegistration());
+    $this->assertTrue($host_entity->isEnabledForRegistration());
 
     $settings->set('status', FALSE);
     $settings->save();
-    $this->assertEquals(FALSE, $host_entity->isEnabledForRegistration());
+    $this->assertFalse($host_entity->isEnabledForRegistration());
   }
 
 }

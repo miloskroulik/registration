@@ -96,10 +96,10 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $this->assertEquals($this->user->id(), $registration->getUserId());
     $this->assertEquals($this->regType->getWorkflow()->id(), $registration->getWorkflow()->id());
     $this->assertEquals($this->regType->getDefaultState(), $registration->getState()->id());
-    $this->assertEquals(TRUE, $registration->isActive());
-    $this->assertEquals(FALSE, $registration->isCanceled());
-    $this->assertEquals(FALSE, $registration->isComplete());
-    $this->assertEquals(FALSE, $registration->isHeld());
+    $this->assertTrue($registration->isActive());
+    $this->assertFalse($registration->isCanceled());
+    $this->assertFalse($registration->isComplete());
+    $this->assertFalse($registration->isHeld());
 
     $registration->setCreatedTime(635879700);
     $registration->save();
@@ -107,7 +107,7 @@ class RegistrationTest extends RegistrationKernelTestBase {
 
     $registration->set('state', 'complete');
     $registration->save();
-    $this->assertEquals(TRUE, $registration->isComplete());
+    $this->assertTrue($registration->isComplete());
     $this->assertEquals(\Drupal::time()->getRequestTime(), $registration->getCompletedTime());
   }
 

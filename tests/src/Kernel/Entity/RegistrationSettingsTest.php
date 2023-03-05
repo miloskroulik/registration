@@ -44,20 +44,19 @@ class RegistrationSettingsTest extends RegistrationKernelTestBase {
     $this->assertEquals($node->getEntityTypeId(), $settings->getHostEntityTypeId());
     $this->assertEquals('en', $settings->getLangcode());
     // Default settings from the registration_test module.
-    $this->assertEquals(TRUE, $settings->getSetting('status'));
+    $this->assertTrue((bool) $settings->getSetting('status'));
     $this->assertEquals(5, $settings->getSetting('capacity'));
     $this->assertEquals(2, $settings->getSetting('maximum_spaces'));
-    // Settings for boolean fields without an explicit default set.
-    $this->assertEquals(FALSE, $settings->getSetting('multiple_registrations'));
-    $this->assertEquals(FALSE, $settings->getSetting('send_reminder'));
-    // Settings for other field types without explicit defaults set.
-    $this->assertEquals(NULL, $settings->getSetting('open'));
-    $this->assertEquals(NULL, $settings->getSetting('close'));
-    $this->assertEquals(NULL, $settings->getSetting('reminder_date'));
-    $this->assertEquals(NULL, $settings->getSetting('reminder_template'));
-    $this->assertEquals(NULL, $settings->getSetting('from_address'));
-    $this->assertEquals(NULL, $settings->getSetting('confirmation'));
-    $this->assertEquals(NULL, $settings->getSetting('confirmation_redirect'));
+    // Settings for fields without an explicit default set.
+    $this->assertNull($settings->getSetting('multiple_registrations'));
+    $this->assertNull($settings->getSetting('send_reminder'));
+    $this->assertNull($settings->getSetting('open'));
+    $this->assertNull($settings->getSetting('close'));
+    $this->assertNull($settings->getSetting('reminder_date'));
+    $this->assertNull($settings->getSetting('reminder_template'));
+    $this->assertNull($settings->getSetting('from_address'));
+    $this->assertNull($settings->getSetting('confirmation'));
+    $this->assertNull($settings->getSetting('confirmation_redirect'));
   }
 
 }
