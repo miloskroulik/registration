@@ -31,7 +31,7 @@ function registration_test_entity_base_field_info(EntityTypeInterface $entity_ty
         ],
       ],
     ];
-    $fields['registration'] = BaseFieldDefinition::create('registration')
+    $fields['event_registration'] = BaseFieldDefinition::create('registration')
       ->setLabel(t('Registration'))
       ->setDefaultValue([
         'registration_settings' => serialize($default_settings),

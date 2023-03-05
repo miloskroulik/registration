@@ -26,7 +26,7 @@ class RegistrationSettingsTest extends RegistrationKernelTestBase {
     $node = Node::create([
       'type' => 'event',
       'title' => 'My event',
-      'registration' => 'conference',
+      'event_registration' => 'conference',
     ]);
     $node->save();
     $node = $this->reloadEntity($node);
