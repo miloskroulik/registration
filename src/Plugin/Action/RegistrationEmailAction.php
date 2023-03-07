@@ -75,7 +75,7 @@ class RegistrationEmailAction extends EmailAction {
       '#text' => $this->configuration['message']['value'],
       '#format' => $this->configuration['message']['format'],
     ];
-    $params['message'] = new FormattableMarkup($this->renderer->render($build), []);
+    $params['message'] = new FormattableMarkup($this->renderer->renderPlain($build), []);
     $params['token_entities'] = [
       $host_entity->getEntityTypeId() => $host_entity->getEntity(),
       'registration_settings' => $settings,

@@ -119,7 +119,7 @@ class EmailRegistrantsForm extends RegistrationFormBase {
         '#text' => $values['message']['value'],
         '#format' => $values['message']['format'],
       ];
-      $message = $this->renderer->render($build);
+      $message = $this->renderer->renderPlain($build);
       $this->replaceTokens($form['message_preview'], $host_entity, $registration, $message);
 
       // Hidden fields for the next submit.
