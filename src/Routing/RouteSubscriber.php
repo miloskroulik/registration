@@ -41,6 +41,14 @@ class RouteSubscriber extends RouteSubscriberBase {
       $route->setOption('_admin_route', TRUE);
     }
 
+    // Update the registration collection route to use a custom access check.
+    // This allows users with the 'access registration overview' permission to
+    // use the route, in addition to users with 'administer registration'
+    // permission (which is the default for entity collections).
+    if ($route = $collection->get('entity.registration.collection')) {
+      $route->setRequirements(['_registration_collection_access' => 'TRUE']);
+    }
+
     // Add routes for managing registrations and registering.
     foreach ($this->registrationManager->getRegistrationEnabledEntityTypes() as $entity_type_id => $entity_type) {
       if ($route = $this->registrationManager->getRoute($entity_type, 'broadcast')) {
