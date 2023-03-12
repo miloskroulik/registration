@@ -92,6 +92,10 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertEquals(1, $host_entity->getSpacesRemaining());
     $this->assertEquals(3, $host_entity->getRegistrationCount());
 
+    // The default settings are defined in the registration_test module,
+    // and were arbitrarily set to a capacity of 5 registrations and
+    // a limit of 2 spaces per registration.
+    // @see registration_test_entity_base_field_info()
     $settings = $host_entity->getDefaultSettings();
     $this->assertTrue($settings['status']);
     $this->assertEquals(5, $settings['capacity']);
