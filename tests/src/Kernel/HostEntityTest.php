@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\registration\Kernel;
 
-use Drupal\node\Entity\Node;
-use Drupal\registration\Entity\Registration;
+use Drupal\Tests\registration\Traits\NodeCreateTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
 
 /**
  * Tests the Host Entity class.
@@ -13,6 +13,9 @@ use Drupal\registration\Entity\Registration;
  * @group registration
  */
 class HostEntityTest extends RegistrationKernelTestBase {
+
+  use NodeCreateTrait;
+  use RegistrationCreateTrait;
 
   /**
    * @covers ::bundle
@@ -39,21 +42,14 @@ class HostEntityTest extends RegistrationKernelTestBase {
    * @covers ::isAfterClose
    */
   public function testHostEntity() {
-    $node = Node::create([
-      'type' => 'event',
-      'title' => 'My event',
-      'event_registration' => 'conference',
-    ]);
-    $node->save();
+    $node = $this->createAndSaveNode();
+    /** @var \Drupal\node\NodeInterface $node */
     $node = $this->reloadEntity($node);
 
-    $registration = Registration::create([
-      'type' => 'conference',
-      'entity_type_id' => 'node',
-      'entity_id' => $node->id(),
-      'anon_mail' => 'test@example.com',
-    ]);
+    $registration = $this->createRegistration($node);
+    $registration->set('anon_mail', 'test@example.com');
     $registration->save();
+
     $host_entity = $registration->getHostEntity();
 
     $this->assertEquals($node->bundle(), $host_entity->bundle());
@@ -62,6 +58,7 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertEquals($node->id(), $host_entity->id());
     $this->assertFalse($host_entity->isNew());
     $this->assertEquals('My event', $host_entity->label());
+    $this->assertTrue($host_entity->isConfiguredForRegistration());
 
     $new_registration = $host_entity->createRegistration();
     $this->assertEquals($new_registration->getType()->id(), $host_entity->getRegistrationTypeBundle());
@@ -118,12 +115,8 @@ class HostEntityTest extends RegistrationKernelTestBase {
 
     $user = $this->createUser([], ['administer registration']);
     $this->assertFalse($host_entity->isUserRegistered($user));
-    $registration = Registration::create([
-      'type' => 'conference',
-      'entity_type_id' => 'node',
-      'entity_id' => $node->id(),
-      'user_uid' => $user->id(),
-    ]);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $user->id());
     $registration->save();
     $this->assertTrue($host_entity->isUserRegistered($user));
 
@@ -136,14 +129,28 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $settings->save();
     $this->assertTrue($host_entity->isEnabledForRegistration());
 
+    // Reached capacity.
+    $settings->set('capacity', 5);
+    $settings->save();
+    $this->assertFalse($host_entity->isEnabledForRegistration());
+
+    // Unlimited capacity.
+    $settings->set('capacity', 0);
+    $settings->save();
+    $this->assertTrue($host_entity->isEnabledForRegistration());
+
     // Before open and after close.
     $this->assertFalse($host_entity->isBeforeOpen());
     $this->assertFalse($host_entity->isAfterClose());
     $settings->set('open', '2220-01-01T00:00:00');
     $settings->save();
     $this->assertTrue($host_entity->isBeforeOpen());
+    $this->assertFalse($host_entity->isAfterClose());
+    $this->assertFalse($host_entity->isEnabledForRegistration());
+    $settings->set('open', NULL);
     $settings->set('close', '2020-01-01T00:00:00');
     $settings->save();
+    $this->assertFalse($host_entity->isBeforeOpen());
     $this->assertTrue($host_entity->isAfterClose());
     $this->assertFalse($host_entity->isEnabledForRegistration());
 
@@ -152,9 +159,18 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $settings->save();
     $this->assertTrue($host_entity->isEnabledForRegistration());
 
+    // Disable registration.
     $settings->set('status', FALSE);
     $settings->save();
     $this->assertFalse($host_entity->isEnabledForRegistration());
+
+    // Not configured for registration.
+    $node = $this->createNode();
+    $node->set('event_registration', NULL);
+    $node->save();
+    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $host_entity = $handler->createHostEntity($node);
+    $this->assertFalse($host_entity->isConfiguredForRegistration());
   }
 
 }

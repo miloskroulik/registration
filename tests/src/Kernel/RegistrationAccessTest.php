@@ -2,10 +2,9 @@
 
 namespace Drupal\Tests\registration\Kernel;
 
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
-use Drupal\registration\Entity\Registration;
 use Drupal\registration\Entity\RegistrationType;
+use Drupal\Tests\registration\Traits\NodeCreateTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
 
 /**
  * Tests registration permissions and access control.
@@ -16,12 +15,8 @@ use Drupal\registration\Entity\RegistrationType;
  */
 class RegistrationAccessTest extends RegistrationKernelTestBase {
 
-  /**
-   * The node.
-   *
-   * @var \Drupal\node\NodeInterface
-   */
-  protected NodeInterface $node;
+  use NodeCreateTrait;
+  use RegistrationCreateTrait;
 
   /**
    * {@inheritdoc}
@@ -30,15 +25,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     parent::setUp();
 
     $admin_user = $this->createUser();
-    \Drupal::currentUser()->setAccount($admin_user);
-
-    $node = Node::create([
-      'type' => 'event',
-      'title' => 'My event',
-      'event_registration' => 'conference',
-    ]);
-    $node->save();
-    $this->node = $node;
+    $this->setCurrentUser($admin_user);
 
     $registration_type = RegistrationType::create([
       'id' => 'seminar',
@@ -56,13 +43,12 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
    */
   public function testAccess() {
     $account = $this->createUser([], ['access registration overview']);
-    $registration = Registration::create([
-      'type' => 'conference',
-      'entity_type_id' => 'node',
-      'entity_id' => $this->node->id(),
-      'user_uid' => $account->id(),
-    ]);
+
+    $node = $this->createAndSaveNode();
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
     $registration->save();
+
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
@@ -109,6 +95,11 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('delete', $account));
 
     // "View any" permission.
+    $account = $this->createUser([], ['access content']);
+    $registration->set('author_uid', $account->id());
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $this->assertFalse($registration->access('view', $account));
     $account = $this->createUser([], ['view any registration']);
     $this->assertTrue($registration->access('view', $account));
 
@@ -129,9 +120,12 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
    * @covers ::checkCreateAccess
    */
   public function testCreateAccess() {
-    $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler('registration');
+    $access_control_handler = $this->entityTypeManager->getAccessControlHandler('registration');
 
     $account = $this->createUser([], ['access content']);
+    $this->assertFalse($access_control_handler->createAccess('conference', $account));
+
+    $account = $this->createUser([], ['bypass node access']);
     $this->assertFalse($access_control_handler->createAccess('conference', $account));
 
     $account = $this->createUser([], ['administer registration']);
@@ -153,15 +147,79 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
   }
 
   /**
+   * Tests delete access for registrations.
+   */
+  public function testDeleteAccess() {
+    $access_control_handler = $this->entityTypeManager->getAccessControlHandler('registration');
+
+    // Administer registration type only applies to settings, not registrations.
+    $account = $this->createUser([], ['administer conference registration']);
+    $node = $this->createAndSaveNode();
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $this->assertFalse($registration->access('delete', $account));
+
+    // Delete "own" permission.
+    $account = $this->createUser([], ['delete own conference registration']);
+    $this->assertFalse($registration->access('delete', $account));
+    $registration->set('author_uid', $account->id());
+    $registration->save();
+    // @see https://www.drupal.org/project/drupal/issues/2834344
+    $access_control_handler->resetCache();
+    $this->assertFalse($registration->access('delete', $account));
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $access_control_handler->resetCache();
+    $this->assertTrue($registration->access('delete', $account));
+
+    // Delete "any" permission.
+    $account = $this->createUser([], ['delete any conference registration']);
+    $this->assertTrue($registration->access('delete', $account));
+    $account = $this->createUser([], ['delete any seminar registration']);
+    $this->assertFalse($registration->access('delete', $account));
+  }
+
+  /**
+   * Tests update access for registrations.
+   */
+  public function testUpdateAccess() {
+    $access_control_handler = $this->entityTypeManager->getAccessControlHandler('registration');
+
+    // Administer registration type only applies to settings, not registrations.
+    $account = $this->createUser([], ['administer conference registration']);
+    $node = $this->createAndSaveNode();
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $this->assertFalse($registration->access('update', $account));
+
+    // Update "own" permission.
+    $account = $this->createUser([], ['update own conference registration']);
+    $this->assertFalse($registration->access('update', $account));
+    $registration->set('author_uid', $account->id());
+    $registration->save();
+    // @see https://www.drupal.org/project/drupal/issues/2834344
+    $access_control_handler->resetCache();
+    $this->assertFalse($registration->access('update', $account));
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $access_control_handler->resetCache();
+    $this->assertTrue($registration->access('update', $account));
+
+    // Update "any" permission.
+    $account = $this->createUser([], ['update any conference registration']);
+    $this->assertTrue($registration->access('update', $account));
+    $account = $this->createUser([], ['update any seminar registration']);
+    $this->assertFalse($registration->access('update', $account));
+  }
+
+  /**
    * Tests route access for registrations.
    */
   public function testRouteAccess() {
-    $registration = Registration::create([
-      'type' => 'conference',
-      'entity_type_id' => 'node',
-      'entity_id' => $this->node->id(),
-    ]);
-    $registration->save();
+    $node = $this->createAndSaveNode();
+    $registration = $this->createAndSaveRegistration($node);
 
     $account = $this->createUser([], ['administer registration']);
     $this->assertTrue($registration->toUrl('collection')->access($account));

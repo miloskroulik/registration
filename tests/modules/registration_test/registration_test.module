@@ -30,6 +30,11 @@ function registration_test_entity_base_field_info(EntityTypeInterface $entity_ty
           'value' => 2,
         ],
       ],
+      'from_address' => [
+        0 => [
+          'value' => 'test@example.com',
+        ],
+      ],
     ];
     $fields['event_registration'] = BaseFieldDefinition::create('registration')
       ->setLabel(t('Registration'))

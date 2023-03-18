@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\registration\Kernel;
 
-use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
-use Drupal\registration\Entity\Registration;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationManagerInterface;
+use Drupal\Tests\registration\Traits\NodeCreateTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
 /**
@@ -18,6 +18,9 @@ use Symfony\Component\HttpFoundation\ParameterBag;
  * @group registration
  */
 class RegistrationManagerTest extends RegistrationKernelTestBase {
+
+  use NodeCreateTrait;
+  use RegistrationCreateTrait;
 
   /**
    * The host entity.
@@ -47,24 +50,14 @@ class RegistrationManagerTest extends RegistrationKernelTestBase {
     parent::setUp();
 
     $admin_user = $this->createUser();
-    \Drupal::currentUser()->setAccount($admin_user);
+    $this->setCurrentUser($admin_user);
 
-    $node = Node::create([
-      'type' => 'event',
-      'title' => 'My event',
-      'event_registration' => 'conference',
-    ]);
-    $node->save();
-    $this->node = $node;
+    $this->node = $this->createAndSaveNode();
 
     $this->registrationManager = $this->container->get('registration.manager');
 
-    $registration = Registration::create([
-      'type' => 'conference',
-      'entity_type_id' => 'node',
-      'entity_id' => $this->node->id(),
-      'anon_mail' => 'test@example.com',
-    ]);
+    $registration = $this->createRegistration($this->node);
+    $registration->set('anon_mail', 'test@example.com');
     $registration->save();
     $this->hostEntity = $registration->getHostEntity();
   }
@@ -101,13 +94,10 @@ class RegistrationManagerTest extends RegistrationKernelTestBase {
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
-    $registration2 = Registration::create([
-      'type' => 'conference',
-      'entity_type_id' => 'node',
-      'entity_id' => $this->node->id(),
-      'user_uid' => 1,
-    ]);
+    $registration2 = $this->createRegistration($this->node);
+    $registration2->set('user_uid', 1);
     $registration2->save();
+
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
@@ -115,28 +105,28 @@ class RegistrationManagerTest extends RegistrationKernelTestBase {
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
     $account = $this->createUser([], ['access registration overview']);
-    \Drupal::currentUser()->setAccount($account);
+    $this->container->get('current_user')->setAccount($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
     $account = $this->createUser([], ['create conference registration self']);
-    \Drupal::currentUser()->setAccount($account);
+    $this->container->get('current_user')->setAccount($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
     $account = $this->createUser([], ['create conference registration other users']);
-    \Drupal::currentUser()->setAccount($account);
+    $this->container->get('current_user')->setAccount($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
     $account = $this->createUser([], ['create conference registration other anonymous']);
-    \Drupal::currentUser()->setAccount($account);
+    $this->container->get('current_user')->setAccount($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);

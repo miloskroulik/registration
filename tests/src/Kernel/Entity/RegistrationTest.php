@@ -3,8 +3,8 @@
 namespace Drupal\Tests\registration\Kernel\Entity;
 
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
-use Drupal\node\Entity\Node;
-use Drupal\registration\Entity\Registration;
+use Drupal\Tests\registration\Traits\NodeCreateTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\user\UserInterface;
 
@@ -16,6 +16,9 @@ use Drupal\user\UserInterface;
  * @group registration
  */
 class RegistrationTest extends RegistrationKernelTestBase {
+
+  use NodeCreateTrait;
+  use RegistrationCreateTrait;
 
   /**
    * A sample user.
@@ -34,7 +37,7 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $user = $this->reloadEntity($user);
     /** @var \Drupal\user\UserInterface $user */
     $this->user = $user;
-    $this->container->get('current_user')->setAccount($user);
+    $this->setCurrentUser($user);
   }
 
   /**
@@ -64,19 +67,12 @@ class RegistrationTest extends RegistrationKernelTestBase {
    * @covers ::isHeld
    */
   public function testRegistration() {
-    $node = Node::create([
-      'type' => 'event',
-      'title' => 'My event',
-    ]);
-    $node->save();
+    $node = $this->createAndSaveNode();
     $node = $this->reloadEntity($node);
 
-    $registration = Registration::create([
-      'type' => 'conference',
-      'entity_type_id' => 'node',
-      'entity_id' => $node->id(),
-      'user_uid' => $this->user->id(),
-    ]);
+    /** @var \Drupal\node\NodeInterface $node */
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $this->user->id());
     $registration->save();
 
     $this->assertEquals('Registration #1 for My event', $registration->label());

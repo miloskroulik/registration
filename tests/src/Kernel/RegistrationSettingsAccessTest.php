@@ -3,10 +3,10 @@
 namespace Drupal\Tests\registration\Kernel;
 
 use Drupal\Core\Url;
-use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 use Drupal\registration\Entity\RegistrationType;
+use Drupal\Tests\registration\Traits\NodeCreateTrait;
 
 /**
  * Tests registration settings permissions and access control.
@@ -16,6 +16,8 @@ use Drupal\registration\Entity\RegistrationType;
  * @group registration
  */
 class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
+
+  use NodeCreateTrait;
 
   /**
    * The node.
@@ -31,15 +33,9 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
     parent::setUp();
 
     $admin_user = $this->createUser();
-    \Drupal::currentUser()->setAccount($admin_user);
+    $this->setCurrentUser($admin_user);
 
-    $node = Node::create([
-      'type' => 'event',
-      'title' => 'My event',
-      'event_registration' => 'conference',
-    ]);
-    $node->save();
-    $this->node = $node;
+    $this->node = $this->createAndSaveNode();
 
     $registration_type = RegistrationType::create([
       'id' => 'seminar',
@@ -103,7 +99,7 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
    * @covers ::checkCreateAccess
    */
   public function testCreateAccess() {
-    $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler('registration_settings');
+    $access_control_handler = $this->entityTypeManager->getAccessControlHandler('registration');
 
     $account = $this->createUser([], ['access content']);
     $this->assertFalse($access_control_handler->createAccess(NULL, $account));

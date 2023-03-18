@@ -72,6 +72,16 @@ abstract class RegistrationKernelTestBase extends EntityKernelTestBase {
             'weight' => 1,
           ],
         ],
+        'transitions' => [
+          'complete' => [
+            'label' => 'Complete',
+            'to' => 'complete',
+            'weight' => 0,
+            'from' => [
+              'pending',
+            ],
+          ],
+        ],
         'default_registration_state' => 'pending',
         'complete_registration_state' => 'complete',
       ],

@@ -3,8 +3,8 @@
 namespace Drupal\Tests\registration\Kernel\Entity;
 
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
-use Drupal\node\Entity\Node;
-use Drupal\registration\Entity\Registration;
+use Drupal\Tests\registration\Traits\NodeCreateTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
 
 /**
  * Tests the Registration Settings entity.
@@ -15,6 +15,9 @@ use Drupal\registration\Entity\Registration;
  */
 class RegistrationSettingsTest extends RegistrationKernelTestBase {
 
+  use NodeCreateTrait;
+  use RegistrationCreateTrait;
+
   /**
    * @covers ::getHostEntity
    * @covers ::getHostEntityId
@@ -23,20 +26,8 @@ class RegistrationSettingsTest extends RegistrationKernelTestBase {
    * @covers ::getSetting
    */
   public function testRegistrationSettings() {
-    $node = Node::create([
-      'type' => 'event',
-      'title' => 'My event',
-      'event_registration' => 'conference',
-    ]);
-    $node->save();
-    $node = $this->reloadEntity($node);
-
-    $registration = Registration::create([
-      'type' => 'conference',
-      'entity_type_id' => 'node',
-      'entity_id' => $node->id(),
-    ]);
-    $registration->save();
+    $node = $this->createAndSaveNode();
+    $registration = $this->createAndSaveRegistration($node);
     $settings = $registration->getHostEntity()->getSettings();
 
     $this->assertEquals($node->id(), $settings->getHostEntity()->id());
@@ -47,6 +38,7 @@ class RegistrationSettingsTest extends RegistrationKernelTestBase {
     $this->assertTrue((bool) $settings->getSetting('status'));
     $this->assertEquals(5, $settings->getSetting('capacity'));
     $this->assertEquals(2, $settings->getSetting('maximum_spaces'));
+    $this->assertEquals('test@example.com', $settings->getSetting('from_address'));
     // Settings for fields without an explicit default set.
     $this->assertNull($settings->getSetting('multiple_registrations'));
     $this->assertNull($settings->getSetting('send_reminder'));
@@ -54,7 +46,6 @@ class RegistrationSettingsTest extends RegistrationKernelTestBase {
     $this->assertNull($settings->getSetting('close'));
     $this->assertNull($settings->getSetting('reminder_date'));
     $this->assertNull($settings->getSetting('reminder_template'));
-    $this->assertNull($settings->getSetting('from_address'));
     $this->assertNull($settings->getSetting('confirmation'));
     $this->assertNull($settings->getSetting('confirmation_redirect'));
   }
