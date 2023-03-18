@@ -38,7 +38,7 @@ class RegistrationFieldConstraint extends Constraint {
   /**
    * If the target entity type does not have an "id" key in its annotation.
    *
-   * The "id" key is required for views relationships to work for registations.
+   * The "id" key is required for views relationships to work for registrations.
    * It would be highly unusual if a content entity type did not have one.
    *
    * @var string

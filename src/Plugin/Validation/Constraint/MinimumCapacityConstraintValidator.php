@@ -44,13 +44,20 @@ class MinimumCapacityConstraintValidator extends ConstraintValidator implements 
    * {@inheritdoc}
    */
   public function validate($settings, Constraint $constraint) {
-    if (($settings instanceof RegistrationSettings) && $settings->getSetting('capacity')) {
+    // Validate the capacity if it is not null and it is greather than zero. If
+    // the capacity is null, the minimum value constraint will be triggered
+    // instead, which is sufficient, and triggering a second violation would be
+    // confusing. If the capacity is zero, the implied capacity is "unlimited",
+    // so no check is required.
+    if (($settings instanceof RegistrationSettings) && ((int) $settings->getSetting('capacity') > 0)) {
       $entity_type_id = $settings->getHostEntityTypeId();
       $entity_id = $settings->getHostEntityId();
       $storage = $this->entityTypeManager->getStorage($entity_type_id);
       if ($entity = $storage->load($entity_id)) {
         $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
         $host_entity = $handler->createHostEntity($entity);
+        // Prevent setting the capacity to a non-zero value that is less than
+        // the number of spaces already reserved by active registrations.
         if ($settings->getSetting('capacity') < $host_entity->getActiveSpacesReserved()) {
           $this->context->buildViolation($constraint->message, [
             '@type' => $host_entity->getRegistrationTypeBundle(),

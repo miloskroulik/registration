@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Plugin\Action;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Action\ConfigurableActionBase;
 use Drupal\Core\Entity\DependencyTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -118,11 +119,13 @@ class RegistrationSetStateAction extends ConfigurableActionBase implements Conta
    * {@inheritdoc}
    */
   public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
-    $key = $object->getEntityType()->getKey('state');
-
+    $account = $this->prepareUser($account);
     /** @var \Drupal\registration\Entity\RegistrationInterface $object */
-    $result = $object->access('update', $account, TRUE)
-      ->andIf($object->$key->access('edit', $account, TRUE));
+    $type = $object->getType()->id();
+    $access = $account->hasPermission("edit $type registration state");
+    $result = AccessResult::allowedIf($access)
+      ->cachePerPermissions()
+      ->andIf($object->access('update', $account, TRUE));
 
     return $return_as_object ? $result : $result->isAllowed();
   }
@@ -143,6 +146,22 @@ class RegistrationSetStateAction extends ConfigurableActionBase implements Conta
       }
     }
     return $states;
+  }
+
+  /**
+   * Loads the current account object, if it does not exist yet.
+   *
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   The account interface instance, if available.
+   *
+   * @return \Drupal\Core\Session\AccountInterface
+   *   Returns the current account object.
+   */
+  protected function prepareUser(AccountInterface $account = NULL): AccountInterface {
+    if (!$account) {
+      $account = \Drupal::currentUser();
+    }
+    return $account;
   }
 
 }
