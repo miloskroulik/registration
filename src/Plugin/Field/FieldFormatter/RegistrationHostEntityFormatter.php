@@ -69,6 +69,9 @@ class RegistrationHostEntityFormatter extends FormatterBase {
     foreach ($items as $delta => $item) {
       /** @var \Drupal\registration\HostEntityInterface $host_entity */
       $entity = $item->get('entity')->getValue();
+      if (is_null($entity)) {
+        continue;
+      }
       // Get the translated entity if it has one. Let the host entity handler
       // do the heavy lifting since the entity type may not be translatable
       // and calling translation functions on it would throw exceptions.

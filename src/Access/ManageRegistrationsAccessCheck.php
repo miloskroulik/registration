@@ -50,15 +50,24 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
     // then allow access if the user has the appropriate permission.
     if ($host_entity) {
       if ($type = $host_entity->getRegistrationTypeBundle()) {
-        $entity = $host_entity->getEntity();
-        $access =
-             $account->hasPermission("administer registration")
-          || $account->hasPermission("administer $type registration")
-          || ($account->hasPermission("administer own $type registration") && $entity->access('update', $account));
-        return AccessResult::allowedIf($access)
-          // Recalculate this result if the relevant entities are updated.
-          ->cachePerPermissions()
-          ->addCacheableDependency($entity);
+        if ($entity = $host_entity->getEntity()) {
+          $access = $account->hasPermission("administer registration") || $account->hasPermission("administer $type registration");
+          if ($access) {
+            return AccessResult::allowed()
+              // Recalculate this result if the relevant entities are updated.
+              ->cachePerPermissions()
+              ->addCacheableDependency($entity);
+          }
+          $access = $account->hasPermission("administer own $type registration");
+          return AccessResult::allowedIf($access)
+            // Own permission must be cached per user and not per permissions.
+            ->cachePerUser()
+            // Recalculate this result if the relevant entities are updated.
+            ->addCacheableDependency($entity)
+            // Own permission must be combined with update access to the entity.
+            // Merge the cacheability of the entity access check via "andIf".
+            ->andIf($entity->access('update', $account, TRUE));
+        }
       }
     }
 
@@ -68,10 +77,8 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
     // allow the registration, so this will disable the route. This would
     // in turn hide the Manage Registrations tab for the host entity.
     $access_result = AccessResult::neutral();
-
-    // Recalculate this result if the relevant entities are updated.
-    $access_result->cachePerPermissions();
-    if ($entity) {
+    if ($host_entity && ($entity = $host_entity->getEntity())) {
+      // Recalculate this result if the relevant entities are updated.
       $access_result->addCacheableDependency($entity);
     }
     return $access_result;

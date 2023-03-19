@@ -56,8 +56,9 @@ class UserRegistrationsAccessCheck implements AccessInterface {
         // their own registrations.
         || ($account->hasPermission("view own registration") && $viewing_own);
       return AccessResult::allowedIf($access)
+        // Every user should get their own access result.
+        ->cachePerUser()
         // Recalculate this result if the relevant entities are updated.
-        ->cachePerPermissions()
         ->addCacheTags(['registration.user:' . $user->id()])
         ->addCacheableDependency($user);
     }
@@ -65,6 +66,9 @@ class UserRegistrationsAccessCheck implements AccessInterface {
     // User not available or has no registrations.
     $access_result = AccessResult::forbidden("The user is not available or does not have any registrations.");
     if ($user) {
+      // Every user should get their own access result.
+      $access_result->cachePerUser();
+
       // Recalculate this result if registrations are added or deleted for this
       // user.
       $access_result->addCacheTags(['registration.user:' . $user->id()]);
