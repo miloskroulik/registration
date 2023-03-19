@@ -65,7 +65,7 @@ class RegistrationSettingsStorageTest extends RegistrationKernelTestBase impleme
     // Set up an override that returns an empty default for the event
     // registration field when Spanish is active.
     $service_definition = $container->getDefinition('registration.field_manager');
-    $service_definition->setClass(RegistrationFieldManagerOverride::class);
+    $service_definition->setClass(RegistrationFieldManager::class);
   }
 
   /**

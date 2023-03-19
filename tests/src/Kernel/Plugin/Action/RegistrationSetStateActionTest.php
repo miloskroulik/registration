@@ -20,16 +20,6 @@ class RegistrationSetStateActionTest extends RegistrationKernelTestBase {
   use RegistrationCreateTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
-   */
-  protected static $modules = [
-    'action',
-  ];
-
-
-  /**
    * The action manager.
    *
    * @var \Drupal\Core\Action\ActionManager

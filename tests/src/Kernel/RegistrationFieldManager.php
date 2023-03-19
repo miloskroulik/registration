@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\registration\Kernel;
 
-use Drupal\registration\RegistrationFieldManager;
+use Drupal\registration\RegistrationFieldManager as BaseRegistrationFieldManager;
 
 /**
  * Overrides field definitions for testing.
  */
-class RegistrationFieldManagerOverride extends RegistrationFieldManager {
+class RegistrationFieldManager extends BaseRegistrationFieldManager {
 
   /**
    * {@inheritdoc}

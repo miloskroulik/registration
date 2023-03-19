@@ -1,0 +1,66 @@
+<?php
+
+namespace Drupal\Tests\registration\Kernel\Plugin\Field\Formatter;
+
+use Drupal\Tests\registration\Traits\NodeCreateTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
+
+/**
+ * Tests the registration_host_entity formatter.
+ *
+ * @coversDefaultClass \Drupal\registration\Plugin\Field\FieldFormatter\RegistrationHostEntityFormatter
+ *
+ * @group registration
+ */
+class RegistrationHostEntityFormatterTest extends FormatterTestBase {
+
+  use NodeCreateTrait;
+  use RegistrationCreateTrait;
+
+  /**
+   * @covers ::render
+   */
+  public function testRegistrationHostEntityFormatter() {
+    $node = $this->createAndSaveNode();
+    $registration = $this->createAndSaveRegistration($node);
+    $host_entity = $registration->getHostEntity();
+
+    // Host entity title, no link.
+    $build = $registration->get('host_entity')->view([
+      'type' => 'registration_host_entity',
+      'label' => 'hidden',
+      'settings' => [
+        'link' => FALSE,
+      ],
+    ]);
+    $output = $this->renderPlain($build);
+    $this->assertEquals('My event', $output);
+
+    // Host entity title, with link.
+    $build = $registration->get('host_entity')->view([
+      'type' => 'registration_host_entity',
+      'label' => 'hidden',
+      'settings' => [
+        'link' => TRUE,
+      ],
+    ]);
+    $output = $this->renderPlain($build);
+    $this->assertEquals('<a href="/node/1" hreflang="en">My event</a>', $output);
+
+    $registration->set('entity_id', 999);
+    $registration->save();
+    $registration = $this->reloadEntity($registration);
+
+    // No host entity.
+    $build = $registration->get('host_entity')->view([
+      'type' => 'registration_host_entity',
+      'label' => 'hidden',
+      'settings' => [
+        'link' => FALSE,
+      ],
+    ]);
+    $output = $this->renderPlain($build);
+    $this->assertEmpty($output);
+  }
+
+}

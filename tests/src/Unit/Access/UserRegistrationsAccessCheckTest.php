@@ -30,6 +30,7 @@ class UserRegistrationsAccessCheckTest extends UnitTestCase {
     \Drupal::setContainer($container);
 
     $cache_contexts_manager = new CacheContextsManager($container, [
+      'user',
       'user.permissions',
     ]);
     $container->set('cache_contexts_manager', $cache_contexts_manager);

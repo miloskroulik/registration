@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\registration\Unit\Access;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityInterface;
@@ -31,6 +32,7 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     \Drupal::setContainer($container);
 
     $cache_contexts_manager = new CacheContextsManager($container, [
+      'user',
       'user.permissions',
     ]);
     $container->set('cache_contexts_manager', $cache_contexts_manager);
@@ -81,6 +83,12 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
+    // Setup entity access results for remaining checks.
+    $result1 = AccessResult::neutral();
+    $result2 = AccessResult::allowed();
+    $result3 = AccessResult::allowed();
+    $entity->expects($this->any())->method('access')->willReturnOnConsecutiveCalls($result1, $result2, $result3);
+
     // Administer "own" registration permission.
     // Needs update access to the entity to succeed.
     $account = $this->createMock(AccountInterface::class);
@@ -94,8 +102,6 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
       ]));
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
-
-    $entity->expects($this->once())->method('access')->willReturn(TRUE);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
