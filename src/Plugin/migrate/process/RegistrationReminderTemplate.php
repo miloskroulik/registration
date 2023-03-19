@@ -9,7 +9,7 @@ use Drupal\migrate\Row;
 /**
  * Migrates a settings reminder template.
  *
- * Example ysage:
+ * Example usage:
  *
  * process:
  *   reminder_template:

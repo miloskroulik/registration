@@ -23,6 +23,9 @@ process:
   state: state
   created: created
   changed: updated
+  completed:
+    plugin: registration_completed
+    source: updated
 destination:
   plugin: entity:registration
 migration_dependencies:
