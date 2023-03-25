@@ -198,6 +198,29 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $violations = $registration->validate();
     $this->assertEquals('<em class="placeholder">' . $this->adminUser->getAccountName() . '</em> is already registered for this event.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
+
+    // Administrators can always edit existing registrations.
+    $this->setCurrentUser($this->adminUser);
+    $settings->set('status', FALSE);
+    $settings->save();
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    $violations = $registration->validate();
+    $this->assertEquals(1, $violations->count());
+    $registration->save();
+    $this->assertFalse($registration->isNew());
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+
+    // Non-administrative user.
+    $account = $this->createUser([], [
+      'view any conference registration',
+      'update any conference registration',
+    ]);
+    $this->setCurrentUser($account);
+    $violations = $registration->validate();
+    $this->assertEquals(1, $violations->count());
+    $this->assertEquals('Registration for <em class="placeholder">My event</em> is disabled.', (string) $violations[0]->getMessage());
   }
 
 }

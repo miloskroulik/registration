@@ -173,14 +173,17 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
 
         // If there were no violations so far, then the host entity may have
         // been disabled for registration by an event subscriber. Add a generic
-        // violation to cover this case.
-        if (empty(count($this->context->getViolations()))) {
-          $this->context
-            ->buildViolation($constraint->disabledMessage, [
-              '%label' => $host_entity->label(),
-            ])
-            ->addViolation();
-          return;
+        // violation to cover this case. However allow administrators to edit
+        // existing registrations.
+        if ($registration->isNew() || !$admin) {
+          if (empty(count($this->context->getViolations()))) {
+            $this->context
+              ->buildViolation($constraint->disabledMessage, [
+                '%label' => $host_entity->label(),
+              ])
+              ->addViolation();
+            return;
+          }
         }
       }
 
