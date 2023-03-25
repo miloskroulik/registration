@@ -6,8 +6,8 @@ use Drupal\Core\Routing\RouteMatch;
 use Drupal\registration\Access\RegisterAccessCheck;
 use Drupal\registration\RegistrationManagerInterface;
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
-use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 
 /**
  * Tests the "register" access check.
@@ -18,8 +18,8 @@ use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
  */
 class RegisterAccessCheckTest extends RegistrationKernelTestBase {
 
-  use NodeCreateTrait;
-  use RegistrationCreateTrait;
+  use NodeCreationTrait;
+  use RegistrationCreationTrait;
 
   /**
    * The registration manager.

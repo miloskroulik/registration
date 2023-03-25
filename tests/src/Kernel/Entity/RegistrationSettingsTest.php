@@ -3,8 +3,8 @@
 namespace Drupal\Tests\registration\Kernel\Entity;
 
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
-use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 
 /**
  * Tests the Registration Settings entity.
@@ -15,8 +15,8 @@ use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
  */
 class RegistrationSettingsTest extends RegistrationKernelTestBase {
 
-  use NodeCreateTrait;
-  use RegistrationCreateTrait;
+  use NodeCreationTrait;
+  use RegistrationCreationTrait;
 
   /**
    * @covers ::getHostEntity

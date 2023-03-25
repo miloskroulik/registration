@@ -6,7 +6,6 @@ use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\node\Entity\NodeType;
 use Drupal\registration\Entity\RegistrationType;
 use Drupal\registration\Entity\RegistrationTypeInterface;
-use Drupal\workflows\Entity\Workflow;
 
 /**
  * Provides a base class for Registration kernel tests.
@@ -42,51 +41,12 @@ abstract class RegistrationKernelTestBase extends EntityKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->installConfig('registration');
+
     $this->installEntitySchema('node');
     $this->installEntitySchema('registration');
     $this->installEntitySchema('registration_settings');
     $this->installEntitySchema('workflow');
-
-    $workflow = Workflow::create([
-      'id' => 'registration',
-      'label' => 'Registration',
-      'type' => 'registration',
-      'type_settings' => [
-        'states' => [
-          'pending' => [
-            'label' => 'Pending',
-            'description' => 'Registration is pending.',
-            'active' => TRUE,
-            'canceled' => FALSE,
-            'held' => FALSE,
-            'show_on_form' => FALSE,
-            'weight' => 0,
-          ],
-          'complete' => [
-            'label' => 'Complete',
-            'description' => 'Registration has been completed.',
-            'active' => TRUE,
-            'canceled' => FALSE,
-            'held' => FALSE,
-            'show_on_form' => FALSE,
-            'weight' => 1,
-          ],
-        ],
-        'transitions' => [
-          'complete' => [
-            'label' => 'Complete',
-            'to' => 'complete',
-            'weight' => 0,
-            'from' => [
-              'pending',
-            ],
-          ],
-        ],
-        'default_registration_state' => 'pending',
-        'complete_registration_state' => 'complete',
-      ],
-    ]);
-    $workflow->save();
 
     $node_type = NodeType::create([
       'type' => 'event',

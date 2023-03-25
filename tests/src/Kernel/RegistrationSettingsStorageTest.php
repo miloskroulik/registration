@@ -6,7 +6,7 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceModifierInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\NodeInterface;
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
 
 /**
  * Tests registration settings storage.
@@ -17,7 +17,7 @@ use Drupal\Tests\registration\Traits\NodeCreateTrait;
  */
 class RegistrationSettingsStorageTest extends RegistrationKernelTestBase implements ServiceModifierInterface {
 
-  use NodeCreateTrait;
+  use NodeCreationTrait;
 
   /**
    * Modules to enable.
@@ -55,6 +55,13 @@ class RegistrationSettingsStorageTest extends RegistrationKernelTestBase impleme
       ->get('config.factory')
       ->getEditable('system.site')
       ->set('default_langcode', 'es')
+      ->save();
+
+    // Do not automatically sync saved settings across languages.
+    $this->container
+      ->get('config.factory')
+      ->getEditable('registration.settings')
+      ->set('sync_registration_settings', FALSE)
       ->save();
   }
 
@@ -120,6 +127,48 @@ class RegistrationSettingsStorageTest extends RegistrationKernelTestBase impleme
     $this->assertTrue((bool) $settings->getSetting('status'));
     $this->assertEquals(5, $settings->getSetting('capacity'));
     $this->assertEquals(2, $settings->getSetting('maximum_spaces'));
+
+    // Automatically sync saved settings across languages.
+    $this->container
+      ->get('config.factory')
+      ->getEditable('registration.settings')
+      ->set('sync_registration_settings', TRUE)
+      ->save();
+
+    $node = $this->createAndSaveNode();
+    $host_entity = $handler->createHostEntity($node);
+
+    $settings = $storage->loadSettingsForHostEntity($host_entity);
+    $this->assertEquals('es', $settings->getLangcode());
+    $this->assertTrue($settings->isNew());
+    $settings->set('capacity', 100);
+    $settings->set('from_address', 'info@example.es');
+    $settings->save();
+    $settings = $storage->loadSettingsForHostEntity($host_entity);
+    $this->assertFalse($settings->isNew());
+
+    $settings = $storage->loadSettingsForHostEntity($host_entity, 'en');
+    $this->assertEquals('en', $settings->getLangcode());
+    // The settings for the alternate language are the same as the default
+    // language except for text.
+    $this->assertEquals(100, $settings->getSetting('capacity'));
+    $this->assertNotEquals('info@example.es', $settings->getSetting('from_address'));
+    $this->assertFalse($settings->isNew());
+
+    // Sync all fields including text fields.
+    $this->container
+      ->get('config.factory')
+      ->getEditable('registration.settings')
+      ->set('sync_registration_settings_all_fields', TRUE)
+      ->save();
+
+    $settings = $storage->loadSettingsForHostEntity($host_entity);
+    $this->assertEquals('es', $settings->getLangcode());
+    $settings->set('from_address', 'info@example.com');
+    $settings->save();
+    $settings = $storage->loadSettingsForHostEntity($host_entity, 'en');
+    $this->assertEquals('en', $settings->getLangcode());
+    $this->assertEquals('info@example.com', $settings->getSetting('from_address'));
   }
 
 }

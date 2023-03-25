@@ -126,7 +126,7 @@ class RegistrationFieldConstraintTest extends RegistrationKernelTestBase {
     $field_values = [
       'field_name' => 'field_registration',
       'entity_type' => 'user',
-      'bundle' => 'event',
+      'bundle' => 'user',
       'label' => 'Registration',
       'translatable' => FALSE,
     ];

@@ -2,9 +2,10 @@
 
 namespace Drupal\Tests\registration\Kernel\Plugin\Validation\Constraint;
 
+use Drupal\user\UserInterface;
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
-use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 
 /**
  * Tests the Registration constraint.
@@ -15,8 +16,15 @@ use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
  */
 class RegistrationConstraintTest extends RegistrationKernelTestBase {
 
-  use NodeCreateTrait;
-  use RegistrationCreateTrait;
+  use NodeCreationTrait;
+  use RegistrationCreationTrait;
+
+  /**
+   * The admin user.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected UserInterface $adminUser;
 
   /**
    * {@inheritdoc}
@@ -26,6 +34,7 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
 
     $admin_user = $this->createUser();
     $this->setCurrentUser($admin_user);
+    $this->adminUser = $admin_user;
   }
 
   /**
@@ -42,6 +51,23 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $this->assertEquals('Registration for <em class="placeholder">My event</em> is disabled.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
 
+    // Host entity is disabled for registration through settings.
+    $node = $this->createAndSaveNode();
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    $host_entity = $registration->getHostEntity();
+    $settings = $host_entity->getSettings();
+    $settings->set('status', FALSE);
+    $settings->save();
+    $violations = $registration->validate();
+    $this->assertEquals('Registration for <em class="placeholder">My event</em> is disabled.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+
+    $settings->set('status', TRUE);
+    $settings->save();
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+
     // Missing host entity.
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
@@ -56,7 +82,7 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
     // Capacity 5 and max 2 spaces per registration are set in the
-    // registraiton_test module.
+    // registration_test module.
     $registration->set('count', 5);
     $violations = $registration->validate();
     $this->assertEquals('You may not register for more than 2 spaces.', (string) $violations[0]->getMessage());
@@ -145,6 +171,33 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $registration->set('user_uid', $user->id());
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
+
+    // If multiple registrations are allowed per user or email address, then
+    // no violations should be triggered for duplicates.
+    $host_entity = $registration->getHostEntity();
+    $settings = $host_entity->getSettings();
+    $settings->set('multiple_registrations', TRUE);
+    $settings->save();
+    $registration->set('user_uid', 1);
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+    $registration->set('user_uid', NULL);
+    $registration->set('anon_mail', 'test@example.com');
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+
+    // Turn it back off and confirm errors are triggered.
+    $settings->set('multiple_registrations', FALSE);
+    $settings->save();
+    $registration->set('user_uid', 1);
+    $registration->set('anon_mail', NULL);
+    $violations = $registration->validate();
+    $this->assertEquals('You are already registered for this event.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $this->setCurrentUser($user);
+    $violations = $registration->validate();
+    $this->assertEquals('<em class="placeholder">' . $this->adminUser->getAccountName() . '</em> is already registered for this event.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
   }
 
 }

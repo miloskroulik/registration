@@ -3,8 +3,8 @@
 namespace Drupal\Tests\registration\Kernel\Entity;
 
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
-use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\user\UserInterface;
 
@@ -17,8 +17,8 @@ use Drupal\user\UserInterface;
  */
 class RegistrationTest extends RegistrationKernelTestBase {
 
-  use NodeCreateTrait;
-  use RegistrationCreateTrait;
+  use NodeCreationTrait;
+  use RegistrationCreationTrait;
 
   /**
    * A sample user.

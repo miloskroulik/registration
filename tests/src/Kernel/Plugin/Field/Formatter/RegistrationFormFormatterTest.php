@@ -5,7 +5,7 @@ namespace Drupal\Tests\registration\Kernel\Plugin\Field\Formatter;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceModifierInterface;
 use Drupal\Tests\registration\Kernel\CurrentRouteMatch;
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
 
 /**
  * Tests the registration_form formatter.
@@ -16,7 +16,7 @@ use Drupal\Tests\registration\Traits\NodeCreateTrait;
  */
 class RegistrationFormFormatterTest extends FormatterTestBase implements ServiceModifierInterface {
 
-  use NodeCreateTrait;
+  use NodeCreationTrait;
 
   /**
    * {@inheritdoc}

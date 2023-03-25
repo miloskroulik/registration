@@ -4,8 +4,8 @@ namespace Drupal\Tests\registration\Kernel\Plugin\Action;
 
 use Drupal\Core\Action\ActionManager;
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
-use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 
 /**
  * Tests the registration 'set state' action.
@@ -16,8 +16,8 @@ use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
  */
 class RegistrationEmailActionTest extends RegistrationKernelTestBase {
 
-  use NodeCreateTrait;
-  use RegistrationCreateTrait;
+  use NodeCreationTrait;
+  use RegistrationCreationTrait;
 
   /**
    * The action manager.

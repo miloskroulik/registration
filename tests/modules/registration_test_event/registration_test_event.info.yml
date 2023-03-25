@@ -1,0 +1,6 @@
+name: Registration Test Event
+type: module
+description: 'Test module for Registration events.'
+package: Testing
+dependencies:
+  - registration:registration

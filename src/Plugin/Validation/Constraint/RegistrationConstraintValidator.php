@@ -79,88 +79,108 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
 
       $settings = $host_entity->getSettings();
 
-      // Check the main status setting for new registrations. Allow an
-      // administrator to edit registrations even when the main setting is
-      // disabled.
-      $type = $host_entity->getRegistrationTypeBundle();
-      $admin =
-             $this->currentUser->hasPermission("administer registration")
-          || $this->currentUser->hasPermission("administer $type registration");
-
-      if ($registration->isNew() || !$admin) {
-        $enabled = (bool) $settings->getSetting('status');
-        if (!$enabled) {
-          $this->context
-            ->buildViolation($constraint->disabledMessage, [
-              '@%label' => $host_entity->label(),
-            ])
-            ->addViolation();
-          return;
-        }
-      }
-
-      // Check maximum allowed spaces per registration.
+      // Skip certain checks if the host entity is considered enabled for
+      // registration. This allows event subscribers to override constraint
+      // checking. If the host entity is not enabled, then do the checks so
+      // a specific error message can be given.
       $spaces = $registration->getSpacesReserved();
-      $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
-      if ($maximum_spaces && ($spaces > $maximum_spaces)) {
-        $this->context
-          ->buildViolation($constraint->tooManySpacesMessage)
-          ->setParameter('@count', $maximum_spaces)
-          ->setPlural((int) $maximum_spaces)
-          ->atPath('count')
-          ->addViolation();
-      }
+      $host_enabled = $host_entity->isEnabledForRegistration($spaces, $registration);
 
-      // Check against capacity unless the registration is canceled.
-      if (!$registration->isCanceled() && !$host_entity->hasRoom($spaces, $registration)) {
-        if ($spaces > 1) {
+      if (!$host_enabled) {
+        // Check the main status setting for new registrations. Allow an
+        // administrator to edit registrations even when the main setting is
+        // disabled.
+        $type = $host_entity->getRegistrationTypeBundle();
+        $admin =
+               $this->currentUser->hasPermission("administer registration")
+            || $this->currentUser->hasPermission("administer $type registration");
+
+        if ($registration->isNew() || !$admin) {
+          $enabled = (bool) $settings->getSetting('status');
+          if (!$enabled) {
+            $this->context
+              ->buildViolation($constraint->disabledMessage, [
+                '%label' => $host_entity->label(),
+              ])
+              ->addViolation();
+            return;
+          }
+        }
+
+        // Check maximum allowed spaces per registration.
+        $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
+        if ($maximum_spaces && ($spaces > $maximum_spaces)) {
           $this->context
-            ->buildViolation($constraint->noRoomMessage, [
-              '%label' => $host_entity->label(),
-            ])
+            ->buildViolation($constraint->tooManySpacesMessage)
+            ->setParameter('@count', $maximum_spaces)
+            ->setPlural((int) $maximum_spaces)
             ->atPath('count')
             ->addViolation();
         }
-        else {
+
+        // Check against capacity unless the registration is canceled.
+        if (!$registration->isCanceled() && !$host_entity->hasRoom($spaces, $registration)) {
+          if ($spaces > 1) {
+            $this->context
+              ->buildViolation($constraint->noRoomMessage, [
+                '%label' => $host_entity->label(),
+              ])
+              ->atPath('count')
+              ->addViolation();
+          }
+          else {
+            $this->context
+              ->buildViolation($constraint->noRoomMessage, [
+                '%label' => $host_entity->label(),
+              ])
+              ->addViolation();
+          }
+        }
+
+        // Check against open and close dates for new registrations.
+        if ($registration->isNew()) {
+          $storage_format = DateTimeItemInterface::DATETIME_STORAGE_FORMAT;
+          $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+
+          $registration_date = new DrupalDateTime('now', $storage_timezone);
+
+          // Check open date.
+          $open = $settings->getSetting('open');
+          if ($open) {
+            $open = DrupalDateTime::createFromFormat($storage_format, $open, $storage_timezone);
+          }
+          if ($open && ($registration_date < $open)) {
+            $this->context
+              ->buildViolation($constraint->notOpenYetMessage, [
+                '%label' => $host_entity->label(),
+              ])
+              ->addViolation();
+          }
+
+          // Check close date.
+          $close = $settings->getSetting('close');
+          if ($close) {
+            $close = DrupalDateTime::createFromFormat($storage_format, $close, $storage_timezone);
+          }
+          if ($close && ($registration_date >= $close)) {
+            $this->context
+              ->buildViolation($constraint->closedMessage, [
+                '%label' => $host_entity->label(),
+              ])
+              ->addViolation();
+          }
+        }
+
+        // If there were no violations so far, then the host entity may have
+        // been disabled for registration by an event subscriber. Add a generic
+        // violation to cover this case.
+        if (empty(count($this->context->getViolations()))) {
           $this->context
-            ->buildViolation($constraint->noRoomMessage, [
+            ->buildViolation($constraint->disabledMessage, [
               '%label' => $host_entity->label(),
             ])
             ->addViolation();
-        }
-      }
-
-      // Check against open and close dates for new registrations.
-      if ($registration->isNew()) {
-        $storage_format = DateTimeItemInterface::DATETIME_STORAGE_FORMAT;
-        $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
-
-        $registration_date = new DrupalDateTime('now', $storage_timezone);
-
-        // Check open date.
-        $open = $settings->getSetting('open');
-        if ($open) {
-          $open = DrupalDateTime::createFromFormat($storage_format, $open, $storage_timezone);
-        }
-        if ($open && ($registration_date < $open)) {
-          $this->context
-            ->buildViolation($constraint->notOpenYetMessage, [
-              '%label' => $host_entity->label(),
-            ])
-            ->addViolation();
-        }
-
-        // Check close date.
-        $close = $settings->getSetting('close');
-        if ($close) {
-          $close = DrupalDateTime::createFromFormat($storage_format, $close, $storage_timezone);
-        }
-        if ($close && ($registration_date >= $close)) {
-          $this->context
-            ->buildViolation($constraint->closedMessage, [
-              '%label' => $host_entity->label(),
-            ])
-            ->addViolation();
+          return;
         }
       }
 

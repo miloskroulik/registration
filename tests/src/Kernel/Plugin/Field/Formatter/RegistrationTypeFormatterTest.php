@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\registration\Kernel\Plugin\Field\Formatter;
 
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
 
 /**
  * Tests the registration_type formatter.
@@ -13,7 +13,7 @@ use Drupal\Tests\registration\Traits\NodeCreateTrait;
  */
 class RegistrationTypeFormatterTest extends FormatterTestBase {
 
-  use NodeCreateTrait;
+  use NodeCreationTrait;
 
   /**
    * @covers ::render

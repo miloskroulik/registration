@@ -6,8 +6,8 @@ use Drupal\node\NodeInterface;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationManagerInterface;
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
-use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
 /**
@@ -19,8 +19,8 @@ use Symfony\Component\HttpFoundation\ParameterBag;
  */
 class RegistrationManagerTest extends RegistrationKernelTestBase {
 
-  use NodeCreateTrait;
-  use RegistrationCreateTrait;
+  use NodeCreationTrait;
+  use RegistrationCreationTrait;
 
   /**
    * The host entity.

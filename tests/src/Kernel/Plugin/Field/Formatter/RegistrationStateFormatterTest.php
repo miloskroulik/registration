@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\registration\Kernel\Plugin\Field\Formatter;
 
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
-use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 
 /**
  * Tests the registration_state formatter.
@@ -14,8 +14,8 @@ use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
  */
 class RegistrationStateFormatterTest extends FormatterTestBase {
 
-  use NodeCreateTrait;
-  use RegistrationCreateTrait;
+  use NodeCreationTrait;
+  use RegistrationCreationTrait;
 
   /**
    * @covers ::render

@@ -3,8 +3,8 @@
 namespace Drupal\Tests\registration\Kernel;
 
 use Drupal\registration\Entity\RegistrationType;
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
-use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 
 /**
  * Tests registration permissions and access control.
@@ -15,8 +15,8 @@ use Drupal\Tests\registration\Traits\RegistrationCreateTrait;
  */
 class RegistrationAccessTest extends RegistrationKernelTestBase {
 
-  use NodeCreateTrait;
-  use RegistrationCreateTrait;
+  use NodeCreationTrait;
+  use RegistrationCreationTrait;
 
   /**
    * {@inheritdoc}

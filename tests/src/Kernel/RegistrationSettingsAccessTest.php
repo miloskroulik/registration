@@ -6,7 +6,7 @@ use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 use Drupal\registration\Entity\RegistrationType;
-use Drupal\Tests\registration\Traits\NodeCreateTrait;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
 
 /**
  * Tests registration settings permissions and access control.
@@ -17,7 +17,7 @@ use Drupal\Tests\registration\Traits\NodeCreateTrait;
  */
 class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
 
-  use NodeCreateTrait;
+  use NodeCreationTrait;
 
   /**
    * The node.

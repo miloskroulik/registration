@@ -8,7 +8,7 @@ use Drupal\node\NodeInterface;
 /**
  * Defines a trait for creating a test node and saving it.
  */
-trait NodeCreateTrait {
+trait NodeCreationTrait {
 
   /**
    * Creates a node that is configured for registration.

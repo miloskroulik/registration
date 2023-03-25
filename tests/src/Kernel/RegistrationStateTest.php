@@ -64,12 +64,14 @@ class RegistrationStateTest extends RegistrationKernelTestBase {
     $this->assertFalse($state->isShownOnForm());
     $this->assertEquals('complete', $state->id());
     $this->assertEquals('Complete', $state->label());
-    $this->assertEquals(1, $state->weight());
+    // Held state is in between pending and complete.
+    $this->assertEquals(2, $state->weight());
     $this->assertFalse($state->canTransitionTo('complete'));
     $this->assertFalse($state->canTransitionTo('pending'));
 
+    // Completed registrations can be canceled.
     $transitions = $state->getTransitions();
-    $this->assertEmpty($transitions);
+    $this->assertCount(1, $transitions);
   }
 
   /**
@@ -77,20 +79,20 @@ class RegistrationStateTest extends RegistrationKernelTestBase {
    */
   public function testNewState() {
     $workflow = Workflow::load('registration');
-    $workflow_state = new State($workflow->getTypePlugin(), 'canceled', 'Canceled', 10);
+    $workflow_state = new State($workflow->getTypePlugin(), 'ticketed', 'Ticketed', 10);
     $active = FALSE;
     $canceled = TRUE;
     $held = FALSE;
     $show = FALSE;
-    $state = new RegistrationState($workflow_state, 'Registration has been canceled.', $active, $canceled, $held, $show);
+    $state = new RegistrationState($workflow_state, 'Registration has been ticketed.', $active, $canceled, $held, $show);
 
-    $this->assertEquals('Registration has been canceled.', $state->getDescription());
+    $this->assertEquals('Registration has been ticketed.', $state->getDescription());
     $this->assertFalse($state->isActive());
     $this->assertTrue($state->isCanceled());
     $this->assertFalse($state->isHeld());
     $this->assertFalse($state->isShownOnForm());
-    $this->assertEquals('canceled', $state->id());
-    $this->assertEquals('Canceled', $state->label());
+    $this->assertEquals('ticketed', $state->id());
+    $this->assertEquals('Ticketed', $state->label());
     $this->assertEquals(10, $state->weight());
   }
 

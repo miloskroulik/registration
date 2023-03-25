@@ -9,7 +9,7 @@ use Drupal\registration\Entity\RegistrationInterface;
 /**
  * Defines a trait for creating a test registration and saving it.
  */
-trait RegistrationCreateTrait {
+trait RegistrationCreationTrait {
 
   /**
    * Creates a registration for a given node host entity.
