@@ -19,11 +19,35 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
    */
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account): AccessResultInterface {
     $account = $this->prepareUser($account);
+
+    /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
+    $host_entity = $entity->getHostEntity();
+
+    // Update operations require a host entity configured for registration.
+    if ($operation == 'update') {
+      if (!$host_entity) {
+        $result = AccessResult::forbidden("The host entity is missing.");
+        return $result->addCacheableDependency($entity);
+      }
+      if (!$host_entity->isConfiguredForRegistration()) {
+        $result = AccessResult::forbidden("The host entity is not configured for registration.");
+        if ($host_entity->getEntity()) {
+          $result->addCacheableDependency($host_entity->getEntity());
+        }
+        return $result->addCacheableDependency($entity);
+      }
+    }
+
     /** @var \Drupal\Core\Access\AccessResult $result */
     $result = parent::checkAccess($entity, $operation, $account);
 
     if ($result->isNeutral()) {
       $result = $this->checkEntityUserPermissions($entity, $operation, $account);
+    }
+
+    // Ensure that access is evaluated again when the host entity changes.
+    if ($host_entity && $host_entity->getEntity()) {
+      $result->addCacheableDependency($host_entity->getEntity());
     }
 
     // Ensure that access is evaluated again when the entity changes.
