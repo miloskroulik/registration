@@ -169,8 +169,10 @@ function registration_entity_operation_alter(array &$operations, EntityInterface
 function registration_entity_insert(EntityInterface $entity) {
   if ($entity instanceof FieldConfig) {
     if ($entity->getType() == 'registration') {
-      // Rebuild routes and local tasks when Registration fields are added.
+      // Rebuild routes, block plugins and local tasks when Registration fields
+      // are added.
       \Drupal::service("router.builder")->rebuild();
+      \Drupal::service('plugin.manager.block')->clearCachedDefinitions();
       \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
     }
   }
@@ -182,8 +184,10 @@ function registration_entity_insert(EntityInterface $entity) {
 function registration_entity_delete(EntityInterface $entity) {
   if ($entity instanceof FieldConfig) {
     if ($entity->getType() == 'registration') {
-      // Rebuild routes and local tasks when Registration fields are deleted.
+      // Rebuild routes, block plugins and local tasks when Registration fields
+      // are deleted.
       \Drupal::service("router.builder")->rebuild();
+      \Drupal::service('plugin.manager.block')->clearCachedDefinitions();
       \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
     }
   }
