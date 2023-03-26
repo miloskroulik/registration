@@ -113,10 +113,12 @@ abstract class RegistrationBrowserTestBase extends BrowserTestBase {
    */
   protected function getAdministratorPermissions(): array {
     return [
-      'view the administration theme',
       'access administration pages',
+      'access user profiles',
+      'administer blocks',
       'administer registration',
       'administer registration types',
+      'view the administration theme',
     ];
   }
 

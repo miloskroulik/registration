@@ -3,7 +3,7 @@
 namespace Drupal\Tests\registration\Functional;
 
 /**
- * Tests the registration type UI.
+ * Tests register.
  *
  * @group registration
  */
