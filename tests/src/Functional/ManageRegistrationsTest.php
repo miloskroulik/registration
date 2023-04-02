@@ -10,7 +10,7 @@ namespace Drupal\Tests\registration\Functional;
 class ManageRegistrationsTest extends RegistrationBrowserTestBase {
 
   /**
-   * Tests registration settings.
+   * Tests manage registrations.
    */
   public function testManageRegistrations() {
     $user = $this->drupalCreateUser();

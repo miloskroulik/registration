@@ -26,8 +26,8 @@ class RegistrationSettingsTest extends RegistrationBrowserTestBase {
     $this->drupalGet('user/' . $user->id() . '/registrations/settings/delete');
     $this->assertSession()->statusCodeEquals(404);
 
-    // Registration settings cannot edited if the host entity is not configured
-    // for registration.
+    // Registration settings cannot be edited if the host entity is not
+    // configured for registration.
     $user->set('field_registration', NULL);
     $user->save();
     $this->drupalGet('user/' . $user->id() . '/registrations/settings');
