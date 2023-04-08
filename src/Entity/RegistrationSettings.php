@@ -392,6 +392,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
       ->setLabel(t('Spaces allowed'))
       ->setDescription(t('The maximum number of spaces allowed for each registrations. For no limit, use 0. (Default is 1)'))
       ->setRequired(TRUE)
+      ->setDefaultValue(1)
       ->setSetting('min', 0)
       ->setSetting('max', 99999)
       ->setDisplayOptions('form', [
