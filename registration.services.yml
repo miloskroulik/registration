@@ -54,7 +54,7 @@ services:
   registration.collection_access_checker:
     class: Drupal\registration\Access\RegistrationCollectionAccessCheck
     tags:
-    - { name: access_check, applies_to: _registration_collection_access }
+      - { name: access_check, applies_to: _registration_collection_access }
 
   registration.manage_registrations_access_checker:
     class: Drupal\registration\Access\ManageRegistrationsAccessCheck
