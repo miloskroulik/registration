@@ -20,6 +20,15 @@ views.field.registration_host_entity:
 views.field.registration_settings_operations:
   type: views_field
   label: 'Registration settings operations'
+views.field.host_entity_registration_count:
+  type: views_field
+  label: 'Host entity registration count'
+views.field.host_entity_spaces_remaining:
+  type: views_field
+  label: 'Host entity spaces remaining'
+views.field.host_entity_spaces_reserved:
+  type: views_field
+  label: 'Host entity spaces reserved'
 
 views.relationship.registration:
   type: views_relationship

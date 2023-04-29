@@ -110,7 +110,33 @@ function registration_views_data_alter(array &$data) {
     ];
   }
 
-  // Make views aware of custom field plugins.
+  // Add custom field plugins for host entity data.
+  foreach ($registration_manager->getRegistrationEnabledEntityTypes() as $entity_type) {
+    $table = $entity_type->getDataTable() ?: $entity_type->getBaseTable();
+    $data[$table]['registration_count'] = [
+      'title' => t('Registration count'),
+      'help' => t('The total number of registrations.'),
+      'field' => [
+        'id' => 'host_entity_registration_count',
+      ],
+    ];
+    $data[$table]['spaces_remaining'] = [
+      'title' => t('Spaces remaining'),
+      'help' => t('The number of spaces remaining for registration.'),
+      'field' => [
+        'id' => 'host_entity_spaces_remaining',
+      ],
+    ];
+    $data[$table]['spaces_reserved'] = [
+      'title' => t('Spaces reserved'),
+      'help' => t('The number of spaces reserved by registrations.'),
+      'field' => [
+        'id' => 'host_entity_spaces_reserved',
+      ],
+    ];
+  }
+
+  // Make views aware of additional custom field plugins.
   $data['registration']['host_entity'] = [
     'title' => t('Host entity'),
     'group' => t('Registration'),
