@@ -420,7 +420,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function hasRoom(int $spaces = 1, RegistrationInterface $registration = NULL): bool {
-    $capacity = $this->getSettings()->getSetting('capacity');
+    $capacity = $this->getSetting('capacity');
     if ($capacity) {
       $projected_usage = $this->getActiveSpacesReserved($registration) + $spaces;
       if (($capacity - $projected_usage) < 0) {
