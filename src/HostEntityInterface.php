@@ -126,6 +126,17 @@ interface HostEntityInterface {
   public function getActiveSpacesReserved(RegistrationInterface $registration = NULL): int;
 
   /**
+   * Gets the reserved spaces for registrations in the wait list.
+   *
+   * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
+   *   (optional) If set, an existing registration to exclude from the count.
+   *
+   * @return int
+   *   The total number of reserved spaces for registrations in the wait list.
+   */
+  public function getWaitListSpacesReserved(RegistrationInterface $registration = NULL): int;
+
+  /**
    * Gets the spaces remaining.
    *
    * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
@@ -233,6 +244,19 @@ interface HostEntityInterface {
   public function hasRoom(int $spaces = 1, RegistrationInterface $registration = NULL): bool;
 
   /**
+   * Determines if a host entity has spaces remaining on its wait list.
+   *
+   * @param int $spaces
+   *   (optional) The number of spaces requested. Defaults to 1.
+   * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
+   *   (optional) If set, an existing registration to exclude from the count.
+   *
+   * @return bool
+   *   TRUE if there are spaces remaining on the wait list, FALSE otherwise.
+   */
+  public function hasRoomOnWaitList(int $spaces = 1, RegistrationInterface $registration = NULL): bool;
+
+  /**
    * Determines whether a host entity is configured for registration.
    *
    * A host entity is configured for registration if it has a registration
@@ -310,5 +334,17 @@ interface HostEntityInterface {
    *   TRUE if it is currently after the close date.
    */
   public function isAfterClose(): bool;
+
+  /**
+   * Determines whether the wait list is enabled.
+   *
+   * Always returns FALSE unless the registration_waitlist submodule is
+   * installed, and the wait list registration setting is enabled for
+   * the host entity.
+   *
+   * @return bool
+   *   TRUE if the wait list is enabled, FALSE otherwise.
+   */
+  public function isWaitListEnabled(): bool;
 
 }

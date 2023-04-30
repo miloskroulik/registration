@@ -162,6 +162,21 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
   /**
    * {@inheritdoc}
    */
+  public function getWaitListStates(): array {
+    $states = [];
+
+    if ($workflow = $this->getWorkflow()) {
+      if ($wait_list_state = $workflow->getTypePlugin()->getWaitListState()) {
+        $states[$id] = $wait_list_state;
+      }
+    }
+
+    return $states;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getStatesToShowOnForm(StateInterface $current_state = NULL, bool $check_transitions = FALSE): array {
     $states = [];
 
