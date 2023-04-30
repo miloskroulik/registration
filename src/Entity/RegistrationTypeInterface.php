@@ -36,14 +36,6 @@ interface RegistrationTypeInterface extends ConfigEntityInterface {
   public function getHeldStates(): array;
 
   /**
-   * Gets the wait list states for the registration type.
-   *
-   * @return array
-   *   An array of states indexed by state ID, if any.
-   */
-  public function getWaitListStates(): array;
-
-  /**
    * Gets the states to show on the registration form.
    *
    * @param \Drupal\workflows\StateInterface|null $current_state

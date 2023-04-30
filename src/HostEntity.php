@@ -245,48 +245,6 @@ class HostEntity implements HostEntityInterface {
       'host_entity' => $this,
       'settings' => $this->getSettings(),
       'registration' => $registration,
-      'states' => $states,
-    ]);
-    $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_USAGE);
-    return $event->getData() ?? 0;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getWaitListSpacesReserved(RegistrationInterface $registration = NULL): int {
-    $states = [];
-
-    if ($registration_type = $this->getRegistrationType()) {
-      $states = $registration_type->getWaitListStates();
-    }
-
-    // Ensure we have wait list states before querying against them.
-    if (empty($states)) {
-      return 0;
-    }
-
-    $database = Database::getConnection();
-    $query = $database->select('registration')
-      ->condition('entity_id', $this->id())
-      ->condition('entity_type_id', $this->getEntityTypeId())
-      ->condition('state', array_keys($states), 'IN');
-
-    if ($registration && !$registration->isNew()) {
-      $query->condition('registration_id', $registration->id(), '<>');
-    }
-
-    $query->addExpression('sum(count)', 'spaces');
-
-    $spaces = $query->execute()->fetchField();
-    $spaces = empty($spaces) ? 0 : $spaces;
-
-    // Allow other modules to alter the number of spaces reserved.
-    $event = new RegistrationDataAlterEvent($spaces, [
-      'host_entity' => $this,
-      'settings' => $this->getSettings(),
-      'registration' => $registration,
-      'states' => $states,
     ]);
     $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_USAGE);
     return $event->getData() ?? 0;
@@ -462,33 +420,14 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function hasRoom(int $spaces = 1, RegistrationInterface $registration = NULL): bool {
-    $capacity = $this->getSetting('capacity');
+    $capacity = $this->getSettings()->getSetting('capacity');
     if ($capacity) {
       $projected_usage = $this->getActiveSpacesReserved($registration) + $spaces;
       if (($capacity - $projected_usage) < 0) {
-        // No room, but check the wait list.
-        return $this->hasRoomOnWaitList($spaces, $registration);
+        return FALSE;
       }
     }
     return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasRoomOnWaitList(int $spaces = 1, RegistrationInterface $registration = NULL): bool {
-    if ($this->isWaitListEnabled()) {
-      $capacity = $this->getSetting('registration_waitlist_capacity');
-      if ($capacity) {
-        $projected_usage = $this->getWaitListSpacesReserved($registration) + $spaces;
-        if (($capacity - $projected_usage) < 0) {
-          return FALSE;
-        }
-      }
-      return TRUE;
-    }
-    // Wait list is not installed or not enabled.
-    return FALSE;
   }
 
   /**
@@ -521,16 +460,9 @@ class HostEntity implements HostEntityInterface {
       // Check capacity.
       if (!$this->hasRoom($spaces, $registration)) {
         $enabled = FALSE;
-        if ($this->isWaitListEnabled()) {
-          $errors[] = $this->t('Sorry, unable to register for %label because the wait list is full.', [
-            '%label' => $this->label(),
-          ]);
-        }
-        else {
-          $errors[] = $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
-            '%label' => $this->label(),
-          ]);
-        }
+        $errors[] = $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
+          '%label' => $this->label(),
+        ]);
       }
 
       // Check open date.
@@ -559,8 +491,6 @@ class HostEntity implements HostEntityInterface {
     $event = new RegistrationDataAlterEvent($enabled, [
       'host_entity' => $this,
       'settings' => $settings,
-      'spaces' => $spaces,
-      'registration' => $registration,
       'errors' => $errors,
     ]);
     $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_ENABLED);
@@ -649,16 +579,6 @@ class HostEntity implements HostEntityInterface {
       $close = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $close, $storage_timezone);
     }
     return ($close && ($now >= $close));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isWaitListEnabled(): bool {
-    if ($this->moduleHandler()->moduleExists('registration_waitlist')) {
-      return (bool) $this->getSetting('registration_waitlist_enable');
-    }
-    return FALSE;
   }
 
   /**
