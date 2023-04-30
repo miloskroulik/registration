@@ -491,6 +491,8 @@ class HostEntity implements HostEntityInterface {
     $event = new RegistrationDataAlterEvent($enabled, [
       'host_entity' => $this,
       'settings' => $settings,
+      'spaces' => $spaces,
+      'registration' => $registration,
       'errors' => $errors,
     ]);
     $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_ENABLED);
