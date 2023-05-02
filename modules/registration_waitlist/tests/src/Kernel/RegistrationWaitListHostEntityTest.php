@@ -62,10 +62,20 @@ class RegistrationWaitListHostEntityTest extends RegistrationWaitListKernelTestB
     $this->assertTrue($host_entity->isEnabledForRegistration());
 
     // Disable the wait list.
-    $settings = $host_entity->getSettings();
+    $node = $this->createAndSaveNode();
+    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $host_entity = $handler->createHostEntity($node);
+    /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
+    $storage = $this->entityTypeManager->getStorage('registration_settings');
+    $settings = $storage->loadSettingsForHostEntity($host_entity);
     $settings->set('registration_waitlist_enable', FALSE);
     $settings->save();
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    $registration->set('count', 5);
+    $registration->save();
     $this->assertFalse($host_entity->hasRoom());
+    $this->assertFalse($host_entity->hasRoomOffWaitList());
     $this->assertFalse($host_entity->hasRoomOnWaitList());
     $this->assertFalse($host_entity->isEnabledForRegistration());
   }
