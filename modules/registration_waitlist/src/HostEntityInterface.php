@@ -11,6 +11,19 @@ use Drupal\registration\HostEntityInterface as BaseHostEntityInterface;
 interface HostEntityInterface extends BaseHostEntityInterface {
 
   /**
+   * Gets the spaces remaining on the wait list.
+   *
+   * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
+   *   (optional) If set, an existing registration to exclude from the spaces
+   *   reserved when calculating the wait list spaces remaining.
+   *
+   * @return int|null
+   *   The spaces remaining on the wait list, if available. Returns NULL if the
+   *   wait list is disabled or the wait list capacity is unlimited (0).
+   */
+  public function getWaitListSpacesRemaining(RegistrationInterface $registration = NULL): ?int;
+
+  /**
    * Gets the reserved spaces for registrations in the wait list.
    *
    * @param \Drupal\registration\Entity\RegistrationInterface|null $registration

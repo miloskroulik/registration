@@ -17,6 +17,27 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function getWaitListSpacesRemaining(RegistrationInterface $registration = NULL): ?int {
+    if ($this->isWaitListEnabled()) {
+      if ($capacity = $this->getSetting('registration_waitlist_capacity')) {
+        // Allow other modules to alter the number of spaces remaining.
+        $spaces_remaining = $capacity - $this->getWaitListSpacesReserved($registration);
+        $event = new RegistrationDataAlterEvent($spaces_remaining, [
+          'host_entity' => $this,
+          'settings' => $this->getSettings(),
+          'registration' => $registration,
+          'waitlist' => TRUE,
+        ]);
+        $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_SPACES_REMAINING);
+        return $event->getData() ?? NULL;
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getWaitListSpacesReserved(RegistrationInterface $registration = NULL): int {
     $database = Database::getConnection();
     $query = $database->select('registration')
