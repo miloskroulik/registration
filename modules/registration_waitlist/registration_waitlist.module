@@ -17,6 +17,8 @@ use Drupal\registration_waitlist\Plugin\Field\RegistrationItemFieldItemList;
 function registration_waitlist_entity_type_alter(array &$entity_types) {
   // Override the host entity handler.
   $entity_types['registration']->setHandlerClass('host_entity', 'Drupal\registration_waitlist\HostEntityHandler');
+  // Add a wait list constraint to registration settings.
+  $entity_types['registration_settings']->addConstraint('MinimumWaitListCapacity');
 }
 
 /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\registration\Plugin\Validation\Constraint;
+namespace Drupal\registration_waitlist\Plugin\Validation\Constraint;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -10,9 +10,9 @@ use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
 /**
- * Validates the MinimumCapacityConstraint constraint.
+ * Validates the MinimumWaitListCapacityConstraint constraint.
  */
-class MinimumCapacityConstraintValidator extends ConstraintValidator implements ContainerInjectionInterface {
+class MinimumWaitListCapacityConstraintValidator extends ConstraintValidator implements ContainerInjectionInterface {
 
   /**
    * The entity type manager.
@@ -34,7 +34,7 @@ class MinimumCapacityConstraintValidator extends ConstraintValidator implements 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container): MinimumCapacityConstraintValidator {
+  public static function create(ContainerInterface $container): MinimumWaitListCapacityConstraintValidator {
     return new static(
       $container->get('entity_type.manager')
     );
@@ -44,26 +44,23 @@ class MinimumCapacityConstraintValidator extends ConstraintValidator implements 
    * {@inheritdoc}
    */
   public function validate($settings, Constraint $constraint) {
-    // Validate the capacity if it is not null and it is greater than zero. If
-    // the capacity is null, the minimum value constraint will be triggered
-    // instead, which is sufficient, and triggering a second violation would be
-    // confusing. If the capacity is zero, the implied capacity is "unlimited",
-    // so no check is required.
-    if (($settings instanceof RegistrationSettings) && ((int) $settings->getSetting('capacity') > 0)) {
+    if (($settings instanceof RegistrationSettings) && ((int) $settings->getSetting('registration_waitlist_capacity') > 0)) {
       $entity_type_id = $settings->getHostEntityTypeId();
       $entity_id = $settings->getHostEntityId();
       $storage = $this->entityTypeManager->getStorage($entity_type_id);
       if ($entity = $storage->load($entity_id)) {
         $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
         $host_entity = $handler->createHostEntity($entity);
-        // Prevent setting the capacity to a non-zero value that is less than
-        // the number of spaces already reserved by active registrations.
-        if ($settings->getSetting('capacity') < $host_entity->getActiveSpacesReserved()) {
-          $this->context->buildViolation($constraint->message, [
-            '@type' => $host_entity->getRegistrationTypeBundle(),
-            '@capacity' => $host_entity->getActiveSpacesReserved(),
-          ])->atPath('capacity')
-            ->addViolation();
+        if ($host_entity->isWaitListEnabled()) {
+          // Prevent setting the capacity to a non-zero value that is less than
+          // the number of spaces already reserved by wait listed registrations.
+          if ($settings->getSetting('registration_waitlist_capacity') < $host_entity->getWaitListSpacesReserved()) {
+            $this->context->buildViolation($constraint->message, [
+              '@type' => $host_entity->getRegistrationTypeBundle(),
+              '@capacity' => $host_entity->getWaitListSpacesReserved(),
+            ])->atPath('registration_waitlist_capacity')
+              ->addViolation();
+          }
         }
       }
     }
