@@ -8,6 +8,7 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
@@ -87,7 +88,6 @@ class RegisterForm extends ContentEntityForm {
           '#markup' => $error,
         ];
       }
-      return $form;
     }
 
     // Initialize the form with fields.
@@ -100,6 +100,15 @@ class RegisterForm extends ContentEntityForm {
     $admin_theme = $this->currentUser()->hasPermission('view the administration theme');
     if (!$registration->isNew() && $admin_theme) {
       $this->useAdvancedForm($form);
+    }
+
+    // Hide all fields if registration is disabled.
+    if (!empty($form['notice'])) {
+      foreach (Element::children($form) as $key) {
+        if ($key != 'notice') {
+          $form[$key]['#access'] = FALSE;
+        }
+      }
     }
 
     return $form;
