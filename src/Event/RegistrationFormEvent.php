@@ -27,7 +27,7 @@ class RegistrationFormEvent extends Event {
   protected FormStateInterface $formState;
 
   /**
-   * Constructs a new RegistrationEvent.
+   * Constructs a new RegistrationFormEvent.
    *
    * @param array $form
    *   The registration form.

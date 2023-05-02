@@ -88,6 +88,24 @@ final class RegistrationEvents {
   const REGISTRATION_ALTER_REGISTER_FORM = 'registration.alter.register_form';
 
   /**
+   * Name of the event fired when handling registration logging.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationSaveEvent
+   */
+  const REGISTRATION_SAVE_LOG = 'registration.save.log';
+
+  /**
+   * Name of the event fired when handling registration confirmation.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationSaveEvent
+   */
+  const REGISTRATION_SAVE_CONFIRMATION = 'registration.save.confirmation';
+
+  /**
    * Name of the event fired after loading a registration.
    *
    * @Event

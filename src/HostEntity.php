@@ -35,7 +35,7 @@ class HostEntity implements HostEntityInterface {
   use DependencySerializationTrait;
 
   /**
-   * The current user service.
+   * The current user.
    *
    * @var \Drupal\Core\Session\AccountProxy
    */

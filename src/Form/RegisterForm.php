@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Form;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Datetime\DateFormatterInterface;
@@ -15,6 +16,7 @@ use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\Event\RegistrationFormEvent;
+use Drupal\registration\Event\RegistrationSaveEvent;
 use Drupal\registration\RegistrationHelper;
 use Drupal\registration\RegistrationManagerInterface;
 use Drupal\workflows\State;
@@ -32,6 +34,13 @@ class RegisterForm extends ContentEntityForm {
    * @var \Drupal\Core\Datetime\DateFormatterInterface
    */
   protected DateFormatterInterface $dateFormatter;
+
+  /**
+   * The event dispatcher.
+   *
+   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   */
+  protected ContainerAwareEventDispatcher $eventDispatcher;
 
   /**
    * The language manager.
@@ -60,6 +69,7 @@ class RegisterForm extends ContentEntityForm {
   public static function create(ContainerInterface $container): RegisterForm {
     $instance = parent::create($container);
     $instance->dateFormatter = $container->get('date.formatter');
+    $instance->eventDispatcher = $container->get('event_dispatcher');
     $instance->languageManager = $container->get('language_manager');
     $instance->logger = $container->get('registration.logger');
     $instance->registrationManager = $container->get('registration.manager');
@@ -220,28 +230,38 @@ class RegisterForm extends ContentEntityForm {
     // Save the registration.
     $return = $registration->save();
 
-    // Log it.
-    if ($is_new) {
-      if ($user = $registration->getUser()) {
-        $this->logger->info('@name registered for %label (ID #@id).', [
-          '@name' => $user->getDisplayName(),
-          '%label' => $host_entity->label(),
-          '@id' => $registration->id(),
-        ]);
+    // Allow other modules to override the logging.
+    $event = new RegistrationSaveEvent([
+      'is_new' => $is_new,
+      'registration' => $registration,
+      'host_entity' => $host_entity,
+    ]);
+    $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_SAVE_LOG);
+
+    // Log it unless a different module already logged it.
+    if (!$event->wasHandled()) {
+      if ($is_new) {
+        if ($user = $registration->getUser()) {
+          $this->logger->info('@name registered for %label (ID #@id).', [
+            '@name' => $user->getDisplayName(),
+            '%label' => $host_entity->label(),
+            '@id' => $registration->id(),
+          ]);
+        }
+        else {
+          $this->logger->info('@email registered for %label (ID #@id).', [
+            '@email' => $registration->getEmail(),
+            '%label' => $host_entity->label(),
+            '@id' => $registration->id(),
+          ]);
+        }
       }
       else {
-        $this->logger->info('@email registered for %label (ID #@id).', [
-          '@email' => $registration->getEmail(),
+        $this->logger->info('The registration for %label (ID #@id) was saved.', [
           '%label' => $host_entity->label(),
           '@id' => $registration->id(),
         ]);
       }
-    }
-    else {
-      $this->logger->info('The registration for %label (ID #@id) was saved.', [
-        '%label' => $host_entity->label(),
-        '@id' => $registration->id(),
-      ]);
     }
 
     // Confirmation message.
@@ -250,7 +270,18 @@ class RegisterForm extends ContentEntityForm {
     if (!$confirmation) {
       $confirmation = $this->t('The registration was saved.');
     }
-    $this->messenger()->addStatus($confirmation);
+
+    // Allow other modules to override the confirmation message.
+    $event = new RegistrationSaveEvent([
+      'is_new' => $is_new,
+      'registration' => $registration,
+      'host_entity' => $host_entity,
+      'confirmation' => $confirmation,
+    ]);
+    $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_SAVE_CONFIRMATION);
+    if (!$event->wasHandled()) {
+      $this->messenger()->addStatus($confirmation);
+    }
 
     // Redirect.
     $redirect = $settings->getSetting('confirmation_redirect');
