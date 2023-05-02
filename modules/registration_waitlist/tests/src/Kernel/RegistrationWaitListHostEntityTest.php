@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\registration\Kernel;
+namespace Drupal\Tests\registration_waitlist\Kernel;
 
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
@@ -8,7 +8,7 @@ use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 /**
  * Tests the Host Entity class.
  *
- * @coversDefaultClass \Drupal\registration\HostEntity
+ * @coversDefaultClass \Drupal\registration_waitlist\HostEntity
  *
  * @group registration
  */
@@ -54,6 +54,12 @@ class RegistrationWaitListHostEntityTest extends RegistrationWaitListKernelTestB
     $registration->set('author_uid', 1);
     $registration->save();
     $this->assertEquals(3, $host_entity->getWaitListSpacesReserved());
+
+    // Still room on the wait list.
+    $this->assertTrue($host_entity->hasRoom());
+    $this->assertTrue($host_entity->hasRoomOnWaitList());
+    $this->assertFalse($host_entity->hasRoomOffWaitList());
+    $this->assertTrue($host_entity->isEnabledForRegistration());
 
     // Disable the wait list.
     $settings = $host_entity->getSettings();
