@@ -13,6 +13,8 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
+use Drupal\registration\Event\RegistrationEvents;
+use Drupal\registration\Event\RegistrationFormEvent;
 use Drupal\registration\RegistrationHelper;
 use Drupal\registration\RegistrationManagerInterface;
 use Drupal\workflows\State;
@@ -501,6 +503,13 @@ class RegisterForm extends ContentEntityForm {
         $form['created']['#access'] = FALSE;
       }
     }
+
+    // Allow other modules to override the form. This is provided as an
+    // alternative to a hook_form_alter since the form ID of the register
+    // form may be difficult to determine in all contexts.
+    $event = new RegistrationFormEvent($form, $form_state);
+    \Drupal::service('event_dispatcher')->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_REGISTER_FORM);
+    $form = $event->getForm();
   }
 
   /**

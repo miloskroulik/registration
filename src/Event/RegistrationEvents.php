@@ -39,7 +39,7 @@ final class RegistrationEvents {
    * @Event
    *
    * @see \Drupal\registration\Event\RegistrationDataAlterEvent
-   * @see \Drupal\registration\Mail\RegistrationMailer
+   * @see \Drupal\registration\Notify\RegistrationMailer
    */
   const REGISTRATION_ALTER_MAIL = 'registration.alter.mail';
 
@@ -52,7 +52,7 @@ final class RegistrationEvents {
    * @Event
    *
    * @see \Drupal\registration\Event\RegistrationDataAlterEvent
-   * @see \Drupal\registration\Mail\RegistrationMailerInterface
+   * @see \Drupal\registration\Notify\RegistrationMailerInterface
    */
   const REGISTRATION_ALTER_RECIPIENTS = 'registration.alter.recipients';
 
@@ -77,6 +77,15 @@ final class RegistrationEvents {
    * @see \Drupal\registration\Event\RegistrationDataAlterEvent
    */
   const REGISTRATION_ALTER_USAGE = 'registration.alter.usage';
+
+  /**
+   * Name of the event fired to allow alter of the registration form.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationFormEvent
+   */
+  const REGISTRATION_ALTER_REGISTER_FORM = 'registration.alter.register_form';
 
   /**
    * Name of the event fired after loading a registration.
