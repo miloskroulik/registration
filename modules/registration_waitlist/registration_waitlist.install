@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for Registration Wait List.
+ */
+
+/**
+ * Adds a waitlist state to the default registration workflow.
+ */
+function registration_waitlist_install() {
+  $storage = \Drupal::entityTypeManager()->getStorage('workflow');
+  if ($workflow = $storage->load('registration')) {
+    $workflow_type = $workflow->getTypePlugin();
+    $configuration = $workflow_type->getConfiguration();
+    $configuration['states']['waitlist'] = [
+      'label' => 'Wait list',
+      'active' => FALSE,
+      'canceled' => FALSE,
+      'held' => FALSE,
+      'show_on_form' => TRUE,
+      'description' => 'Special state for registrations after capacity is reached.',
+      'weight' => 10,
+    ];
+    $configuration['transitions']['complete']['from'][] = 'waitlist';
+    $configuration['transitions']['cancel']['from'][] = 'waitlist';
+    $workflow_type->setConfiguration($configuration);
+    $workflow->save();
+  }
+}

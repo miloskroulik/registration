@@ -1,0 +1,6 @@
+services:
+
+  registration_waitlist.registration_form_event_subscriber:
+    class: Drupal\registration_waitlist\EventSubscriber\RegistrationFormEventSubscriber
+    tags:
+      - { name: event_subscriber }

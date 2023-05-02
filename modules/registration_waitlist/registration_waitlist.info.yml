@@ -1,0 +1,8 @@
+name: Registration Wait List
+type: module
+description: 'Provides a special registration state that acts as a wait list.'
+package: Registration
+core_version_requirement: ^9.3 || ^10
+php: 8.0
+dependencies:
+  - registration:registration

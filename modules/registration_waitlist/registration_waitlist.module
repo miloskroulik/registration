@@ -1,0 +1,135 @@
+<?php
+
+/**
+ * @file
+ * Provides wait list functionality for the Entity Registration module.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\registration_waitlist\Plugin\Field\RegistrationItemFieldItemList;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function registration_waitlist_entity_type_alter(array &$entity_types) {
+  // Override the host entity handler.
+  $entity_types['registration']->setHandlerClass('host_entity', 'Drupal\registration_waitlist\HostEntityHandler');
+}
+
+/**
+ * Implements hook_validation_constraint_alter().
+ */
+function registration_waitlist_validation_constraint_alter(array &$definitions) {
+  // Override the registration constraint.
+  $definitions['RegistrationConstraint']['class'] = 'Drupal\registration_waitlist\Plugin\Validation\Constraint\RegistrationConstraint';
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function registration_waitlist_registration_presave(EntityInterface $entity) {
+  /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+  $registration = $entity;
+  if (!$registration->getState()->isCanceled()) {
+    /** @var \Drupal\registration_waitlist\HostEntityInterface $host_entity */
+    if ($host_entity = $registration->getHostEntity()) {
+      $spaces = $registration->getSpacesReserved();
+      if (!$host_entity->hasRoomOffWaitList($spaces, $registration)) {
+        if ($host_entity->isWaitListEnabled()) {
+          if ($host_entity->hasRoomOnWaitList($spaces, $registration)) {
+            $registration->set('state', 'waitlist');
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function registration_waitlist_form_registration_settings_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form['registration_waitlist_capacity']['#states'] = [
+    'visible' => [
+      ':input[name="registration_waitlist_enable[value]"]' => ['checked' => TRUE],
+    ],
+  ];
+  $form['registration_waitlist_message_enable']['#states'] = [
+    'visible' => [
+      ':input[name="registration_waitlist_enable[value]"]' => ['checked' => TRUE],
+    ],
+  ];
+  $form['registration_waitlist_message']['#states'] = [
+    'visible' => [
+      ':input[name="registration_waitlist_enable[value]"]' => ['checked' => TRUE],
+      ':input[name="registration_waitlist_message_enable[value]"]' => ['checked' => TRUE],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_field_info_alter().
+ */
+function registration_waitlist_field_info_alter(array &$info): void {
+  // Override the registration field item list.
+  $info['registration']['list_class'] = RegistrationItemFieldItemList::class;
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function registration_waitlist_entity_base_field_info(EntityTypeInterface $entity_type) {
+  $fields = [];
+  if ($entity_type->id() === 'registration_settings') {
+    // Add wait list fields to the registration settings entity.
+    $fields['registration_waitlist_enable'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Enable wait list'))
+      ->setDescription(t('When wait list is enabled, registrations made after capacity has been reached will be set to the wait list state.'))
+      ->setDefaultValue(FALSE)
+      ->setRequired(FALSE)
+      ->setDisplayOptions('form', [
+        'type' => 'boolean_checkbox',
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['registration_waitlist_capacity'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Wait list capacity'))
+      ->setDescription(t('The maximum number of registrants on the wait list. Leave at 0 for no limit.'))
+      ->setRequired(TRUE)
+      ->setDefaultValue(0)
+      ->setSetting('min', 0)
+      ->setSetting('max', 99999)
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['registration_waitlist_message_enable'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Enable wait list message'))
+      ->setDescription(t('Enable to allow display of a message above the registration form when capacity has been reached.'))
+      ->setRequired(FALSE)
+      ->setDisplayOptions('form', [
+        'type' => 'boolean_checkbox',
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['registration_waitlist_message'] = BaseFieldDefinition::create('text_long')
+      ->setLabel(t('Wait list message'))
+      ->setDescription(t('Enter a message to display above the registration form to notify users that they will be placed on a waitlist.  Message only appears if capacity is reached.'))
+      ->setRequired(FALSE)
+      ->setTranslatable(TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'text_textarea',
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+  }
+  return $fields;
+}
