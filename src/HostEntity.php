@@ -506,7 +506,7 @@ class HostEntity implements HostEntityInterface {
     $states = [];
 
     if ($registration_type = $this->getRegistrationType()) {
-      $states = $registration_type->getActiveStates();
+      $states = $registration_type->getActiveOrHeldStates();
     }
 
     // Ensure we have active states before querying against them.
@@ -532,7 +532,7 @@ class HostEntity implements HostEntityInterface {
     $states = [];
 
     if ($registration_type = $this->getRegistrationType()) {
-      $states = $registration_type->getActiveStates();
+      $states = $registration_type->getActiveOrHeldStates();
     }
 
     // Ensure we have active states before querying against them.
