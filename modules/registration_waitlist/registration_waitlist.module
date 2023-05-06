@@ -135,3 +135,38 @@ function registration_waitlist_entity_base_field_info(EntityTypeInterface $entit
   }
   return $fields;
 }
+
+/**
+ * Implements hook_migration_plugins_alter().
+ */
+function registration_waitlist_migration_plugins_alter(array &$migrations) {
+  if (isset($migrations['d7_registration_settings'])) {
+    // Add fields to the registration settings migration.
+    $migrations['d7_registration_settings']['process']['registration_waitlist_enable'][] = [
+      'plugin' => 'registration_additional_settings',
+      'source' => 'settings',
+      'key' => 'registration_waitlist_enable',
+    ];
+    $migrations['d7_registration_settings']['process']['registration_waitlist_capacity'][] = [
+      'plugin' => 'registration_additional_settings',
+      'source' => 'settings',
+      'key' => 'registration_waitlist_capacity',
+    ];
+    $migrations['d7_registration_settings']['process']['registration_waitlist_message_enable'][] = [
+      'plugin' => 'registration_additional_settings',
+      'source' => 'settings',
+      'key' => 'registration_waitlist_message_enable',
+    ];
+    $migrations['d7_registration_settings']['process']['registration_waitlist_message'][] = [
+      'plugin' => 'registration_additional_settings',
+      'source' => 'settings',
+      'key' => 'registration_waitlist_message',
+    ];
+    // Pipeline into the reminder template plugin, which knows how to handle
+    // migrating into a long text field with value and format.
+    // @todo Rename plugin to registration_longtext.
+    $migrations['d7_registration_settings']['process']['registration_waitlist_message'][] = [
+      'plugin' => 'registration_reminder_template',
+    ];
+  }
+}
