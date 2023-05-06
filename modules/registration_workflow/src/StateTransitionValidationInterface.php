@@ -27,7 +27,7 @@ interface StateTransitionValidationInterface {
   public function getValidTransitions(RegistrationInterface $registration, AccountInterface $user = NULL): array;
 
   /**
-   * Checks if a transition between two states if valid for the given user.
+   * Checks if a transition between two states is valid for the given user.
    *
    * @param \Drupal\workflows\WorkflowInterface $workflow
    *   The workflow entity.
