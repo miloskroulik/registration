@@ -1,0 +1,8 @@
+name: Registration Purger
+type: module
+description: 'Deletes registrations and registration settings when a host entity is deleted.'
+package: Registration
+core_version_requirement: ^9.3 || ^10
+php: 8.0
+dependencies:
+  - registration:registration
