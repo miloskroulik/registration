@@ -20,6 +20,7 @@ abstract class RegistrationScheduledActionKernelTestBase extends RegistrationKer
    * @var array
    */
   protected static $modules = [
+    'dblog',
     'registration_scheduled_action',
   ];
 
@@ -44,6 +45,7 @@ abstract class RegistrationScheduledActionKernelTestBase extends RegistrationKer
     parent::setUp();
 
     $this->installConfig('filter');
+    $this->installSchema('dblog', 'watchdog');
 
     $this->cron = $this->container->get('cron');
     $this->keyValueFactory = $this->container->get('keyvalue.expirable');
