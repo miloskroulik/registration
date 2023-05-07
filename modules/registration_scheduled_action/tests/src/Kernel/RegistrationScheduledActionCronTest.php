@@ -214,12 +214,12 @@ class RegistrationScheduledActionCronTest extends RegistrationScheduledActionKer
   }
 
   /**
-   * Get the count of logged emails from dblog.
+   * Gets the count of logged emails from dblog.
    *
    * @return int
    *   The count.
    */
-  protected function getLoggedEmailsCount() {
+  protected function getLoggedEmailsCount(): int {
     $database = Database::getConnection();
     $query = $database->select('watchdog')
       ->condition('message', 'Registration broadcast for %label sent to @count recipient(s).');
