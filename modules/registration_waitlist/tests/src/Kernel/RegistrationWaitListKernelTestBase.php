@@ -2,15 +2,12 @@
 
 namespace Drupal\Tests\registration_waitlist\Kernel;
 
-use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
-use Drupal\node\Entity\NodeType;
-use Drupal\registration\Entity\RegistrationType;
-use Drupal\registration\Entity\RegistrationTypeInterface;
+use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
 
 /**
  * Provides a base class for Registration Wait List kernel tests.
  */
-abstract class RegistrationWaitListKernelTestBase extends EntityKernelTestBase {
+abstract class RegistrationWaitListKernelTestBase extends RegistrationKernelTestBase {
 
   /**
    * Modules to enable.
@@ -21,33 +18,15 @@ abstract class RegistrationWaitListKernelTestBase extends EntityKernelTestBase {
    * @var array
    */
   protected static $modules = [
-    'datetime',
-    'node',
-    'registration',
     'registration_waitlist',
     'registration_waitlist_test',
-    'workflows',
   ];
-
-  /**
-   * The registration type.
-   *
-   * @var \Drupal\registration\Entity\RegistrationTypeInterface
-   */
-  protected RegistrationTypeInterface $regType;
 
   /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
-
-    $this->installConfig('registration');
-
-    $this->installEntitySchema('node');
-    $this->installEntitySchema('registration');
-    $this->installEntitySchema('registration_settings');
-    $this->installEntitySchema('workflow');
 
     $storage = $this->entityTypeManager->getStorage('workflow');
     if ($workflow = $storage->load('registration')) {
@@ -67,25 +46,6 @@ abstract class RegistrationWaitListKernelTestBase extends EntityKernelTestBase {
       $workflow_type->setConfiguration($configuration);
       $workflow->save();
     }
-
-    $node_type = NodeType::create([
-      'type' => 'event',
-      'name' => 'Event',
-    ]);
-    $node_type->save();
-
-    $registration_type = RegistrationType::create([
-      'id' => 'conference',
-      'label' => 'Conference',
-      'workflow' => 'registration',
-      'defaultState' => 'pending',
-      'heldExpireTime' => 1,
-      'heldExpireState' => 'canceled',
-    ]);
-    $registration_type->save();
-    /** @var \Drupal\registration\Entity\RegistrationTypeInterface $registration_type */
-    $registration_type = $this->reloadEntity($registration_type);
-    $this->regType = $registration_type;
   }
 
 }

@@ -3,6 +3,7 @@
 namespace Drupal\Tests\registration_workflow\Kernel;
 
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
+use Drupal\user\UserInterface;
 
 /**
  * Provides a base class for Registration Workflow kernel tests.
@@ -21,5 +22,42 @@ abstract class RegistrationWorkflowKernelTestBase extends RegistrationKernelTest
     'registration_waitlist',
     'registration_workflow',
   ];
+
+  /**
+   * The admin user.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected UserInterface $adminUser;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $admin_user = $this->createUser();
+    $this->setCurrentUser($admin_user);
+    $this->adminUser = $admin_user;
+
+    $storage = $this->entityTypeManager->getStorage('workflow');
+    if ($workflow = $storage->load('registration')) {
+      $workflow_type = $workflow->getTypePlugin();
+      $configuration = $workflow_type->getConfiguration();
+      $configuration['states']['waitlist'] = [
+        'label' => 'Wait list',
+        'active' => FALSE,
+        'canceled' => FALSE,
+        'held' => FALSE,
+        'show_on_form' => TRUE,
+        'description' => 'Special state for registrations after capacity is reached.',
+        'weight' => 10,
+      ];
+      $configuration['transitions']['complete']['from'][] = 'waitlist';
+      $configuration['transitions']['cancel']['from'][] = 'waitlist';
+      $workflow_type->setConfiguration($configuration);
+      $workflow->save();
+    }
+  }
 
 }

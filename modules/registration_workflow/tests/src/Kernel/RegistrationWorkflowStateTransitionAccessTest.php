@@ -4,8 +4,6 @@ namespace Drupal\Tests\registration_workflow\Kernel;
 
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\registration_workflow\Access\StateTransitionAccessCheck;
-use Drupal\user\UserInterface;
-use Drupal\workflows\Entity\Workflow;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Symfony\Component\Routing\Route;
@@ -23,49 +21,11 @@ class RegistrationWorkflowStateTransitionAccessTest extends RegistrationWorkflow
   use RegistrationCreationTrait;
 
   /**
-   * The admin user.
-   *
-   * @var \Drupal\user\UserInterface
-   */
-  protected UserInterface $adminUser;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $admin_user = $this->createUser();
-    $this->setCurrentUser($admin_user);
-    $this->adminUser = $admin_user;
-
-    $storage = $this->entityTypeManager->getStorage('workflow');
-    if ($workflow = $storage->load('registration')) {
-      $workflow_type = $workflow->getTypePlugin();
-      $configuration = $workflow_type->getConfiguration();
-      $configuration['states']['waitlist'] = [
-        'label' => 'Wait list',
-        'active' => FALSE,
-        'canceled' => FALSE,
-        'held' => FALSE,
-        'show_on_form' => TRUE,
-        'description' => 'Special state for registrations after capacity is reached.',
-        'weight' => 10,
-      ];
-      $configuration['transitions']['complete']['from'][] = 'waitlist';
-      $configuration['transitions']['cancel']['from'][] = 'waitlist';
-      $workflow_type->setConfiguration($configuration);
-      $workflow->save();
-    }
-  }
-
-  /**
    * @covers ::checkAccess
    */
   public function testWorkflowStateTransitionAccess() {
     $node = $this->createAndSaveNode();
     $registration = $this->createAndSaveRegistration($node);
-    $workflow = Workflow::load('registration');
     /** @var \Drupal\registration_workflow\StateTransitionValidationInterface $validator */
     $validator = $this->container->get('registration_workflow.validation');
     $access_checker = new StateTransitionAccessCheck($validator);
