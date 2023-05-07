@@ -60,25 +60,26 @@ The following are optional tasks that work differently compared to the Drupal 7 
 
 1. (Optional) Adjust the default registration states at /admin/config/workflow/workflows. This link is available via the Workflow menu item in the Configuration menu of Drupal administration.
 1. (Optional) Adjust general module settings at /admin/structure/registration-settings. This link is available from the main Configuration page of Drupal administration. If you want registration related emails to be sent as HTML, you need to visit this page.
-1. (Optional) Enable the Registration Workflow submodule to add permissions and operations for workflow transitions.
+1. (Optional) Enable the Registration Purger submodule to automatically delete registrations and registration settings for a host entity that is deleted.
+1. (Optional) Enable the Registration Wait List submodule to allow overflow registrations to a wait list.
+1. (Optional) Enable the Registration Workflow submodule to add permissions and operations for workflow transitions and integrate with [ECA Workflow](https://www.drupal.org/project/eca) transitions.
 1. (Optional) Enable the Registration Scheduled Action submodule to setup scheduled emails based on registration settings dates in your system. See the README file in that submodule folder for more information.
 
 
 
 DIFFERENCES FROM DRUPAL 7 VERSION
 -----------
-There are some important differences between the Drupal 7 and Drupal 9 versions of the module.
+There are some important differences between the Drupal 7 and Drupal 10 versions of the module.
 
-1. The Drupal 9 version is a complete rewrite of the module and accordingly uses Drupal 9 concepts such as separating Form Display from Field settings, custom plugins, services, class inheritance and dependency injection.
-1. The Drupal 9 version uses some PHP 8 programming constructs and thus requires PHP 8. This decision was also made because PHP 7 will be deprecated within a few months of the first release of the Drupal 9 version.
-1. In the Drupal 9 version registration states are created and configured using the core Workflow module. You can even create your own Workflow and use it in your Registration types if you have a highly custom registration workflow. The default workflow that is created during module installation will work for the most common use cases.
-1. In the Drupal 9 version registration listings are provided as customizable views if you have the Views module installed. Listings are presented in traditional tables if the Views module is not installed.
-1. The Drupal 7 version includes three submodules - entity access, views and waitlist. In the Drupal 9 version the functionality in the views submodule is included in the main module. The entity access and waitlist submodules have not been created yet and may be added in the future if requested by the community. The Drupal 9 version includes a workflow submodule that adds permissions and operations for workflow transitions, and a scheduled actions submodule allowing you to send emails at scheduled intervals.
+1. The Drupal 10 version is a complete rewrite of the module and accordingly uses advanced Drupal concepts such as separating Form Display from Field settings, custom plugins, services, class inheritance and dependency injection.
+1. In the Drupal 10 version registration states are created and configured using the core Workflows module. You can even create your own Workflow and use it in your Registration types if you have a highly custom registration workflow. The default workflow that is created during module installation will work for the most common use cases.
+1. In the Drupal 10 version registration listings are provided as customizable views if you have the Views module installed. Listings are presented in traditional tables if the Views module is not installed.
+1. The Drupal 7 version includes three submodules - entity access, views and wait list. In the Drupal 10 version the functionality in the views submodule is included in the main module. The entity access submodule has not been created yet and may be added in the future if requested by the community. The Drupal 10 version includes the wait list submodule, a purger submodule for host entity deletion, a workflow submodule that adds permissions and operations for workflow transitions, and a scheduled actions submodule allowing you to send emails at scheduled intervals.
 
 MULTILINGUAL CONSIDERATIONS
 -----------
 
-The Drupal 9 version includes full support for multilingual sites. Although registrations are not translatable entities, each registration has a language field indicating the language used to create it. This allows you to craft different reminder emails for each language and target just the registrants for a given language.
+The Drupal 10 version includes full support for multilingual sites. Although registrations are not translatable entities, each registration has a language field indicating the language used to create it. This allows you to craft different reminder emails for each language and target just the registrants for a given language.
 
 Registration settings can also vary per language. In many cases, untranslatable settings fields, such as the capacity for a given registration event, should be the same across all language variants. Visit the global settings page at /admin/structure/registration-settings to control how registration settings are handled across languages. This feature is only visible to sites with multiple languages installed.
 
@@ -87,7 +88,7 @@ Note that some listings, such as the Registration Summary at /admin/people/regis
 MAINTAINERS
 -----------
 
-Drupal 9 module:
+Drupal 10 module:
 
  * John Oltman - [https://www.drupal.org/u/johnoltman](https://www.drupal.org/u/johnoltman)
 
