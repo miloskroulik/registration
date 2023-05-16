@@ -234,13 +234,18 @@ function registration_entity_presave(EntityInterface $entity) {
  * Implements hook_entity_update().
  */
 function registration_entity_update(EntityInterface $entity) {
-  // Rebuild routes and local tasks when Registration fields are updated.
-  if ($entity instanceof EntityFormDisplay) {
-    $entity_type_id = $entity->getTargetEntityTypeId();
-    $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
-    if (\Drupal::service('registration.manager')->hasRegistrationField($entity_type)) {
-      \Drupal::service("router.builder")->rebuild();
-      \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
+  // Use a static to ensure a rebuild is done at most once per page load.
+  static $rebuild = FALSE;
+  if (!$rebuild) {
+    // Rebuild routes and local tasks when Registration fields are updated.
+    if ($entity instanceof EntityFormDisplay) {
+      $entity_type_id = $entity->getTargetEntityTypeId();
+      $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+      if (\Drupal::service('registration.manager')->hasRegistrationField($entity_type)) {
+        $rebuild = TRUE;
+        \Drupal::service("router.builder")->rebuild();
+        \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
+      }
     }
   }
 }
