@@ -41,7 +41,7 @@ function registration_confirmation_form_registration_type_form_alter(&$form, For
     '#title' => t('Message'),
     '#description' => t('Enter the message you want to send. Tokens are supported, e.g., [node:title].'),
     '#default_value' => $message['value'] ?? '',
-    '#format' => $message['format'] ?? filter_fallback_format(),
+    '#format' => $message['format'] ?? filter_default_format(),
     '#states' => [
       'visible' => [
         ':input[name="registration_confirmation[enable]"]' => ['checked' => TRUE],
