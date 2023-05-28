@@ -69,7 +69,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
    */
   public function getHostEntityId(): int {
     if (!$this->get('entity_id')->isEmpty()) {
-      return (int) $this->get('entity_id')->first()->value;
+      return (int) $this->get('entity_id')->first()->getValue()['value'];
     }
     return 0;
   }
@@ -82,7 +82,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
    */
   public function getHostEntityTypeId(): string {
     if (!$this->get('entity_type_id')->isEmpty()) {
-      return $this->get('entity_type_id')->first()->value;
+      return $this->get('entity_type_id')->first()->getValue()['value'];
     }
     return '';
   }
@@ -92,7 +92,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
    */
   public function getLangcode(): ?string {
     if (!$this->get('langcode')->isEmpty()) {
-      return $this->get('langcode')->first()->value;
+      return $this->get('langcode')->first()->getValue()['value'];
     }
     return NULL;
   }
