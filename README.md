@@ -46,7 +46,7 @@ Once the module is installed, a new **Registration** field type becomes availabl
 CONFIGURATION
 -------------
 
-Configuration for the Drupal 9 version of the module is similar to the Drupal 7 version.
+Configuration for the Drupal 10 version of the module is similar to the Drupal 7 version.
 
 1. Create at least one registration bundle (or type) at /admin/structure/registration-types, much like you would a content type. For example, add a registration type named Conference or Seminar.
 1. Add a registration field to any entity type you want to enable registrations for. For example, you may have an Event content type that you want to enable Conference registrations for - add a field to that content type. Provide appropriate default registration settings for the field as needed.
@@ -60,6 +60,7 @@ The following are optional tasks that work differently compared to the Drupal 7 
 
 1. (Optional) Adjust the default registration states at /admin/config/workflow/workflows. This link is available via the Workflow menu item in the Configuration menu of Drupal administration.
 1. (Optional) Adjust general module settings at /admin/structure/registration-settings. This link is available from the main Configuration page of Drupal administration. If you want registration related emails to be sent as HTML, you need to visit this page.
+1. (Optional) Enable the Registration Confirmation submodule to send confirmation emails when registrations are completed. This is configured on the registration type edit form.
 1. (Optional) Enable the Registration Purger submodule to automatically delete registrations and registration settings for a host entity that is deleted.
 1. (Optional) Enable the Registration Wait List submodule to allow overflow registrations to a wait list.
 1. (Optional) Enable the Registration Workflow submodule to add permissions and operations for workflow transitions and integrate with [ECA Workflow](https://www.drupal.org/project/eca) transitions.
@@ -74,7 +75,7 @@ There are some important differences between the Drupal 7 and Drupal 10 versions
 1. The Drupal 10 version is a complete rewrite of the module and accordingly uses advanced Drupal concepts such as separating Form Display from Field settings, custom plugins, services, class inheritance and dependency injection.
 1. In the Drupal 10 version registration states are created and configured using the core Workflows module. You can even create your own Workflow and use it in your Registration types if you have a highly custom registration workflow. The default workflow that is created during module installation will work for the most common use cases.
 1. In the Drupal 10 version registration listings are provided as customizable views if you have the Views module installed. Listings are presented in traditional tables if the Views module is not installed.
-1. The Drupal 7 version includes three submodules - entity access, views and wait list. In the Drupal 10 version the functionality in the views submodule is included in the main module. The entity access submodule has not been created yet and may be added in the future if requested by the community. The Drupal 10 version includes the wait list submodule, a purger submodule for host entity deletion, a workflow submodule that adds permissions and operations for workflow transitions, and a scheduled actions submodule allowing you to send emails at scheduled intervals.
+1. The Drupal 7 version includes three submodules - entity access, views and wait list. In the Drupal 10 version the functionality in the views submodule is included in the main module. The entity access submodule has not been created yet and may be added in the future if requested by the community. The Drupal 10 version includes the wait list submodule, a confirmation submodule that sends emails when registrations are completed, a purger submodule for host entity deletion, a workflow submodule that adds permissions and operations for workflow transitions, and a scheduled actions submodule allowing you to send emails at scheduled intervals.
 
 MULTILINGUAL CONSIDERATIONS
 -----------
