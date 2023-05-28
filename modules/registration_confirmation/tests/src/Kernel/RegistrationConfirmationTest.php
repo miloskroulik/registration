@@ -75,6 +75,12 @@ class RegistrationConfirmationTest extends RegistrationConfirmationKernelTestBas
     $registration->set('state', 'complete');
     $registration->save();
     $this->assertEquals(1, $this->getLoggedEmailsCount());
+
+    // Send email if the registration starts out complete.
+    $registration = $this->createRegistration($node);
+    $registration->set('state', 'complete');
+    $registration->save();
+    $this->assertEquals(2, $this->getLoggedEmailsCount());
   }
 
   /**

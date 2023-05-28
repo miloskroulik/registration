@@ -75,6 +75,7 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents(): array {
     return [
+      RegistrationEvents::REGISTRATION_INSERT => 'onUpdate',
       RegistrationEvents::REGISTRATION_UPDATE => 'onUpdate',
     ];
   }
