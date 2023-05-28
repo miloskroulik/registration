@@ -1,0 +1,8 @@
+name: Registration Confirmation
+type: module
+description: 'Provides an immediate confirmation email when a registration is completed.'
+package: Registration
+core_version_requirement: ^9.3 || ^10
+php: 8.0
+dependencies:
+  - registration:registration
