@@ -180,7 +180,7 @@ class RegistrationStatus extends BlockBase implements ContainerFactoryPluginInte
     $block_content = $this->token->replace(
       $block_content,
       $tokens,
-      ['callback' => $additional_token_callback],
+      ['callback' => $additional_token_callback, 'clear' => TRUE],
       $token_cache_metadata
     );
 
