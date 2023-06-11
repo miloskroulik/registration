@@ -84,6 +84,14 @@ function registration_entity_type_alter(array &$entity_types) {
   // This prevents more than one registration field on a bundle, etc.
   $entity_types['field_config']->addConstraint('registration_field');
   $entity_types['field_storage_config']->addConstraint('registration_field');
+
+  // If tne Entity API contributed module is installed, use its views data
+  // handler to derive additional reverse relationships. This is a workaround
+  // to core issue https://www.drupal.org/project/drupal/issues/2706431.
+  // @todo Remove once issue #2706431 is resolved.
+  if (\Drupal::moduleHandler()->moduleExists('entity')) {
+    $entity_types['registration']->setHandlerClass('views_data', 'Drupal\entity\EntityViewsData');
+  }
 }
 
 /**
