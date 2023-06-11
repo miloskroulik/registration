@@ -67,6 +67,9 @@ The following are optional tasks that work differently compared to the Drupal 7 
 1. (Optional) Enable the Registration Scheduled Action submodule to setup scheduled emails based on registration settings dates in your system. See the README file in that submodule folder for more information.
 
 
+USERS AND REGISTRATIONS IN VIEWS
+-----------
+If you have the Views module installed, the reverse relationship from a User entity to their registrations is not available using the Registration module "out of the box", due to core issue #2706431. To enable this relationship, install the [Entity API](https://www.drupal.org/project/entity) contributed module. Then use the **Registration using user_uid** relationship to associate Users to their registrations.
 
 DIFFERENCES FROM DRUPAL 7 VERSION
 -----------
