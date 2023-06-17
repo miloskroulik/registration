@@ -5,6 +5,7 @@ CONTENTS OF THIS FILE
  * Requirements
  * Installation
  * Configuration
+ * Users and Registrations in Views
  * Differences from Drupal 7 version
  * Maintainers
 
@@ -69,7 +70,7 @@ The following are optional tasks that work differently compared to the Drupal 7 
 
 USERS AND REGISTRATIONS IN VIEWS
 -----------
-If you have the Views module installed, the reverse relationship from a User entity to their registrations is not available using the Registration module "out of the box", due to core issue #2706431. To enable this relationship, install the [Entity API](https://www.drupal.org/project/entity) contributed module. Then use the **Registration using user_uid** relationship to associate Users to their registrations.
+If you have the Views module installed, and want to create an administrative listing of Users and their associated registrations, the reverse relationship from a User entity to their registrations is not available using the Registration module "out of the box", due to core issue #2706431. To enable this relationship, install the [Entity API](https://www.drupal.org/project/entity) contributed module. Then use the **Registration using user_uid** relationship (with description *Relate each Registration with a user_uid field set to the user*) to associate Users to their registrations. The relationship named **User registration** (with desciption *Relate users to their registrations*) is for the unlikely case that the User entity is a host entity for registrations, and is not suitable for this type of listing.
 
 DIFFERENCES FROM DRUPAL 7 VERSION
 -----------
