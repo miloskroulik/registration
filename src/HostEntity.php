@@ -442,6 +442,9 @@ class HostEntity implements HostEntityInterface {
    */
   public function isEnabledForRegistration(int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool {
     $settings = $this->getSettings();
+    if (!$settings) {
+      return FALSE;
+    }
     $enabled = $settings->getSetting('status');
 
     // Only explore other settings if main status is enabled.
