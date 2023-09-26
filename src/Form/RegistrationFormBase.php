@@ -5,8 +5,8 @@ namespace Drupal\registration\Form;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\registration\RegistrationManagerInterface;
 use Drupal\registration\HostEntityInterface;
+use Drupal\registration\RegistrationManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

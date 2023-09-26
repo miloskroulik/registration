@@ -8,10 +8,10 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Context\ContextInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
+use Drupal\registration\Cache\Context\HostEntityCacheContext;
 use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationHostEntityHandlerInterface;
 use Drupal\registration\RegistrationManagerInterface;
-use Drupal\registration\Cache\Context\HostEntityCacheContext;
 use Drupal\Tests\UnitTestCase;
 
 /**

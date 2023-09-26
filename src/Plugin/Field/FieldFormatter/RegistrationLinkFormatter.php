@@ -3,8 +3,8 @@
 namespace Drupal\registration\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;

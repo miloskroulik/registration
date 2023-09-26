@@ -4,8 +4,8 @@ namespace Drupal\registration\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

@@ -6,8 +6,8 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\registration\HostEntityInterface;
-use Drupal\workflows\StateInterface;
 use Drupal\user\UserInterface;
+use Drupal\workflows\StateInterface;
 use Drupal\workflows\WorkflowInterface;
 
 /**

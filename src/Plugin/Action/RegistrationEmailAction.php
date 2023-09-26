@@ -10,8 +10,8 @@ use Drupal\Core\Action\Plugin\Action\EmailAction;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\registration\Entity\RegistrationInterface;
-use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
+use Drupal\registration\Event\RegistrationEvents;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

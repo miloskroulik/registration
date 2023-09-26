@@ -2,8 +2,8 @@
 
 namespace Drupal\registration_scheduled_action\Entity;
 
-use Drupal\Core\Action\ConfigurableActionBase;
 use Drupal\Core\Action\ActionInterface;
+use Drupal\Core\Action\ConfigurableActionBase;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Language\LanguageInterface;

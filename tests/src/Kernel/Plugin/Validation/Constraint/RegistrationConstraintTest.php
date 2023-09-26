@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\registration\Kernel\Plugin\Validation\Constraint;
 
-use Drupal\user\UserInterface;
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
+use Drupal\user\UserInterface;
 
 /**
  * Tests the Registration constraint.

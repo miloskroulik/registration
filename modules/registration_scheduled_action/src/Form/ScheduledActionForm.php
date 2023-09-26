@@ -2,8 +2,8 @@
 
 namespace Drupal\registration_scheduled_action\Form;
 
-use Drupal\Core\Action\ConfigurableActionBase;
 use Drupal\Core\Action\ActionManager;
+use Drupal\Core\Action\ConfigurableActionBase;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;

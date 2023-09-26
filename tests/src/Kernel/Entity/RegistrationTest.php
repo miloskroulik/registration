@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\registration\Kernel\Entity;
 
+use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
-use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\user\UserInterface;
 
 /**

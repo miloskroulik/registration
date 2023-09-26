@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\registration_waitlist\Kernel\Plugin\Validation\Constraint;
 
-use Drupal\user\UserInterface;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Drupal\Tests\registration_waitlist\Kernel\RegistrationWaitListKernelTestBase;
+use Drupal\user\UserInterface;
 
 /**
  * Tests the wait list extended Registration constraint.

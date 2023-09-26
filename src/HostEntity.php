@@ -15,12 +15,12 @@ use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\TypedData\TranslatableInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
-use Drupal\registration\Event\RegistrationEvents;
-use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 use Drupal\registration\Entity\RegistrationType;
 use Drupal\registration\Entity\RegistrationTypeInterface;
+use Drupal\registration\Event\RegistrationDataAlterEvent;
+use Drupal\registration\Event\RegistrationEvents;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

@@ -10,8 +10,8 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\registration\RegistrationHelper;
 use Drupal\language\Config\LanguageConfigOverride;
+use Drupal\registration\RegistrationHelper;
 
 /**
  * Defines the registration settings element for configuration translation.

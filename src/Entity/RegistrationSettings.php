@@ -8,8 +8,8 @@ use Drupal\Core\Entity\EntityMalformedException;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
+use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\HostEntityInterface;
 
 /**

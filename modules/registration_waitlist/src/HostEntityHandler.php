@@ -2,8 +2,8 @@
 
 namespace Drupal\registration_waitlist;
 
-use Drupal\registration\RegistrationHostEntityHandler;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\registration\RegistrationHostEntityHandler;
 
 /**
  * Extends the "host_entity" handler class for registrations.

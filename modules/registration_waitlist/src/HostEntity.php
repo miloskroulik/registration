@@ -5,8 +5,8 @@ namespace Drupal\registration_waitlist;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\registration\Entity\RegistrationInterface;
-use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
+use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\HostEntity as BaseHostEntity;
 
 /**

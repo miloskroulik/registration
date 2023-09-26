@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\registration_workflow\Kernel;
 
-use Drupal\workflows\Entity\Workflow;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
+use Drupal\workflows\Entity\Workflow;
 
 /**
  * Tests registration state transitions.

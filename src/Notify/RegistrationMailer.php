@@ -3,18 +3,18 @@
 namespace Drupal\registration\Notify;
 
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\Render\Renderer;
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\registration\Entity\RegistrationInterface;
-use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
+use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationManagerInterface;
 use Psr\Log\LoggerInterface;
