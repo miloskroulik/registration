@@ -24,8 +24,8 @@ screen and (min-width: 780px),
   .layout-region-registration-main,
   .layout-region-registration-footer {
     float: left; /* LTR */
-    width: 65%;
     box-sizing: border-box;
+    width: 65%;
     padding-right: 2em; /* LTR */
   }
 
