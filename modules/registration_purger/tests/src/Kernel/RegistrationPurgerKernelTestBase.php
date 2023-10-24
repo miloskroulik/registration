@@ -35,8 +35,6 @@ abstract class RegistrationPurgerKernelTestBase extends RegistrationKernelTestBa
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('node', 'node_access');
-
     $admin_user = $this->createUser();
     $this->setCurrentUser($admin_user);
     $this->adminUser = $admin_user;
