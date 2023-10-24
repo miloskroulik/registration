@@ -41,6 +41,8 @@ abstract class RegistrationKernelTestBase extends EntityKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->installSchema('node', 'node_access');
+
     $this->installConfig('registration');
 
     $this->installEntitySchema('node');

@@ -108,7 +108,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function getAnonymousEmail(): string {
     if (!$this->get('anon_mail')->isEmpty()) {
-      return $this->get('anon_mail')->first()->value;
+      return $this->get('anon_mail')->first()->getValue()['value'];
     }
     return '';
   }
@@ -118,7 +118,10 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function getAuthor(): ?UserInterface {
     if (!$this->get('author_uid')->isEmpty()) {
-      $author = $this->get('author_uid')->first()->entity;
+      $author = NULL;
+      if ($entities = $this->get('author_uid')->referencedEntities()) {
+        $author = $entities[0];
+      }
       if ($author && $author->isAuthenticated()) {
         return $author;
       }
@@ -143,7 +146,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function getEmail(): string {
     if (!$this->get('mail')->isEmpty()) {
-      return $this->get('mail')->first()->value;
+      return $this->get('mail')->first()->getValue()['value'];
     }
     return '';
   }
@@ -155,7 +158,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
     if (!isset($this->hostEntity)) {
       $this->hostEntity = NULL;
       if (!$this->get('host_entity')->isEmpty()) {
-        $entity = $this->get('host_entity')->first()->entity;
+        $entity = $this->get('host_entity')->first()->get('entity')->getValue();
         // Check if a specific language was requested. If not then default
         // to the current site language.
         if (!$langcode) {
@@ -176,7 +179,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function getHostEntityId(): int|string|NULL {
     if (!$this->get('entity_id')->isEmpty()) {
-      return (int) $this->get('entity_id')->first()->value;
+      return (int) $this->get('entity_id')->first()->getValue()['value'];
     }
     return 0;
   }
@@ -186,7 +189,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function getHostEntityTypeId(): string {
     if (!$this->get('entity_type_id')->isEmpty()) {
-      return $this->get('entity_type_id')->first()->value;
+      return $this->get('entity_type_id')->first()->getValue()['value'];
     }
     return '';
   }
@@ -215,7 +218,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function getLangcode(): ?string {
     if (!$this->get('langcode')->isEmpty()) {
-      return $this->get('langcode')->first()->value;
+      return $this->get('langcode')->first()->getValue()['value'];
     }
     return NULL;
   }
@@ -242,7 +245,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function getSpacesReserved(): int {
     if (!$this->get('count')->isEmpty()) {
-      return (int) $this->get('count')->first()->value;
+      return (int) $this->get('count')->first()->getValue()['value'];
     }
     else {
       return 1;
@@ -261,7 +264,9 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function getUser(): ?UserInterface {
     if (!$this->get('user_uid')->isEmpty()) {
-      return $this->get('user_uid')->first()->entity;
+      if ($entities = $this->get('user_uid')->referencedEntities()) {
+        return $entities[0];
+      }
     }
     return NULL;
   }
@@ -271,7 +276,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function getUserId(): int {
     if (!$this->get('user_uid')->isEmpty()) {
-      return (int) $this->get('user_uid')->first()->target_id;
+      return (int) $this->get('user_uid')->first()->getValue()['target_id'];
     }
     return 0;
   }
@@ -297,7 +302,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
       return $workflow->getTypePlugin()->getState($this->getType()->getDefaultState());
     }
     else {
-      return $workflow->getTypePlugin()->getState($this->get('state')->first()->value);
+      return $workflow->getTypePlugin()->getState($this->get('state')->first()->getValue()['value']);
     }
   }
 

@@ -105,6 +105,16 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $registration->save();
     $this->assertTrue($registration->isComplete());
     $this->assertEquals(\Drupal::time()->getRequestTime(), $registration->getCompletedTime());
+
+    $registration = $this->createRegistration($node);
+    $registration->set('anon_mail', 'admin@example.org');
+    $registration->save();
+    $this->assertEquals(1, $registration->getSpacesReserved());
+    $this->assertEquals('admin@example.org', $registration->getAnonymousEmail());
+
+    $node->delete();
+    $registration = $this->reloadEntity($registration);
+    $this->assertNull($registration->getHostEntity());
   }
 
 }
