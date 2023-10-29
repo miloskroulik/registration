@@ -217,10 +217,12 @@ class ScheduledActionForm extends EntityForm {
     }
     $scheduled_action->setPluginConfiguration($configuration);
 
-    $scheduled_action->save();
+    $return = $scheduled_action->save();
 
     $this->messenger()->addMessage($this->t('The scheduled action %label has been successfully saved.', ['%label' => $this->entity->label()]));
     $form_state->setRedirect('entity.registration_scheduled_action.collection');
+
+    return $return;
   }
 
   /**

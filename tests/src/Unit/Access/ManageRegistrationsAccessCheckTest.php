@@ -27,6 +27,8 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     \Drupal::unsetContainer();
     $container = new ContainerBuilder();
     \Drupal::setContainer($container);

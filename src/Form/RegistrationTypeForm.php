@@ -117,10 +117,12 @@ class RegistrationTypeForm extends BundleEntityFormBase {
     $registration_type->setDefaultState($values['workflow_data']['default_state']);
     $registration_type->setHeldExpirationTime($values['workflow_data']['held']['held_expire']);
     $registration_type->setHeldExpirationState($values['workflow_data']['held']['held_expire_state']);
-    $registration_type->save();
+    $return = $registration_type->save();
 
     $this->messenger()->addMessage($this->t('The registration type %label has been successfully saved.', ['%label' => $this->entity->label()]));
     $form_state->setRedirect('entity.registration_type.collection');
+
+    return $return;
   }
 
   /**
