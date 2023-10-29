@@ -37,7 +37,9 @@ class HostEntityTest extends RegistrationKernelTestBase {
    * @covers ::isConfiguredForRegistration
    * @covers ::isEnabledForRegistration
    * @covers ::isEmailRegistered
+   * @covers ::isEmailRegisteredInStates
    * @covers ::isUserRegistered
+   * @covers ::isUserRegisteredInStates
    * @covers ::isBeforeOpen
    * @covers ::isAfterClose
    */
@@ -110,15 +112,37 @@ class HostEntityTest extends RegistrationKernelTestBase {
     // A registration with one space cannot be saved requesting three spaces.
     $this->assertFalse($host_entity->hasRoom(3, $sample_registration));
 
+    // An email address has registered.
     $this->assertTrue($host_entity->isEmailRegistered('test@example.com'));
+    // An email address has not registered.
     $this->assertFalse($host_entity->isEmailRegistered('test2@example.com'));
 
+    // Check email against specific registration states.
+    $states = ['held', 'complete'];
+    $this->assertFalse($host_entity->isEmailRegisteredInStates('test@example.com', $states));
+    $states = ['pending'];
+    $this->assertTrue($host_entity->isEmailRegisteredInStates('test@example.com', $states));
+    // Check against empty states.
+    $states = [];
+    $this->assertFalse($host_entity->isEmailRegisteredInStates('test@example.com', $states));
+
+    // A user has not registered yet.
     $user = $this->createUser([], ['administer registration']);
     $this->assertFalse($host_entity->isUserRegistered($user));
     $registration = $this->createRegistration($node);
     $registration->set('user_uid', $user->id());
     $registration->save();
+    // A user has registered.
     $this->assertTrue($host_entity->isUserRegistered($user));
+
+    // Check user against specific registration states.
+    $states = ['held', 'complete'];
+    $this->assertFalse($host_entity->isUserRegisteredInStates($user, $states));
+    $states = ['pending'];
+    $this->assertTrue($host_entity->isUserRegisteredInStates($user, $states));
+    // Check against empty states.
+    $states = [];
+    $this->assertFalse($host_entity->isUserRegisteredInStates($user, $states));
 
     // Out of room.
     $this->assertFalse($host_entity->isEnabledForRegistration());

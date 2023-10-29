@@ -272,6 +272,9 @@ interface HostEntityInterface {
    * This checks the anonymous email field only. To check if a Drupal
    * user account has registered, use the isUserRegistered function.
    *
+   * Only registrations in an active or held state are considered. To check
+   * against specific states, use the isEmailRegisteredInStates function.
+   *
    * @param string $email
    *   The email address to check.
    *
@@ -281,7 +284,27 @@ interface HostEntityInterface {
   public function isEmailRegistered(string $email): bool;
 
   /**
+   * Determines whether an email address is registered in certain statuses.
+   *
+   * This checks the anonymous email field only. To check if a Drupal
+   * user account has registered, use the isUserRegisteredInStates function.
+   *
+   * @param string $email
+   *   The email address to check.
+   * @param array $states
+   *   A list of statuses to check, as state IDs.
+   *   If the parameter is empty, FALSE is returned.
+   *
+   * @return bool
+   *   TRUE if the email registered for the host and is in a certain status.
+   */
+  public function isEmailRegisteredInStates(string $email, array $states): bool;
+
+  /**
    * Determines whether a given user is already registered.
+   *
+   * Only registrations in an active or held state are considered. To check
+   * against specific states, use the isUserRegisteredInStates function.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The user account.
@@ -290,6 +313,20 @@ interface HostEntityInterface {
    *   TRUE if the user has already registered for the host entity.
    */
   public function isUserRegistered(AccountInterface $account): bool;
+
+  /**
+   * Determines whether a given user is already registered in certain statuses.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account.
+   * @param array $states
+   *   A list of statuses to check, as state IDs.
+   *   If the parameter is an empty array, FALSE is returned.
+   *
+   * @return bool
+   *   TRUE if the user registered for the host and is in a certain status.
+   */
+  public function isUserRegisteredInStates(AccountInterface $account, array $states): bool;
 
   /**
    * Determines whether it is currently before the open date.

@@ -531,6 +531,26 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function isEmailRegisteredInStates(string $email, array $states): bool {
+    // Ensure we have states before querying against them.
+    if (empty($states)) {
+      return FALSE;
+    }
+
+    $database = Database::getConnection();
+    $query = $database->select('registration')
+      ->condition('entity_id', $this->id())
+      ->condition('entity_type_id', $this->getEntityTypeId())
+      ->condition('anon_mail', $email)
+      ->condition('state', $states, 'IN');
+
+    $count = $query->countQuery()->execute()->fetchField();
+    return ($count > 0);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isUserRegistered(AccountInterface $account): bool {
     $states = [];
 
@@ -549,6 +569,26 @@ class HostEntity implements HostEntityInterface {
       ->condition('entity_type_id', $this->getEntityTypeId())
       ->condition('user_uid', $account->id())
       ->condition('state', array_keys($states), 'IN');
+
+    $count = $query->countQuery()->execute()->fetchField();
+    return ($count > 0);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isUserRegisteredInStates(AccountInterface $account, array $states): bool {
+    // Ensure we have states before querying against them.
+    if (empty($states)) {
+      return FALSE;
+    }
+
+    $database = Database::getConnection();
+    $query = $database->select('registration')
+      ->condition('entity_id', $this->id())
+      ->condition('entity_type_id', $this->getEntityTypeId())
+      ->condition('user_uid', $account->id())
+      ->condition('state', $states, 'IN');
 
     $count = $query->countQuery()->execute()->fetchField();
     return ($count > 0);
