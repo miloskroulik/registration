@@ -7,6 +7,7 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Field\FieldItemList;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
+use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationHelper;
 
 /**
@@ -15,7 +16,15 @@ use Drupal\registration\RegistrationHelper;
  * Overrides the default values form for a registration field
  * to append a subform for the default registration settings.
  */
-class RegistrationItemFieldItemList extends FieldItemList {
+class RegistrationItemFieldItemList extends FieldItemList implements RegistrationItemFieldItemListInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createHostEntity(string $langcode = NULL): HostEntityInterface {
+    $handler = \Drupal::entityTypeManager()->getHandler('registration', 'host_entity');
+    return $handler->createHostEntity($this->getEntity(), $langcode);
+  }
 
   /**
    * {@inheritdoc}
