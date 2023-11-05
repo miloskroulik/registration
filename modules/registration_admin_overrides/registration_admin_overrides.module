@@ -1,0 +1,75 @@
+<?php
+
+/**
+ * @file
+ * Allows administrators to override some validation for registrations.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function registration_admin_overrides_form_registration_type_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $registration_type = $form_state->getFormObject()->getEntity();
+
+  $form['registration_admin_overrides'] = [
+    '#type' => 'fieldset',
+    '#title' => t('Administrative override settings'),
+    '#description' => t('These settings apply to accounts that can administer registrations of this type and have the relevant override permissions.'),
+  ];
+  $form['registration_admin_overrides']['status'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Allow administrators to override the main enabled status.'),
+    '#default_value' => $registration_type->getThirdPartySetting('registration_admin_overrides', 'status'),
+  ];
+  $form['registration_admin_overrides']['maximum_spaces'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Allow administrators to exceed the maximum number of spaces allowed per registration.'),
+    '#default_value' => $registration_type->getThirdPartySetting('registration_admin_overrides', 'maximum_spaces'),
+  ];
+  $form['registration_admin_overrides']['capacity'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Allow administrators to exceed host entity capacity.'),
+    '#default_value' => $registration_type->getThirdPartySetting('registration_admin_overrides', 'capacity'),
+  ];
+  $form['registration_admin_overrides']['open'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Allow administrators to register before the open date.'),
+    '#default_value' => $registration_type->getThirdPartySetting('registration_admin_overrides', 'open'),
+  ];
+  $form['registration_admin_overrides']['close'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Allow administrators to register after the close date.'),
+    '#default_value' => $registration_type->getThirdPartySetting('registration_admin_overrides', 'close'),
+  ];
+  $form['actions']['submit']['#submit'][] = 'registration_admin_overrides_form_registration_type_submit';
+}
+
+/**
+ * Implements submit handler for hook_form_BASE_FORM_ID_alter().
+ */
+function registration_admin_overrides_form_registration_type_submit(&$form, FormStateInterface $form_state) {
+  $registration_type = $form_state->getFormObject()->getEntity();
+  $registration_type->setThirdPartySetting('registration_admin_overrides', 'status', $form_state->getValue([
+    'registration_admin_overrides',
+    'status',
+  ]));
+  $registration_type->setThirdPartySetting('registration_admin_overrides', 'maximum_spaces', $form_state->getValue([
+    'registration_admin_overrides',
+    'maximum_spaces',
+  ]));
+  $registration_type->setThirdPartySetting('registration_admin_overrides', 'capacity', $form_state->getValue([
+    'registration_admin_overrides',
+    'capacity',
+  ]));
+  $registration_type->setThirdPartySetting('registration_admin_overrides', 'open', $form_state->getValue([
+    'registration_admin_overrides',
+    'open',
+  ]));
+  $registration_type->setThirdPartySetting('registration_admin_overrides', 'close', $form_state->getValue([
+    'registration_admin_overrides',
+    'close',
+  ]));
+  $registration_type->save();
+}

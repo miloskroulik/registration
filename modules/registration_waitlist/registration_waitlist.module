@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration_waitlist\Plugin\Field\RegistrationItemFieldItemList;
 
 /**
@@ -42,7 +43,16 @@ function registration_waitlist_registration_presave(EntityInterface $entity) {
       if (!$host_entity->hasRoomOffWaitList($spaces, $registration)) {
         if ($host_entity->isWaitListEnabled()) {
           if ($host_entity->hasRoomOnWaitList($spaces, $registration)) {
-            $registration->set('state', 'waitlist');
+            // Allow other modules to change the new state.
+            $new_state = 'waitlist';
+            $event = new RegistrationDataAlterEvent($new_state, [
+              'host_entity' => $host_entity,
+              'settings' => $host_entity->getSettings(),
+              'registration' => $registration,
+            ]);
+            \Drupal::service('event_dispatcher')->dispatch($event, 'registration_waitlist.registration.presave');
+            $new_state = (string) $event->getData();
+            $registration->set('state', $new_state);
           }
         }
       }

@@ -227,6 +227,9 @@ class RegisterForm extends ContentEntityForm {
     // Track if new for logging.
     $is_new = $registration->isNew();
 
+    // Track the desired target state in case it changes during save.
+    $target_state_id = $registration->getState()->id();
+
     // Save the registration.
     $return = $registration->save();
 
@@ -277,6 +280,7 @@ class RegisterForm extends ContentEntityForm {
       'registration' => $registration,
       'host_entity' => $host_entity,
       'confirmation' => $confirmation,
+      'target_state_id' => $target_state_id,
     ]);
     $this->eventDispatcher->dispatch($event, RegistrationEvents::REGISTRATION_SAVE_CONFIRMATION);
     if (!$event->wasHandled()) {

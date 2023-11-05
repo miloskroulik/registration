@@ -1,0 +1,31 @@
+services:
+
+  registration_admin_overrides.event_subscriber:
+    class: \Drupal\registration_admin_overrides\EventSubscriber\RegistrationEventSubscriber
+    arguments: [
+      '@current_user',
+      '@registration_admin_overrides.override_checker'
+    ]
+    tags:
+      - { name: event_subscriber }
+
+  registration_admin_overrides.register_access_checker:
+    class: Drupal\registration_admin_overrides\Access\RegisterAccessCheck
+    arguments: [
+      '@entity_type.manager',
+      '@registration.manager',
+      '@registration_admin_overrides.override_checker'
+    ]
+    tags:
+      - { name: access_check, applies_to: _register_access_check_with_override }
+
+  registration_admin_overrides.override_checker:
+    class: Drupal\registration_admin_overrides\RegistrationOverrideChecker
+
+  registration_admin_overrides.route_subscriber:
+    class: Drupal\registration_admin_overrides\Routing\RouteSubscriber
+    arguments: [
+      '@registration.manager',
+    ]
+    tags:
+      - { name: event_subscriber }

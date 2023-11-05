@@ -1,20 +1,24 @@
 <?php
 
-namespace Drupal\Tests\registration\Kernel\Plugin\Validation\Constraint;
+namespace Drupal\Tests\registration_admin_overrides\Kernel\Plugin\Validation\Constraint;
 
-use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
+use Drupal\Tests\registration_admin_overrides\Kernel\RegistrationAdminOverridesKernelTestBase;
 use Drupal\user\UserInterface;
 
 /**
  * Tests the Registration constraint.
  *
+ * Performs a regression test confirming that inactive overrides have no impact
+ * on constraint checking. Then adds a feature test confirming that when
+ * overrides are active, the constraints are indeed overridden.
+ *
  * @coversDefaultClass \Drupal\registration\Plugin\Validation\Constraint\RegistrationConstraint
  *
  * @group registration
  */
-class RegistrationConstraintTest extends RegistrationKernelTestBase {
+class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBase {
 
   use NodeCreationTrait;
   use RegistrationCreationTrait;
@@ -40,7 +44,16 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
   /**
    * @covers ::validate
    */
-  public function testRegistrationConstraint() {
+  public function testRegistrationConstraintRegression() {
+    // Run a regression test with the same assertions as this test in
+    // registration core. Overrides are inactive since the current
+    // user can administer registrations but does not have the override
+    // permissions needed to override constraints.
+    $account = $this->createUser([], [
+      'administer registration',
+    ]);
+    $this->setCurrentUser($account);
+
     // Host entity not configured for registration.
     $node = $this->createNode();
     $node->set('event_registration', NULL);
@@ -164,7 +177,7 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $registration->set('author_uid', 1);
     $registration->set('user_uid', 1);
     $violations = $registration->validate();
-    $this->assertEquals('You are already registered for this event.', (string) $violations[0]->getMessage());
+    $this->assertEquals('<em class="placeholder">' . $this->adminUser->getAccountName() . '</em> is already registered for this event.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
 
     $user = $this->createUser();
@@ -191,10 +204,6 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $settings->save();
     $registration->set('user_uid', 1);
     $registration->set('anon_mail', NULL);
-    $violations = $registration->validate();
-    $this->assertEquals('You are already registered for this event.', (string) $violations[0]->getMessage());
-    $this->assertEquals(1, $violations->count());
-    $this->setCurrentUser($user);
     $violations = $registration->validate();
     $this->assertEquals('<em class="placeholder">' . $this->adminUser->getAccountName() . '</em> is already registered for this event.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
@@ -235,7 +244,6 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
     $registration->save();
-    $this->setCurrentUser($this->adminUser);
     // Nothing has changed, so editing should be allowed.
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
@@ -256,6 +264,95 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     // Canceling a registration is always allowed.
     $registration->set('count', 2);
     $registration->set('state', 'canceled');
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+  }
+
+  /**
+   * @covers ::validate
+   */
+  public function testRegistrationConstraintWithOverrides() {
+    // Exceeds maximum spaces.
+    $node = $this->createAndSaveNode();
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    // Capacity 5 and max 2 spaces per registration are set in the
+    // registration_test module.
+    $registration->set('count', 5);
+    $account = $this->createUser([
+      'administer registration',
+    ]);
+    $this->setCurrentUser($account);
+    $violations = $registration->validate();
+    $this->assertEquals('You may not register for more than 2 spaces.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $this->setCurrentUser($this->adminUser);
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+
+    // Add registrations for subsequent assertions.
+    $registration->set('count', 2);
+    $registration->save();
+    $registration = $this->createRegistration($node);
+    $registration->set('anon_mail', 'test@example.com');
+    $registration->save();
+    $registration = $this->createAndSaveRegistration($node);
+
+    // No room.
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    $registration->set('count', 2);
+    $this->setCurrentUser($account);
+    $violations = $registration->validate();
+    $this->assertEquals('Sorry, unable to register for <em class="placeholder">My event</em> due to: insufficient spaces remaining.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $this->setCurrentUser($this->adminUser);
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+
+    // Before open.
+    $host_entity = $registration->getHostEntity();
+    $settings = $host_entity->getSettings();
+    $settings->set('open', '2220-01-01T00:00:00');
+    $settings->save();
+    $registration->set('count', 1);
+    $this->setCurrentUser($account);
+    $violations = $registration->validate();
+    $this->assertEquals('Registration for <em class="placeholder">My event</em> is not open yet.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $this->setCurrentUser($this->adminUser);
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+
+    // After close.
+    $settings->set('open', NULL);
+    $settings->set('close', '2020-01-01T00:00:00');
+    $settings->save();
+    $this->setCurrentUser($account);
+    $violations = $registration->validate();
+    $this->assertEquals('Registration for <em class="placeholder">My event</em> is closed.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $this->setCurrentUser($this->adminUser);
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+
+    // Capacity should only be checked for existing registrations if spaces
+    // reserved or registration state have changed.
+    $node = $this->createAndSaveNode();
+    $registration = $this->createAndSaveRegistration($node);
+    $host_entity = $registration->getHostEntity();
+    $settings = $host_entity->getSettings();
+    $settings->set('capacity', 1);
+    $settings->save();
+
+    // Try to increase the spaces reserved while capacity is exceeded.
+    $registration->set('count', 2);
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+
+    // Try to complete a pending registration while capacity is exceeded.
+    $registration->set('count', 1);
+    $registration->set('state', 'complete');
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
   }
