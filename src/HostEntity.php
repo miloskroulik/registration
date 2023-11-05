@@ -453,7 +453,7 @@ class HostEntity implements HostEntityInterface {
       $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
       if ($maximum_spaces && ($spaces > $maximum_spaces)) {
         $enabled = FALSE;
-        $errors[] = $this->formatPlural($maximum_spaces,
+        $errors['maximum_spaces'] = $this->formatPlural($maximum_spaces,
           'You may not register for more than 1 space.',
           'You may not register for more than @count spaces.', [
             '@count' => $maximum_spaces,
@@ -463,7 +463,7 @@ class HostEntity implements HostEntityInterface {
       // Check capacity.
       if (!$this->hasRoom($spaces, $registration)) {
         $enabled = FALSE;
-        $errors[] = $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
+        $errors['capacity'] = $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
           '%label' => $this->label(),
         ]);
       }
@@ -471,7 +471,7 @@ class HostEntity implements HostEntityInterface {
       // Check open date.
       if ($this->isBeforeOpen()) {
         $enabled = FALSE;
-        $errors[] = $this->t('Registration for %label is not open yet.', [
+        $errors['open'] = $this->t('Registration for %label is not open yet.', [
           '%label' => $this->label(),
         ]);
       }
@@ -479,13 +479,13 @@ class HostEntity implements HostEntityInterface {
       // Check close date.
       if ($this->isAfterClose()) {
         $enabled = FALSE;
-        $errors[] = $this->t('Registration for %label is closed.', [
+        $errors['close'] = $this->t('Registration for %label is closed.', [
           '%label' => $this->label(),
         ]);
       }
     }
     else {
-      $errors[] = $this->t('Registration for %label is disabled.', [
+      $errors['status'] = $this->t('Registration for %label is disabled.', [
         '%label' => $this->label(),
       ]);
     }
@@ -499,6 +499,9 @@ class HostEntity implements HostEntityInterface {
       'errors' => $errors,
     ]);
     $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_ENABLED);
+    if ($event->hasErrors()) {
+      $errors = $event->getErrors();
+    }
     return $event->getData() ?? FALSE;
   }
 

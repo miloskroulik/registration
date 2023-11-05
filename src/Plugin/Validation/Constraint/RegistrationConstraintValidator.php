@@ -84,7 +84,8 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
       // checking. If the host entity is not enabled, then do the checks so
       // a specific error message can be given.
       $spaces = $registration->getSpacesReserved();
-      $host_enabled = $host_entity->isEnabledForRegistration($spaces, $registration);
+      $errors = [];
+      $host_enabled = $host_entity->isEnabledForRegistration($spaces, $registration, $errors);
 
       if (!$host_enabled) {
         // Check the main status setting for new registrations. Allow an
@@ -97,7 +98,7 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
 
         if ($registration->isNew() || !$admin) {
           $enabled = (bool) $settings->getSetting('status');
-          if (!$enabled) {
+          if (!$enabled && isset($errors['status'])) {
             $this->context
               ->buildViolation($constraint->disabledMessage, [
                 '%label' => $host_entity->label(),
@@ -109,31 +110,33 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
 
         // Check maximum allowed spaces per registration.
         $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
-        if ($maximum_spaces && ($spaces > $maximum_spaces)) {
+        if ($maximum_spaces && ($spaces > $maximum_spaces) && isset($errors['maximum_spaces'])) {
           $this->context
             ->buildViolation($constraint->tooManySpacesMessage)
             ->setParameter('@count', $maximum_spaces)
-            ->setPlural((int) $maximum_spaces)
+            ->setPlural($maximum_spaces)
             ->atPath('count')
             ->addViolation();
         }
 
         // Check against capacity unless the registration is canceled.
         if (!$registration->isCanceled() && !$host_entity->hasRoom($spaces, $registration)) {
-          if ($spaces > 1) {
-            $this->context
-              ->buildViolation($constraint->noRoomMessage, [
-                '%label' => $host_entity->label(),
-              ])
-              ->atPath('count')
-              ->addViolation();
-          }
-          else {
-            $this->context
-              ->buildViolation($constraint->noRoomMessage, [
-                '%label' => $host_entity->label(),
-              ])
-              ->addViolation();
+          if (isset($errors['capacity'])) {
+            if ($spaces > 1) {
+              $this->context
+                ->buildViolation($constraint->noRoomMessage, [
+                  '%label' => $host_entity->label(),
+                ])
+                ->atPath('count')
+                ->addViolation();
+            }
+            else {
+              $this->context
+                ->buildViolation($constraint->noRoomMessage, [
+                  '%label' => $host_entity->label(),
+                ])
+                ->addViolation();
+            }
           }
         }
 
@@ -149,7 +152,7 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
           if ($open) {
             $open = DrupalDateTime::createFromFormat($storage_format, $open, $storage_timezone);
           }
-          if ($open && ($registration_date < $open)) {
+          if ($open && ($registration_date < $open) && isset($errors['open'])) {
             $this->context
               ->buildViolation($constraint->notOpenYetMessage, [
                 '%label' => $host_entity->label(),
@@ -162,7 +165,7 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
           if ($close) {
             $close = DrupalDateTime::createFromFormat($storage_format, $close, $storage_timezone);
           }
-          if ($close && ($registration_date >= $close)) {
+          if ($close && ($registration_date >= $close) && isset($errors['close'])) {
             $this->context
               ->buildViolation($constraint->closedMessage, [
                 '%label' => $host_entity->label(),

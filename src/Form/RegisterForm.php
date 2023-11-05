@@ -97,7 +97,7 @@ class RegisterForm extends ContentEntityForm {
     if ($registration->isNew() && !$host_entity->isEnabledForRegistration($count, $registration, $errors)) {
       foreach ($errors as $error) {
         $form['notice'][] = [
-          '#markup' => $error,
+          '#markup' => '<p class="registration-error">' . $error . '</p>',
         ];
       }
     }

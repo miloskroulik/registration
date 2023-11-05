@@ -135,6 +135,9 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
       'original_errors' => $original_errors,
     ]);
     $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_ENABLED);
+    if ($event->hasErrors()) {
+      $errors = $event->getErrors();
+    }
     return $event->getData() ?? FALSE;
   }
 
