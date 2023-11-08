@@ -468,6 +468,14 @@ class RegisterForm extends ContentEntityForm {
       $remaining = $host_entity->getSpacesRemaining($registration);
       $max = 99999;
 
+      // Allow an existing registration to keep its reserved spaces.
+      $spaces = $registration->getSpacesReserved();
+      if (!$registration->isNew() && (($spaces > $remaining) || ($spaces > $limit))) {
+        $max = $spaces;
+        $capacity = 0;
+        $limit = 0;
+      }
+
       // Plural format is not needed since the field is hidden
       // unless the user can register for more than one space.
       if ($capacity && $limit) {
