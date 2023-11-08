@@ -372,8 +372,9 @@ class RegisterForm extends ContentEntityForm {
     // Add the "Who is registering" field.
     $registrant_options = $registration_manager->getRegistrantOptions($registration, $settings);
     if (empty($registrant_options)) {
-      $form['notice'] = [
-        '#markup' => t('No valid registration options exist. Registration permissions may need to be adjusted.'),
+      $message = t('No valid registration options exist. Registration permissions may need to be adjusted.');
+      $form['notice'][] = [
+        '#markup' => '<p class="registration-error">' . $message . '</p>',
         '#weight' => -1,
       ];
     }

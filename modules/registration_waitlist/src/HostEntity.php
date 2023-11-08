@@ -117,7 +117,7 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
     if ($this->isWaitListEnabled() && !$this->hasRoomOffWaitList()) {
       if (!$this->hasRoomOnWaitList($spaces, $registration)) {
         $enabled = FALSE;
-        $errors[] = $this->t('Sorry, unable to register for %label because the wait list is full.', [
+        $errors['waitlist_capacity'] = $this->t('Sorry, unable to register for %label because the wait list is full.', [
           '%label' => $this->label(),
         ]);
       }

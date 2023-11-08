@@ -127,7 +127,7 @@ class RegistrationFormEventSubscriber implements EventSubscriberInterface {
           $event->setHandled(TRUE);
           $this->messenger()->addWarning($this->t('Registration placed on the wait list.'));
         }
-        elseif (!$context['is_new'] && ($context['target_state_id'] != 'waitlist')) {
+        elseif ($context['target_state_id'] != 'waitlist') {
           // An existing registration was saved, and the registration state was
           // altered during save to place the registration on the wait list.
           // Give a warning notice so the editor knows the desired target state

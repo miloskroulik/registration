@@ -54,7 +54,7 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
     if (!$enabled) {
       $enabled = TRUE;
 
-      // Re-check all of the error conditions against the configured overrides.
+      // Re-check all the error conditions against the configured overrides.
       // Error messages are added and removed from the error array based on
       // the new checks.
       $context = $event->getContext();
@@ -129,6 +129,11 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
             '%label' => $host_entity->label(),
           ]);
         }
+      }
+
+      // Coexist with the wait list submodule.
+      if (!empty($errors['waitlist_capacity'])) {
+        $enabled = FALSE;
       }
 
       // Update the event.
