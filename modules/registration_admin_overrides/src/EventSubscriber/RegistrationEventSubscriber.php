@@ -2,6 +2,7 @@
 
 namespace Drupal\registration_admin_overrides\EventSubscriber;
 
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
@@ -24,6 +25,13 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
   protected AccountProxy $currentUser;
 
   /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected ModuleHandlerInterface $moduleHandler;
+
+  /**
    * The registration override checker.
    *
    * @var \Drupal\registration_admin_overrides\RegistrationOverrideCheckerInterface
@@ -35,11 +43,14 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
    *
    * @param \Drupal\Core\Session\AccountProxy $current_user
    *   The current user.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
    * @param \Drupal\registration_admin_overrides\RegistrationOverrideCheckerInterface $override_checker
    *   The override checker.
    */
-  public function __construct(AccountProxy $current_user, RegistrationOverrideCheckerInterface $override_checker) {
+  public function __construct(AccountProxy $current_user, ModuleHandlerInterface $module_handler, RegistrationOverrideCheckerInterface $override_checker) {
     $this->currentUser = $current_user;
+    $this->moduleHandler = $module_handler;
     $this->overrideChecker = $override_checker;
   }
 
@@ -105,6 +116,15 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
         }
       }
 
+      // Check wait list capacity.
+      if ($this->moduleHandler->moduleExists('registration_waitlist')) {
+        if (isset($errors['waitlist_capacity'])) {
+          if ($this->canOverride($context, 'capacity')) {
+            unset($errors['waitlist_capacity']);
+          }
+        }
+      }
+
       // Check open date.
       if ($host_entity->isBeforeOpen()) {
         if ($this->canOverride($context, 'open')) {
@@ -131,8 +151,8 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
         }
       }
 
-      // Coexist with the wait list submodule.
-      if (!empty($errors['waitlist_capacity'])) {
+      // Respect other modules that may have added their own errors.
+      if (!empty($errors)) {
         $enabled = FALSE;
       }
 
