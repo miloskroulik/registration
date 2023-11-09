@@ -5,7 +5,7 @@ namespace Drupal\Tests\registration_waitlist\Functional;
 use Drupal\Tests\registration\Functional\RegistrationBrowserTestBase;
 
 /**
- * Defines the base class for registration administrative override web tests.
+ * Defines the base class for registration wait list web tests.
  */
 abstract class RegistrationWaitListBrowserTestBase extends RegistrationBrowserTestBase {
 

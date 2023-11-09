@@ -177,6 +177,51 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     $this->assertSession()->buttonNotExists('Save Registration');
     $this->assertSession()->pageTextContains('insufficient spaces remaining');
     $this->assertSession()->pageTextContains('is closed');
+
+    // Enable wait list.
+    $this->container->get('module_installer')->install(['registration_waitlist']);
+    $storage->resetCache([$settings->id()]);
+    $settings = $storage->load($settings->id());
+    $settings->set('registration_waitlist_enable', TRUE);
+    $settings->set('registration_waitlist_message_enable', TRUE);
+    $settings->set('registration_waitlist_message', 'Please note: completing this registration form will place you on a waitlist as there are currently no places left.');
+    $settings->set('registration_waitlist_capacity', 1);
+    $settings->save();
+
+    // Re-enable overrides.
+    $registration_type->setThirdPartySetting('registration_admin_overrides', 'capacity', TRUE);
+    $registration_type->setThirdPartySetting('registration_admin_overrides', 'close', TRUE);
+    $registration_type->save();
+
+    // If there is a wait list, new registrations that exceed capacity go there
+    // even if an override is possible. The registration can then be edited and
+    // placed in a different status by an administrator if needed.
+    $this->drupalGet('user/' . $this->adminUser->id() . '/register');
+    $this->assertSession()->buttonExists('Save Registration');
+    $this->assertSession()->pageTextContains('completing this registration form will place you on a waitlist');
+    $this->assertSession()->pageTextNotContains('insufficient spaces remaining');
+    $this->submitForm([], 'Save Registration');
+    $this->assertSession()->statusMessageExists('warning', 'Registration placed on the wait list.');
+    $this->assertSession()->statusMessageNotExists('status', 'Registration has been saved.');
+    $this->drupalLogout();
+
+    // Wait list capacity has also been reached. A new registration will now be
+    // placed in the standard status when overrides are enabled.
+    $user = $this->drupalCreateUser([
+      'access user profiles',
+      'create conference registration self',
+      'administer registration',
+      'registration override capacity',
+      'registration override close',
+    ]);
+    $this->drupalLogin($user);
+    $this->drupalGet('user/' . $this->adminUser->id() . '/register');
+    $this->assertSession()->buttonExists('Save Registration');
+    $this->assertSession()->pageTextNotContains('completing this registration form will place you on a waitlist');
+    $this->assertSession()->pageTextNotContains('insufficient spaces remaining');
+    $this->submitForm([], 'Save Registration');
+    $this->assertSession()->statusMessageExists('status', 'Registration has been saved.');
+    $this->assertSession()->statusMessageNotExists('warning', 'Registration placed on the wait list.');
     $this->drupalLogout();
   }
 
