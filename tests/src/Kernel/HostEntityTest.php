@@ -127,7 +127,7 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertFalse($host_entity->isEmailRegisteredInStates('test@example.com', $states));
 
     // A user has not registered yet.
-    $user = $this->createUser([], ['administer registration']);
+    $user = $this->createUser(['administer registration']);
     $this->assertFalse($host_entity->isUserRegistered($user));
     $registration = $this->createRegistration($node);
     $registration->set('user_uid', $user->id());

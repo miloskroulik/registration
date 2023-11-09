@@ -49,7 +49,7 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     // registration core. Overrides are inactive since the current
     // user can administer registrations but does not have the override
     // permissions needed to override constraints.
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'administer registration',
     ]);
     $this->setCurrentUser($account);
@@ -222,7 +222,7 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     $this->assertEquals(0, $violations->count());
 
     // Non-administrative user.
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'view any conference registration',
       'update any conference registration',
     ]);

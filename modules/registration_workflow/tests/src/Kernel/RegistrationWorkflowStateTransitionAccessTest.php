@@ -47,7 +47,7 @@ class RegistrationWorkflowStateTransitionAccessTest extends RegistrationWorkflow
     // permission.
     $registration->set('state', 'pending');
     $registration->save();
-    $account = $this->createUser([], ['use registration complete transition']);
+    $account = $this->createUser(['use registration complete transition']);
     $route_match = new RouteMatch('registration_workflow.transition', $route, [
       'registration' => $registration,
       'transition' => 'complete',
@@ -56,7 +56,7 @@ class RegistrationWorkflowStateTransitionAccessTest extends RegistrationWorkflow
     $this->assertTrue($access_result->isAllowed());
 
     // Wrong permission.
-    $account = $this->createUser([], ['use registration hold transition']);
+    $account = $this->createUser(['use registration hold transition']);
     $route_match = new RouteMatch('registration_workflow.transition', $route, [
       'registration' => $registration,
       'transition' => 'complete',
@@ -65,7 +65,7 @@ class RegistrationWorkflowStateTransitionAccessTest extends RegistrationWorkflow
     $this->assertFalse($access_result->isAllowed());
 
     // Invalid transition name.
-    $account = $this->createUser([], ['use registration complete transition']);
+    $account = $this->createUser(['use registration complete transition']);
     $route_match = new RouteMatch('registration_workflow.transition', $route, [
       'registration' => $registration,
       'transition' => 'complete_cruft',
@@ -76,7 +76,7 @@ class RegistrationWorkflowStateTransitionAccessTest extends RegistrationWorkflow
     // Invalid transition since the registration is already complete now.
     $registration->set('state', 'complete');
     $registration->save();
-    $account = $this->createUser([], ['use registration complete transition']);
+    $account = $this->createUser(['use registration complete transition']);
     $route_match = new RouteMatch('registration_workflow.transition', $route, [
       'registration' => $registration,
       'transition' => 'complete',
@@ -86,7 +86,7 @@ class RegistrationWorkflowStateTransitionAccessTest extends RegistrationWorkflow
 
     // Access to cancel a completed registration is allowed with the right
     // permission.
-    $account = $this->createUser([], ['use registration cancel transition']);
+    $account = $this->createUser(['use registration cancel transition']);
     $route_match = new RouteMatch('registration_workflow.transition', $route, [
       'registration' => $registration,
       'transition' => 'cancel',
@@ -95,7 +95,7 @@ class RegistrationWorkflowStateTransitionAccessTest extends RegistrationWorkflow
     $this->assertTrue($access_result->isAllowed());
 
     // Wrong permission.
-    $account = $this->createUser([], ['use registration hold transition']);
+    $account = $this->createUser(['use registration hold transition']);
     $route_match = new RouteMatch('registration_workflow.transition', $route, [
       'registration' => $registration,
       'transition' => 'cancel',
@@ -104,7 +104,7 @@ class RegistrationWorkflowStateTransitionAccessTest extends RegistrationWorkflow
     $this->assertFalse($access_result->isAllowed());
 
     // Invalid transition name.
-    $account = $this->createUser([], ['use registration cancel transition']);
+    $account = $this->createUser(['use registration cancel transition']);
     $route_match = new RouteMatch('registration_workflow.transition', $route, [
       'registration' => $registration,
       'transition' => 'cancel_cruft',
@@ -115,7 +115,7 @@ class RegistrationWorkflowStateTransitionAccessTest extends RegistrationWorkflow
     // Invalid transition since the registration is already canceled now.
     $registration->set('state', 'canceled');
     $registration->save();
-    $account = $this->createUser([], ['use registration cancel transition']);
+    $account = $this->createUser(['use registration cancel transition']);
     $route_match = new RouteMatch('registration_workflow.transition', $route, [
       'registration' => $registration,
       'transition' => 'cancel',

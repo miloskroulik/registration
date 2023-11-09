@@ -54,15 +54,15 @@ class RegistrationSetStateActionTest extends RegistrationKernelTestBase {
     $node = $this->createAndSaveNode();
     $registration = $this->createAndSaveRegistration($node);
 
-    $account = $this->createUser([], ['administer registration']);
+    $account = $this->createUser(['administer registration']);
     $this->assertFalse($action->access($registration, $account));
 
-    $account = $this->createUser([], ['edit conference registration state']);
+    $account = $this->createUser(['edit conference registration state']);
     $this->assertFalse($action->access($registration, $account));
 
     // Must be able to update the registration and edit state to access the
     // action.
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'update any conference registration',
       'edit conference registration state',
     ]);

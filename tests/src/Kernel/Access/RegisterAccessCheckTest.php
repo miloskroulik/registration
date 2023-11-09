@@ -55,23 +55,23 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
       'node' => $node,
     ]);
 
-    $account = $this->createUser([], ['access registration overview']);
+    $account = $this->createUser(['access registration overview']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
-    $account = $this->createUser([], ['administer registration']);
+    $account = $this->createUser(['administer registration']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
-    $account = $this->createUser([], ['create conference registration self']);
+    $account = $this->createUser(['create conference registration self']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
-    $account = $this->createUser([], ['create conference registration other users']);
+    $account = $this->createUser(['create conference registration other users']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
-    $account = $this->createUser([], ['create conference registration other anonymous']);
+    $account = $this->createUser(['create conference registration other anonymous']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
@@ -81,23 +81,23 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
     $settings->set('status', FALSE);
     $settings->save();
 
-    $account = $this->createUser([], ['access registration overview']);
+    $account = $this->createUser(['access registration overview']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
-    $account = $this->createUser([], ['administer registration']);
+    $account = $this->createUser(['administer registration']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
-    $account = $this->createUser([], ['create conference registration self']);
+    $account = $this->createUser(['create conference registration self']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
-    $account = $this->createUser([], ['create conference registration other users']);
+    $account = $this->createUser(['create conference registration other users']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
-    $account = $this->createUser([], ['create conference registration other anonymous']);
+    $account = $this->createUser(['create conference registration other anonymous']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
   }
@@ -119,23 +119,23 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
       'node' => $node,
     ]);
 
-    $account = $this->createUser([], ['access registration overview']);
+    $account = $this->createUser(['access registration overview']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
-    $account = $this->createUser([], ['administer registration']);
+    $account = $this->createUser(['administer registration']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
-    $account = $this->createUser([], ['create conference registration self']);
+    $account = $this->createUser(['create conference registration self']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
-    $account = $this->createUser([], ['create conference registration other users']);
+    $account = $this->createUser(['create conference registration other users']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
-    $account = $this->createUser([], ['create conference registration other anonymous']);
+    $account = $this->createUser(['create conference registration other anonymous']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
   }

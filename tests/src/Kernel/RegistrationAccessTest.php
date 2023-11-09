@@ -42,7 +42,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
    * @covers ::checkAccess
    */
   public function testAccess() {
-    $account = $this->createUser([], ['access registration overview']);
+    $account = $this->createUser(['access registration overview']);
 
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
@@ -54,14 +54,14 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('delete', $account));
 
     // "Own" permissions.
-    $account = $this->createUser([], ['view own registration']);
+    $account = $this->createUser(['view own registration']);
     $registration->set('user_uid', $account->id());
     $registration->save();
     $this->assertTrue($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
 
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'view own conference registration',
       'update own conference registration',
     ]);
@@ -71,7 +71,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
 
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'view own conference registration',
       'update own conference registration',
       'delete own conference registration',
@@ -83,7 +83,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('delete', $account));
 
     // "Own" permissions for the wrong type.
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'view own seminar registration',
       'update own seminar registration',
       'delete own seminar registration',
@@ -95,22 +95,22 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('delete', $account));
 
     // "View any" permission.
-    $account = $this->createUser([], ['access content']);
+    $account = $this->createUser(['access content']);
     $registration->set('author_uid', $account->id());
     $registration->set('user_uid', $account->id());
     $registration->save();
     $this->assertFalse($registration->access('view', $account));
-    $account = $this->createUser([], ['view any registration']);
+    $account = $this->createUser(['view any registration']);
     $this->assertTrue($registration->access('view', $account));
 
     // "Administer" permission.
-    $account = $this->createUser([], ['administer registration']);
+    $account = $this->createUser(['administer registration']);
     $this->assertTrue($registration->access('view', $account));
     $this->assertTrue($registration->access('update', $account));
     $this->assertTrue($registration->access('delete', $account));
 
     // "Administer types" permission only applies to types.
-    $account = $this->createUser([], ['administer registration types']);
+    $account = $this->createUser(['administer registration types']);
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
@@ -122,27 +122,27 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
   public function testCreateAccess() {
     $access_control_handler = $this->entityTypeManager->getAccessControlHandler('registration');
 
-    $account = $this->createUser([], ['access content']);
+    $account = $this->createUser(['access content']);
     $this->assertFalse($access_control_handler->createAccess('conference', $account));
 
-    $account = $this->createUser([], ['bypass node access']);
+    $account = $this->createUser(['bypass node access']);
     $this->assertFalse($access_control_handler->createAccess('conference', $account));
 
-    $account = $this->createUser([], ['administer registration']);
+    $account = $this->createUser(['administer registration']);
     $this->assertTrue($access_control_handler->createAccess('conference', $account));
 
-    $account = $this->createUser([], ['create conference registration self']);
+    $account = $this->createUser(['create conference registration self']);
     $this->assertTrue($access_control_handler->createAccess('conference', $account));
-    $account = $this->createUser([], ['create conference registration other users']);
+    $account = $this->createUser(['create conference registration other users']);
     $this->assertTrue($access_control_handler->createAccess('conference', $account));
-    $account = $this->createUser([], ['create conference registration other anonymous']);
+    $account = $this->createUser(['create conference registration other anonymous']);
     $this->assertTrue($access_control_handler->createAccess('conference', $account));
 
-    $account = $this->createUser([], ['create seminar registration self']);
+    $account = $this->createUser(['create seminar registration self']);
     $this->assertFalse($access_control_handler->createAccess('conference', $account));
-    $account = $this->createUser([], ['create seminar registration other users']);
+    $account = $this->createUser(['create seminar registration other users']);
     $this->assertFalse($access_control_handler->createAccess('conference', $account));
-    $account = $this->createUser([], ['create seminar registration other anonymous']);
+    $account = $this->createUser(['create seminar registration other anonymous']);
     $this->assertFalse($access_control_handler->createAccess('conference', $account));
   }
 
@@ -153,7 +153,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $access_control_handler = $this->entityTypeManager->getAccessControlHandler('registration');
 
     // Administer registration type only applies to settings, not registrations.
-    $account = $this->createUser([], ['administer conference registration']);
+    $account = $this->createUser(['administer conference registration']);
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
     $registration->set('user_uid', $account->id());
@@ -161,7 +161,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('delete', $account));
 
     // Delete "own" permission.
-    $account = $this->createUser([], ['delete own conference registration']);
+    $account = $this->createUser(['delete own conference registration']);
     $this->assertFalse($registration->access('delete', $account));
     $registration->set('author_uid', $account->id());
     $registration->save();
@@ -174,9 +174,9 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('delete', $account));
 
     // Delete "any" permission.
-    $account = $this->createUser([], ['delete any conference registration']);
+    $account = $this->createUser(['delete any conference registration']);
     $this->assertTrue($registration->access('delete', $account));
-    $account = $this->createUser([], ['delete any seminar registration']);
+    $account = $this->createUser(['delete any seminar registration']);
     $this->assertFalse($registration->access('delete', $account));
   }
 
@@ -187,7 +187,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $access_control_handler = $this->entityTypeManager->getAccessControlHandler('registration');
 
     // Administer registration type only applies to settings, not registrations.
-    $account = $this->createUser([], ['administer conference registration']);
+    $account = $this->createUser(['administer conference registration']);
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
     $registration->set('user_uid', $account->id());
@@ -195,7 +195,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('update', $account));
 
     // Update "own" permission.
-    $account = $this->createUser([], ['update own conference registration']);
+    $account = $this->createUser(['update own conference registration']);
     $this->assertFalse($registration->access('update', $account));
     $registration->set('author_uid', $account->id());
     $registration->save();
@@ -208,9 +208,9 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('update', $account));
 
     // Update "any" permission.
-    $account = $this->createUser([], ['update any conference registration']);
+    $account = $this->createUser(['update any conference registration']);
     $this->assertTrue($registration->access('update', $account));
-    $account = $this->createUser([], ['update any seminar registration']);
+    $account = $this->createUser(['update any seminar registration']);
     $this->assertFalse($registration->access('update', $account));
   }
 
@@ -221,17 +221,17 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $node = $this->createAndSaveNode();
     $registration = $this->createAndSaveRegistration($node);
 
-    $account = $this->createUser([], ['administer registration']);
+    $account = $this->createUser(['administer registration']);
     $this->assertTrue($registration->toUrl('collection')->access($account));
     $this->assertTrue($registration->toUrl('edit-form')->access($account));
     $this->assertTrue($registration->toUrl('delete-form')->access($account));
 
-    $account = $this->createUser([], ['access registration overview']);
+    $account = $this->createUser(['access registration overview']);
     $this->assertTrue($registration->toUrl('collection')->access($account));
     $this->assertFalse($registration->toUrl('edit-form')->access($account));
     $this->assertFalse($registration->toUrl('delete-form')->access($account));
 
-    $account = $this->createUser([], ['access content overview']);
+    $account = $this->createUser(['access content overview']);
     $this->assertFalse($registration->toUrl('collection')->access($account));
     $this->assertFalse($registration->toUrl('edit-form')->access($account));
     $this->assertFalse($registration->toUrl('delete-form')->access($account));

@@ -33,7 +33,7 @@ class RegistrationTest extends RegistrationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $user = $this->createUser([], ['administer registration']);
+    $user = $this->createUser(['administer registration']);
     $user = $this->reloadEntity($user);
     /** @var \Drupal\user\UserInterface $user */
     $this->user = $user;

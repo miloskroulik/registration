@@ -213,7 +213,7 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $this->assertEquals(0, $violations->count());
 
     // Non-administrative user.
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'view any conference registration',
       'update any conference registration',
     ]);

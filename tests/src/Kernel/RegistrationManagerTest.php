@@ -104,28 +104,28 @@ class RegistrationManagerTest extends RegistrationKernelTestBase {
     // The current user (1) is already registered.
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
-    $account = $this->createUser([], ['access registration overview']);
+    $account = $this->createUser(['access registration overview']);
     $this->container->get('current_user')->setAccount($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
-    $account = $this->createUser([], ['create conference registration self']);
+    $account = $this->createUser(['create conference registration self']);
     $this->container->get('current_user')->setAccount($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
-    $account = $this->createUser([], ['create conference registration other users']);
+    $account = $this->createUser(['create conference registration other users']);
     $this->container->get('current_user')->setAccount($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
-    $account = $this->createUser([], ['create conference registration other anonymous']);
+    $account = $this->createUser(['create conference registration other anonymous']);
     $this->container->get('current_user')->setAccount($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
