@@ -1,5 +1,14 @@
 services:
 
+  registration_waitlist.registration_event_subscriber:
+    class: \Drupal\registration_waitlist\EventSubscriber\RegistrationEventSubscriber
+    arguments: [
+      '@plugin.manager.action',
+      '@registration_waitlist.logger',
+    ]
+    tags:
+      - { name: event_subscriber }
+
   registration_waitlist.logger:
     parent: logger.channel_base
     arguments: [

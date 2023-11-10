@@ -13,6 +13,87 @@ use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration_waitlist\Plugin\Field\RegistrationItemFieldItemList;
 
 /**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function registration_waitlist_form_registration_type_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $registration_type = $form_state->getFormObject()->getEntity();
+
+  $form['registration_waitlist'] = [
+    '#type' => 'fieldset',
+    '#title' => t('Wait list confirmation email settings'),
+    '#description' => t('Sent when a registration is moved to the wait list.'),
+  ];
+  $form['registration_waitlist']['confirmation_email'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Enable confirmation email'),
+    '#default_value' => $registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_email'),
+  ];
+  $form['registration_waitlist']['confirmation_email_subject'] = [
+    '#type' => 'textfield',
+    '#title' => t('Subject'),
+    '#default_value' => $registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_email_subject'),
+    '#states' => [
+      'required' => [
+        ':input[name="registration_waitlist[confirmation_email]"]' => ['checked' => TRUE],
+      ],
+      'visible' => [
+        ':input[name="registration_waitlist[confirmation_email]"]' => ['checked' => TRUE],
+      ],
+    ],
+  ];
+  $message = $registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_email_message');
+  $form['registration_waitlist']['confirmation_email_message'] = [
+    '#type' => 'text_format',
+    '#title' => t('Message'),
+    '#description' => t('Enter the message you want to send. Tokens are supported, e.g., [node:title].'),
+    '#default_value' => $message['value'] ?? '',
+    '#format' => $message['format'] ?? filter_default_format(),
+    '#states' => [
+      'visible' => [
+        ':input[name="registration_waitlist[confirmation_email]"]' => ['checked' => TRUE],
+      ],
+    ],
+  ];
+  if (\Drupal::moduleHandler()->moduleExists('token')) {
+    $form['token_tree'] = [
+      '#theme' => 'token_tree_link',
+      '#token_types' => [
+        'registration',
+        'registration_settings',
+      ],
+      '#global_types' => FALSE,
+      '#weight' => 10,
+    ];
+    /** @var \Drupal\registration\RegistrationManagerInterface $registration_manager */
+    $registration_manager = \Drupal::service('registration.manager');
+    foreach ($registration_manager->getRegistrationEnabledEntityTypes() as $entity_type) {
+      $form['token_tree']['#token_types'][] = $entity_type->id();
+    }
+  }
+  $form['actions']['submit']['#submit'][] = 'registration_waitlist_form_registration_type_submit';
+}
+
+/**
+ * Implements submit handler for hook_form_BASE_FORM_ID_alter().
+ */
+function registration_waitlist_form_registration_type_submit(&$form, FormStateInterface $form_state) {
+  $registration_type = $form_state->getFormObject()->getEntity();
+  $registration_type->setThirdPartySetting('registration_waitlist', 'confirmation_email', $form_state->getValue([
+    'registration_waitlist',
+    'confirmation_email',
+  ]));
+  $registration_type->setThirdPartySetting('registration_waitlist', 'confirmation_email_subject', $form_state->getValue([
+    'registration_waitlist',
+    'confirmation_email_subject',
+  ]));
+  $registration_type->setThirdPartySetting('registration_waitlist', 'confirmation_email_message', $form_state->getValue([
+    'registration_waitlist',
+    'confirmation_email_message',
+  ]));
+  $registration_type->save();
+}
+
+/**
  * Implements hook_entity_type_alter().
  */
 function registration_waitlist_entity_type_alter(array &$entity_types) {
