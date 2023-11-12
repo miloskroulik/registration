@@ -52,7 +52,26 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Process update.
+   * Processes delete.
+   *
+   * @param \Drupal\registration\Event\RegistrationEvent $event
+   *   The registration event.
+   */
+  public function onDelete(RegistrationEvent $event) {
+    $registration = $event->getRegistration();
+
+    // Auto fill when an active registration is deleted and the auto fill
+    // setting is enabled.
+    if ($registration->getState()->isActive()) {
+      $host_entity = $registration->getHostEntity();
+      if ((bool) $host_entity->getSetting('registration_waitlist_autofill')) {
+        $this->waitListManager->autoFill($host_entity);
+      }
+    }
+  }
+
+  /**
+   * Processes update.
    *
    * @param \Drupal\registration\Event\RegistrationEvent $event
    *   The registration event.
@@ -99,6 +118,7 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents(): array {
     return [
+      RegistrationEvents::REGISTRATION_DELETE => 'onDelete',
       RegistrationEvents::REGISTRATION_INSERT => 'onUpdate',
       RegistrationEvents::REGISTRATION_UPDATE => 'onUpdate',
     ];

@@ -9,7 +9,7 @@ use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 /**
  * Tests the RegistrationWaitListManager class.
  *
- * @coversDefaultClass \Drupal\registration\RegistrationWaitListManager
+ * @coversDefaultClass \Drupal\registration_waitlist\RegistrationWaitListManager
  *
  * @group registration
  */
@@ -82,7 +82,7 @@ class RegistrationWaitListManagerTest extends RegistrationWaitListKernelTestBase
     $this->assertEquals(5, $host_entity->getActiveSpacesReserved());
     $this->assertEquals(9, $host_entity->getWaitListSpacesReserved());
 
-    // Decrease capacity and enable auto fill.
+    // Decrease capacity and enable autofill.
     $settings->set('capacity', 5);
     $settings->set('registration_waitlist_autofill', TRUE);
     $settings->set('registration_waitlist_autofill_state', 'complete');
@@ -95,6 +95,12 @@ class RegistrationWaitListManagerTest extends RegistrationWaitListKernelTestBase
     $settings->save();
     $this->assertEquals(10, $host_entity->getActiveSpacesReserved());
     $this->assertEquals(4, $host_entity->getWaitListSpacesReserved());
+
+    // Delete a registration. Autofill is enabled and fills the available spots.
+    $registration = $this->entityTypeManager->getStorage('registration')->load(1);
+    $registration->delete();
+    $this->assertEquals(9, $host_entity->getActiveSpacesReserved());
+    $this->assertEquals(0, $host_entity->getWaitListSpacesReserved());
   }
 
 }
