@@ -172,7 +172,7 @@ interface HostEntityInterface {
    *
    * @param array $states
    *   (optional) An array of state IDs to filter on.
-   *   For example: ['completed', 'held'].
+   *   For example: ['complete', 'held'].
    * @param string|null $langcode
    *   (optional) The language code to filter on.
    *   If no language code is provided, the host entity language is used.
