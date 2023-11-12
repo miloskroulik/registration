@@ -4,16 +4,11 @@ services:
     class: \Drupal\registration_waitlist\EventSubscriber\RegistrationEventSubscriber
     arguments: [
       '@plugin.manager.action',
+      '@registration_waitlist.manager',
       '@registration_waitlist.logger',
     ]
     tags:
       - { name: event_subscriber }
-
-  registration_waitlist.logger:
-    parent: logger.channel_base
-    arguments: [
-      'registration_waitlist',
-    ]
 
   registration_waitlist.registration_form_event_subscriber:
     class: Drupal\registration_waitlist\EventSubscriber\RegistrationFormEventSubscriber
@@ -22,5 +17,20 @@ services:
 
   registration_waitlist.registration_settings_event_subscriber:
     class: Drupal\registration_waitlist\EventSubscriber\RegistrationSettingsEventSubscriber
+    arguments: [
+      '@registration_waitlist.manager',
+    ]
     tags:
       - { name: event_subscriber }
+
+  registration_waitlist.manager:
+    class: Drupal\registration_waitlist\RegistrationWaitListManager
+    arguments: [
+      '@registration_waitlist.logger',
+    ]
+
+  registration_waitlist.logger:
+    parent: logger.channel_base
+    arguments: [
+      'registration_waitlist',
+    ]

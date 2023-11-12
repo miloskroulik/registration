@@ -112,6 +112,13 @@ function registration_waitlist_validation_constraint_alter(array &$definitions) 
 }
 
 /**
+ * Implements hook_field_widget_info_alter().
+ */
+function registration_waitlist_field_widget_info_alter(array &$info) {
+  $info['registration_state_default']['class'] = 'Drupal\registration_waitlist\Plugin\Field\FieldWidget\RegistrationStateWidget';
+}
+
+/**
  * Implements hook_ENTITY_TYPE_presave().
  */
 function registration_waitlist_registration_presave(EntityInterface $entity) {
@@ -145,6 +152,17 @@ function registration_waitlist_registration_presave(EntityInterface $entity) {
  * Implements hook_form_FORM_ID_alter().
  */
 function registration_waitlist_form_registration_settings_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $form['registration_waitlist_autofill']['#states'] = [
+    'visible' => [
+      ':input[name="registration_waitlist_enable[value]"]' => ['checked' => TRUE],
+    ],
+  ];
+  $form['registration_waitlist_autofill_state']['#states'] = [
+    'visible' => [
+      ':input[name="registration_waitlist_enable[value]"]' => ['checked' => TRUE],
+      ':input[name="registration_waitlist_autofill[value]"]' => ['checked' => TRUE],
+    ],
+  ];
   $form['registration_waitlist_capacity']['#states'] = [
     'visible' => [
       ':input[name="registration_waitlist_enable[value]"]' => ['checked' => TRUE],
@@ -185,6 +203,28 @@ function registration_waitlist_entity_base_field_info(EntityTypeInterface $entit
       ->setRequired(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['registration_waitlist_autofill'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Autofill available spots'))
+      ->setDescription(t('Automatically fill newly available spots in standard capacity from the wait list.'))
+      ->setRequired(FALSE)
+      ->setDefaultValue(FALSE)
+      ->setDisplayOptions('form', [
+        'type' => 'boolean_checkbox',
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['registration_waitlist_autofill_state'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Autofill state'))
+      ->setDescription(t('The state that wait listed registrations should be placed in when slots become available.'))
+      ->setRequired(FALSE)
+      ->setSetting('max_length', 255)
+      ->setDisplayOptions('form', [
+        'type' => 'registration_state_default',
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
