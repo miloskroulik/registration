@@ -59,6 +59,46 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
               ->addCacheableDependency($entity);
           }
           $access = $account->hasPermission("administer own $type registration");
+          $access_result = AccessResult::allowedIf($access)
+            // Own permission must be cached per user and not per permissions.
+            ->cachePerUser()
+            // Recalculate this result if the relevant entities are updated.
+            ->addCacheableDependency($entity)
+            // Own permission must be combined with update access to the entity.
+            // Merge the cacheability of the entity access check via "andIf".
+            ->andIf($entity->access('update', $account, TRUE));
+
+          if ($access_result->isAllowed()) {
+            return $access_result;
+          }
+
+          // Administrative access not granted. Check the Manage permissions.
+          $entity_type_id = $entity->getEntityTypeId();
+          switch ($route_match->getRouteName()) {
+            // Manage sending registrant emails.
+            case "entity.$entity_type_id.registration.broadcast":
+              $route_access = $account->hasPermission("manage $type registration broadcast");
+              break;
+
+            // Manage registration settings.
+            case "entity.$entity_type_id.registration.registration_settings":
+              $route_access = $account->hasPermission("manage $type registration settings");
+              break;
+
+            // Manage registrations. This is always checked below.
+            default:
+              $route_access = TRUE;
+          }
+
+          $access = $account->hasPermission("manage $type registration") && $route_access;
+          if ($access) {
+            return AccessResult::allowed()
+              // Recalculate this result if the relevant entities are updated.
+              ->cachePerPermissions()
+              ->addCacheableDependency($entity);
+          }
+
+          $access = $account->hasPermission("manage own $type registration") && $route_access;
           return AccessResult::allowedIf($access)
             // Own permission must be cached per user and not per permissions.
             ->cachePerUser()

@@ -134,6 +134,17 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
       'bypass node access',
     ]);
     $this->assertFalse($url->access($account));
+    $account = $this->createUser(['manage conference registration']);
+    $this->assertTrue($url->access($account));
+    $account = $this->createUser([
+      'manage own conference registration',
+      'bypass node access',
+    ]);
+    $this->assertTrue($url->access($account));
+    $account = $this->createUser([
+      'manage own conference registration',
+    ]);
+    $this->assertFalse($url->access($account));
 
     // Edit settings route.
     $url = Url::fromRoute('entity.node.registration.registration_settings', [
@@ -157,6 +168,52 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
       'bypass node access',
     ]);
     $this->assertFalse($url->access($account));
+    $account = $this->createUser(['manage conference registration']);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser(['manage conference registration settings']);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser([
+      'manage conference registration',
+      'manage conference registration settings',
+    ]);
+    $this->assertTrue($url->access($account));
+
+    // Broadcase route.
+    $url = Url::fromRoute('entity.node.registration.broadcast', [
+      'node' => $this->node->id(),
+    ]);
+    $account = $this->createUser(['administer registration']);
+    $this->assertTrue($url->access($account));
+    $account = $this->createUser(['access registration overview']);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser([
+      'administer own conference registration',
+      'bypass node access',
+    ]);
+    $this->assertTrue($url->access($account));
+    $account = $this->createUser([
+      'administer own conference registration',
+    ]);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser([
+      'administer own seminar registration',
+      'bypass node access',
+    ]);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser(['manage conference registration']);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser(['manage conference registration broadcast']);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser([
+      'manage conference registration',
+      'manage conference registration settings',
+    ]);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser([
+      'manage conference registration',
+      'manage conference registration broadcast',
+    ]);
+    $this->assertTrue($url->access($account));
   }
 
 }

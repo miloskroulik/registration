@@ -130,16 +130,40 @@ class RegistrationPermissionProvider implements ContainerInjectionInterface {
     ];
     foreach ($bundles as $bundle_name => $bundle_info) {
       $permissions["administer $bundle_name $entity_type_id"] = [
-        'title' => $this->t('@bundle: Administer settings', [
+        'title' => $this->t('@bundle: Administer registrations', [
           '@bundle' => $bundle_info['label'],
         ]),
-        'description' => $this->t('Allow changing registration settings for all entities of this type.'),
+        'description' => $this->t('View, edit, delete and manage all registrations of this type.'),
       ];
       $permissions["administer own $bundle_name $entity_type_id"] = [
-        'title' => $this->t('@bundle: Administer own settings', [
+        'title' => $this->t('@bundle: Administer registrations for editable host entities', [
           '@bundle' => $bundle_info['label'],
         ]),
-        'description' => $this->t('Allow changing registration settings for entities which a user has edit access.'),
+        'description' => $this->t('View, edit, delete and manage registrations of this type for host entities to which a user has edit access.'),
+      ];
+      $permissions["manage $bundle_name $entity_type_id"] = [
+        'title' => $this->t('@bundle: Manage registrations', [
+          '@bundle' => $bundle_info['label'],
+        ]),
+        'description' => $this->t('Manage all registrations of this type.'),
+      ];
+      $permissions["manage own $bundle_name $entity_type_id"] = [
+        'title' => $this->t('@bundle: Manage registrations for editable host entities', [
+          '@bundle' => $bundle_info['label'],
+        ]),
+        'description' => $this->t('Manage registrations of this type for host entities to which a user has edit access.'),
+      ];
+      $permissions["manage $bundle_name $entity_type_id settings"] = [
+        'title' => $this->t('@bundle: Manage registration settings', [
+          '@bundle' => $bundle_info['label'],
+        ]),
+        'description' => $this->t('Allow changing registration settings for registrations of this type. The user must be also be able to manage registrations for the host entity.'),
+      ];
+      $permissions["manage $bundle_name $entity_type_id broadcast"] = [
+        'title' => $this->t('@bundle: Manage sending registrant email', [
+          '@bundle' => $bundle_info['label'],
+        ]),
+        'description' => $this->t('Allow sending email to registrants of this type. The user must be also be able to manage registrations for the host entity.'),
       ];
       $permissions["edit $bundle_name $entity_type_id state"] = [
         'title' => $this->t('@bundle: Edit @type state', [

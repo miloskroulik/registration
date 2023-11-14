@@ -2,7 +2,7 @@
 
 namespace Drupal\registration\Plugin\views\field;
 
-use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\Url;
@@ -22,6 +22,13 @@ class SettingsOperations extends EntityOperations {
   use RedirectDestinationTrait;
 
   /**
+   * The access manager.
+   *
+   * @var \Drupal\Core\Access\AccessManagerInterface
+   */
+  protected AccessManagerInterface $accessManager;
+
+  /**
    * The current user.
    *
    * @var \Drupal\Core\Session\AccountProxy
@@ -33,6 +40,7 @@ class SettingsOperations extends EntityOperations {
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): SettingsOperations {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->accessManager = $container->get('access_manager');
     $instance->currentUser = $container->get('current_user');
     return $instance;
   }
@@ -55,17 +63,13 @@ class SettingsOperations extends EntityOperations {
         $host_entity = $this->entityTypeManager
           ->getHandler('registration', 'host_entity')
           ->createHostEntity($entity);
-        if ($type = $host_entity->getRegistrationTypeBundle()) {
-          $access =
-               $this->currentUser->hasPermission("administer registration")
-            || $this->currentUser->hasPermission("administer $type registration");
-          $access_result = AccessResult::allowedIf($access)
-            // Recalculate this result if the relevant entities are updated.
-            ->cachePerPermissions()
-            ->addCacheableDependency($entity);
-
+        if ($host_entity->getRegistrationTypeBundle()) {
+          $route_name = "entity.$entity_type_id.registration.registration_settings";
+          $access_result = $this->accessManager->checkNamedRoute($route_name, [
+            $entity_type_id => $entity_id,
+          ], $this->currentUser, TRUE);
           if ($access_result->isAllowed()) {
-            $url = Url::fromRoute("entity.$entity_type_id.registration.registration_settings", [
+            $url = Url::fromRoute($route_name, [
               $entity_type_id => $entity_id,
             ]);
             $operations['edit'] = [
