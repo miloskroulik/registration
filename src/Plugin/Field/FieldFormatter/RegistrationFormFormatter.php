@@ -58,7 +58,7 @@ class RegistrationFormFormatter extends FormatterBase {
         ->createHostEntity($entity, $langcode);
       $settings = $host_entity->getSettings();
       $cache_entities[] = $settings;
-      if (isset($items, $items[0])) {
+      if (isset($items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
           $registration_type = $this->entityTypeManager->getStorage('registration_type')->load($id);
           if ($registration_type) {
@@ -69,7 +69,10 @@ class RegistrationFormFormatter extends FormatterBase {
                 'entity_id' => $host_entity->id(),
                 'type' => $registration_type->id(),
               ]);
-              $elements[] = $this->entityFormBuilder->getForm($registration);
+              // Add the host entity to the form state.
+              $elements[] = $this->entityFormBuilder->getForm($registration, 'register', [
+                'host_entity' => $host_entity,
+              ]);
             }
           }
         }

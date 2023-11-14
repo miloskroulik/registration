@@ -38,7 +38,7 @@ class RegistrationFormFormatterTest extends FormatterTestBase implements Service
       'label' => 'hidden',
     ]);
     $output = $this->renderPlain($build);
-    $this->assertStringContainsString('<form class="registration-conference-form', $output);
+    $this->assertStringContainsString('<form class="registration-conference-register-form', $output);
   }
 
 }
