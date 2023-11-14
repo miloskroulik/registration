@@ -24,6 +24,13 @@ class RegistrationStateWidget extends BaseRegistrationStateWidget {
       return parent::formElement($items, $delta, $element, $form, $form_state);
     }
 
+    // Autofill state cannot be set on the default values form for registration
+    // settings.
+    // @todo Add support for this.
+    if ($form_state->get('default_value_widget')) {
+      return [];
+    }
+
     /** @var \Drupal\registration\Entity\RegistrationSettings $entity */
     return [
       '#type' => 'select',
