@@ -41,3 +41,36 @@ function registration_update_9003() {
   \Drupal::entityDefinitionUpdateManager()
     ->installFieldStorageDefinition('completed', 'registration', 'registration', $field_storage_definition);
 }
+
+/**
+ * Migrates administer settings permissions to the equivalent manage settings.
+ */
+function registration_update_9004() {
+  $message = FALSE;
+  $roles = \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple();
+  $types = \Drupal::entityTypeManager()->getStorage('registration_type')->loadMultiple();
+  foreach ($types as $type => $entity) {
+    foreach ($roles as $role) {
+      if (!$role->isAdmin() && $role->hasPermission("administer $type registration")) {
+        $role->revokePermission("administer $type registration");
+        $role->grantPermission("manage $type registration");
+        $role->grantPermission("manage $type registration settings");
+        $role->grantPermission("manage $type registration broadcast");
+        $role->save();
+        $message = TRUE;
+      }
+      if (!$role->isAdmin() && $role->hasPermission("administer own $type registration")) {
+        $role->revokePermission("administer own $type registration");
+        $role->grantPermission("manage own $type registration");
+        $role->grantPermission("manage $type registration settings");
+        $role->grantPermission("manage $type registration broadcast");
+        $role->save();
+        $message = TRUE;
+      }
+    }
+  }
+
+  if ($message) {
+    \Drupal::messenger()->addMessage(t('Permissions for maintaining registration settings were updated for one or more roles. Please view the change record at https://www.drupal.org/node/3402602 for more information about changes to permissions in this release. You should export your configuration after this update completes.'));
+  }
+}

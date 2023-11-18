@@ -42,6 +42,8 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
    * @covers ::checkAccess
    */
   public function testAccess() {
+    $access_control_handler = $this->entityTypeManager->getAccessControlHandler('registration');
+
     $account = $this->createUser(['access registration overview']);
 
     $node = $this->createAndSaveNode();
@@ -102,6 +104,8 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('view', $account));
     $account = $this->createUser(['view any registration']);
     $this->assertTrue($registration->access('view', $account));
+    $this->assertFalse($registration->access('update', $account));
+    $this->assertFalse($registration->access('delete', $account));
 
     // "Administer" permission.
     $account = $this->createUser(['administer registration']);
@@ -109,8 +113,39 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('update', $account));
     $this->assertTrue($registration->access('delete', $account));
 
+    // "Administer type" permission.
+    $account = $this->createUser(['administer conference registration']);
+    $this->assertTrue($registration->access('view', $account));
+    $this->assertTrue($registration->access('update', $account));
+    $this->assertTrue($registration->access('delete', $account));
+
+    // "Administer own type" permission.
+    $account = $this->createUser(['administer own conference registration']);
+    $this->assertFalse($registration->access('view', $account));
+    $this->assertFalse($registration->access('update', $account));
+    $this->assertFalse($registration->access('delete', $account));
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    // @see https://www.drupal.org/project/drupal/issues/2834344
+    $access_control_handler->resetCache();
+    $this->assertTrue($registration->access('view', $account));
+    $this->assertTrue($registration->access('update', $account));
+    $this->assertTrue($registration->access('delete', $account));
+
     // "Administer types" permission only applies to types.
     $account = $this->createUser(['administer registration types']);
+    $this->assertFalse($registration->access('view', $account));
+    $this->assertFalse($registration->access('update', $account));
+    $this->assertFalse($registration->access('delete', $account));
+
+    // "Manage" permissions apply to the host entity, not registrations.
+    $account = $this->createUser([
+      'bypass node access',
+      'manage own conference registration',
+      'manage conference registration',
+      'manage conference registration settings',
+      'manage conference registration broadcast',
+    ]);
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
@@ -152,24 +187,16 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
   public function testDeleteAccess() {
     $access_control_handler = $this->entityTypeManager->getAccessControlHandler('registration');
 
-    // Administer registration type only applies to settings, not registrations.
-    $account = $this->createUser(['administer conference registration']);
-    $node = $this->createAndSaveNode();
-    $registration = $this->createRegistration($node);
-    $registration->set('user_uid', $account->id());
-    $registration->save();
-    $this->assertFalse($registration->access('delete', $account));
-
     // Delete "own" permission.
     $account = $this->createUser(['delete own conference registration']);
-    $this->assertFalse($registration->access('delete', $account));
+    $node = $this->createAndSaveNode();
+    $registration = $this->createRegistration($node);
     $registration->set('author_uid', $account->id());
     $registration->save();
-    // @see https://www.drupal.org/project/drupal/issues/2834344
-    $access_control_handler->resetCache();
     $this->assertFalse($registration->access('delete', $account));
     $registration->set('user_uid', $account->id());
     $registration->save();
+    // @see https://www.drupal.org/project/drupal/issues/2834344
     $access_control_handler->resetCache();
     $this->assertTrue($registration->access('delete', $account));
 
@@ -186,24 +213,16 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
   public function testUpdateAccess() {
     $access_control_handler = $this->entityTypeManager->getAccessControlHandler('registration');
 
-    // Administer registration type only applies to settings, not registrations.
-    $account = $this->createUser(['administer conference registration']);
-    $node = $this->createAndSaveNode();
-    $registration = $this->createRegistration($node);
-    $registration->set('user_uid', $account->id());
-    $registration->save();
-    $this->assertFalse($registration->access('update', $account));
-
     // Update "own" permission.
     $account = $this->createUser(['update own conference registration']);
-    $this->assertFalse($registration->access('update', $account));
+    $node = $this->createAndSaveNode();
+    $registration = $this->createRegistration($node);
     $registration->set('author_uid', $account->id());
     $registration->save();
-    // @see https://www.drupal.org/project/drupal/issues/2834344
-    $access_control_handler->resetCache();
     $this->assertFalse($registration->access('update', $account));
     $registration->set('user_uid', $account->id());
     $registration->save();
+    // @see https://www.drupal.org/project/drupal/issues/2834344
     $access_control_handler->resetCache();
     $this->assertTrue($registration->access('update', $account));
 

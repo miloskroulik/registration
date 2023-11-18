@@ -4,7 +4,7 @@ administer registration types:
   restrict access: true
 administer registration:
   title: 'Administer registrations'
-  description: 'View, edit, delete and manage all registrations, regardless of type.'
+  description: 'View, edit, delete and manage all registrations and registration settings, regardless of type.'
   restrict access: true
 view own registration:
   title: 'View own registrations'

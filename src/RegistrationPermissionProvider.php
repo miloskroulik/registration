@@ -133,22 +133,22 @@ class RegistrationPermissionProvider implements ContainerInjectionInterface {
         'title' => $this->t('@bundle: Administer registrations', [
           '@bundle' => $bundle_info['label'],
         ]),
-        'description' => $this->t('View, edit, delete and manage all registrations of this type.'),
+        'description' => $this->t('View, edit and delete any registrations of this type. Manage registrations and registration settings of this type for all host entities.'),
       ];
       $permissions["administer own $bundle_name $entity_type_id"] = [
-        'title' => $this->t('@bundle: Administer registrations for editable host entities', [
+        'title' => $this->t('@bundle: Administer own registrations', [
           '@bundle' => $bundle_info['label'],
         ]),
-        'description' => $this->t('View, edit, delete and manage registrations of this type for host entities to which a user has edit access.'),
+        'description' => $this->t('View, edit and delete own registrations of this type. Manage registrations and registration settings of this type for host entities to which a user has edit access.'),
       ];
       $permissions["manage $bundle_name $entity_type_id"] = [
         'title' => $this->t('@bundle: Manage registrations', [
           '@bundle' => $bundle_info['label'],
         ]),
-        'description' => $this->t('Manage all registrations of this type.'),
+        'description' => $this->t('Manage registrations of this type for all host entities.'),
       ];
       $permissions["manage own $bundle_name $entity_type_id"] = [
-        'title' => $this->t('@bundle: Manage registrations for editable host entities', [
+        'title' => $this->t('@bundle: Manage registrations for editable entities', [
           '@bundle' => $bundle_info['label'],
         ]),
         'description' => $this->t('Manage registrations of this type for host entities to which a user has edit access.'),
@@ -157,13 +157,13 @@ class RegistrationPermissionProvider implements ContainerInjectionInterface {
         'title' => $this->t('@bundle: Manage registration settings', [
           '@bundle' => $bundle_info['label'],
         ]),
-        'description' => $this->t('Allow changing registration settings for registrations of this type. The user must be also be able to manage registrations for the host entity.'),
+        'description' => $this->t('Allow changing registration settings for registrations of this type. In a standard installation this must be paired with one of the two "manage registrations" permissions.'),
       ];
       $permissions["manage $bundle_name $entity_type_id broadcast"] = [
         'title' => $this->t('@bundle: Manage sending registrant email', [
           '@bundle' => $bundle_info['label'],
         ]),
-        'description' => $this->t('Allow sending email to registrants of this type. The user must be also be able to manage registrations for the host entity.'),
+        'description' => $this->t('Allow sending email to registrants of this type. In a standard installation this must be paired with one of the two "manage registrations" permissions.'),
       ];
       $permissions["edit $bundle_name $entity_type_id state"] = [
         'title' => $this->t('@bundle: Edit @type state', [

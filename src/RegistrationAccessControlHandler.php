@@ -72,8 +72,9 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
     // The "any" permission grants access regardless of the entity user.
     $any_result = AccessResult::allowedIfHasPermissions($account, [
       "administer registration",
-      "$operation any {$entity->getEntityTypeId()}",
-      "$operation any {$entity->bundle()} {$entity->getEntityTypeId()}",
+      "administer {$entity->bundle()} registration",
+      "$operation any registration",
+      "$operation any {$entity->bundle()} registration",
     ], 'OR');
 
     if ($any_result->isAllowed()) {
@@ -83,8 +84,9 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
     /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
     if ($account->id() && ($account->id() == $entity->getUserId())) {
       $own_result = AccessResult::allowedIfHasPermissions($account, [
-        "$operation own {$entity->getEntityTypeId()}",
-        "$operation own {$entity->bundle()} {$entity->getEntityTypeId()}",
+        "administer own {$entity->bundle()} registration",
+        "$operation own registration",
+        "$operation own {$entity->bundle()} registration",
       ], 'OR');
     }
     else {
@@ -103,13 +105,13 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
     $result = parent::checkCreateAccess($account, $context, $entity_bundle);
     if ($result->isNeutral()) {
       $permissions = [
-        $this->entityType->getAdminPermission() ?: 'administer ' . $this->entityTypeId,
-        'create ' . $this->entityTypeId,
+        $this->entityType->getAdminPermission() ?: 'administer registration',
+        'create registration',
       ];
       if ($entity_bundle) {
-        $permissions[] = 'create ' . $entity_bundle . ' ' . $this->entityTypeId . ' self';
-        $permissions[] = 'create ' . $entity_bundle . ' ' . $this->entityTypeId . ' other users';
-        $permissions[] = 'create ' . $entity_bundle . ' ' . $this->entityTypeId . ' other anonymous';
+        $permissions[] = 'create ' . $entity_bundle . ' registration self';
+        $permissions[] = 'create ' . $entity_bundle . ' registration other users';
+        $permissions[] = 'create ' . $entity_bundle . ' registration other anonymous';
       }
 
       $result = AccessResult::allowedIfHasPermissions($account, $permissions, 'OR');
