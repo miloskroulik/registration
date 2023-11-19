@@ -102,6 +102,7 @@ class RegistrationController extends ControllerBase {
         $type = $host_entity->getRegistrationTypeBundle();
         $access_result = AccessResult::allowedIfHasPermissions($this->currentUser(), [
           "administer registration",
+          "administer $type registration",
           "view any registration",
           "view any $type registration",
         ], 'OR');
