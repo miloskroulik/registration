@@ -58,21 +58,44 @@ class RegistrationSettingsAccessControlHandler extends EntityAccessControlHandle
       return $result;
     }
 
+    // Check administrative permissions.
     $result = AccessResult::allowedIfHasPermissions($account, [
       "administer registration",
       "administer $type registration",
     ], 'OR');
 
+    // If administrative permission not granted, check manage permissions.
+    // Must be able to manage registrations and settings.
+    if ($result->isNeutral()) {
+      $result = AccessResult::allowedIfHasPermissions($account, [
+        "manage $type registration",
+        "manage $type registration settings",
+      ], 'AND');
+    }
+
     if ($result->isAllowed()) {
       return $result->addCacheableDependency($host_entity->getEntity());
     }
 
-    // Check "own" permission if access not granted yet.
+    // Check "own" permissions if access not granted yet.
     $entity = $host_entity->getEntity();
-    $access = ($account->hasPermission("administer own $type registration") && $entity->access('update', $account));
-    return AccessResult::allowedIf($access)
+    $access = $account->hasPermission("administer own $type registration");
+    $result = AccessResult::allowedIf($access)
       ->cachePerUser()
-      ->addCacheableDependency($entity);
+      ->addCacheableDependency($entity)
+      ->andIf($entity->access('update', $account, TRUE));
+
+    if ($result->isNeutral()) {
+      $result = AccessResult::allowedIfHasPermissions($account, [
+        "manage own $type registration",
+        "manage $type registration settings",
+      ], 'AND')
+        ->cachePerUser()
+        ->addCacheableDependency($entity)
+        ->andIf($entity->access('update', $account, TRUE));
+    }
+
+    return $result;
   }
 
   /**
