@@ -201,6 +201,27 @@ class RegistrationManager implements RegistrationManagerInterface {
       $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON] = $this->t('Myself');
     }
 
+    // Check for an existing registration with only one option that is a
+    // mismatch for the current registrant. Remove the option so the user
+    // editing the registration gets a message about permissions.
+    if (!$registration->isNew() && (count($options) == 1)) {
+      if (isset($options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON])) {
+        if ($registration->getUserId()) {
+          // Registration has a user account, current user can register
+          // anonymous users ("other people") but cannot register other
+          // accounts.
+          $options = [];
+        }
+      }
+      if (isset($options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER])) {
+        if ($registration->getAnonymousEmail() && !$registration->getUserId()) {
+          // Registration has an anonymous email, current user can register
+          // other accounts but cannot register anonymous ("other people").
+          $options = [];
+        }
+      }
+    }
+
     return $options;
   }
 

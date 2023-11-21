@@ -120,7 +120,7 @@ class RegistrationManagerTest extends RegistrationKernelTestBase {
 
     $account = $this->createUser(['create conference registration other users']);
     $this->container->get('current_user')->setAccount($account);
-    $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
+    $options = $this->registrationManager->getRegistrantOptions($registration2, $settings);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
