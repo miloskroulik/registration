@@ -39,7 +39,7 @@ class RegistrationWaitListManager implements RegistrationWaitListManagerInterfac
         $count = 0;
         $wait_listed_registrations = $host_entity->getRegistrationList(['waitlist']);
         foreach ($wait_listed_registrations as $registration) {
-          if ($host_entity->hasRoom($registration->getSpacesReserved())) {
+          if ($host_entity->hasRoomOffWaitList($registration->getSpacesReserved())) {
             $registration->set('state', $new_state);
             $registration->save();
             $count++;

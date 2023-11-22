@@ -18,6 +18,7 @@ abstract class RegistrationWaitListKernelTestBase extends RegistrationKernelTest
    * @var array
    */
   protected static $modules = [
+    'dblog',
     'registration_waitlist',
     'registration_waitlist_test',
   ];
@@ -27,6 +28,9 @@ abstract class RegistrationWaitListKernelTestBase extends RegistrationKernelTest
    */
   protected function setUp(): void {
     parent::setUp();
+
+    $this->installConfig('filter');
+    $this->installSchema('dblog', 'watchdog');
 
     $storage = $this->entityTypeManager->getStorage('workflow');
     if ($workflow = $storage->load('registration')) {

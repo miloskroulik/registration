@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\registration_waitlist\Kernel;
 
+use Drupal\Core\Database\Database;
 use Drupal\registration_waitlist\RegistrationWaitListManagerInterface;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
@@ -95,12 +96,37 @@ class RegistrationWaitListManagerTest extends RegistrationWaitListKernelTestBase
     $settings->save();
     $this->assertEquals(10, $host_entity->getActiveSpacesReserved());
     $this->assertEquals(4, $host_entity->getWaitListSpacesReserved());
+    // Two registrations were autofilled.
+    $this->assertTrue($this->loggedRegistrationCountMatches(2));
 
     // Delete a registration. Autofill is enabled and fills the available spots.
     $registration = $this->entityTypeManager->getStorage('registration')->load(1);
     $registration->delete();
     $this->assertEquals(9, $host_entity->getActiveSpacesReserved());
     $this->assertEquals(0, $host_entity->getWaitListSpacesReserved());
+    // One registration was autofilled.
+    $this->assertTrue($this->loggedRegistrationCountMatches(1));
+  }
+
+  /**
+   * Determines if the autofill registration count matches a given count.
+   *
+   * @param int $count
+   *   The count to check.
+   *
+   * @return bool
+   *   TRUE if the autofill registration count matches, FALSE otherwise.
+   */
+  protected function loggedRegistrationCountMatches(int $count): bool {
+    $message = \Drupal::translation()->formatPlural($count, 'Automatically filled 1 registration from the wait list.', 'Automatically filled @count registrations from the wait list.');
+    $database = Database::getConnection();
+    $query = $database->select('watchdog')
+      ->condition('message', $message);
+    $query->addExpression('count(wid)', 'registrations');
+
+    $rows = $query->execute()->fetchField();
+    $rows = empty($rows) ? 0 : $rows;
+    return ($rows == 1);
   }
 
 }

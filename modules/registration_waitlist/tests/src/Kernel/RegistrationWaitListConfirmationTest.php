@@ -20,28 +20,6 @@ class RegistrationWaitListConfirmationTest extends RegistrationWaitListKernelTes
   use RegistrationCreationTrait;
 
   /**
-   * Modules to enable.
-   *
-   * Note that when a child class declares its own $modules list, that list
-   * doesn't override this one, it just extends it.
-   *
-   * @var array
-   */
-  protected static $modules = [
-    'dblog',
-  ];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $this->installConfig('filter');
-    $this->installSchema('dblog', 'watchdog');
-  }
-
-  /**
    * @covers ::onUpdate
    */
   public function testRegistrationWaitListConfirmation() {
