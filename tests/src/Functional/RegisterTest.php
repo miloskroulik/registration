@@ -35,7 +35,7 @@ class RegisterTest extends RegistrationBrowserTestBase {
     $this->drupalLogin($user);
     $this->drupalGet('user/' . $this->adminUser->id() . '/register');
     $this->submitForm([], 'Save Registration');
-    $this->assertSession()->pageTextContains('Registration has been saved.');
+    $this->assertSession()->statusMessageExists('status', 'Registration has been saved.');
     $this->drupalLogout();
 
     // Register other person (anonymous). Must provide email address.
@@ -49,7 +49,37 @@ class RegisterTest extends RegistrationBrowserTestBase {
       'anon_mail[0][value]' => $this->randomMachineName() . '@example.com',
     ];
     $this->submitForm($edit, 'Save Registration');
-    $this->assertSession()->pageTextContains('Registration has been saved.');
+    $this->assertSession()->statusMessageExists('status', 'Registration has been saved.');
+    $this->assertSession()->pageTextContains($this->adminUser->getDisplayName());
+    $this->assertSession()->pageTextNotContains($user->getDisplayName());
+    $this->drupalLogout();
+
+    // Redirect without token.
+    $settings->set('confirmation_redirect', '/user/' . $user->id());
+    $settings->save();
+
+    $this->drupalLogin($user);
+    $this->drupalGet('user/' . $this->adminUser->id() . '/register');
+    $edit = [
+      'anon_mail[0][value]' => $this->randomMachineName() . '@example.com',
+    ];
+    $this->submitForm($edit, 'Save Registration');
+    $this->assertSession()->statusMessageExists('status', 'Registration has been saved.');
+    $this->assertSession()->pageTextContains($user->getDisplayName());
+    $this->drupalLogout();
+
+    // Redirect with token.
+    $settings->set('confirmation_redirect', '/user/[registration:author_uid]');
+    $settings->save();
+
+    $this->drupalLogin($user);
+    $this->drupalGet('user/' . $this->adminUser->id() . '/register');
+    $edit = [
+      'anon_mail[0][value]' => $this->randomMachineName() . '@example.com',
+    ];
+    $this->submitForm($edit, 'Save Registration');
+    $this->assertSession()->statusMessageExists('status', 'Registration has been saved.');
+    $this->assertSession()->pageTextContains($user->getDisplayName());
     $this->drupalLogout();
   }
 

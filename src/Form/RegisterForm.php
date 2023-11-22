@@ -13,10 +13,12 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
+use Drupal\Core\Utility\Token;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\Event\RegistrationFormEvent;
 use Drupal\registration\Event\RegistrationSaveEvent;
+use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationHelper;
 use Drupal\registration\RegistrationManagerInterface;
 use Drupal\workflows\State;
@@ -64,6 +66,13 @@ class RegisterForm extends ContentEntityForm {
   protected RegistrationManagerInterface $registrationManager;
 
   /**
+   * The token service.
+   *
+   * @var \Drupal\Core\Utility\Token
+   */
+  protected Token $token;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): RegisterForm {
@@ -73,6 +82,7 @@ class RegisterForm extends ContentEntityForm {
     $instance->languageManager = $container->get('language_manager');
     $instance->logger = $container->get('registration.logger');
     $instance->registrationManager = $container->get('registration.manager');
+    $instance->token = $container->get('token');
     return $instance;
   }
 
@@ -290,6 +300,9 @@ class RegisterForm extends ContentEntityForm {
     // Redirect.
     $redirect = $settings->getSetting('confirmation_redirect');
     if ($redirect) {
+      // Replace tokens in the redirect field if there are any.
+      $redirect = $this->replaceTokens($host_entity, $registration, $redirect);
+
       // Custom redirect in the settings.
       // Check for external first.
       if (UrlHelper::isExternal($redirect)) {
@@ -609,6 +622,28 @@ class RegisterForm extends ContentEntityForm {
     $settings = $form_state->get('settings');
 
     $host_entity->addCacheableDependencies($form, [$settings]);
+  }
+
+  /**
+   * Replaces tokens in a string.
+   *
+   * @param \Drupal\registration\HostEntityInterface $host_entity
+   *   The host entity.
+   * @param \Drupal\registration\Entity\RegistrationInterface $registration
+   *   The registration entity.
+   * @param string $input
+   *   The input string that may have tokens.
+   *
+   * @return string
+   *   The input string with any tokens replaced.
+   */
+  protected function replaceTokens(HostEntityInterface $host_entity, RegistrationInterface $registration, string $input): string {
+    $entities = [
+      $host_entity->getEntityTypeId() => $host_entity->getEntity(),
+      'registration' => $registration,
+      'registration_settings' => $host_entity->getSettings(),
+    ];
+    return $this->token->replace($input, $entities, ['clear' => TRUE]);
   }
 
   /**
