@@ -18,7 +18,8 @@
  * @ingroup themeable
  */
 #}
+{% set classes = ['registration', 'registration--state-' ~ registration_entity.getState.id ] %}
 {{ attach_library('registration/view') }}
-<article{{ attributes.addClass('registration') }}>
+<article{{ attributes.addClass(classes) }}>
   {{- registration -}}
 </article>
