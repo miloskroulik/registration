@@ -4,6 +4,7 @@ namespace Drupal\registration\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
@@ -56,6 +57,47 @@ class RegistrationItem extends FieldItemBase {
   public function isEmpty(): bool {
     $value = $this->get('registration_type')->getValue();
     return ($value === NULL) || ($value === '');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function defaultFieldSettings() {
+    return [
+      'allowed_types' => [],
+    ] + parent::defaultFieldSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
+    $options = [];
+    $types = \Drupal::entityTypeManager()->getStorage('registration_type')->loadMultiple();
+    foreach ($types as $type) {
+      $options[$type->id()] = $type->label();
+    }
+
+    if (count($options) == 1) {
+      $element = [];
+      $element['allowed_types'] = [
+        '#type' => 'hidden',
+        '#value' => array_keys($options),
+      ];
+    }
+    else {
+      $element = [];
+      $element['allowed_types'] = [
+        '#type' => 'checkboxes',
+        '#title' => $this->t('Allowed registration types'),
+        '#options' => $options,
+        '#default_value' => $this->getSetting('allowed_types') ?? [],
+        '#required' => TRUE,
+        '#access' => (count($options) > 1),
+      ];
+    }
+
+    return $element;
   }
 
 }

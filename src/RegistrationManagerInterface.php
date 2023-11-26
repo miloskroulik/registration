@@ -89,6 +89,14 @@ interface RegistrationManagerInterface {
   public function getRegistrationEnabledEntityTypes(): array;
 
   /**
+   * Gets a list of installed registration fields.
+   *
+   * @return \Drupal\Core\Field\FieldDefinitionInterface[]
+   *   An array of field definitions.
+   */
+  public function getRegistrationFieldDefinitions(): array;
+
+  /**
    * Gets a registration related route for an entity type.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type

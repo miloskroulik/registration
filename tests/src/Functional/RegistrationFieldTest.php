@@ -25,6 +25,88 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
   ];
 
   /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $registration_type = $this->entityTypeManager
+      ->getStorage('registration_type')
+      ->create([
+        'id' => 'seminar',
+        'label' => 'Seminar',
+        'workflow' => 'registration',
+        'defaultState' => 'pending',
+        'heldExpireTime' => 1,
+        'heldExpireState' => 'canceled',
+      ]);
+    $registration_type->save();
+
+    $this->container
+      ->get('config.factory')
+      ->getEditable('registration.settings')
+      ->set('limit_field_values', TRUE)
+      ->save();
+  }
+
+  /**
+   * Tests administrator permission for a registration field.
+   */
+  public function testRegistrationFieldAdminPermission() {
+    $this->drupalCreateContentType(['type' => 'test_node_type']);
+    $user = $this->drupalCreateUser([
+      'administer node fields',
+      'bypass node access',
+      'administer registration',
+    ]);
+    $this->drupalLogin($user);
+    $edit = [
+      'new_storage_type' => 'registration',
+      'label' => 'Registration',
+      'field_name' => 'registration',
+    ];
+    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
+    $this->submitForm($edit, 'Save and continue');
+    $this->assertSession()->statusMessageContains('Your settings have been saved.', 'status');
+    $edit = [];
+    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration/storage');
+    $this->submitForm($edit, 'Save field settings');
+    $this->assertSession()->statusMessageContains('Updated field', 'status');
+    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration');
+    // Administrators have access to all types.
+    $this->assertSession()->optionExists('default_value_input[field_registration][0][registration_type]', 'conference');
+    $this->assertSession()->optionExists('default_value_input[field_registration][0][registration_type]', 'seminar');
+  }
+
+  /**
+   * Tests "assign type" permission for a registration field.
+   */
+  public function testRegistrationFieldAssignTypePermission() {
+    $this->drupalCreateContentType(['type' => 'test_node_type']);
+    $user = $this->drupalCreateUser([
+      'administer node fields',
+      'bypass node access',
+      'assign conference registration field',
+    ]);
+    $this->drupalLogin($user);
+    $edit = [
+      'new_storage_type' => 'registration',
+      'label' => 'Registration',
+      'field_name' => 'registration',
+    ];
+    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
+    $this->submitForm($edit, 'Save and continue');
+    $this->assertSession()->statusMessageContains('Your settings have been saved.', 'status');
+    $edit = [];
+    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration/storage');
+    $this->submitForm($edit, 'Save field settings');
+    $this->assertSession()->statusMessageContains('Updated field', 'status');
+    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration');
+    $this->assertSession()->optionExists('default_value_input[field_registration][0][registration_type]', 'conference');
+    $this->assertSession()->optionNotExists('default_value_input[field_registration][0][registration_type]', 'seminar');
+  }
+
+  /**
    * Tests creation of a registration field.
    */
   public function testRegistrationFieldCreate() {
@@ -35,6 +117,7 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
     $user = $this->drupalCreateUser([
       'administer node fields',
       'bypass node access',
+      'assign conference registration field',
       'create conference registration self',
     ]);
     $this->drupalLogin($user);
@@ -56,6 +139,7 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
 
     // Enable registrations by default.
     $edit = [
+      'settings[allowed_types][conference]' => 'conference',
       'set_default_value' => TRUE,
       'default_value_input[field_registration][0][registration_type]' => 'conference',
       'default_value_input[registration_settings][status][value]' => TRUE,
@@ -78,6 +162,7 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
 
     // Disable registrations by default.
     $edit = [
+      'settings[allowed_types][conference]' => 'conference',
       'set_default_value' => TRUE,
       'default_value_input[field_registration][0][registration_type]' => 'conference',
       'default_value_input[registration_settings][status][value]' => FALSE,
@@ -120,6 +205,7 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
     $user = $this->drupalCreateUser([
       'administer node fields',
       'bypass node access',
+      'assign conference registration field',
       'create conference registration self',
     ]);
     $this->drupalLogin($user);
@@ -140,6 +226,7 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
     $this->assertSession()->statusMessageContains('Updated field', 'status');
 
     $edit = [
+      'settings[allowed_types][conference]' => 'conference',
       'set_default_value' => TRUE,
       'default_value_input[field_registration][0][registration_type]' => 'conference',
       'default_value_input[registration_settings][status][value]' => TRUE,

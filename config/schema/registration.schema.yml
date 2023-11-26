@@ -30,6 +30,9 @@ registration.settings:
     set_and_forget:
       type: boolean
       label: 'Set and forget mode'
+    limit_field_values:
+      type: boolean
+      label: 'Limit registration field values by role'
     hide_filter:
       type: integer
       label: 'Manage Registrations filter threshold'
@@ -69,6 +72,16 @@ field.widget.settings.registration_type:
     hide_register_tab:
       type: boolean
       label: 'Hide Register Tab'
+
+field.field_settings.registration:
+  type: mapping
+  label: 'Registration field settings'
+  mapping:
+    allowed_types:
+      type: sequence
+      label: 'Allowed registration types'
+      sequence:
+        type: string
 
 field.value.registration:
   type: mapping

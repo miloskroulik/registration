@@ -2,6 +2,8 @@
 
 namespace Drupal\registration;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -15,6 +17,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class RegistrationPermissionProvider implements ContainerInjectionInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * The configuration.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected ImmutableConfig $config;
 
   /**
    * The entity type bundle info.
@@ -33,12 +42,15 @@ class RegistrationPermissionProvider implements ContainerInjectionInterface {
   /**
    * Constructs a new RegistrationPermissionProvider object.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The configuration factory.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    */
-  public function __construct(EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager) {
+    $this->config = $config_factory->get('registration.settings');
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->entityTypeManager = $entity_type_manager;
   }
@@ -48,6 +60,7 @@ class RegistrationPermissionProvider implements ContainerInjectionInterface {
    */
   public static function create(ContainerInterface $container): static {
     return new static(
+      $container->get('config.factory'),
       $container->get('entity_type.bundle.info'),
       $container->get('entity_type.manager')
     );
@@ -141,6 +154,14 @@ class RegistrationPermissionProvider implements ContainerInjectionInterface {
         ]),
         'description' => $this->t('View, edit and delete own registrations of this type. Manage registrations and registration settings of this type for host entities to which a user has edit access.'),
       ];
+      if ($this->config->get('limit_field_values', FALSE)) {
+        $permissions["assign $bundle_name $entity_type_id field"] = [
+          'title' => $this->t('@bundle: Assign this type to host entity registration fields', [
+            '@bundle' => $bundle_info['label'],
+          ]),
+          'description' => $this->t('The ability to assign this type may also be restricted by the "allowed types" registration field setting.'),
+        ];
+      }
       $permissions["manage $bundle_name $entity_type_id"] = [
         'title' => $this->t('@bundle: Manage registrations', [
           '@bundle' => $bundle_info['label'],

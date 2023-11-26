@@ -74,3 +74,29 @@ function registration_update_9004() {
     \Drupal::messenger()->addMessage(t('Permissions for maintaining registration settings were updated for one or more roles. Please view the change record at https://www.drupal.org/node/3402602 for more information about changes to permissions in this release. You should export your configuration after this update completes.'));
   }
 }
+
+/**
+ * Adds the "allowed types" field setting to registration fields.
+ */
+function registration_update_9005() {
+  $types = \Drupal::entityTypeManager()->getStorage('registration_type')->loadMultiple();
+  $allowed_type_keys = array_keys($types);
+  if (!empty($allowed_type_keys)) {
+    $allowed_types = array_combine($allowed_type_keys, $allowed_type_keys);
+    $field_definitions = \Drupal::service('registration.manager')->getRegistrationFieldDefinitions();
+    foreach ($field_definitions as $field_definition) {
+      $field_definition->setSetting('allowed_types', $allowed_types);
+      $field_definition->save();
+    }
+  }
+}
+
+/**
+ * Adds global setting for limiting registration field values by role.
+ */
+function registration_update_9006() {
+  \Drupal::service('config.factory')
+    ->getEditable('registration.settings')
+    ->set('limit_field_values', FALSE)
+    ->save();
+}

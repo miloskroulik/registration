@@ -56,6 +56,13 @@ class RegistrationAdminForm extends ConfigFormBase {
       '#description' => $this->t('Automatically maintains the <strong>Enable</strong> registrations checkbox on the per-entity Settings form based on the open and close dates on the Settings page. This is useful for displaying and removing Register links as soon as registration for a given event opens and closes. Requires a properly configured Cron task that runs at least once an hour. This mode is selected automatically by default, but you can disable it for backwards compatibility with the Drupal 7 version of the module. Sites that enable this may wish to hide the <strong>Enable</strong> field on the Registration settings <a href="/admin/structure/registration-settings/form-display">form display</a>. Note that registrations are still enabled and disabled properly without this, but users may receive messaging such as "Registrations are closed" on the Register page unless the site admin manually unchecks the Enable box on the Settings form at the appropriate time. With this mode set, links to the Register page are automatically removed once the close date is reached for a given event.'),
     ];
 
+    $form['limit_field_values'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Limit registration field values by role'),
+      '#default_value' => $config->get('limit_field_values'),
+      '#description' => $this->t('Adds a new permission "Assign this type to host entity registration fields" per registration type. This allows site builders to vary the allowed registration type values for registration fields by user role. Most sites can leave this option disabled. See <a href="https://www.drupal.org/project/registration/issues/1683116" target="_blank">this issue on Drupal.org</a> for more information. Note that site builders can already restrict the allowed values per host entity bundle using the "Allowed types" registration field setting, however that restriction is global and affects all users equally.'),
+    ];
+
     $form['hide_filter'] = [
       '#type' => 'number',
       '#title' => $this->t('Manage Registrations filter threshold'),
@@ -121,6 +128,7 @@ class RegistrationAdminForm extends ConfigFormBase {
 
     $this->config('registration.settings')
       ->set('set_and_forget', $form_state->getValue('set_and_forget'))
+      ->set('limit_field_values', $form_state->getValue('limit_field_values'))
       ->set('hide_filter', $form_state->getValue('hide_filter'))
       ->set('queue_notifications', $form_state->getValue('queue_notifications'))
       ->set('html_email', $form_state->getValue('html_email'))

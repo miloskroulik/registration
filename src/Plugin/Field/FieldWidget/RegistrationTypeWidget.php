@@ -2,12 +2,14 @@
 
 namespace Drupal\registration\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Entity\EntityTypeBundleInfo;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountProxy;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -22,6 +24,20 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class RegistrationTypeWidget extends WidgetBase {
+
+  /**
+   * The current user service.
+   *
+   * @var \Drupal\Core\Session\AccountProxy
+   */
+  protected AccountProxy $currentUser;
+
+  /**
+   * The configuration.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected ImmutableConfig $config;
 
   /**
    * The entity type manager.
@@ -49,6 +65,8 @@ class RegistrationTypeWidget extends WidgetBase {
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->config = $container->get('config.factory')->get('registration.settings');
+    $instance->currentUser = $container->get('current_user');
     $instance->entityTypeBundleInfo = $container->get('entity_type.bundle.info');
     $instance->entityTypeManager = $container->get('entity_type.manager');
     $instance->moduleHandler = $container->get('module_handler');
@@ -124,11 +142,37 @@ class RegistrationTypeWidget extends WidgetBase {
    */
   protected function getRegistrationTypeOptions(): array {
     $options = ['' => $this->t('-- Disable Registrations --')];
+    $allowed_types = $this->getFieldSetting('allowed_types');
     $entities = $this->entityTypeManager->getStorage('registration_type')->loadMultiple();
     foreach ($entities as $id => $entity) {
-      $options[$id] = $entity->label();
+      if ($this->canAssignType($id)) {
+        if ($allowed_types) {
+          if (in_array($id, $allowed_types)) {
+            $options[$id] = $entity->label();
+          }
+        }
+        else {
+          $options[$id] = $entity->label();
+        }
+      }
     }
     return $options;
+  }
+
+  /**
+   * Determines if a given type can be assigned to a registration field.
+   *
+   * @param string $id
+   *   The machine name of the registration type.
+   *
+   * @return bool
+   *   TRUE if the registration type can be assigned, FALSE otherwise.
+   */
+  protected function canAssignType(string $id): bool {
+    if ($this->config->get('limit_field_values', FALSE)) {
+      return $this->currentUser->hasPermission("administer registration") || $this->currentUser->hasPermission("assign $id registration field");
+    }
+    return TRUE;
   }
 
 }
