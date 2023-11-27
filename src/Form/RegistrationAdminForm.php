@@ -5,6 +5,8 @@ namespace Drupal\registration\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\registration\Entity\RegistrationType;
+use Drupal\user\Entity\Role;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -126,6 +128,8 @@ class RegistrationAdminForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
 
+    $original_limit_field_values = $this->config('registration.settings')->get('limit_field_values');
+
     $this->config('registration.settings')
       ->set('set_and_forget', $form_state->getValue('set_and_forget'))
       ->set('limit_field_values', $form_state->getValue('limit_field_values'))
@@ -135,6 +139,28 @@ class RegistrationAdminForm extends ConfigFormBase {
       ->set('sync_registration_settings', $form_state->getValue('sync_registration_settings'))
       ->set('sync_registration_settings_all_fields', $form_state->getValue('sync_registration_settings_all_fields'))
       ->save();
+
+    // Check if the "limit_field_values" setting has been newly disabled.
+    $limit_field_values = $this->config('registration.settings')->get('limit_field_values');
+    if ($original_limit_field_values && !$limit_field_values) {
+      $this->removeAssignTypePermissions();
+    }
+  }
+
+  /**
+   * Removes the "assign type" permissions that no longer exist.
+   */
+  protected function removeAssignTypePermissions() {
+    $roles = Role::loadMultiple();
+    $types = RegistrationType::loadMultiple();
+    foreach ($types as $type => $entity) {
+      foreach ($roles as $role) {
+        if (!$role->isAdmin() && $role->hasPermission("assign $type registration field")) {
+          $role->revokePermission("assign $type registration field");
+          $role->save();
+        }
+      }
+    }
   }
 
 }

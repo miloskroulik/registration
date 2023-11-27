@@ -100,3 +100,13 @@ function registration_update_9006() {
     ->set('limit_field_values', FALSE)
     ->save();
 }
+
+/**
+ * Resaves all roles so dependencies are added.
+ */
+function registration_update_9007() {
+  $roles = \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple();
+  foreach ($roles as $role) {
+    $role->save();
+  }
+}

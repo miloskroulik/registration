@@ -169,7 +169,7 @@ class RegistrationTypeWidget extends WidgetBase {
    *   TRUE if the registration type can be assigned, FALSE otherwise.
    */
   protected function canAssignType(string $id): bool {
-    if ($this->config->get('limit_field_values', FALSE)) {
+    if ($this->config->get('limit_field_values')) {
       return $this->currentUser->hasPermission("administer registration") || $this->currentUser->hasPermission("assign $id registration field");
     }
     return TRUE;
