@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Provides inline entity form support for the Entity Registration module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\registration_inline_entity_form\RegistrationElementSubmit;
+use Drupal\registration_inline_entity_form\RegistrationWidgetSubmit;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function registration_inline_entity_form_entity_type_alter(array &$entity_types) {
+  // Set the inline form for registration settings.
+  $entity_types['registration_settings']->setHandlerClass('inline_form', 'Drupal\registration_inline_entity_form\Form\RegistrationSettingsInlineForm');
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function registration_inline_entity_form_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  // Attach the IEF handlers only if the current form has an IEF widget.
+  $widget_state = $form_state->get('inline_entity_form');
+  if (!is_null($widget_state)) {
+    RegistrationElementSubmit::attach($form);
+    RegistrationWidgetSubmit::attach($form, $form_state);
+  }
+}

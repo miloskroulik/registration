@@ -15,6 +15,9 @@
         "php": "^8.0",
         "drupal/core": "^9.3 || ^10"
     },
+    "require-dev": {
+        "drupal/inline_entity_form": "^1.0"
+    },
     "support": {
         "issues": "https://www.drupal.org/project/issues/registration",
         "source": "https://git.drupalcode.org/project/registration"
