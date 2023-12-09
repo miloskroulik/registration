@@ -33,12 +33,13 @@ class RegistrationInlineEntityFormTest extends RegistrationBrowserTestBase {
     // Create a test content type.
     $this->drupalCreateContentType(['type' => 'test_node_type']);
 
-    // Login as a user who can administer node fields.
+    // Login as a user who can administer node fields and edit settings.
     $user = $this->drupalCreateUser([
       'administer node fields',
       'administer node form display',
       'bypass node access',
       'create conference registration self',
+      'edit registration settings',
     ]);
     $this->drupalLogin($user);
 
@@ -60,7 +61,7 @@ class RegistrationInlineEntityFormTest extends RegistrationBrowserTestBase {
     $edit = [
       'set_default_value' => TRUE,
       'default_value_input[field_registration][0][registration_type]' => 'conference',
-      'default_value_input[registration_settings][status][value]' => TRUE,
+      'default_value_input[registration_settings][status][value]' => FALSE,
       'default_value_input[registration_settings][capacity][0][value]' => 1,
       'default_value_input[registration_settings][multiple_registrations][value]' => TRUE,
       'default_value_input[registration_settings][from_address][0][value]' => 'webmaster@example.org',
@@ -87,6 +88,7 @@ class RegistrationInlineEntityFormTest extends RegistrationBrowserTestBase {
       'field_registration[0][inline_entity_form][from_address][0][value]' => 'webmaster@example.org',
     ];
     $this->drupalGet('node/add/test_node_type');
+    $this->assertSession()->fieldEnabled('field_registration[0][inline_entity_form][status][value]');
     $this->submitForm($edit, 'Save');
     $this->assertSession()->statusMessageExists('status');
     $this->drupalGet('node/1/register');
@@ -97,6 +99,26 @@ class RegistrationInlineEntityFormTest extends RegistrationBrowserTestBase {
     $this->drupalGet('node/1/register');
     $this->submitForm($edit, 'Save Registration');
     $this->assertSession()->statusMessageExists('status');
+
+    // Login as a user who can administer node fields and edit type settings.
+    $user = $this->drupalCreateUser([
+      'bypass node access',
+      'edit conference registration settings',
+    ]);
+    $this->drupalLogin($user);
+
+    // Create a new node. Inline settings are not available because edit type
+    // settings permission does not apply to new host entities, since the
+    // registration type may be unknown.
+    $this->drupalGet('node/add/test_node_type');
+    $this->expectException('\Behat\Mink\Exception\ElementNotFoundException');
+    $this->assertSession()->fieldEnabled('field_registration[0][inline_entity_form][status][value]');
+
+    // Edit an existing node. Inline settings are available because edit type
+    // settings permission applies to existing host entities with a registration
+    // type set.
+    $this->drupalGet('node/1/edit');
+    $this->assertSession()->fieldEnabled('field_registration[0][inline_entity_form][status][value]');
   }
 
 }

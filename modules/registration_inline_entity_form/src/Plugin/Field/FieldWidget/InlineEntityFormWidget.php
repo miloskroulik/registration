@@ -167,6 +167,7 @@ class InlineEntityFormWidget extends InlineEntityFormBase {
     ]);
     $bundle = $this->getBundle();
     $element['settings']['inline_entity_form'] = $this->getInlineEntityForm($op, $bundle, $langcode, $delta, $parents, $settings);
+    $element['settings']['#access'] = $settings->access('update');
     return $element;
   }
 
