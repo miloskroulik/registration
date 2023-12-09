@@ -79,6 +79,14 @@ class RegistrationPermissionProvider implements ContainerInjectionInterface {
         'title' => $this->t('%type_name: Administer own registrations', $type_params),
         'description' => $this->t('View, edit and delete own registrations of this type. Manage registrations and registration settings of this type for host entities to which a user has edit access.'),
       ],
+      "administer $type_id registration settings" => [
+        'title' => $this->t('%type_name: Administer settings', $type_params),
+        'description' => $this->t('Manage registrations and registration settings of this type for all host entities.'),
+      ],
+      "administer own $type_id registration settings" => [
+        'title' => $this->t('%type_name: Administer own settings', $type_params),
+        'description' => $this->t('Manage registrations and registration settings of this type for host entities to which a user has edit access.'),
+      ],
       "manage $type_id registration" => [
         'title' => $this->t('%type_name: Manage registrations', $type_params),
         'description' => $this->t('Manage registrations of this type for all host entities.'),
@@ -89,11 +97,11 @@ class RegistrationPermissionProvider implements ContainerInjectionInterface {
       ],
       "manage $type_id registration settings" => [
         'title' => $this->t('%type_name: Manage registration settings', $type_params),
-        'description' => $this->t('Allow changing registration settings for registrations of this type. In a standard installation this must be paired with one of the two "manage registrations" permissions.'),
+        'description' => $this->t('Allow changing registration settings for registrations of this type. In a standard installation this must be paired with one of the two "Manage registrations" permissions.'),
       ],
       "manage $type_id registration broadcast" => [
         'title' => $this->t('%type_name: Manage sending registrant email', $type_params),
-        'description' => $this->t('Allow sending email to registrants of this type. In a standard installation this must be paired with one of the two "manage registrations" permissions.'),
+        'description' => $this->t('Allow sending email to registrants of this type. In a standard installation this must be paired with one of the two "Manage registrations" permissions.'),
       ],
       "edit $type_id registration state" => [
         'title' => $this->t('%type_name: Edit registration state', $type_params),

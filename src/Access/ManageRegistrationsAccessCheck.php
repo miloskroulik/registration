@@ -51,15 +51,23 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
     if ($host_entity) {
       if ($type = $host_entity->getRegistrationTypeBundle()) {
         if ($entity = $host_entity->getEntity()) {
-          $access = $account->hasPermission("administer registration") || $account->hasPermission("administer $type registration");
-          if ($access) {
-            return AccessResult::allowed()
-              // Recalculate this result if the relevant entities are updated.
-              ->cachePerPermissions()
-              ->addCacheableDependency($entity);
+          // Check the administrative permissions.
+          $access_result = AccessResult::allowedIfHasPermissions($account, [
+            "administer registration",
+            "administer $type registration",
+            "administer $type registration settings",
+          ], 'OR')
+            ->addCacheableDependency($entity);
+
+          if ($access_result->isAllowed()) {
+            return $access_result;
           }
-          $access = $account->hasPermission("administer own $type registration");
-          $access_result = AccessResult::allowedIf($access)
+
+          // Access not granted. Check the "administer own" permissions.
+          $access_result = AccessResult::allowedIfHasPermissions($account, [
+            "administer own $type registration",
+            "administer own $type registration settings",
+          ], 'OR')
             // Own permission must be cached per user and not per permissions.
             ->cachePerUser()
             // Recalculate this result if the relevant entities are updated.

@@ -43,7 +43,7 @@ function registration_update_9003() {
 }
 
 /**
- * Migrates administer settings permissions to the equivalent manage settings.
+ * Updates permissions for maintaining registration settings.
  */
 function registration_update_9004() {
   $message = FALSE;
@@ -53,17 +53,13 @@ function registration_update_9004() {
     foreach ($roles as $role) {
       if (!$role->isAdmin() && $role->hasPermission("administer $type registration")) {
         $role->revokePermission("administer $type registration");
-        $role->grantPermission("manage $type registration");
-        $role->grantPermission("manage $type registration settings");
-        $role->grantPermission("manage $type registration broadcast");
+        $role->grantPermission("administer $type registration settings");
         $role->save();
         $message = TRUE;
       }
       if (!$role->isAdmin() && $role->hasPermission("administer own $type registration")) {
         $role->revokePermission("administer own $type registration");
-        $role->grantPermission("manage own $type registration");
-        $role->grantPermission("manage $type registration settings");
-        $role->grantPermission("manage $type registration broadcast");
+        $role->grantPermission("administer own $type registration settings");
         $role->save();
         $message = TRUE;
       }

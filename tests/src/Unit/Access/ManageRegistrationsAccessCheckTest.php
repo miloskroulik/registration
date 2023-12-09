@@ -104,6 +104,19 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
+    // Administer "type settings" registration permission.
+    $account = $this->createMock(AccountInterface::class);
+    $account
+      ->expects($this->any())
+      ->method('hasPermission')
+      ->will($this->returnValueMap([
+        ['administer registration', FALSE],
+        ['administer conference registration', FALSE],
+        ['administer conference registration settings', TRUE],
+      ]));
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
     // Manage "type" registration permission.
     $account = $this->createMock(AccountInterface::class);
     $account
@@ -112,7 +125,7 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
       ->will($this->returnValueMap([
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
-        ['administer own conference registration', FALSE],
+        ['administer conference registration settings', FALSE],
         ['manage conference registration', TRUE],
       ]));
     $access_result = $access_checker->access($account, $route_match);
@@ -127,7 +140,27 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
       ->will($this->returnValueMap([
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
+        ['administer conference registration settings', FALSE],
         ['administer own conference registration', TRUE],
+        ['administer own conference registration settings', FALSE],
+        ['manage conference registration', FALSE],
+        ['manage own conference registration', FALSE],
+      ]));
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    // Administer "own" settings registration permission.
+    // Needs update access to the entity to succeed.
+    $account = $this->createMock(AccountInterface::class);
+    $account
+      ->expects($this->any())
+      ->method('hasPermission')
+      ->will($this->returnValueMap([
+        ['administer registration', FALSE],
+        ['administer conference registration', FALSE],
+        ['administer conference registration settings', FALSE],
+        ['administer own conference registration', FALSE],
+        ['administer own conference registration settings', TRUE],
         ['manage conference registration', FALSE],
         ['manage own conference registration', FALSE],
       ]));
@@ -144,6 +177,7 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
         ['administer own conference registration', FALSE],
+        ['administer own conference registration settings', FALSE],
         ['manage conference registration', FALSE],
         ['manage own conference registration', TRUE],
       ]));
@@ -175,6 +209,24 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
         ['administer own conference registration', TRUE],
+        ['administer own conference registration settings', FALSE],
+        ['manage conference registration', FALSE],
+        ['manage own conference registration', FALSE],
+      ]));
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    // Administer "own" settings registration permission.
+    // Needs update access to the entity to succeed.
+    $account = $this->createMock(AccountInterface::class);
+    $account
+      ->expects($this->any())
+      ->method('hasPermission')
+      ->will($this->returnValueMap([
+        ['administer registration', FALSE],
+        ['administer conference registration', FALSE],
+        ['administer own conference registration', FALSE],
+        ['administer own conference registration settings', TRUE],
         ['manage conference registration', FALSE],
         ['manage own conference registration', FALSE],
       ]));
@@ -191,6 +243,7 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
         ['administer own conference registration', FALSE],
+        ['administer own conference registration settings', FALSE],
         ['manage conference registration', FALSE],
         ['manage own conference registration', TRUE],
       ]));

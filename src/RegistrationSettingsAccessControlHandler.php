@@ -62,6 +62,7 @@ class RegistrationSettingsAccessControlHandler extends EntityAccessControlHandle
     $result = AccessResult::allowedIfHasPermissions($account, [
       "administer registration",
       "administer $type registration",
+      "administer $type registration settings",
     ], 'OR');
 
     // If administrative permission not granted, check manage permissions.
@@ -79,8 +80,10 @@ class RegistrationSettingsAccessControlHandler extends EntityAccessControlHandle
 
     // Check "own" permissions if access not granted yet.
     $entity = $host_entity->getEntity();
-    $access = $account->hasPermission("administer own $type registration");
-    $result = AccessResult::allowedIf($access)
+    $result = AccessResult::allowedIfHasPermissions($account, [
+      "administer own $type registration",
+      "administer own $type registration settings",
+    ], 'OR')
       ->cachePerUser()
       ->addCacheableDependency($entity)
       ->andIf($entity->access('update', $account, TRUE));

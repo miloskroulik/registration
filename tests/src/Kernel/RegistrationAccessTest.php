@@ -119,6 +119,12 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('update', $account));
     $this->assertTrue($registration->access('delete', $account));
 
+    // "Administer type settings" permission applies only to settings.
+    $account = $this->createUser(['administer conference registration settings']);
+    $this->assertFalse($registration->access('view', $account));
+    $this->assertFalse($registration->access('update', $account));
+    $this->assertFalse($registration->access('delete', $account));
+
     // "Administer own type" permission.
     $account = $this->createUser(['administer own conference registration']);
     $this->assertFalse($registration->access('view', $account));
@@ -131,6 +137,19 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('view', $account));
     $this->assertTrue($registration->access('update', $account));
     $this->assertTrue($registration->access('delete', $account));
+
+    // "Administer own type settings" permission only applies to settings.
+    $account = $this->createUser(['administer own conference registration settings']);
+    $this->assertFalse($registration->access('view', $account));
+    $this->assertFalse($registration->access('update', $account));
+    $this->assertFalse($registration->access('delete', $account));
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    // @see https://www.drupal.org/project/drupal/issues/2834344
+    $access_control_handler->resetCache();
+    $this->assertFalse($registration->access('view', $account));
+    $this->assertFalse($registration->access('update', $account));
+    $this->assertFalse($registration->access('delete', $account));
 
     // "Administer types" permission only applies to types.
     $account = $this->createUser(['administer registration types']);
