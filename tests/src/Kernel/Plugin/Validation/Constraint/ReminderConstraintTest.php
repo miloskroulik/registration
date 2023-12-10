@@ -67,6 +67,13 @@ class ReminderConstraintTest extends RegistrationKernelTestBase {
     $violations = $settings->validate();
     $this->assertEquals(1, $violations->count());
     $this->assertEquals('Reminder must be in the future.', (string) $violations[0]->getMessage());
+
+    // Validation is skipped when no reminder is to be sent.
+    $settings->set('send_reminder', FALSE);
+    $settings->set('reminder_date', '2000-01-01T00:00:00');
+    $settings->set('reminder_template', NULL);
+    $violations = $settings->validate();
+    $this->assertEquals(0, $violations->count());
   }
 
 }
