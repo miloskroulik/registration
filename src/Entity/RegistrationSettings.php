@@ -39,7 +39,9 @@ use Drupal\registration\HostEntityInterface;
  *   },
  *   field_ui_base_route = "registration.admin_settings",
  *   constraints = {
- *     "MinimumCapacity" = {}
+ *     "MinimumCapacity" = {},
+ *     "RedirectConstraint" = {},
+ *     "ReminderConstraint" = {},
  *   }
  * )
  */
