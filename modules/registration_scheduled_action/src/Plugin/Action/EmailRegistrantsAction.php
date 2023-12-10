@@ -34,6 +34,7 @@ class EmailRegistrantsAction extends ConfigurableEmailActionBase implements Quer
         'subject' => $configuration['subject'],
         'langcode' => $object->langcode,
         'states' => array_keys($registration_type->getActiveStates()),
+        'mail_tag' => $this->getPluginId(),
       ];
       $success_count = $this->registrationMailer->notify($host_entity, $data);
       if ($success_count) {

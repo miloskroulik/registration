@@ -103,7 +103,9 @@ class RegistrationEmailAction extends EmailAction {
       'host_entity' => $host_entity,
       'settings' => $settings,
       'registration' => $entity,
-      'data' => [],
+      'data' => [
+        'mail_tag' => $this->configuration['mail_tag'] ?? $this->getPluginId(),
+      ],
     ]);
     $this->dispatcher->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_MAIL);
     $params = $event->getData();

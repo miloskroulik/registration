@@ -58,6 +58,7 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
         $configuration['recipient'] = $registration->getEmail();
         $configuration['subject'] = $registration_type->getThirdPartySetting('registration_confirmation', 'subject');
         $configuration['message'] = $registration_type->getThirdPartySetting('registration_confirmation', 'message');
+        $configuration['mail_tag'] = 'registration_confirmation';
         $configuration['log_message'] = FALSE;
         $action = $this->actionManager->createInstance('registration_send_email_action');
         $action->setConfiguration($configuration);

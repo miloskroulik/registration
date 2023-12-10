@@ -48,6 +48,7 @@ class EmailConfirmationAction extends ConfigurableEmailActionBase implements Que
       $configuration = $scheduled_action->getPluginConfiguration();
       $configuration['recipient'] = $registration->getEmail();
       $configuration['log_message'] = FALSE;
+      $configuration['mail_tag'] = $this->getPluginId();
       $action = $this->actionManager->createInstance('registration_send_email_action');
       $action->setConfiguration($configuration);
       if ($action->execute($registration)) {

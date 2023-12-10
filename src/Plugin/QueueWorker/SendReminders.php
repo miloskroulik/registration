@@ -118,6 +118,7 @@ class SendReminders extends QueueWorkerBase implements ContainerFactoryPluginInt
           '%label' => $host_entity->label(),
         ]);
         $data['states'] = array_keys($states);
+        $data['mail_tag'] = 'reminder';
         $success_count = $this->registrationMailer->notify($host_entity, $data);
         if (!$success_count) {
           $this->logger->warning('Reminder email for %label had no recipients.', [

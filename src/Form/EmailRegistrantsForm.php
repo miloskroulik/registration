@@ -224,6 +224,7 @@ class EmailRegistrantsForm extends RegistrationFormBase {
       $registration_type = $host_entity->getRegistrationType();
       $states = $registration_type->getActiveStates();
       $values['states'] = array_keys($states);
+      $values['mail_tag'] = 'broadcast';
       $success_count = $this->registrationMailer->notify($host_entity, $values);
       $message = $this->formatPlural($success_count,
        'Registration broadcast sent to 1 recipient.',
