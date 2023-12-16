@@ -21,3 +21,5 @@ Configuring the inline form widget requires the following steps:
 * Optionally use the field widget gear icon to configure the field widget to be collapsible and thus rendered as an HTML 5 details element. If the widget is not collapsible, it will be rendered as a fieldset.
 
 Once the steps are complete, a site editor will see a Registration Settings element when editing a host entity, positioned directly after the standard Registration Type element that normally appears for a registration field. The settings field will only appear if the host entity is configured for registration (i.e. a registration type is selected) and the user has permission to edit registration settings.
+
+If a user does not have permissions to edit registration settings via core Registration module permissions, this module provides permissions that allow editing registration settings using only the inline form. This can be useful in a scenario where site editors should be able to edit settings on host entity edit forms, but should not be able to manage registrations.
