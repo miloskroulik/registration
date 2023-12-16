@@ -2,9 +2,11 @@
 
 namespace Drupal\registration_waitlist\EventSubscriber;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Action\ActionManager;
 use Drupal\registration\Event\RegistrationEvent;
 use Drupal\registration\Event\RegistrationEvents;
+use Drupal\registration_waitlist\Event\RegistrationWaitListEvents;
 use Drupal\registration_waitlist\RegistrationWaitListManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -20,6 +22,13 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
    * @var \Drupal\Core\Action\ActionManager
    */
   protected ActionManager $actionManager;
+
+  /**
+   * The event dispatcher.
+   *
+   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   */
+  protected ContainerAwareEventDispatcher $eventDispatcher;
 
   /**
    * The wait list manager.
@@ -40,13 +49,16 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
    *
    * @param \Drupal\Core\Action\ActionManager $action_manager
    *   The action manager.
+   * @param \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher $event_dispatcher
+   *   The event dispatcher.
    * @param \Drupal\registration_waitlist\RegistrationWaitListManagerInterface $wait_list_manager
    *   The wait list manager.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger.
    */
-  public function __construct(ActionManager $action_manager, RegistrationWaitListManagerInterface $wait_list_manager, LoggerInterface $logger) {
+  public function __construct(ActionManager $action_manager, ContainerAwareEventDispatcher $event_dispatcher, RegistrationWaitListManagerInterface $wait_list_manager, LoggerInterface $logger) {
     $this->actionManager = $action_manager;
+    $this->eventDispatcher = $event_dispatcher;
     $this->waitListManager = $wait_list_manager;
     $this->logger = $logger;
   }
@@ -63,8 +75,9 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
     // Auto fill when an active registration is deleted and the auto fill
     // setting is enabled.
     if ($registration->getState()->isActive()) {
+      /** @var \Drupal\registration_waitlist\HostEntityInterface $host_entity */
       $host_entity = $registration->getHostEntity();
-      if ((bool) $host_entity->getSetting('registration_waitlist_autofill')) {
+      if ($host_entity->getSetting('registration_waitlist_autofill')) {
         $this->waitListManager->autoFill($host_entity);
       }
     }
@@ -80,9 +93,13 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
     $registration = $event->getRegistration();
     $from_state = isset($registration->original) ? $registration->original->getState()->id() : NULL;
     $to_state = $registration->getState()->id();
-    // Send a confirmation email for newly wait listed registrations if this is
-    // enabled for the registration type.
     if (($from_state !== $to_state) && ($to_state == 'waitlist')) {
+      // Dispatch an event indicating a registration was just wait listed.
+      $event = new RegistrationEvent($registration);
+      $this->eventDispatcher->dispatch($event, RegistrationWaitListEvents::REGISTRATION_WAITLIST_WAITLISTED);
+
+      // Send a confirmation email for newly wait listed registrations if this
+      // is enabled for the registration type.
       $registration_type = $registration->getType();
       if ($registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_email')) {
         $configuration['recipient'] = $registration->getEmail();
@@ -104,8 +121,9 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
     if (!$registration->isNew() && ($from_state !== $to_state)) {
       if ($registration->original && $registration->original->getState()->isActive()) {
         if (!$registration->getState()->isActive()) {
+          /** @var \Drupal\registration_waitlist\HostEntityInterface $host_entity */
           $host_entity = $registration->getHostEntity();
-          if ((bool) $host_entity->getSetting('registration_waitlist_autofill')) {
+          if ($host_entity->getSetting('registration_waitlist_autofill')) {
             $this->waitListManager->autoFill($host_entity);
           }
         }

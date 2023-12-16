@@ -4,6 +4,7 @@ services:
     class: \Drupal\registration_waitlist\EventSubscriber\RegistrationEventSubscriber
     arguments: [
       '@plugin.manager.action',
+      '@event_dispatcher',
       '@registration_waitlist.manager',
       '@registration_waitlist.logger',
     ]
@@ -26,6 +27,7 @@ services:
   registration_waitlist.manager:
     class: Drupal\registration_waitlist\RegistrationWaitListManager
     arguments: [
+      '@event_dispatcher',
       '@registration_waitlist.logger',
     ]
 

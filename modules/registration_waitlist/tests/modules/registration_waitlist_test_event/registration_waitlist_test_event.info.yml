@@ -1,0 +1,7 @@
+name: Registration Wait List Test Event
+type: module
+description: 'Test module for Registration Wait List events.'
+package: Testing
+dependencies:
+  - registration:registration
+  - registration:registration_waitlist

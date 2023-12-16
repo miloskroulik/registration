@@ -2,7 +2,10 @@
 
 namespace Drupal\registration_waitlist;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\registration\Event\RegistrationEvent;
+use Drupal\registration_waitlist\Event\RegistrationWaitListEvents;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -11,6 +14,13 @@ use Psr\Log\LoggerInterface;
 class RegistrationWaitListManager implements RegistrationWaitListManagerInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * The event dispatcher.
+   *
+   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   */
+  protected ContainerAwareEventDispatcher $eventDispatcher;
 
   /**
    * The logger.
@@ -22,10 +32,13 @@ class RegistrationWaitListManager implements RegistrationWaitListManagerInterfac
   /**
    * Creates a RegistrationWaitListManager object.
    *
+   * @param \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher $event_dispatcher
+   *   The event dispatcher.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger.
    */
-  public function __construct(LoggerInterface $logger) {
+  public function __construct(ContainerAwareEventDispatcher $event_dispatcher, LoggerInterface $logger) {
+    $this->eventDispatcher = $event_dispatcher;
     $this->logger = $logger;
   }
 
@@ -40,8 +53,11 @@ class RegistrationWaitListManager implements RegistrationWaitListManagerInterfac
         $wait_listed_registrations = $host_entity->getRegistrationList(['waitlist']);
         foreach ($wait_listed_registrations as $registration) {
           if ($host_entity->hasRoomOffWaitList($registration->getSpacesReserved())) {
+            $event = new RegistrationEvent($registration);
+            $this->eventDispatcher->dispatch($event, RegistrationWaitListEvents::REGISTRATION_WAITLIST_PREAUTOFILL);
             $registration->set('state', $new_state);
             $registration->save();
+            $this->eventDispatcher->dispatch($event, RegistrationWaitListEvents::REGISTRATION_WAITLIST_AUTOFILL);
             $count++;
           }
 
