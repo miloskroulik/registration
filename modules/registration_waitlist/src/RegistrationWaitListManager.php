@@ -47,7 +47,7 @@ class RegistrationWaitListManager implements RegistrationWaitListManagerInterfac
    */
   public function autoFill(HostEntityInterface $host_entity) {
     $spaces_to_fill = $host_entity->getSpacesRemaining();
-    if ($spaces_to_fill) {
+    if ($spaces_to_fill && $host_entity->isConfiguredForRegistration() && $host_entity->isEnabledForRegistration()) {
       if ($new_state = $host_entity->getSetting('registration_waitlist_autofill_state')) {
         $count = 0;
         $wait_listed_registrations = $host_entity->getRegistrationList(['waitlist']);

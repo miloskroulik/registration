@@ -106,6 +106,34 @@ class RegistrationWaitListManagerTest extends RegistrationWaitListKernelTestBase
     $this->assertEquals(0, $host_entity->getWaitListSpacesReserved());
     // One registration was autofilled.
     $this->assertTrue($this->loggedRegistrationCountMatches(1));
+
+    // Fill standard capacity.
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    $registration->set('count', 1);
+    $registration->save();
+    $this->assertFalse($host_entity->hasRoomOffWaitList());
+    $this->assertEquals(10, $host_entity->getActiveSpacesReserved());
+
+    // Add registrations to the wait list.
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    $registration->set('count', 2);
+    $registration->save();
+    $this->assertEquals(10, $host_entity->getActiveSpacesReserved());
+    $this->assertEquals(2, $host_entity->getWaitListSpacesReserved());
+
+    // Close registration.
+    $settings->set('status', FALSE);
+    $settings->save();
+
+    // Delete a registration. Autofill is enabled, however registration is now
+    // closed for the host entity, so autofill does not occur.
+    $registration = $this->entityTypeManager->getStorage('registration')->load(2);
+    $this->assertEquals(2, $registration->getSpacesReserved());
+    $registration->delete();
+    $this->assertEquals(8, $host_entity->getActiveSpacesReserved());
+    $this->assertEquals(2, $host_entity->getWaitListSpacesReserved());
   }
 
   /**
