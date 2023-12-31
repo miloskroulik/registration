@@ -112,6 +112,14 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $this->assertEquals(1, $registration->getSpacesReserved());
     $this->assertEquals('admin@example.org', $registration->getAnonymousEmail());
 
+    // A registration that starts out complete should have a completed time.
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $this->user->id());
+    $registration->set('state', 'complete');
+    $registration->save();
+    $this->assertTrue($registration->isComplete());
+    $this->assertEquals(\Drupal::time()->getRequestTime(), $registration->getCompletedTime());
+
     $node->delete();
     $registration = $this->reloadEntity($registration);
     $this->assertNull($registration->getHostEntity());

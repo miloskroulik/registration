@@ -285,7 +285,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    * {@inheritdoc}
    */
   public function getWorkflow(): WorkflowInterface {
-    if ($this->isNew() || $this->get('workflow')->isEmpty()) {
+    if ($this->get('workflow')->isEmpty()) {
       return $this->getType()->getWorkflow();
     }
     else {
@@ -298,7 +298,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function getState(): StateInterface {
     $workflow = $this->getWorkflow();
-    if ($this->isNew() || $this->get('state')->isEmpty()) {
+    if ($this->get('state')->isEmpty()) {
       return $workflow->getTypePlugin()->getState($this->getType()->getDefaultState());
     }
     else {
