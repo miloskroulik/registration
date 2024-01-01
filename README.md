@@ -57,7 +57,8 @@ After enabling the module, perform the following steps to configure Registration
 1. When you add or edit an entity, select the registration type you want to use for the entity.
 1. Registrations are now enabled for the entity and you can configure the registration settings via a local task.
 1. Extend your registration types with additional fields as needed. For example, if your site allows users to register for classes, it may be useful to add biographical data such as First name and Last name fields to your registration type. These fields automatically appear on the registration form.
-1. (Optional) Adjust the default registration states at /admin/config/workflow/workflows. This link is available via the Workflow menu item in the Configuration menu of Drupal administration.
+1. Add registration related permissions to the appropriate roles at /admin/people/permissions.
+1. (Optional) Adjust the default registration states at /admin/config/workflow/workflows. This link is available via the Workflow menu item in the Configuration menu of Drupal administration. If you want administrators to be able to edit the state for new or existing registrations, you should configure the "show on form" setting for the appropriate states.
 1. (Optional) Adjust general module settings at /admin/structure/registration-settings. This link is available from the main Configuration page of Drupal administration. If you want registration related emails to be sent as HTML, you need to visit this page.
 
 
