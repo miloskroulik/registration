@@ -120,3 +120,9 @@ services:
     ]
     tags:
       - { name: event_subscriber }
+
+  registration.timestamp_event_subscriber:
+    class: Drupal\registration\EventSubscriber\TimestampEventSubscriber
+    arguments: ['@datetime.time']
+    tags:
+      - { name: event_subscriber }

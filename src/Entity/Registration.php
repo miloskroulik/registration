@@ -410,19 +410,6 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
     if ($this->get('workflow')->isEmpty()) {
       $this->set('workflow', $this->getType()->getWorkflowId());
     }
-    // Completed timestamp.
-    if ($this->get('completed')->isEmpty()) {
-      // Check if a new registration is starting out in complete state.
-      if ($this->isNew() && $this->isComplete()) {
-        $this->set('completed', \Drupal::time()->getRequestTime());
-      }
-      elseif ($this->original) {
-        // Check if an updated registration is transitioning to complete state.
-        if (!$this->original->isComplete() && $this->isComplete()) {
-          $this->set('completed', \Drupal::time()->getRequestTime());
-        }
-      }
-    }
     // Language default.
     if ($this->get('langcode')->isEmpty()) {
       $langcode = '';

@@ -95,6 +95,7 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->isActive());
     $this->assertFalse($registration->isCanceled());
     $this->assertFalse($registration->isComplete());
+    $this->assertNull($registration->getCompletedTime());
     $this->assertFalse($registration->isHeld());
 
     $registration->setCreatedTime(635879700);
@@ -120,6 +121,15 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->isComplete());
     $this->assertEquals(\Drupal::time()->getRequestTime(), $registration->getCompletedTime());
 
+    // A registration completed in a presave hook should have a completed time.
+    // @see registration_test_registration_presave().
+    $registration = $this->createRegistration($node);
+    $registration->set('anon_mail', 'trigger_presave_hook@example.org');
+    $registration->save();
+    $this->assertTrue($registration->isComplete());
+    $this->assertEquals(\Drupal::time()->getRequestTime(), $registration->getCompletedTime());
+
+    // Delete the host entity.
     $node->delete();
     $registration = $this->reloadEntity($registration);
     $this->assertNull($registration->getHostEntity());
