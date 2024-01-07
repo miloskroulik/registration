@@ -19,21 +19,21 @@ class RegistrationFieldConstraint extends Constraint {
    *
    * @var string
    */
-  public string $disallowedCardinalityMessage = 'An entity can only have one registration field.';
+  public string $disallowedCardinalityMessage = 'An entity can only have one registration field';
 
   /**
    * If the user tries to add a registration field to a registration type.
    *
    * @var string
    */
-  public string $disallowedTargetTypeMessage = 'A registration field cannot be added to a registration type.';
+  public string $disallowedTargetTypeMessage = 'A registration field cannot be added to a registration type';
 
   /**
    * If the user tries to add a registration field to registration settings.
    *
    * @var string
    */
-  public string $disallowedTargetSettingsMessage = 'A registration field cannot be added to registration settings.';
+  public string $disallowedTargetSettingsMessage = 'A registration field cannot be added to registration settings';
 
   /**
    * If the target entity type does not have an "id" key in its annotation.
@@ -43,6 +43,6 @@ class RegistrationFieldConstraint extends Constraint {
    *
    * @var string
    */
-  public string $missingIdKeyMessage = 'A registration field can only be added to an entity with an "id" key.';
+  public string $missingIdKeyMessage = 'A registration field can only be added to an entity with an "id" key';
 
 }

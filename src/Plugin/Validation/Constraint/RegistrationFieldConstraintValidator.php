@@ -103,6 +103,7 @@ class RegistrationFieldConstraintValidator extends ConstraintValidator implement
           // Also remove the storage if it no longer has any fields.
           $storage_definition = $field_config->getFieldStorageDefinition();
           if ($storage_definition->isDeletable()) {
+            $storage_definition->enforceIsNew(FALSE);
             $storage_definition->delete();
           }
         }

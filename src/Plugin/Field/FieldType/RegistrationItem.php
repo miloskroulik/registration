@@ -13,7 +13,7 @@ use Drupal\Core\TypedData\DataDefinition;
  * @FieldType(
  *   id = "registration",
  *   label = @Translation("Registration"),
- *   description = @Translation("Enables registrations of a selected type for an entity."),
+ *   description = @Translation("Field to enable registration for an event or other entity."),
  *   category = @Translation("Entity registration"),
  *   default_widget = "registration_type",
  *   default_formatter = "registration_type",

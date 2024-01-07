@@ -48,7 +48,7 @@ class RegistrationFieldConstraintTest extends RegistrationKernelTestBase {
       'translatable' => TRUE,
     ];
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('A registration field cannot be added to a registration type.');
+    $this->expectExceptionMessage('A registration field cannot be added to a registration type');
     $this->entityTypeManager
       ->getStorage('field_storage_config')
       ->create($field_storage_values)
@@ -67,7 +67,7 @@ class RegistrationFieldConstraintTest extends RegistrationKernelTestBase {
       'translatable' => TRUE,
     ];
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('A registration field cannot be added to registration settings.');
+    $this->expectExceptionMessage('A registration field cannot be added to registration settings');
     $this->entityTypeManager
       ->getStorage('field_storage_config')
       ->create($field_storage_values)
@@ -100,7 +100,7 @@ class RegistrationFieldConstraintTest extends RegistrationKernelTestBase {
     // The node entity already has a base registration field added by the
     // registration_test module.
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('An entity can only have one registration field.');
+    $this->expectExceptionMessage('An entity can only have one registration field');
     $this->entityTypeManager
       ->getStorage('field_config')
       ->create($field_values)
@@ -211,7 +211,7 @@ class RegistrationFieldConstraintTest extends RegistrationKernelTestBase {
       'translatable' => FALSE,
     ];
     $this->expectException(\InvalidArgumentException::class);
-    $this->expectExceptionMessage('An entity can only have one registration field.');
+    $this->expectExceptionMessage('An entity can only have one registration field');
     $this->entityTypeManager
       ->getStorage('field_config')
       ->create($field_values)
