@@ -47,13 +47,9 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
       'field_name' => 'registration',
     ];
     $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
-    $this->submitForm($edit, 'Save and continue');
-    $this->assertSession()->statusMessageContains('Your settings have been saved.', 'status');
-
-    $edit = [];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration/storage');
-    $this->submitForm($edit, 'Save field settings');
-    $this->assertSession()->statusMessageContains('Updated field', 'status');
+    $this->submitForm($edit, 'Continue');
+    $this->assertSession()->buttonExists('Save settings');
+    $this->assertSession()->pageTextContains('This field cardinality is set to 1 and cannot be configured.');
 
     // Enable registrations by default, with a wait list.
     $edit = [
@@ -66,7 +62,7 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
       'default_value_input[registration_settings][registration_waitlist_enable][value]' => TRUE,
       'default_value_input[registration_settings][registration_waitlist_capacity][0][value]' => 0,
     ];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration');
+    $this->drupalGet('admin/structure/types/manage/test_node_type/add-field/node/field_registration');
     $this->submitForm($edit, 'Save settings');
     $this->assertSession()->statusMessageContains('Saved', 'status');
 

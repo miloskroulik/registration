@@ -66,13 +66,9 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
       'field_name' => 'registration',
     ];
     $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
-    $this->submitForm($edit, 'Save and continue');
-    $this->assertSession()->statusMessageContains('Your settings have been saved.', 'status');
-    $edit = [];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration/storage');
-    $this->submitForm($edit, 'Save field settings');
-    $this->assertSession()->statusMessageContains('Updated field', 'status');
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration');
+    $this->submitForm($edit, 'Continue');
+    $this->assertSession()->buttonExists('Save settings');
+    $this->assertSession()->pageTextContains('This field cardinality is set to 1 and cannot be configured.');
     // Administrators have access to all types.
     $this->assertSession()->optionExists('default_value_input[field_registration][0][registration_type]', 'conference');
     $this->assertSession()->optionExists('default_value_input[field_registration][0][registration_type]', 'seminar');
@@ -95,13 +91,9 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
       'field_name' => 'registration',
     ];
     $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
-    $this->submitForm($edit, 'Save and continue');
-    $this->assertSession()->statusMessageContains('Your settings have been saved.', 'status');
-    $edit = [];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration/storage');
-    $this->submitForm($edit, 'Save field settings');
-    $this->assertSession()->statusMessageContains('Updated field', 'status');
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration');
+    $this->submitForm($edit, 'Continue');
+    $this->assertSession()->buttonExists('Save settings');
+    $this->assertSession()->pageTextContains('This field cardinality is set to 1 and cannot be configured.');
     $this->assertSession()->optionExists('default_value_input[field_registration][0][registration_type]', 'conference');
     $this->assertSession()->optionNotExists('default_value_input[field_registration][0][registration_type]', 'seminar');
   }
@@ -129,13 +121,9 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
       'field_name' => 'registration',
     ];
     $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
-    $this->submitForm($edit, 'Save and continue');
-    $this->assertSession()->statusMessageContains('Your settings have been saved.', 'status');
-
-    $edit = [];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration/storage');
-    $this->submitForm($edit, 'Save field settings');
-    $this->assertSession()->statusMessageContains('Updated field', 'status');
+    $this->submitForm($edit, 'Continue');
+    $this->assertSession()->buttonExists('Save settings');
+    $this->assertSession()->pageTextContains('This field cardinality is set to 1 and cannot be configured.');
 
     // Enable registrations by default.
     $edit = [
@@ -146,7 +134,7 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
       'default_value_input[registration_settings][capacity][0][value]' => 0,
       'default_value_input[registration_settings][from_address][0][value]' => 'webmaster@example.org',
     ];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration');
+    $this->drupalGet('admin/structure/types/manage/test_node_type/add-field/node/field_registration');
     $this->submitForm($edit, 'Save settings');
     $this->assertSession()->statusMessageContains('Saved', 'status');
 
@@ -190,8 +178,14 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
       'field_name' => 'registration2',
     ];
     $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
-    $this->submitForm($edit, 'Save and continue');
-    $this->assertSession()->statusMessageExists('error');
+    $this->submitForm($edit, 'Continue');
+    $edit = [];
+    $this->drupalGet('admin/structure/types/manage/test_node_type/add-field/node/field_registration2');
+    $edit = [
+      'settings[allowed_types][conference]' => 'conference',
+    ];
+    $this->submitForm($edit, 'Save settings');
+    $this->assertSession()->statusMessageContains('An entity can only have one registration field', 'status');
   }
 
   /**
@@ -217,13 +211,9 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
       'field_name' => 'registration',
     ];
     $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
-    $this->submitForm($edit, 'Save and continue');
-    $this->assertSession()->statusMessageContains('Your settings have been saved.', 'status');
-
-    $edit = [];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration/storage');
-    $this->submitForm($edit, 'Save field settings');
-    $this->assertSession()->statusMessageContains('Updated field', 'status');
+    $this->submitForm($edit, 'Continue');
+    $this->assertSession()->buttonExists('Save settings');
+    $this->assertSession()->pageTextContains('This field cardinality is set to 1 and cannot be configured.');
 
     $edit = [
       'settings[allowed_types][conference]' => 'conference',
@@ -233,7 +223,7 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
       'default_value_input[registration_settings][capacity][0][value]' => 0,
       'default_value_input[registration_settings][from_address][0][value]' => 'webmaster@example.org',
     ];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/node.test_node_type.field_registration');
+    $this->drupalGet('admin/structure/types/manage/test_node_type/add-field/node/field_registration');
     $this->submitForm($edit, 'Save settings');
     $this->assertSession()->statusMessageContains('Saved', 'status');
 
