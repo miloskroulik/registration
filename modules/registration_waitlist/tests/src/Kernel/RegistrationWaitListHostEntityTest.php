@@ -45,6 +45,24 @@ class RegistrationWaitListHostEntityTest extends RegistrationWaitListKernelTestB
     $this->assertTrue($host_entity->hasRoomOnWaitList());
     $this->assertTrue($host_entity->isEnabledForRegistration());
 
+    // Hold a registration while the wait list is active.
+    $registration->set('state', 'held');
+    $registration->save();
+    $this->assertTrue($registration->isHeld());
+    $this->assertTrue($host_entity->hasRoom());
+    $this->assertFalse($host_entity->hasRoomOffWaitList());
+    $this->assertTrue($host_entity->hasRoomOnWaitList());
+    $this->assertTrue($host_entity->isEnabledForRegistration());
+
+    // Complete a registration while the wait list is active.
+    $registration->set('state', 'complete');
+    $registration->save();
+    $this->assertTrue($registration->isComplete());
+    $this->assertTrue($host_entity->hasRoom());
+    $this->assertFalse($host_entity->hasRoomOffWaitList());
+    $this->assertTrue($host_entity->hasRoomOnWaitList());
+    $this->assertTrue($host_entity->isEnabledForRegistration());
+
     // Wait list spaces reserved and remaining.
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
