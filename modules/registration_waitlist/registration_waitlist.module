@@ -129,21 +129,17 @@ function registration_waitlist_registration_presave(EntityInterface $entity) {
     /** @var \Drupal\registration_waitlist\HostEntityInterface $host_entity */
     if ($host_entity = $registration->getHostEntity()) {
       $spaces = $registration->getSpacesReserved();
-      if (!$host_entity->hasRoomOffWaitList($spaces, $registration)) {
-        if ($host_entity->isWaitListEnabled()) {
-          if ($host_entity->hasRoomOnWaitList($spaces, $registration)) {
-            // Allow other modules to change the new state.
-            $new_state = 'waitlist';
-            $event = new RegistrationDataAlterEvent($new_state, [
-              'host_entity' => $host_entity,
-              'settings' => $host_entity->getSettings(),
-              'registration' => $registration,
-            ]);
-            \Drupal::service('event_dispatcher')->dispatch($event, RegistrationWaitListEvents::REGISTRATION_WAITLIST_PRESAVE);
-            $new_state = (string) $event->getData();
-            $registration->set('state', $new_state);
-          }
-        }
+      if ($host_entity->shouldAddToWaitList($spaces, $registration)) {
+        // Allow other modules to change the new state.
+        $new_state = 'waitlist';
+        $event = new RegistrationDataAlterEvent($new_state, [
+          'host_entity' => $host_entity,
+          'settings' => $host_entity->getSettings(),
+          'registration' => $registration,
+        ]);
+        \Drupal::service('event_dispatcher')->dispatch($event, RegistrationWaitListEvents::REGISTRATION_WAITLIST_PRESAVE);
+        $new_state = (string) $event->getData();
+        $registration->set('state', $new_state);
       }
     }
   }

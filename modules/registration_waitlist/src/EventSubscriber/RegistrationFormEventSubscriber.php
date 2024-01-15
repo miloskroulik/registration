@@ -46,36 +46,32 @@ class RegistrationFormEventSubscriber implements EventSubscriberInterface {
     if ($host_entity = $form_state->get('host_entity')) {
       if ($registration = $form_state->get('registration')) {
         $spaces = $registration->getSpacesReserved();
-        if (!$host_entity->hasRoomOffWaitList($spaces, $registration)) {
-          if ($host_entity->isWaitListEnabled()) {
-            if ($host_entity->hasRoomOnWaitList($spaces, $registration)) {
-              $type = $host_entity->getRegistrationTypeBundle();
-              $admin =
-                     $this->currentUser()->hasPermission("administer registration")
-                  || $this->currentUser()->hasPermission("administer $type registration");
+        if ($host_entity->shouldAddToWaitList($spaces, $registration)) {
+          $type = $host_entity->getRegistrationTypeBundle();
+          $admin =
+                 $this->currentUser()->hasPermission("administer registration")
+              || $this->currentUser()->hasPermission("administer $type registration");
 
-              if ($registration->isNew() || !$admin) {
-                // Hide the Status field since the registration will be placed
-                // in the wait list state on save.
-                if (isset($form['state'])) {
-                  $form['state']['#access'] = FALSE;
-                }
+          if ($registration->isNew() || !$admin) {
+            // Hide the Status field since the registration will be placed
+            // in the wait list state on save.
+            if (isset($form['state'])) {
+              $form['state']['#access'] = FALSE;
+            }
 
-                // Add message indicating the registration will be wait listed,
-                // if a message was configured.
-                if ($host_entity->getSetting('registration_waitlist_message_enable')) {
-                  if ($message = $host_entity->getSetting('registration_waitlist_message')) {
-                    $form['message']['#weight'] = -10;
-                    $form['message'][] = [
-                      '#markup' => '<div class="registration-waitlist-message">' . $message . '</div>',
-                    ];
-                  }
-                }
-
-                // Save the updated form to the event.
-                $event->setForm($form);
+            // Add message indicating the registration will be wait listed,
+            // if a message was configured.
+            if ($host_entity->getSetting('registration_waitlist_message_enable')) {
+              if ($message = $host_entity->getSetting('registration_waitlist_message')) {
+                $form['message']['#weight'] = -10;
+                $form['message'][] = [
+                  '#markup' => '<div class="registration-waitlist-message">' . $message . '</div>',
+                ];
               }
             }
+
+            // Save the updated form to the event.
+            $event->setForm($form);
           }
         }
       }

@@ -194,4 +194,11 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
     return (bool) $this->getSetting('registration_waitlist_enable');
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function shouldAddToWaitList(int $spaces = 1, RegistrationInterface $registration = NULL): bool {
+    return !$this->hasRoomOffWaitList($spaces, $registration) && $this->isWaitListEnabled() && $this->hasRoomOnWaitList($spaces, $registration);
+  }
+
 }

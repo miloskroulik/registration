@@ -74,4 +74,22 @@ interface HostEntityInterface extends BaseHostEntityInterface {
    */
   public function isWaitListEnabled(): bool;
 
+  /**
+   * Determines if the given registration should be placed on the wait list.
+   *
+   * A registration should be placed on the wait list if there is no room
+   * within standard capacity, wait list is enabled in the host entity
+   * settings, and the wait list has room for the registration.
+   *
+   * @param int $spaces
+   *   (optional) The number of spaces requested. Defaults to 1.
+   * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
+   *   (optional) A registration to check, if available.
+   *   If this parameter is not set, the check applies to a new registration.
+   *
+   * @return bool
+   *   TRUE if the registration should be wait listed, FALSE otherwise.
+   */
+  public function shouldAddToWaitList(int $spaces = 1, RegistrationInterface $registration = NULL): bool;
+
 }
