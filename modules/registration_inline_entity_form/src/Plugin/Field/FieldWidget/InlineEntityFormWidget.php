@@ -114,6 +114,10 @@ class InlineEntityFormWidget extends InlineEntityFormBase {
       return $element;
     }
 
+    // Set the provider so the widget can be identified in a form alter hook.
+    // @see registration_inline_entity_form_form_alter()
+    $form_state->set('provider', 'registration_inline_entity_form');
+
     // Initialize the form state with the inline entity form state.
     $parents = array_merge($element['#field_parents'], [$items->getName()]);
     $ief_id = $this->makeIefId($parents);

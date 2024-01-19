@@ -51,10 +51,15 @@ function registration_inline_entity_form_entity_type_alter(array &$entity_types)
  * Implements hook_form_alter().
  */
 function registration_inline_entity_form_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  // Attach the IEF handlers only if the current form has an IEF widget.
+  // Attach registration related IEF handlers only if the current form has an
+  // IEF widget placed by this module.
   $widget_state = $form_state->get('inline_entity_form');
   if (!is_null($widget_state)) {
-    RegistrationElementSubmit::attach($form);
-    RegistrationWidgetSubmit::attach($form, $form_state);
+    if ($provider = $form_state->get('provider')) {
+      if ($provider == 'registration_inline_entity_form') {
+        RegistrationElementSubmit::attach($form);
+        RegistrationWidgetSubmit::attach($form, $form_state);
+      }
+    }
   }
 }
