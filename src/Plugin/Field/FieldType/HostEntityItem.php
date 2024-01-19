@@ -93,11 +93,12 @@ class HostEntityItem extends FieldItemBase {
       // The entity is either a registration or a registration settings entity.
       $entity = $this->getEntity();
       /** @var \Drupal\registration\Entity\HostEntityKeysInterface $entity */
-      $entity_id = $entity->getHostEntityId();
-      $entity_type_id = $entity->getHostEntityTypeId();
-      $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
-      $this->set('entity', $storage->load($entity_id));
-      $this->isCalculated = TRUE;
+      if ($entity_id = $entity->getHostEntityId()) {
+        $entity_type_id = $entity->getHostEntityTypeId();
+        $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
+        $this->set('entity', $storage->load($entity_id));
+        $this->isCalculated = TRUE;
+      }
     }
   }
 
