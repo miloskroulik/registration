@@ -36,3 +36,8 @@ services:
     arguments: [
       'registration_waitlist',
     ]
+
+  registration_waitlist.twig_extension:
+    class: Drupal\registration_waitlist\TwigExtension\RegistrationWaitListTwigExtension
+    tags:
+      - { name: twig.extension }
