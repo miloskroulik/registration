@@ -14,6 +14,17 @@ use Drupal\registration_waitlist\Event\RegistrationWaitListEvents;
 use Drupal\registration_waitlist\Plugin\Field\RegistrationItemFieldItemList;
 
 /**
+ * Implements hook_theme().
+ */
+function registration_waitlist_theme() {
+  return [
+    'host_entity_waitlist_indicator' => [
+      'variables' => [],
+    ],
+  ];
+}
+
+/**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function registration_waitlist_form_registration_type_form_alter(&$form, FormStateInterface $form_state, $form_id) {

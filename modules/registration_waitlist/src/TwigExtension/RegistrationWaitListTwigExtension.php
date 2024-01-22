@@ -67,7 +67,7 @@ class RegistrationWaitListTwigExtension extends AbstractExtension {
     if ($host_entity->isConfiguredForRegistration() && $host_entity->isEnabledForRegistration()) {
       if ($host_entity->shouldAddToWaitList($spaces, $registration)) {
         return [
-          '#markup' => t('(waiting list)'),
+          '#theme' => 'host_entity_waitlist_indicator',
         ];
       }
     }
