@@ -13,7 +13,6 @@ use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\registration\Entity\RegistrationTypeInterface;
 use Drush\Attributes as CLI;
 use Drush\Commands\DrushCommands;
-use Drush\Drupal\Commands\sql\SanitizeCommands;
 use Drush\Drupal\Commands\sql\SanitizePluginInterface;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -41,7 +40,7 @@ final class RegistrationSanitizeCommands extends DrushCommands implements Saniti
   /**
    * Sanitize string fields associated with the registration entities.
    */
-  #[CLI\Hook(type: HookManager::POST_COMMAND_HOOK, target: SanitizeCommands::SANITIZE)]
+  #[CLI\Hook(type: HookManager::POST_COMMAND_HOOK, target: 'sql:sanitize')]
   public function sanitize($result, CommandData $commandData): void {
     $registration_types = $this->entityTypeManager->getStorage('registration_type')->loadMultiple();
     foreach ($registration_types as $registration_type) {
@@ -82,7 +81,7 @@ final class RegistrationSanitizeCommands extends DrushCommands implements Saniti
   /**
    * {@inheritdoc}
    */
-  #[CLI\Hook(type: HookManager::ON_EVENT, target: SanitizeCommands::CONFIRMS)]
+  #[CLI\Hook(type: HookManager::ON_EVENT, target: 'sql-sanitize-confirms')]
   public function messages(&$messages, InputInterface $input): void {
     $messages[] = dt('Sanitize text fields associated with registrations.');
     $messages[] = dt('Sanitize registration emails.');
