@@ -53,7 +53,7 @@ class RegistrationDataAlterEvent extends Event {
    *   ]
    *   The host_entity and settings elements are usually present.
    *   The registration and user elements are only present for a few events.
-   *   Addiotional context elements can be added for specific use cases.
+   *   Additional context elements can be added for specific use cases.
    */
   public function __construct(mixed $data, array $context) {
     $this->data = $data;

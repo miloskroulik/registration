@@ -88,7 +88,7 @@ class RegistrationMailerTest extends RegistrationKernelTestBase {
     $registration->set('user_uid', $user->id());
     $registration->save();
     $recipient_list = $this->registrationMailer->getRecipientList($host_entity);
-    // Note that the receipient list count is still only 4.
+    // Note that the recipient list count is still only 4.
     $this->assertCount(4, $recipient_list);
     $results = $this->registrationMailer->notify($host_entity, $data);
     $this->assertEquals(5, $results);

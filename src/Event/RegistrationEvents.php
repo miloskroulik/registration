@@ -229,7 +229,7 @@ final class RegistrationEvents {
   const REGISTRATION_SETTINGS_UPDATE = 'registration.registration_settings.update';
 
   /**
-   * Name of the event fired before deleting egistration settings.
+   * Name of the event fired before deleting registration settings.
    *
    * @Event
    *

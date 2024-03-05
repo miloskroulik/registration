@@ -9,7 +9,7 @@ use Drupal\migrate\Row;
 /**
  * Migrates a property in an additional settings field.
  *
- * The properties are stroed in a seriazlied "settings" field in Drupal 7.
+ * The properties are stored in a serialized "settings" field in Drupal 7.
  *
  * @MigrateProcessPlugin(
  *   id = "registration_additional_settings"

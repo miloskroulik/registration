@@ -126,7 +126,7 @@ class RegistrationState implements StateInterface {
    * Determines if this state should be displayed on the registration form.
    *
    * @return bool
-   *   TRUE if displayed on the form, FLASE otherwise.
+   *   TRUE if displayed on the form, FALSE otherwise.
    */
   public function isShownOnForm(): bool {
     return $this->showOnForm;

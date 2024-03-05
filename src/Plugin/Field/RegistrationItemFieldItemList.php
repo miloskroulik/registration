@@ -126,7 +126,7 @@ class RegistrationItemFieldItemList extends FieldItemList implements Registratio
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    * @param string $entity_type_id
-   *   The entity type ID for registration setttings.
+   *   The entity type ID for registration settings.
    *
    * @return array
    *   The default settings form.

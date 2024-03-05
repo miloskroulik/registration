@@ -73,7 +73,7 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
     ]);
     $settings->save();
 
-    // Edit regtistration settings.
+    // Edit registration settings.
     $account = $this->createUser([
       'bypass node access',
       'edit registration settings',
@@ -82,7 +82,7 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($settings->access('update', $account));
     $this->assertTrue($settings->access('delete', $account));
 
-    // Edit type regtistration settings.
+    // Edit type registration settings.
     $account = $this->createUser([
       'bypass node access',
       'edit conference registration settings',

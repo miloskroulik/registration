@@ -26,7 +26,7 @@ interface HostEntityKeysInterface {
   /**
    * Gets the registration language code.
    *
-   * This is the site language in use at the time of the registation. For
+   * This is the site language in use at the time of the registration. For
    * example, if the site visitor registered on page /es/node/1, then the
    * language code would be "es" (Spanish).
    *

@@ -98,7 +98,7 @@ function registration_update_9006() {
 }
 
 /**
- * Resaves all roles so dependencies are added.
+ * Re-saves all roles so dependencies are added.
  */
 function registration_update_9007() {
   $roles = \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple();

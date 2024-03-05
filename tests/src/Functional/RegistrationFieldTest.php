@@ -185,7 +185,7 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
       'settings[allowed_types][conference]' => 'conference',
     ];
     $this->submitForm($edit, 'Save settings');
-    $this->assertSession()->statusMessageContains('An entity can only have one registration field', 'status');
+    $this->assertSession()->statusMessageContains('An entity can only have one registration field', 'error');
   }
 
   /**

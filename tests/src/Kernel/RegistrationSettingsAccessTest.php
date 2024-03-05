@@ -206,7 +206,7 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
     ]);
     $this->assertTrue($url->access($account));
 
-    // Broadcase route.
+    // Broadcast route.
     $url = Url::fromRoute('entity.node.registration.broadcast', [
       'node' => $this->node->id(),
     ]);

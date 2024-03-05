@@ -8,7 +8,7 @@ CONTENTS OF THIS FILE
 INTRODUCTION
 ------------
 
-Registration Inline Entity Form is a submodule of Registration that allows site builders to choose an inline form widget for editing registration fields instead of the standard widget. The inlne form widget enables a site editor to configure registration settings for a host entity directly on the host entity edit form. For example, a content type with a registration field using the inline form widget would allow event capacity and other registration settings to be entered when editing content of that type, instead of having to visit a separate settings page.
+Registration Inline Entity Form is a submodule of Registration that allows site builders to choose an inline form widget for editing registration fields instead of the standard widget. The inline form widget enables a site editor to configure registration settings for a host entity directly on the host entity edit form. For example, a content type with a registration field using the inline form widget would allow event capacity and other registration settings to be entered when editing content of that type, instead of having to visit a separate settings page.
 
 CONFIGURATION
 -------------

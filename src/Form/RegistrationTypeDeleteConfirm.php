@@ -57,7 +57,7 @@ class RegistrationTypeDeleteConfirm extends EntityDeleteForm {
       foreach ($fields as $field_id => $info) {
         $entities = $this->entityTypeManager
           ->getStorage($entity_type_id)
-          ->loadbyProperties([
+          ->loadByProperties([
             "$field_id.registration_type" => $this->entity->id(),
           ]);
         $num_entities += count($entities);

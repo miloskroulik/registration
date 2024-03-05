@@ -34,7 +34,7 @@ interface RegistrationMailerInterface {
    *   To replace this test data with your own, use an event subscriber to
    *   modify the list.
    *
-   *   Other data needed by your event subcribers can be set into this
+   *   Other data needed by your event subscribers can be set into this
    *   array, and it will be passed to your event handlers.
    *
    * @return array
