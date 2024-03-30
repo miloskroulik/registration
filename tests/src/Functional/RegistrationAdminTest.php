@@ -51,6 +51,13 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     $user->set('field_registration', 'conference');
     $user->save();
 
+    /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
+    $display_repository = \Drupal::service('entity_display.repository');
+    $entity_form_display = $display_repository->getFormDisplay('registration', 'conference', 'default');
+    $entity_form_display->setComponent('count', [
+      'type' => 'number',
+    ])->save();
+
     $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
     $host_entity = $handler->createHostEntity($user);
 
@@ -58,6 +65,8 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     $settings_storage = $this->entityTypeManager->getStorage('registration_settings');
     $settings = $settings_storage->loadSettingsForHostEntity($host_entity);
     $settings->set('status', TRUE);
+    $settings->set('capacity', 0);
+    $settings->set('maximum_spaces', 2);
     $settings->save();
 
     /** @var \Drupal\registration\RegistrationStorage $registration_storage */
@@ -75,8 +84,18 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
 
     $this->drupalGet('/registration/' . $registration->id() . '/edit');
     $this->assertSession()->pageTextContains('Edit Registration #' . $registration->id());
+    $this->assertSession()->fieldEnabled('count[0][value]');
+    $this->assertSession()->pageTextContainsOnce('The number of spaces you wish to reserve. You may register up to 2 spaces.');
     $this->getSession()->getPage()->pressButton('Save Registration');
     $this->assertSession()->pageTextContains('Registration has been saved.');
+
+    // When only one space can be registered, the Spaces field is hidden.
+    $settings->set('maximum_spaces', 1);
+    $settings->save();
+    $this->drupalGet('/registration/' . $registration->id() . '/edit');
+    $this->assertSession()->pageTextContains('Edit Registration #' . $registration->id());
+    $this->assertSession()->fieldNotExists('count[0][value]');
+    $this->assertSession()->pageTextNotContains('The number of spaces you wish to reserve.');
   }
 
   /**

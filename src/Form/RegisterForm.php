@@ -384,7 +384,7 @@ class RegisterForm extends ContentEntityForm {
 
     // Add the "Who is registering" field.
     $registrant_options = $registration_manager->getRegistrantOptions($registration, $settings);
-    if (empty($registrant_options)) {
+    if ($registration->isNew() && empty($registrant_options)) {
       $message = t('No valid registration options exist. Registration permissions may need to be adjusted.');
       $form['notice'][] = [
         '#markup' => '<p class="registration-error">' . $message . '</p>',
@@ -481,9 +481,10 @@ class RegisterForm extends ContentEntityForm {
       $remaining = $host_entity->getSpacesRemaining($registration);
       $max = 99999;
 
-      // Allow an existing registration to keep its reserved spaces.
+      // Allow an existing registration to keep its reserved spaces, even if the
+      // capacity or maximum spaces was reduced after the registration occurred.
       $spaces = $registration->getSpacesReserved();
-      if (!$registration->isNew() && (($spaces > $remaining) || ($spaces > $limit))) {
+      if (!$registration->isNew() && (($capacity && ($spaces > $remaining)) || ($limit && ($spaces > $limit)))) {
         $max = $spaces;
         $capacity = 0;
         $limit = 0;
