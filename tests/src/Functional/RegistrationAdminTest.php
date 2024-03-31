@@ -82,6 +82,12 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     ]);
     $registration->save();
 
+    $admin_user = $this->drupalCreateUser([
+      'access user profiles',
+      'administer registration',
+      'create conference registration other users',
+    ]);
+    $this->drupalLogin($admin_user);
     $this->drupalGet('/registration/' . $registration->id() . '/edit');
     $this->assertSession()->pageTextContains('Edit Registration #' . $registration->id());
     $this->assertSession()->fieldEnabled('count[0][value]');

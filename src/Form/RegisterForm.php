@@ -382,10 +382,16 @@ class RegisterForm extends ContentEntityForm {
     $host_entity = $form_state->get('host_entity');
     $settings = $host_entity->getSettings();
 
-    // Add the "Who is registering" field.
+    // Get the registrant options and give an error if there aren't any.
     $registrant_options = $registration_manager->getRegistrantOptions($registration, $settings);
-    if ($registration->isNew() && empty($registrant_options)) {
-      $message = t('No valid registration options exist. Registration permissions may need to be adjusted.');
+    if (empty($registrant_options)) {
+      $allow_multiple = $settings->getSetting('multiple_registrations');
+      if (!$allow_multiple && $registration->isNew() && $current_user->isAuthenticated() && $host_entity->isUserRegistered($current_user)) {
+        $message = t('You are already registered for this event.');
+      }
+      else {
+        $message = t('No valid registration options exist. Registration permissions may need to be adjusted.');
+      }
       $form['notice'][] = [
         '#markup' => '<p class="registration-error">' . $message . '</p>',
         '#weight' => -1,
@@ -413,6 +419,7 @@ class RegisterForm extends ContentEntityForm {
       ];
     }
 
+    // Add the "Who is registering" field.
     $form['who_is_registering'] = [
       '#type' => 'select',
       '#title' => t('This registration is for:'),
@@ -584,26 +591,29 @@ class RegisterForm extends ContentEntityForm {
   protected function actions(array $form, FormStateInterface $form_state): array {
     $actions = [];
 
-    $host_entity = $form_state->get('host_entity');
-    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
-    $registration = $this->getEntity();
-    $count = $registration->getSpacesReserved();
-    if (!$registration->isNew() || $host_entity->isEnabledForRegistration($count, $registration)) {
-      // Override the button label for the Save button.
-      $actions = parent::actions($form, $form_state);
-      $actions['submit']['#value'] = $this->t('Save Registration');
+    // Only display the action buttons if there are no errors.
+    if (empty($form['notice'])) {
+      $host_entity = $form_state->get('host_entity');
+      /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+      $registration = $this->getEntity();
+      $count = $registration->getSpacesReserved();
+      if (!$registration->isNew() || $host_entity->isEnabledForRegistration($count, $registration)) {
+        // Override the button label for the Save button.
+        $actions = parent::actions($form, $form_state);
+        $actions['submit']['#value'] = $this->t('Save Registration');
 
-      // Ensure language is taken into account for multilingual.
-      RegistrationHelper::applyInterfaceLanguageToLinks($actions);
+        // Ensure language is taken into account for multilingual.
+        RegistrationHelper::applyInterfaceLanguageToLinks($actions);
 
-      // Add a Cancel link for new registrations.
-      if ($registration->isNew()) {
-        $actions['cancel'] = [
-          '#type' => 'link',
-          '#title' => $this->t('Cancel'),
-          '#url' => $host_entity->getEntity()->toUrl(),
-          '#weight' => 20,
-        ];
+        // Add a Cancel link for new registrations.
+        if ($registration->isNew()) {
+          $actions['cancel'] = [
+            '#type' => 'link',
+            '#title' => $this->t('Cancel'),
+            '#url' => $host_entity->getEntity()->toUrl(),
+            '#weight' => 20,
+          ];
+        }
       }
     }
 

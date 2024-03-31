@@ -34,8 +34,14 @@ class RegisterTest extends RegistrationBrowserTestBase {
     ]);
     $this->drupalLogin($user);
     $this->drupalGet('user/' . $this->adminUser->id() . '/register');
+    $this->assertSession()->buttonExists('Save Registration');
     $this->submitForm([], 'Save Registration');
     $this->assertSession()->statusMessageExists('status', 'Registration has been saved.');
+
+    // Already registered.
+    $this->drupalGet('user/' . $this->adminUser->id() . '/register');
+    $this->assertSession()->buttonNotExists('Save Registration');
+    $this->assertSession()->pageTextContainsOnce('You are already registered for this event.');
     $this->drupalLogout();
 
     // Register other person (anonymous). Must provide email address.
