@@ -4,6 +4,7 @@ namespace Drupal\Tests\registration\Kernel;
 
 use Drupal\Core\Routing\CurrentRouteMatch as BaseCurrentRouteMatch;
 use Drupal\Core\Routing\RouteMatch;
+use Symfony\Component\Routing\Route;
 
 /**
  * Overrides the current_route_match service for testing.
@@ -25,6 +26,21 @@ class CurrentRouteMatch extends BaseCurrentRouteMatch {
     return new RouteMatch($route_name, $route, [
       'node' => $node,
     ]);
+  }
+
+  /**
+   * Returns the route object.
+   *
+   * @return \Symfony\Component\Routing\Route|null
+   *   The route object. NULL if no route is matched.
+   */
+  public function getRouteObject() {
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load(1);
+    $route = new Route('/node/1');
+    $route->setOption('parameters', [
+      'node' => ['type' => 'entity:node'],
+    ]);
+    return $route;
   }
 
 }

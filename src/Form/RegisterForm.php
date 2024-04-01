@@ -605,8 +605,10 @@ class RegisterForm extends ContentEntityForm {
         // Ensure language is taken into account for multilingual.
         RegistrationHelper::applyInterfaceLanguageToLinks($actions);
 
-        // Add a Cancel link for new registrations.
-        if ($registration->isNew()) {
+        // Add a Cancel link for new registrations when using the Register tab.
+        $host_entity_url = $host_entity->getEntity()->toUrl()->toString();
+        $current_url = Url::fromRoute('<current>')->toString();
+        if ($registration->isNew() && ($host_entity_url != $current_url)) {
           $actions['cancel'] = [
             '#type' => 'link',
             '#title' => $this->t('Cancel'),
