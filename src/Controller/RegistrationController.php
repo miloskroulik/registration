@@ -99,13 +99,22 @@ class RegistrationController extends ControllerBase {
 
       // Fallback to data table.
       if (empty($build)) {
+        $account = $this->currentUser();
         $type = $host_entity->getRegistrationTypeBundle();
-        $access_result = AccessResult::allowedIfHasPermissions($this->currentUser(), [
+        $access_result = AccessResult::allowedIfHasPermissions($account, [
           "administer registration",
           "administer $type registration",
           "view any registration",
           "view any $type registration",
         ], 'OR');
+
+        // The "host" permission grants access if the user can edit the host
+        // entity.
+        if ($access_result->isNeutral() && $host_entity->getEntity()) {
+          $access_result = AccessResult::allowedIfHasPermission($account, "view host registration")
+            // Merge the cacheability of the host entity access check.
+            ->andIf($host_entity->getEntity()->access('update', $account, TRUE));
+        }
 
         if ($access_result->isAllowed()) {
           $build = $this->buildDataTable($host_entity);

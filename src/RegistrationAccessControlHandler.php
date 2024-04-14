@@ -81,21 +81,36 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
       return $any_result;
     }
 
+    // The "host" permission grants access if the user can edit the host entity.
+    if (($host_entity = $entity->getHostEntity()) && $host_entity->getEntity()) {
+      $host_result = AccessResult::allowedIfHasPermission($account, "$operation host registration")
+        // Merge the cacheability of the host entity access check via "andIf".
+        ->andIf($host_entity->getEntity()->access('update', $account, TRUE));
+
+      if ($host_result->isAllowed()) {
+        return $host_result;
+      }
+    }
+
     /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
     if ($account->id() && ($account->id() == $entity->getUserId())) {
       $own_result = AccessResult::allowedIfHasPermissions($account, [
         "administer own {$entity->bundle()} registration",
         "$operation own registration",
         "$operation own {$entity->bundle()} registration",
-      ], 'OR');
-    }
-    else {
-      $own_result = AccessResult::neutral()->cachePerPermissions();
+      ], 'OR')
+        // The "own" permission is based on the current user's ID, so the result
+        // must be cached per user.
+        ->cachePerUser();
+
+      if ($own_result->isAllowed()) {
+        return $own_result;
+      }
     }
 
-    // The "own" permission is based on the current user's ID, so the result
-    // must be cached per user.
-    return $own_result->cachePerUser();
+    // No access. Cache per permissions since any user with the same permissions
+    // as this account should get the same result.
+    return AccessResult::neutral()->cachePerPermissions();
   }
 
   /**

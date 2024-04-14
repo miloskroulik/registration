@@ -107,6 +107,19 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
 
+    // "View host" permission.
+    $account = $this->createUser(['view host registration']);
+    $this->assertFalse($registration->access('view', $account));
+    $this->assertFalse($registration->access('update', $account));
+    $this->assertFalse($registration->access('delete', $account));
+    $account = $this->createUser([
+      'bypass node access',
+      'view host registration',
+    ]);
+    $this->assertTrue($registration->access('view', $account));
+    $this->assertFalse($registration->access('update', $account));
+    $this->assertFalse($registration->access('delete', $account));
+
     // "Administer" permission.
     $account = $this->createUser(['administer registration']);
     $this->assertTrue($registration->access('view', $account));
@@ -224,6 +237,15 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('delete', $account));
     $account = $this->createUser(['delete any seminar registration']);
     $this->assertFalse($registration->access('delete', $account));
+
+    // Delete "host" permission.
+    $account = $this->createUser(['delete host registration']);
+    $this->assertFalse($registration->access('delete', $account));
+    $account = $this->createUser([
+      'bypass node access',
+      'delete host registration',
+    ]);
+    $this->assertTrue($registration->access('delete', $account));
   }
 
   /**
@@ -250,6 +272,15 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('update', $account));
     $account = $this->createUser(['update any seminar registration']);
     $this->assertFalse($registration->access('update', $account));
+
+    // Update "host" permission.
+    $account = $this->createUser(['update host registration']);
+    $this->assertFalse($registration->access('update', $account));
+    $account = $this->createUser([
+      'bypass node access',
+      'update host registration',
+    ]);
+    $this->assertTrue($registration->access('update', $account));
   }
 
   /**

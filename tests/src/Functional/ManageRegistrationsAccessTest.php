@@ -155,6 +155,29 @@ class ManageRegistrationsAccessTest extends RegistrationBrowserTestBase {
     $this->assertSession()->pageTextContains('List of registrations for');
     $this->assertSession()->pageTextNotContains('Registration summary for');
 
+    // Adding view "host" permission does not provide access to the listing
+    // when the host entity is not editable.
+    $test_user = $this->drupalCreateUser([
+      'manage conference registration',
+      'view host registration',
+    ]);
+    $this->drupalLogin($test_user);
+    $this->drupalGet('user/' . $user->id() . '/registrations');
+    $this->assertSession()->pageTextContains('Registration summary for');
+    $this->assertSession()->pageTextNotContains('List of registrations for');
+
+    // Adding view "host" permission provides access to the listing when the
+    // host entity is editable.
+    $test_user = $this->drupalCreateUser([
+      'manage conference registration',
+      'administer users',
+      'view host registration',
+    ]);
+    $this->drupalLogin($test_user);
+    $this->drupalGet('user/' . $user->id() . '/registrations');
+    $this->assertSession()->pageTextContains('List of registrations for');
+    $this->assertSession()->pageTextNotContains('Registration summary for');
+
     // Manage "own" type permission only provides summary access.
     $test_user = $this->drupalCreateUser([
       'manage own conference registration',
@@ -170,6 +193,17 @@ class ManageRegistrationsAccessTest extends RegistrationBrowserTestBase {
       'manage own conference registration',
       'administer users',
       'view any registration',
+    ]);
+    $this->drupalLogin($test_user);
+    $this->drupalGet('user/' . $user->id() . '/registrations');
+    $this->assertSession()->pageTextContains('List of registrations for');
+    $this->assertSession()->pageTextNotContains('Registration summary for');
+
+    // Adding view "host" permission provides access to the listing.
+    $test_user = $this->drupalCreateUser([
+      'manage own conference registration',
+      'administer users',
+      'view host registration',
     ]);
     $this->drupalLogin($test_user);
     $this->drupalGet('user/' . $user->id() . '/registrations');
