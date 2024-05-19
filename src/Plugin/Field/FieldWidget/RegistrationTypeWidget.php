@@ -114,22 +114,28 @@ class RegistrationTypeWidget extends WidgetBase {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state): array {
-    $entity = $items->getEntity();
-    $entity_type = $entity->getEntityTypeId();
-    $entity_bundle = $entity->bundle();
-    $bundle_info = $this->entityTypeBundleInfo->getBundleInfo($entity_type);
-    $bundle = $bundle_info[$entity_bundle]['label'];
-
     $default_value = $items[$delta]->get('registration_type')->getValue();
     $element['registration_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Registration type'),
       '#options' => $this->getRegistrationTypeOptions(),
       '#default_value' => $default_value,
-      '#description' => $this->t('Select what type of registrations should be enabled for this @type. Depending on the display settings, it will appear as either string, registration link, or form.', [
-        '@type' => $bundle,
-      ]),
     ];
+
+    // Set the field help.
+    $element['registration_type']['#description'] = $element['#description'];
+    if (empty($element['#description'])) {
+      // Default if field help is blank.
+      $entity = $items->getEntity();
+      $entity_type = $entity->getEntityTypeId();
+      $entity_bundle = $entity->bundle();
+      $bundle_info = $this->entityTypeBundleInfo->getBundleInfo($entity_type);
+      $bundle = $bundle_info[$entity_bundle]['label'];
+
+      $element['registration_type']['#description'] = $this->t('Select what type of registrations should be enabled for this @type. Depending on the display settings, it will appear as either string, registration link, or form.', [
+        '@type' => $bundle,
+      ]);
+    }
 
     return $element;
   }

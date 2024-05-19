@@ -32,7 +32,7 @@ final class RegistrationSanitizeCommands extends DrushCommands implements Saniti
     protected Connection $database,
     protected EntityFieldManagerInterface $entityFieldManager,
     protected EntityTypeManagerInterface $entityTypeManager,
-    protected FieldTypePluginManagerInterface $fieldTypePluginManager
+    protected FieldTypePluginManagerInterface $fieldTypePluginManager,
   ) {
     parent::__construct();
   }

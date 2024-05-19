@@ -298,9 +298,11 @@ function registration_form_views_exposed_form_alter(array &$form, FormStateInter
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function registration_form_workflow_delete_form_alter(array &$form,
+function registration_form_workflow_delete_form_alter(
+  array &$form,
   FormStateInterface $form_state,
- $form_id) {
+  $form_id,
+) {
   // If there are no actions, the delete is not allowed. Alter the error
   // message to mention registration types.
   if (empty($form['actions'])) {
@@ -311,9 +313,11 @@ function registration_form_workflow_delete_form_alter(array &$form,
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function registration_form_workflow_state_delete_form_alter(array &$form,
+function registration_form_workflow_state_delete_form_alter(
+  array &$form,
   FormStateInterface $form_state,
- $form_id) {
+  $form_id,
+) {
   // If there are no actions, the delete is not allowed. Alter the error
   // message to mention registration types.
   if (empty($form['actions'])) {
@@ -324,9 +328,11 @@ function registration_form_workflow_state_delete_form_alter(array &$form,
 /**
  * Implements hook_field_widget_complete_WIDGET_TYPE_form_alter().
  */
-function registration_field_widget_complete_datetime_default_form_alter(&$field_widget_complete_form,
+function registration_field_widget_complete_datetime_default_form_alter(
+  &$field_widget_complete_form,
   FormStateInterface $form_state,
- $context) {
+  $context,
+) {
   // Add timezone to the datetime widgets when editing registration settings.
   if ($context['items']
     ->getFieldDefinition()
