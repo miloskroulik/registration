@@ -230,7 +230,7 @@ function registration_entity_presave(EntityInterface $entity) {
     }
 
     // If the registration user was updated, clear cache tags for the old user.
-    if (!$entity->isNew() && ($entity->getUserId() != $entity->original->getUserId())) {
+    if ($entity->original && ($entity->getUserId() != $entity->original->getUserId())) {
       if ($user = $entity->original->getUser()) {
         Cache::invalidateTags(['registration.user:' . $user->id()]);
       }
