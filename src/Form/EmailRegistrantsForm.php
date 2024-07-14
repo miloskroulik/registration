@@ -119,7 +119,13 @@ class EmailRegistrantsForm extends RegistrationFormBase {
         '#text' => $values['message']['value'],
         '#format' => $values['message']['format'],
       ];
-      $message = $this->renderer->renderPlain($build);
+      if (version_compare(\Drupal::VERSION, '10.3', '>=')) {
+        $message = $this->renderer->renderInIsolation($build);
+      }
+      else {
+        // @phpstan-ignore-next-line
+        $message = $this->renderer->renderPlain($build);
+      }
       $this->replaceTokens($form['message_preview'], $host_entity, $registration, $message);
 
       // Hidden fields for the next submit.

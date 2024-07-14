@@ -9,3 +9,6 @@ parameters:
     - "#Drupal calls should be avoided in classes, use dependency injection instead#"
     - "#always exists and is not nullable#"
     - "#ContentEntityInterface but return statement is missing#"
+
+  excludePaths:
+    - modules/registration_scheduled_action/src/Element/DateTime.php

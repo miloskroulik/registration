@@ -62,10 +62,13 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
     $this->drupalLogin($user);
     $edit = [
       'new_storage_type' => 'registration',
+    ];
+    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
+    $this->submitForm($edit, 'Continue');
+    $edit = [
       'label' => 'Registration',
       'field_name' => 'registration',
     ];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
     $this->submitForm($edit, 'Continue');
     $this->assertSession()->buttonExists('Save settings');
     $this->assertSession()->pageTextContains('This field cardinality is set to 1 and cannot be configured.');
@@ -87,10 +90,13 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
     $this->drupalLogin($user);
     $edit = [
       'new_storage_type' => 'registration',
+    ];
+    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
+    $this->submitForm($edit, 'Continue');
+    $edit = [
       'label' => 'Registration',
       'field_name' => 'registration',
     ];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
     $this->submitForm($edit, 'Continue');
     $this->assertSession()->buttonExists('Save settings');
     $this->assertSession()->pageTextContains('This field cardinality is set to 1 and cannot be configured.');
@@ -117,10 +123,13 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
     // Create a registration field on the content type.
     $edit = [
       'new_storage_type' => 'registration',
+    ];
+    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
+    $this->submitForm($edit, 'Continue');
+    $edit = [
       'label' => 'Registration',
       'field_name' => 'registration',
     ];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
     $this->submitForm($edit, 'Continue');
     $this->assertSession()->buttonExists('Save settings');
     $this->assertSession()->pageTextContains('This field cardinality is set to 1 and cannot be configured.');
@@ -174,10 +183,13 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
     // A second registration field on the same bundle is not allowed.
     $edit = [
       'new_storage_type' => 'registration',
+    ];
+    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
+    $this->submitForm($edit, 'Continue');
+    $edit = [
       'label' => 'Registration',
       'field_name' => 'registration2',
     ];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
     $this->submitForm($edit, 'Continue');
     $edit = [];
     $this->drupalGet('admin/structure/types/manage/test_node_type/add-field/node/field_registration2');
@@ -207,10 +219,13 @@ class RegistrationFieldTest extends RegistrationBrowserTestBase {
     // Create a registration field on the content type.
     $edit = [
       'new_storage_type' => 'registration',
+    ];
+    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
+    $this->submitForm($edit, 'Continue');
+    $edit = [
       'label' => 'Registration',
       'field_name' => 'registration',
     ];
-    $this->drupalGet('admin/structure/types/manage/test_node_type/fields/add-field');
     $this->submitForm($edit, 'Continue');
     $this->assertSession()->buttonExists('Save settings');
     $this->assertSession()->pageTextContains('This field cardinality is set to 1 and cannot be configured.');

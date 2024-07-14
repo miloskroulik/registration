@@ -17,10 +17,10 @@
 }
 
 /* Wide screens */
-@media
-screen and (min-width: 780px),
+/* stylelint-disable */
+@media screen and (min-width: 780px),
 (orientation: landscape) and (min-device-height: 780px) {
-
+/* stylelint-enable */
   .layout-region-registration-main,
   .layout-region-registration-footer {
     float: left; /* LTR */
@@ -70,9 +70,7 @@ screen and (min-width: 780px),
  * toolbar is on, we need to suppress layout for the original media width + the
  * toolbar width (240px). In this case, 240px + 780px.
  */
-@media
-screen and (max-width: 1020px) {
-
+@media screen and (max-width: 1020px) {
   .toolbar-vertical.toolbar-tray-open .layout-region-registration-main,
   .toolbar-vertical.toolbar-tray-open .layout-region-registration-footer,
   .toolbar-vertical.toolbar-tray-open .layout-region-registration-secondary {
