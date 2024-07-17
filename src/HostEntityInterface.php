@@ -49,6 +49,16 @@ interface HostEntityInterface {
   public function getEntityTypeId(): string;
 
   /**
+   * Gets the entity type label of the type of the wrapped entity.
+   *
+   * If the entity type has bundles, the bundle label is returned instead.
+   *
+   * @return string
+   *   The host entity type or bundle label, for example "Event".
+   */
+  public function getEntityTypeLabel(): string;
+
+  /**
    * Gets the identifier of the wrapped entity.
    *
    * @return string|int|null

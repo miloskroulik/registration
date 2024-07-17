@@ -21,6 +21,7 @@ class HostEntityTest extends RegistrationKernelTestBase {
    * @covers ::bundle
    * @covers ::getEntity
    * @covers ::getEntityTypeId
+   * @covers ::getEntityTypeLabel
    * @covers ::id
    * @covers ::isNew
    * @covers ::label
@@ -57,6 +58,7 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertEquals($node->bundle(), $host_entity->bundle());
     $this->assertEquals($node, $host_entity->getEntity());
     $this->assertEquals($node->getEntityTypeId(), $host_entity->getEntityTypeId());
+    $this->assertEquals('Event', $host_entity->getEntityTypeLabel());
     $this->assertEquals($node->id(), $host_entity->id());
     $this->assertFalse($host_entity->isNew());
     $this->assertEquals('My event', $host_entity->label());

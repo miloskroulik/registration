@@ -134,6 +134,22 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function getEntityTypeLabel(): string {
+    $entity_type = $this->getEntity()->getEntityType();
+    if ($bundle_type = $entity_type->getBundleEntityType()) {
+      return $this->entityTypeManager()
+        ->getStorage($bundle_type)
+        ->load($this->bundle())
+        ->label();
+    }
+    else {
+      return $entity_type->getLabel();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function id(): string|int|NULL {
     return $this->getEntity()->id();
   }

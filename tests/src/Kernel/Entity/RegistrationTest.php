@@ -133,6 +133,7 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $node->delete();
     $registration = $this->reloadEntity($registration);
     $this->assertNull($registration->getHostEntity());
+    $this->assertNull($registration->getHostEntityTypeLabel());
   }
 
 }

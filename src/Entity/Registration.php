@@ -198,19 +198,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    * {@inheritdoc}
    */
   public function getHostEntityTypeLabel(): ?string {
-    if ($host_entity = $this->getHostEntity()) {
-      $entity_type = $host_entity->getEntity()->getEntityType();
-      if ($bundle_type = $entity_type->getBundleEntityType()) {
-        return \Drupal::entityTypeManager()
-          ->getStorage($bundle_type)
-          ->load($host_entity->bundle())
-          ->label();
-      }
-      else {
-        return $entity_type->getLabel();
-      }
-    }
-    return NULL;
+    return $this->getHostEntity()?->getEntityTypeLabel();
   }
 
   /**
