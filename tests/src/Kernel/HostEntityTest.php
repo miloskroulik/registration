@@ -41,6 +41,7 @@ class HostEntityTest extends RegistrationKernelTestBase {
    * @covers ::isEmailRegisteredInStates
    * @covers ::isUserRegistered
    * @covers ::isUserRegisteredInStates
+   * @covers ::isRegistrant
    * @covers ::isBeforeOpen
    * @covers ::isAfterClose
    */
@@ -116,14 +117,18 @@ class HostEntityTest extends RegistrationKernelTestBase {
 
     // An email address has registered.
     $this->assertTrue($host_entity->isEmailRegistered('test@example.com'));
+    $this->assertTrue($host_entity->isRegistrant(NULL, 'test@example.com'));
     // An email address has not registered.
     $this->assertFalse($host_entity->isEmailRegistered('test2@example.com'));
+    $this->assertFalse($host_entity->isRegistrant(NULL, 'test2@example.com'));
 
     // Check email against specific registration states.
     $states = ['held', 'complete'];
     $this->assertFalse($host_entity->isEmailRegisteredInStates('test@example.com', $states));
+    $this->assertFalse($host_entity->isRegistrant(NULL, 'test@example.com', $states));
     $states = ['pending'];
     $this->assertTrue($host_entity->isEmailRegisteredInStates('test@example.com', $states));
+    $this->assertTrue($host_entity->isRegistrant(NULL, 'test@example.com', $states));
     // Check against empty states.
     $states = [];
     $this->assertFalse($host_entity->isEmailRegisteredInStates('test@example.com', $states));
@@ -131,17 +136,25 @@ class HostEntityTest extends RegistrationKernelTestBase {
     // A user has not registered yet.
     $user = $this->createUser(['administer registration']);
     $this->assertFalse($host_entity->isUserRegistered($user));
+    $this->assertFalse($host_entity->isRegistrant($user));
+    $this->assertFalse($host_entity->isRegistrant(NULL, $user->getEmail()));
     $registration = $this->createRegistration($node);
     $registration->set('user_uid', $user->id());
     $registration->save();
     // A user has registered.
     $this->assertTrue($host_entity->isUserRegistered($user));
+    $this->assertTrue($host_entity->isRegistrant($user));
+    $this->assertTrue($host_entity->isRegistrant(NULL, $user->getEmail()));
 
     // Check user against specific registration states.
     $states = ['held', 'complete'];
     $this->assertFalse($host_entity->isUserRegisteredInStates($user, $states));
+    $this->assertFalse($host_entity->isRegistrant($user, NULL, $states));
+    $this->assertFalse($host_entity->isRegistrant(NULL, $user->getEmail(), $states));
     $states = ['pending'];
     $this->assertTrue($host_entity->isUserRegisteredInStates($user, $states));
+    $this->assertTrue($host_entity->isRegistrant($user, NULL, $states));
+    $this->assertTrue($host_entity->isRegistrant(NULL, $user->getEmail(), $states));
     // Check against empty states.
     $states = [];
     $this->assertFalse($host_entity->isUserRegisteredInStates($user, $states));

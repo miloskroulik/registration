@@ -386,7 +386,7 @@ class RegisterForm extends ContentEntityForm {
     $registrant_options = $registration_manager->getRegistrantOptions($registration, $settings);
     if (empty($registrant_options)) {
       $allow_multiple = $settings->getSetting('multiple_registrations');
-      if (!$allow_multiple && $registration->isNew() && $current_user->isAuthenticated() && $host_entity->isUserRegistered($current_user)) {
+      if (!$allow_multiple && $registration->isNew() && $current_user->isAuthenticated() && $host_entity->isRegistrant($current_user)) {
         $message = t('You are already registered for this event.');
       }
       else {

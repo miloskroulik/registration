@@ -3,6 +3,7 @@
 namespace Drupal\registration;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -193,6 +194,26 @@ interface HostEntityInterface {
   public function getRegistrationList(array $states = [], string $langcode = NULL): array;
 
   /**
+   * Gets a query of registrations for the host.
+   *
+   * Conditions are automatically added for the host and for the specified
+   * properties. If an account or email are passed, further conditions are
+   * added to find any registration that person is a registrant for.
+   *
+   * @param array|null $properties
+   *   (optional) An associative array where the keys are the property names
+   *   and the values are the values those properties must have.
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   (optional) The user account of the registrant.
+   * @param string|null $email
+   *   (optional) The email address of the registrant.
+   *
+   * @return \Drupal\Core\Entity\Query\QueryInterface
+   *   The registrations query.
+   */
+  public function getRegistrationQuery(array $properties = [], AccountInterface $account = NULL, $email = NULL): QueryInterface;
+
+  /**
    * Gets the registration type.
    *
    * @return \Drupal\registration\Entity\RegistrationTypeInterface|null
@@ -337,6 +358,21 @@ interface HostEntityInterface {
    *   TRUE if the user registered for the host and is in a certain status.
    */
   public function isUserRegisteredInStates(AccountInterface $account, array $states): bool;
+
+  /**
+   * Determines whether a given user is already registered in certain statuses.
+   *
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   (optional) The user account of the registrant.
+   * @param string|null $email
+   *   (optional) The email address of the registrant.
+   * @param array|null $states
+   *   (optional) A list of statuses to check. Defaults to active states.
+   *
+   * @return bool
+   *   TRUE if the user registered for the host and is in a certain status.
+   */
+  public function isRegistrant(AccountInterface $account = NULL, $email = NULL, array $states = []): bool;
 
   /**
    * Determines whether it is currently before the open date.

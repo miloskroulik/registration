@@ -8,6 +8,7 @@ use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Session\AccountInterface;
@@ -318,12 +319,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function getRegistrationCount(): int {
-    $database = Database::getConnection();
-    $query = $database->select('registration')
-      ->condition('entity_id', $this->id())
-      ->condition('entity_type_id', $this->getEntityTypeId());
-
-    $count = $query->countQuery()->execute()->fetchField();
+    $count = $this->getRegistrationQuery()->count()->execute();
 
     // Allow other modules to alter the count.
     $event = new RegistrationDataAlterEvent($count, [
@@ -351,10 +347,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function getRegistrationList(array $states = [], string $langcode = NULL): array {
-    $properties = [
-      'entity_type_id' => $this->getEntityTypeId(),
-      'entity_id' => $this->id(),
-    ];
+    $properties = [];
     if (!empty($states)) {
       $properties['state'] = $states;
     }
@@ -368,7 +361,55 @@ class HostEntity implements HostEntityInterface {
     if ($langcode != 'und') {
       $properties['langcode'] = $langcode;
     }
-    return $this->entityTypeManager()->getStorage('registration')->loadByProperties($properties);
+    $ids = $this->getRegistrationQuery($properties)->execute();
+    return $ids ? $this->entityTypeManager()->getStorage('registration')->loadMultiple($ids) : [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRegistrationQuery(array $properties = [], AccountInterface $account = NULL, $email = NULL): QueryInterface {
+    $query = $this->entityTypeManager()->getStorage('registration')->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('entity_type_id', $this->getEntityTypeId())
+      ->condition('entity_id', $this->id());
+
+    // Add property conditions using same logic as
+    // EntityStorageBase::loadByProperties().
+    foreach ($properties as $name => $value) {
+      // Cast scalars to array so we can consistently use an IN condition.
+      $query->condition($name, (array) $value, 'IN');
+    }
+
+    // Add special handling for identifying the registrant.
+    $emails = [];
+    $uids = [];
+    if ($account) {
+      $uids[] = $account->id();
+      if ($account->getEmail()) {
+        $emails[] = $account->getEmail();
+      }
+    }
+    if ($email) {
+      $emails[] = $email;
+      // Check for other users based on provided email.
+      if (!$account || $account->getEmail() !== $email) {
+        $user_query = $this->entityTypeManager()->getStorage('user')->getQuery()->accessCheck(FALSE);
+        $uids = array_merge($uids, $user_query->condition('mail', $email)->execute());
+      }
+    }
+    if ($emails || $uids) {
+      $orGroup = $query->orConditionGroup();
+      if ($emails) {
+        $orGroup->condition('anon_mail', $emails);
+      }
+      if ($uids) {
+        $orGroup->condition('user_uid', $uids);
+      }
+      $query->condition($orGroup);
+    }
+
+    return $query;
   }
 
   /**
@@ -530,6 +571,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isEmailRegistered(string $email): bool {
+    @trigger_error('Calling HostEntity::isEmailRegistered() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     $states = [];
 
     if ($registration_type = $this->getRegistrationType()) {
@@ -556,6 +598,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isEmailRegisteredInStates(string $email, array $states): bool {
+    @trigger_error('Calling HostEntity::isEmailRegisteredInStates() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     // Ensure we have states before querying against them.
     if (empty($states)) {
       return FALSE;
@@ -576,6 +619,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isUserRegistered(AccountInterface $account): bool {
+    @trigger_error('Calling HostEntity::isUserRegistered() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     $states = [];
 
     if ($registration_type = $this->getRegistrationType()) {
@@ -602,6 +646,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isUserRegisteredInStates(AccountInterface $account, array $states): bool {
+    @trigger_error('Calling HostEntity::isUserRegisteredInStates() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     // Ensure we have states before querying against them.
     if (empty($states)) {
       return FALSE;
@@ -616,6 +661,27 @@ class HostEntity implements HostEntityInterface {
 
     $count = $query->countQuery()->execute()->fetchField();
     return ($count > 0);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isRegistrant(AccountInterface $account = NULL, $email = NULL, array $states = []): bool {
+    if (!$account && !$email) {
+      throw new \InvalidArgumentException("Either an account or an email must be passed to HostEntity::isRegistrant().");
+    }
+
+    // Default to active or held states if none specified.
+    if (!$states && $registration_type = $this->getRegistrationType()) {
+      $states = array_keys($registration_type->getActiveOrHeldStates());
+    }
+    // Ensure we have active states before querying against them.
+    if (empty($states)) {
+      return FALSE;
+    }
+
+    $query = $this->getRegistrationQuery(['state' => $states], $account, $email);
+    return (!empty($query->execute()));
   }
 
   /**

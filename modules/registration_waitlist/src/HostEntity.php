@@ -145,6 +145,7 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isEmailRegistered(string $email): bool {
+    @trigger_error('Calling HostEntity::isEmailRegistered() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     $states = [];
 
     if ($registration_type = $this->getRegistrationType()) {
@@ -168,6 +169,7 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isUserRegistered(AccountInterface $account): bool {
+    @trigger_error('Calling HostEntity::isUserRegistered() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     $states = [];
 
     if ($registration_type = $this->getRegistrationType()) {
@@ -185,6 +187,19 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
 
     $count = $query->countQuery()->execute()->fetchField();
     return ($count > 0);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isRegistrant(AccountInterface $account = NULL, $email = NULL, array $states = []): bool {
+    if (!$states) {
+      if ($registration_type = $this->getRegistrationType()) {
+        $states = array_keys($registration_type->getActiveOrHeldStates());
+      }
+      $states['waitlist'] = 'waitlist';
+    }
+    return parent::isRegistrant($account, $email, $states);
   }
 
   /**

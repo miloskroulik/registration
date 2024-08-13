@@ -200,7 +200,7 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
 
           // Check the email address when registering an anonymous user.
           if ($email = $registration->getAnonymousEmail()) {
-            if ($host_entity->isEmailRegistered($email)) {
+            if ($host_entity->isRegistrant(NULL, $email)) {
               $this->context
                 ->buildViolation($constraint->emailAlreadyRegisteredMessage, [
                   '%mail' => $email,
@@ -212,7 +212,7 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
 
           // Check the user account.
           elseif ($user = $registration->getUser()) {
-            if ($host_entity->isUserRegistered($user)) {
+            if ($host_entity->isRegistrant($user)) {
               if ($user->id() == $this->currentUser->id()) {
                 $this->context
                   ->buildViolation($constraint->youAreAlreadyRegisteredMessage)
@@ -231,7 +231,7 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
 
           // The user logged in is registering.
           else {
-            if ($host_entity->isUserRegistered($this->currentUser)) {
+            if ($host_entity->isRegistrant($this->currentUser)) {
               $this->context
                 ->buildViolation($constraint->youAreAlreadyRegisteredMessage)
                 ->addViolation();
@@ -247,7 +247,7 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
           // Check email address.
           if ($registration->getAnonymousEmail() != $original->getAnonymousEmail()) {
             if ($email = $registration->getAnonymousEmail()) {
-              if ($host_entity->isEmailRegistered($email)) {
+              if ($host_entity->isRegistrant(NULL, $email)) {
                 $this->context
                   ->buildViolation($constraint->emailAlreadyRegisteredMessage, [
                     '%mail' => $email,
@@ -261,7 +261,7 @@ class RegistrationConstraintValidator extends ConstraintValidator implements Con
           // Check the user account.
           if ($registration->getUserId() != $original->getUserId()) {
             if ($user = $registration->getUser()) {
-              if ($host_entity->isUserRegistered($user)) {
+              if ($host_entity->isRegistrant($user)) {
                 if ($user->id() == $this->currentUser->id()) {
                   $this->context
                     ->buildViolation($constraint->youAreAlreadyRegisteredMessage)

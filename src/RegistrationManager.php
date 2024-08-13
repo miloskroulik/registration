@@ -180,7 +180,7 @@ class RegistrationManager implements RegistrationManagerInterface {
     $allow_multiple = $settings->getSetting('multiple_registrations');
     if ($this->currentUser->isAuthenticated()
       && $this->currentUser->hasPermission("create $type registration self")
-      && ($my_registration || $allow_multiple || !$host_entity->isUserRegistered($this->currentUser))
+      && ($my_registration || $allow_multiple || !$host_entity->isRegistrant($this->currentUser))
     ) {
       $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = $this->t('Myself');
     }
