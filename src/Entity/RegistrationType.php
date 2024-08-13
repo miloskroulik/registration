@@ -281,8 +281,12 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
   public function calculateDependencies(): RegistrationTypeInterface {
     parent::calculateDependencies();
 
+    // The registration type depends on a workflow.
+    $workflow = $this->getWorkflow();
+    $this->addDependency('config', $workflow->getConfigDependencyName());
+
     // The registration type depends on the module that provides the workflow.
-    $workflow_plugin = $this->getWorkflow()->getTypePlugin();
+    $workflow_plugin = $workflow->getTypePlugin();
     $this->calculatePluginDependencies($workflow_plugin);
 
     return $this;

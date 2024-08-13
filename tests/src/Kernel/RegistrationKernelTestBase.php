@@ -67,6 +67,11 @@ abstract class RegistrationKernelTestBase extends EntityKernelTestBase {
     $registration_type->save();
     /** @var \Drupal\registration\Entity\RegistrationTypeInterface $registration_type */
     $registration_type = $this->reloadEntity($registration_type);
+
+    // The registration type should have a dependency on its workflow.
+    $dependencies = $registration_type->getDependencies();
+    $this->assertContains('workflows.workflow.registration', $dependencies['config']);
+
     $this->regType = $registration_type;
   }
 
