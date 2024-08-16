@@ -2,7 +2,6 @@
 
 namespace Drupal\registration\Plugin\Action;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Core\Access\AccessResult;
@@ -13,6 +12,7 @@ use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\Event\RegistrationEvents;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Sends an email message to a registrant.
@@ -28,9 +28,9 @@ class RegistrationEmailAction extends EmailAction {
   /**
    * The event dispatcher.
    *
-   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
-  protected ContainerAwareEventDispatcher $dispatcher;
+  protected EventDispatcherInterface $dispatcher;
 
   /**
    * The renderer.

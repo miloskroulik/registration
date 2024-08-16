@@ -2,7 +2,6 @@
 
 namespace Drupal\registration;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -23,6 +22,7 @@ use Drupal\registration\Entity\RegistrationTypeInterface;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\Event\RegistrationEvents;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Defines the class for the host entity.
@@ -66,9 +66,9 @@ class HostEntity implements HostEntityInterface {
   /**
    * The event dispatcher.
    *
-   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
-  protected ContainerAwareEventDispatcher $eventDispatcher;
+  protected EventDispatcherInterface $eventDispatcher;
 
   /**
    * The renderer.
@@ -758,10 +758,10 @@ class HostEntity implements HostEntityInterface {
   /**
    * Retrieves the event dispatcher.
    *
-   * @return \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   * @return \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    *   The event dispatcher.
    */
-  protected function eventDispatcher(): ContainerAwareEventDispatcher {
+  protected function eventDispatcher(): EventDispatcherInterface {
     if (!isset($this->eventDispatcher)) {
       $this->eventDispatcher = $this->container()->get('event_dispatcher');
     }

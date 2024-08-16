@@ -2,11 +2,11 @@
 
 namespace Drupal\registration_waitlist;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\registration\Event\RegistrationEvent;
 use Drupal\registration_waitlist\Event\RegistrationWaitListEvents;
 use Psr\Log\LoggerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Defines the class for the registration wait list manager service.
@@ -18,9 +18,9 @@ class RegistrationWaitListManager implements RegistrationWaitListManagerInterfac
   /**
    * The event dispatcher.
    *
-   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
-  protected ContainerAwareEventDispatcher $eventDispatcher;
+  protected EventDispatcherInterface $eventDispatcher;
 
   /**
    * The logger.
@@ -32,12 +32,12 @@ class RegistrationWaitListManager implements RegistrationWaitListManagerInterfac
   /**
    * Creates a RegistrationWaitListManager object.
    *
-   * @param \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher $event_dispatcher
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger.
    */
-  public function __construct(ContainerAwareEventDispatcher $event_dispatcher, LoggerInterface $logger) {
+  public function __construct(EventDispatcherInterface $event_dispatcher, LoggerInterface $logger) {
     $this->eventDispatcher = $event_dispatcher;
     $this->logger = $logger;
   }

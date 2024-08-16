@@ -2,8 +2,7 @@ name: Registration Inline Entity Form
 type: module
 description: 'Provides integration with the Inline Entity Form module.'
 package: Registration
-core_version_requirement: ^9.3 || ^10
-php: 8.0
+core_version_requirement: ^10.3 || ^11
 dependencies:
   - inline_entity_form:inline_entity_form
   - registration:registration

@@ -2,7 +2,6 @@
 
 namespace Drupal\registration\Form;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Datetime\DateFormatterInterface;
@@ -24,6 +23,7 @@ use Drupal\registration\RegistrationManagerInterface;
 use Drupal\workflows\State;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Defines the Register form.
@@ -40,9 +40,9 @@ class RegisterForm extends ContentEntityForm {
   /**
    * The event dispatcher.
    *
-   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
-  protected ContainerAwareEventDispatcher $eventDispatcher;
+  protected EventDispatcherInterface $eventDispatcher;
 
   /**
    * The language manager.

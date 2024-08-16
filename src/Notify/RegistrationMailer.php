@@ -2,7 +2,6 @@
 
 namespace Drupal\registration\Notify;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Config\ImmutableConfig;
@@ -18,6 +17,7 @@ use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Defines the class for the registration notification service.
@@ -43,9 +43,9 @@ class RegistrationMailer implements RegistrationMailerInterface {
   /**
    * The event dispatcher.
    *
-   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
-  protected ContainerAwareEventDispatcher $eventDispatcher;
+  protected EventDispatcherInterface $eventDispatcher;
 
   /**
    * The logger.
@@ -89,7 +89,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
    *   The configuration factory.
    * @param \Drupal\Core\Session\AccountProxy $current_user
    *   The current user.
-   * @param \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher $event_dispatcher
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger.
@@ -102,7 +102,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
    * @param \Drupal\Core\Render\Renderer $renderer
    *   The renderer.
    */
-  public function __construct(ConfigFactory $config_factory, AccountProxy $current_user, ContainerAwareEventDispatcher $event_dispatcher, LoggerInterface $logger, MailManagerInterface $mail_manager, QueueFactory $queue_factory, RegistrationManagerInterface $registration_manager, Renderer $renderer) {
+  public function __construct(ConfigFactory $config_factory, AccountProxy $current_user, EventDispatcherInterface $event_dispatcher, LoggerInterface $logger, MailManagerInterface $mail_manager, QueueFactory $queue_factory, RegistrationManagerInterface $registration_manager, Renderer $renderer) {
     $this->config = $config_factory->get('registration.settings');
     $this->currentUser = $current_user;
     $this->eventDispatcher = $event_dispatcher;
