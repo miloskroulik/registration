@@ -2,8 +2,7 @@ name: Registration Scheduled Action
 type: module
 description: 'Provides scheduled action support for registrations.'
 package: Registration
-core_version_requirement: ^9.3 || ^10
+core_version_requirement: ^10.3 || ^11
 configure: entity.registration_scheduled_action.collection
-php: 8.0
 dependencies:
   - registration:registration

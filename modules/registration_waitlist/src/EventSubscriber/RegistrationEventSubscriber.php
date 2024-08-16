@@ -2,7 +2,6 @@
 
 namespace Drupal\registration_waitlist\EventSubscriber;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Action\ActionManager;
 use Drupal\registration\Event\RegistrationEvent;
 use Drupal\registration\Event\RegistrationEvents;
@@ -10,6 +9,7 @@ use Drupal\registration_waitlist\Event\RegistrationWaitListEvents;
 use Drupal\registration_waitlist\RegistrationWaitListManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Provides a registration event subscriber.
@@ -26,9 +26,9 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
   /**
    * The event dispatcher.
    *
-   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
    */
-  protected ContainerAwareEventDispatcher $eventDispatcher;
+  protected EventDispatcherInterface $eventDispatcher;
 
   /**
    * The wait list manager.
@@ -49,14 +49,14 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
    *
    * @param \Drupal\Core\Action\ActionManager $action_manager
    *   The action manager.
-   * @param \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher $event_dispatcher
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher.
    * @param \Drupal\registration_waitlist\RegistrationWaitListManagerInterface $wait_list_manager
    *   The wait list manager.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger.
    */
-  public function __construct(ActionManager $action_manager, ContainerAwareEventDispatcher $event_dispatcher, RegistrationWaitListManagerInterface $wait_list_manager, LoggerInterface $logger) {
+  public function __construct(ActionManager $action_manager, EventDispatcherInterface $event_dispatcher, RegistrationWaitListManagerInterface $wait_list_manager, LoggerInterface $logger) {
     $this->actionManager = $action_manager;
     $this->eventDispatcher = $event_dispatcher;
     $this->waitListManager = $wait_list_manager;

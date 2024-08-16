@@ -19,7 +19,6 @@ use Drupal\Core\TypedData\DataReferenceDefinition;
  *   id = "registration_host_entity",
  *   label = @Translation("Host entity"),
  *   description = @Translation("Field to display a host entity for a registration."),
- *   category = @Translation("Entity registration"),
  *   default_formatter = "registration_host_entity",
  *   cardinality = 1,
  *   no_ui = TRUE,

@@ -14,7 +14,6 @@ use Drupal\Core\TypedData\DataDefinition;
  *   id = "registration",
  *   label = @Translation("Registration"),
  *   description = @Translation("Field to enable registration for an event or other entity."),
- *   category = @Translation("Entity registration"),
  *   default_widget = "registration_type",
  *   default_formatter = "registration_type",
  *   cardinality = 1,
