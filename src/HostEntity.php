@@ -401,10 +401,10 @@ class HostEntity implements HostEntityInterface {
     if ($emails || $uids) {
       $orGroup = $query->orConditionGroup();
       if ($emails) {
-        $orGroup->condition('anon_mail', $emails);
+        $orGroup->condition('anon_mail', $emails, 'IN');
       }
       if ($uids) {
-        $orGroup->condition('user_uid', $uids);
+        $orGroup->condition('user_uid', $uids, 'IN');
       }
       $query->condition($orGroup);
     }
