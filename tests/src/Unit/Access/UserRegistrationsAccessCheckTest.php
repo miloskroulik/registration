@@ -77,10 +77,10 @@ class UserRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['view own registration', TRUE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
@@ -91,10 +91,10 @@ class UserRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['view own registration', TRUE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
@@ -105,10 +105,10 @@ class UserRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['view own registration', TRUE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
@@ -119,10 +119,10 @@ class UserRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['view own registration', FALSE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
   }

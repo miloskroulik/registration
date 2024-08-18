@@ -11,4 +11,7 @@ parameters:
     - "#ContentEntityInterface but return statement is missing#"
 
   excludePaths:
+    # See https://www.drupal.org/node/3436275
     - modules/registration_scheduled_action/src/Element/DateTime.php
+    # See https://github.com/drush-ops/drush/pull/5902
+    - src/Drush/Commands/RegistrationSanitizeCommands.php
