@@ -47,10 +47,10 @@ class RegistrationCollectionAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', TRUE],
         ['access registration overview', FALSE],
-      ]));
+      ]);
     $access_result = $access_checker->access($route, $route_match, $account);
     $this->assertTrue($access_result->isAllowed());
 
@@ -58,10 +58,10 @@ class RegistrationCollectionAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['access registration overview', TRUE],
-      ]));
+      ]);
     $access_result = $access_checker->access($route, $route_match, $account);
     $this->assertTrue($access_result->isAllowed());
 
@@ -69,10 +69,10 @@ class RegistrationCollectionAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['access registration overview', FALSE],
-      ]));
+      ]);
     $access_result = $access_checker->access($route, $route_match, $account);
     $this->assertFalse($access_result->isAllowed());
   }

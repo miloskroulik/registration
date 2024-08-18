@@ -97,10 +97,10 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['administer conference registration', TRUE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
@@ -109,11 +109,11 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
         ['administer conference registration settings', TRUE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
@@ -122,12 +122,12 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
         ['administer conference registration settings', FALSE],
         ['manage conference registration', TRUE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
@@ -137,7 +137,7 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
         ['administer conference registration settings', FALSE],
@@ -145,7 +145,7 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
         ['administer own conference registration settings', FALSE],
         ['manage conference registration', FALSE],
         ['manage own conference registration', FALSE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
@@ -155,7 +155,7 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
         ['administer conference registration settings', FALSE],
@@ -163,7 +163,7 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
         ['administer own conference registration settings', TRUE],
         ['manage conference registration', FALSE],
         ['manage own conference registration', FALSE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
@@ -173,14 +173,14 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
         ['administer own conference registration', FALSE],
         ['administer own conference registration settings', FALSE],
         ['manage conference registration', FALSE],
         ['manage own conference registration', TRUE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
   }
@@ -205,14 +205,14 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
         ['administer own conference registration', TRUE],
         ['administer own conference registration settings', FALSE],
         ['manage conference registration', FALSE],
         ['manage own conference registration', FALSE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
@@ -222,14 +222,14 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
         ['administer own conference registration', FALSE],
         ['administer own conference registration settings', TRUE],
         ['manage conference registration', FALSE],
         ['manage own conference registration', FALSE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
@@ -239,14 +239,14 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
+      ->willReturnMap([
         ['administer registration', FALSE],
         ['administer conference registration', FALSE],
         ['administer own conference registration', FALSE],
         ['administer own conference registration settings', FALSE],
         ['manage conference registration', FALSE],
         ['manage own conference registration', TRUE],
-      ]));
+      ]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
