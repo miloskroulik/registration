@@ -14,6 +14,7 @@ use Drupal\registration\Entity\RegistrationTypeInterface;
 use Drush\Attributes as CLI;
 use Drush\Commands\DrushCommands;
 use Drush\Drupal\Commands\sql\SanitizePluginInterface;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 
 /**
@@ -35,6 +36,18 @@ final class RegistrationSanitizeCommands extends DrushCommands implements Saniti
     protected FieldTypePluginManagerInterface $fieldTypePluginManager,
   ) {
     parent::__construct();
+  }
+
+  /**
+   * Creates a RegistrationSanitizeCommands object.
+   */
+  public static function create(ContainerInterface $container): RegistrationSanitizeCommands {
+    return new RegistrationSanitizeCommands(
+      $container->get('database'),
+      $container->get('entity_field.manager'),
+      $container->get('entity_type.manager'),
+      $container->get('plugin.manager.field.field_type'),
+    );
   }
 
   /**
