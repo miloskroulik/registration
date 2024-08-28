@@ -1,6 +1,0 @@
-services:
-  registration.sanitize.commands:
-    class: \Drupal\registration\Drush\Commands\RegistrationSanitizeCommands
-    arguments: ['@database', '@entity_field.manager', '@entity_type.manager', '@plugin.manager.field.field_type']
-    tags:
-      - { name: drush.command }
