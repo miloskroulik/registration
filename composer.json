@@ -21,12 +21,5 @@
         "issues": "https://www.drupal.org/project/issues/registration",
         "source": "https://git.drupalcode.org/project/registration"
     },
-    "minimum-stability": "dev",
-    "extra": {
-        "drush": {
-            "services": {
-                "drush.services.yml": "^11"
-            }
-        }
-    }
+    "minimum-stability": "dev"
 }
