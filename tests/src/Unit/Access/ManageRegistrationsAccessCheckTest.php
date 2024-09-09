@@ -83,106 +83,76 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
     $this->entity->expects($this->any())->method('access')->willReturn(AccessResult::neutral());
 
     // Administer registration permission.
-    $account = $this->createMock(AccountInterface::class);
-    $account
-      ->expects($this->once())
-      ->method('hasPermission')
-      ->with('administer registration')
-      ->willReturn(TRUE);
+    $account = $this->getMockAccount(['administer registration']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
     // Administer "type" registration permission.
-    $account = $this->createMock(AccountInterface::class);
-    $account
-      ->expects($this->any())
-      ->method('hasPermission')
-      ->will($this->returnValueMap([
-        ['administer registration', FALSE],
-        ['administer conference registration', TRUE],
-      ]));
+    $account = $this->getMockAccount(['administer conference registration']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
     // Administer "type settings" registration permission.
-    $account = $this->createMock(AccountInterface::class);
-    $account
-      ->expects($this->any())
-      ->method('hasPermission')
-      ->will($this->returnValueMap([
-        ['administer registration', FALSE],
-        ['administer conference registration', FALSE],
-        ['administer conference registration settings', TRUE],
-      ]));
+    $account = $this->getMockAccount(['administer conference registration settings']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
     // Manage "type" registration permission.
-    $account = $this->createMock(AccountInterface::class);
-    $account
-      ->expects($this->any())
-      ->method('hasPermission')
-      ->will($this->returnValueMap([
-        ['administer registration', FALSE],
-        ['administer conference registration', FALSE],
-        ['administer conference registration settings', FALSE],
-        ['manage conference registration', TRUE],
-      ]));
+    $account = $this->getMockAccount(['manage conference registration']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
     // Administer "own" registration permission.
     // Needs update access to the entity to succeed.
-    $account = $this->createMock(AccountInterface::class);
-    $account
-      ->expects($this->any())
-      ->method('hasPermission')
-      ->will($this->returnValueMap([
-        ['administer registration', FALSE],
-        ['administer conference registration', FALSE],
-        ['administer conference registration settings', FALSE],
-        ['administer own conference registration', TRUE],
-        ['administer own conference registration settings', FALSE],
-        ['manage conference registration', FALSE],
-        ['manage own conference registration', FALSE],
-      ]));
+    $account = $this->getMockAccount(['administer own conference registration']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
     // Administer "own" settings registration permission.
     // Needs update access to the entity to succeed.
-    $account = $this->createMock(AccountInterface::class);
-    $account
-      ->expects($this->any())
-      ->method('hasPermission')
-      ->will($this->returnValueMap([
-        ['administer registration', FALSE],
-        ['administer conference registration', FALSE],
-        ['administer conference registration settings', FALSE],
-        ['administer own conference registration', FALSE],
-        ['administer own conference registration settings', TRUE],
-        ['manage conference registration', FALSE],
-        ['manage own conference registration', FALSE],
-      ]));
+    $account = $this->getMockAccount(['administer own conference registration settings']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
     // Manage "own" registration permission.
     // Needs update access to the entity to succeed.
+    $account = $this->getMockAccount(['manage own conference registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+  }
+
+  /**
+   * Creates a mock account with the given permissions granted.
+   *
+   * @param array $permissions_granted
+   *   The permissions that should be granted.
+   *
+   * @return \Drupal\Core\Session\AccountInterface
+   *   The account.
+   */
+  protected function getMockAccount(array $permissions_granted = []) {
+    $permissions = [
+      'administer registration',
+      'administer conference registration',
+      'administer conference registration settings',
+      'administer own conference registration',
+      'administer own conference registration settings',
+      'manage conference registration',
+      'manage conference registration broadcast',
+      'manage conference registration settings',
+      'manage own conference registration',
+    ];
+    $permissions_map = [];
+    foreach ($permissions as $permission) {
+      $permissions_map[] = [$permission, in_array($permission, $permissions_granted)];
+    }
+
     $account = $this->createMock(AccountInterface::class);
     $account
       ->expects($this->any())
       ->method('hasPermission')
-      ->will($this->returnValueMap([
-        ['administer registration', FALSE],
-        ['administer conference registration', FALSE],
-        ['administer own conference registration', FALSE],
-        ['administer own conference registration settings', FALSE],
-        ['manage conference registration', FALSE],
-        ['manage own conference registration', TRUE],
-      ]));
-    $access_result = $access_checker->access($account, $route_match);
-    $this->assertFalse($access_result->isAllowed());
+      ->will($this->returnValueMap($permissions_map));
+    return $account;
   }
 
   /**
@@ -201,61 +171,24 @@ class ManageRegistrationsAccessCheckTest extends UnitTestCase {
 
     // Administer "own" registration permission.
     // Needs update access to the entity to succeed.
-    $account = $this->createMock(AccountInterface::class);
-    $account
-      ->expects($this->any())
-      ->method('hasPermission')
-      ->will($this->returnValueMap([
-        ['administer registration', FALSE],
-        ['administer conference registration', FALSE],
-        ['administer own conference registration', TRUE],
-        ['administer own conference registration settings', FALSE],
-        ['manage conference registration', FALSE],
-        ['manage own conference registration', FALSE],
-      ]));
+    $account = $this->getMockAccount(['administer own conference registration']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
     // Administer "own" settings registration permission.
     // Needs update access to the entity to succeed.
-    $account = $this->createMock(AccountInterface::class);
-    $account
-      ->expects($this->any())
-      ->method('hasPermission')
-      ->will($this->returnValueMap([
-        ['administer registration', FALSE],
-        ['administer conference registration', FALSE],
-        ['administer own conference registration', FALSE],
-        ['administer own conference registration settings', TRUE],
-        ['manage conference registration', FALSE],
-        ['manage own conference registration', FALSE],
-      ]));
+    $account = $this->getMockAccount(['administer own conference registration settings']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
     // Manage "own" registration permission.
     // Needs update access to the entity to succeed.
-    $account = $this->createMock(AccountInterface::class);
-    $account
-      ->expects($this->any())
-      ->method('hasPermission')
-      ->will($this->returnValueMap([
-        ['administer registration', FALSE],
-        ['administer conference registration', FALSE],
-        ['administer own conference registration', FALSE],
-        ['administer own conference registration settings', FALSE],
-        ['manage conference registration', FALSE],
-        ['manage own conference registration', TRUE],
-      ]));
+    $account = $this->getMockAccount(['manage own conference registration']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
     // Insufficient permission.
-    $account = $this->createMock(AccountInterface::class);
-    $account
-      ->expects($this->any())
-      ->method('hasPermission')
-      ->willReturn(FALSE);
+    $account = $this->getMockAccount([]);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
   }

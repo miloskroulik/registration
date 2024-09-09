@@ -51,70 +51,60 @@ class ManageRegistrationsAccessCheck implements AccessInterface {
     if ($host_entity) {
       if ($type = $host_entity->getRegistrationTypeBundle()) {
         if ($entity = $host_entity->getEntity()) {
-          // Check the administrative permissions.
-          $access_result = AccessResult::allowedIfHasPermissions($account, [
+          // Check the global administrative permissions.
+          $result = AccessResult::allowedIfHasPermissions($account, [
             "administer registration",
             "administer $type registration",
             "administer $type registration settings",
-          ], 'OR')
-            ->addCacheableDependency($entity);
+          ], 'OR');
 
-          if ($access_result->isAllowed()) {
-            return $access_result;
-          }
-
-          // Access not granted. Check the "administer own" permissions.
-          $access_result = AccessResult::allowedIfHasPermissions($account, [
-            "administer own $type registration",
-            "administer own $type registration settings",
-          ], 'OR')
-            // Own permission must be cached per user and not per permissions.
-            ->cachePerUser()
-            // Recalculate this result if the relevant entities are updated.
-            ->addCacheableDependency($entity)
-            // Own permission must be combined with update access to the entity.
-            // Merge the cacheability of the entity access check via "andIf".
-            ->andIf($entity->access('update', $account, TRUE));
-
-          if ($access_result->isAllowed()) {
-            return $access_result;
-          }
-
-          // Administrative access not granted. Check the Manage permissions.
+          // Check the global manage permissions.
           $entity_type_id = $entity->getEntityTypeId();
+          $route_permissions = [];
           switch ($route_match->getRouteName()) {
             // Manage sending registrant emails.
             case "entity.$entity_type_id.registration.broadcast":
-              $route_access = $account->hasPermission("manage $type registration broadcast");
+              $route_permissions[] = "manage $type registration broadcast";
               break;
 
             // Manage registration settings.
             case "entity.$entity_type_id.registration.registration_settings":
-              $route_access = $account->hasPermission("manage $type registration settings");
+              $route_permissions[] = "manage $type registration settings";
               break;
 
             // Manage registrations. This is always checked below.
             default:
-              $route_access = TRUE;
           }
 
-          $access = $account->hasPermission("manage $type registration") && $route_access;
-          if ($access) {
-            return AccessResult::allowed()
-              // Recalculate this result if the relevant entities are updated.
-              ->cachePerPermissions()
-              ->addCacheableDependency($entity);
+          $manage_result = AccessResult::allowedIfHasPermissions($account, array_merge($route_permissions, ["manage $type registration"]), 'AND');
+          $result = $result->orIf($manage_result);
+
+          // Skip checking host access if simpler permissions give access.
+          if ($result->isNeutral()) {
+            $host_result = $host_entity->getEntity()->access('update', $account, TRUE);
+            // A forbidden value from the host access shouldn't cascade upwards
+            // to make the result forbidden as that might interfere with other
+            // route access checks.
+            if ($host_result->isForbidden()) {
+              $host_result = AccessResult::neutral()->addCacheableDependency($host_result);
+            }
+
+            $administer_own_result = AccessResult::allowedIfHasPermissions($account, [
+              "administer own $type registration",
+              "administer own $type registration settings",
+            ], 'OR')
+              ->andIf($host_result);
+            $result = $result->orIf($administer_own_result);
+
+            $manage_own_result = AccessResult::allowedIfHasPermissions($account, array_merge($route_permissions, ["manage own $type registration"]), 'AND')
+              ->andIf($host_result);
+            $result = $result->orIf($manage_own_result);
           }
 
-          $access = $account->hasPermission("manage own $type registration") && $route_access;
-          return AccessResult::allowedIf($access)
-            // Own permission must be cached per user and not per permissions.
-            ->cachePerUser()
-            // Recalculate this result if the relevant entities are updated.
-            ->addCacheableDependency($entity)
-            // Own permission must be combined with update access to the entity.
-            // Merge the cacheability of the entity access check via "andIf".
-            ->andIf($entity->access('update', $account, TRUE));
+          // The registration type is specified on the host entity, so all
+          // these access checks depend on that as they use type-specific
+          // permissions.
+          return $result->addCacheableDependency($entity);
         }
       }
     }

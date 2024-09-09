@@ -49,6 +49,8 @@ class RegistrationSettingsAccessControlHandler extends EntityAccessControlHandle
     $host_entity = $entity->getHostEntity();
     $type = $host_entity?->getRegistrationTypeBundle();
 
+    // No permission grants access if the settings entity and host are not
+    // properly set up.
     if (!$type) {
       // The host entity is not configured for registration.
       $result = AccessResult::neutral();
@@ -65,40 +67,41 @@ class RegistrationSettingsAccessControlHandler extends EntityAccessControlHandle
       "administer $type registration settings",
     ], 'OR');
 
-    // If administrative permission not granted, check manage permissions.
-    // Must be able to manage registrations and settings.
+    // Manage permissions require managing registrations and settings.
+    $manage_result = AccessResult::allowedIfHasPermissions($account, [
+      "manage $type registration",
+      "manage $type registration settings",
+    ], 'AND');
+    $result = $result->orIf($manage_result);
+
+    // Only consider host access if simpler permissions don't allow access.
     if ($result->isNeutral()) {
-      $result = AccessResult::allowedIfHasPermissions($account, [
-        "manage $type registration",
-        "manage $type registration settings",
-      ], 'AND');
-    }
+      $host_result = $host_entity->getEntity()->access('update', $account, TRUE);
+      // A forbidden value from the host access shouldn't cascade upwards to
+      // make the settings result forbidden as that would override access
+      // hooks.
+      if ($host_result->isForbidden()) {
+        $host_result = AccessResult::neutral()->addCacheableDependency($host_result);
+      }
 
-    if ($result->isAllowed()) {
-      return $result->addCacheableDependency($host_entity->getEntity());
-    }
+      $administer_own_result = AccessResult::allowedIfHasPermissions($account, [
+        "administer own $type registration",
+        "administer own $type registration settings",
+      ], 'OR')
+        ->andIf($host_result);
 
-    // Check "own" permissions if access not granted yet.
-    $entity = $host_entity->getEntity();
-    $result = AccessResult::allowedIfHasPermissions($account, [
-      "administer own $type registration",
-      "administer own $type registration settings",
-    ], 'OR')
-      ->cachePerUser()
-      ->addCacheableDependency($entity)
-      ->andIf($entity->access('update', $account, TRUE));
-
-    if ($result->isNeutral()) {
-      $result = AccessResult::allowedIfHasPermissions($account, [
+      $manage_own_result = AccessResult::allowedIfHasPermissions($account, [
         "manage own $type registration",
         "manage $type registration settings",
       ], 'AND')
-        ->cachePerUser()
-        ->addCacheableDependency($entity)
-        ->andIf($entity->access('update', $account, TRUE));
+        ->andIf($host_result);
+
+      $result = $result->orIf($administer_own_result)->orIf($manage_own_result);
     }
 
-    return $result;
+    // All of the results depend on the settings entity to specify the host,
+    // and the host to specify the registration type.
+    return $result->addCacheableDependency($entity)->addCacheableDependency($host_entity->getEntity());
   }
 
   /**

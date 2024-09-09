@@ -42,16 +42,22 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
     $result = parent::checkAccess($entity, $operation, $account);
 
     if ($result->isNeutral()) {
-      $result = $this->checkEntityUserPermissions($entity, $operation, $account);
+      // The most global permissions don't depend on anything about the
+      // registration or host.
+      $result = AccessResult::allowedIfHasPermissions($account, [
+        "administer registration",
+        "$operation any registration",
+      ], 'OR');
+
+      if ($result->isNeutral()) {
+        $result = $this->checkEntityUserPermissions($entity, $operation, $account);
+        // All of these checks depend on the registration type, host or
+        // registrant.
+        $result->addCacheableDependency($entity);
+      }
     }
 
-    // Ensure that access is evaluated again when the host entity changes.
-    if ($host_entity && $host_entity->getEntity()) {
-      $result->addCacheableDependency($host_entity->getEntity());
-    }
-
-    // Ensure that access is evaluated again when the entity changes.
-    return $result->addCacheableDependency($entity);
+    return $result;
   }
 
   /**
@@ -69,11 +75,8 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
    *   The access result.
    */
   protected function checkEntityUserPermissions(EntityInterface $entity, string $operation, AccountInterface $account): AccessResultInterface {
-    // The "any" permission grants access regardless of the entity user.
     $any_result = AccessResult::allowedIfHasPermissions($account, [
-      "administer registration",
       "administer {$entity->bundle()} registration",
-      "$operation any registration",
       "$operation any {$entity->bundle()} registration",
     ], 'OR');
 
@@ -81,36 +84,47 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
       return $any_result;
     }
 
+    // The default result.
+    $result = AccessResult::neutral();
+
     // The "host" permission grants access if the user can edit the host entity.
     if (($host_entity = $entity->getHostEntity()) && $host_entity->getEntity()) {
+      $host_result = $host_entity->getEntity()->access('update', $account, TRUE);
+      // A forbidden value from the host access shouldn't cascade upwards to
+      // make the registration result forbidden as that would override
+      // registrant's access to their own registration.
+      if ($host_result->isForbidden()) {
+        $host_result = AccessResult::neutral()->addCacheableDependency($host_result);
+      }
       $host_result = AccessResult::allowedIfHasPermission($account, "$operation host registration")
         // Merge the cacheability of the host entity access check via "andIf".
-        ->andIf($host_entity->getEntity()->access('update', $account, TRUE));
+        ->andIf($host_result);
+      // The cacheable metadata of the host entity update operation matters
+      // even if it does not give permission, because it might have.
+      $result = $result->orIf($host_result);
+    }
 
-      if ($host_result->isAllowed()) {
-        return $host_result;
+    // The own results cache per user so they're less performant, and only
+    // matter if a less granular permissions-based approach has not given
+    // access.
+    if ($result->isNeutral()) {
+      /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
+      if ($account->id() && ($account->id() == $entity->getUserId())) {
+        $own_result = AccessResult::allowedIfHasPermissions($account, [
+          "administer own {$entity->bundle()} registration",
+          "$operation own registration",
+          "$operation own {$entity->bundle()} registration",
+        ], 'OR')
+          // The "own" permission is based on the current user's ID, so the
+          // result must be cached per user.
+          ->cachePerUser();
+        // Even a neutral overall result should be cached per user, as it might
+        // have been allowed based on the account being the registrant.
+        $result = $result->orIf($own_result);
       }
     }
 
-    /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
-    if ($account->id() && ($account->id() == $entity->getUserId())) {
-      $own_result = AccessResult::allowedIfHasPermissions($account, [
-        "administer own {$entity->bundle()} registration",
-        "$operation own registration",
-        "$operation own {$entity->bundle()} registration",
-      ], 'OR')
-        // The "own" permission is based on the current user's ID, so the result
-        // must be cached per user.
-        ->cachePerUser();
-
-      if ($own_result->isAllowed()) {
-        return $own_result;
-      }
-    }
-
-    // No access. Cache per permissions since any user with the same permissions
-    // as this account should get the same result.
-    return AccessResult::neutral()->cachePerPermissions();
+    return $result;
   }
 
   /**
