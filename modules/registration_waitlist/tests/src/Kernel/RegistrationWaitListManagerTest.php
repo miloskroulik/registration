@@ -3,9 +3,9 @@
 namespace Drupal\Tests\registration_waitlist\Kernel;
 
 use Drupal\Core\Database\Database;
-use Drupal\registration_waitlist\RegistrationWaitListManagerInterface;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
+use Drupal\registration_waitlist\RegistrationWaitListManagerInterface;
 
 /**
  * Tests the RegistrationWaitListManager class.

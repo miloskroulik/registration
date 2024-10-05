@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\registration_admin_overrides\Kernel;
 
-use Drupal\registration_admin_overrides\RegistrationOverrideCheckerInterface;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\registration_admin_overrides\RegistrationOverrideCheckerInterface;
 
 /**
  * Tests the registration override checker.

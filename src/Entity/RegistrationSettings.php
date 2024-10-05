@@ -127,7 +127,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
    * @return $this
    *   The settings entity.
    */
-  public function initFromDefaults(HostEntityInterface $host_entity, string $langcode = NULL): RegistrationSettings {
+  public function initFromDefaults(HostEntityInterface $host_entity, ?string $langcode = NULL): RegistrationSettings {
     // Get all the fields for the settings entity.
     $fields = \Drupal::service('entity_field.manager')
       ->getFieldDefinitions('registration_settings', 'registration_settings');

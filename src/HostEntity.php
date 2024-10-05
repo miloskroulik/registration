@@ -92,7 +92,7 @@ class HostEntity implements HostEntityInterface {
    * @param string|null $langcode
    *   (optional) The language the real entity should use, if available.
    */
-  public function __construct(EntityInterface $entity, string $langcode = NULL) {
+  public function __construct(EntityInterface $entity, ?string $langcode = NULL) {
     // Get the entity in the appropriate language if requested. Since the
     // entity type is not known until runtime, need to make sure it is
     // translatable before proceeding.
@@ -230,7 +230,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getActiveSpacesReserved(RegistrationInterface $registration = NULL): int {
+  public function getActiveSpacesReserved(?RegistrationInterface $registration = NULL): int {
     $states = [];
 
     if ($registration_type = $this->getRegistrationType()) {
@@ -270,7 +270,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getSpacesRemaining(RegistrationInterface $registration = NULL): ?int {
+  public function getSpacesRemaining(?RegistrationInterface $registration = NULL): ?int {
     if ($capacity = $this->getSetting('capacity')) {
       // Allow other modules to alter the number of spaces remaining.
       $spaces_remaining = $capacity - $this->getActiveSpacesReserved($registration);
@@ -288,7 +288,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultSettings(string $langcode = NULL): array {
+  public function getDefaultSettings(?string $langcode = NULL): array {
     $entity_type_id = $this->getEntityTypeId();
     $bundle = $this->bundle();
     if (!$langcode) {
@@ -346,7 +346,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrationList(array $states = [], string $langcode = NULL): array {
+  public function getRegistrationList(array $states = [], ?string $langcode = NULL): array {
     $properties = [];
     if (!empty($states)) {
       $properties['state'] = $states;
@@ -368,7 +368,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrationQuery(array $properties = [], AccountInterface $account = NULL, $email = NULL): QueryInterface {
+  public function getRegistrationQuery(array $properties = [], ?AccountInterface $account = NULL, $email = NULL): QueryInterface {
     $query = $this->entityTypeManager()->getStorage('registration')->getQuery()
       ->accessCheck(FALSE)
       ->condition('entity_type_id', $this->getEntityTypeId())
@@ -476,7 +476,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function hasRoom(int $spaces = 1, RegistrationInterface $registration = NULL): bool {
+  public function hasRoom(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool {
     if ($this->needsCapacityCheck($spaces, $registration)) {
       $capacity = $this->getSetting('capacity');
       if ($capacity) {
@@ -499,7 +499,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function isEnabledForRegistration(int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool {
+  public function isEnabledForRegistration(int $spaces = 1, ?RegistrationInterface $registration = NULL, array &$errors = []): bool {
     $settings = $this->getSettings();
     if (!$settings) {
       $errors['settings'] = $this->t('Host entity settings not available for %label.', [
@@ -666,7 +666,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function isRegistrant(AccountInterface $account = NULL, $email = NULL, array $states = []): bool {
+  public function isRegistrant(?AccountInterface $account = NULL, $email = NULL, array $states = []): bool {
     if (!$account && !$email) {
       throw new \InvalidArgumentException("Either an account or an email must be passed to HostEntity::isRegistrant().");
     }

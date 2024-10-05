@@ -177,7 +177,7 @@ class ConfigurableEmailActionBase extends ConfigurableActionBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     // Allow the action to execute by default. Override this function as needed.
     $result = AccessResult::allowed();
     return $return_as_object ? $result : $result->isAllowed();

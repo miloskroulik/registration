@@ -16,7 +16,7 @@ class RegistrationStateForm extends WorkflowTypeStateFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state, StateInterface $state = NULL): array {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state, ?StateInterface $state = NULL): array {
     /** @var \Drupal\registration\RegistrationState $state */
     $state = $form_state->get('state');
 

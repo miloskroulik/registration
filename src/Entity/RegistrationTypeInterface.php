@@ -46,7 +46,7 @@ interface RegistrationTypeInterface extends ConfigEntityInterface {
    * @return array
    *   An array of states indexed by state ID, if any.
    */
-  public function getStatesToShowOnForm(StateInterface $current_state = NULL, bool $check_transitions = FALSE): array;
+  public function getStatesToShowOnForm(?StateInterface $current_state = NULL, bool $check_transitions = FALSE): array;
 
   /**
    * Gets the workflow ID for the registration type.

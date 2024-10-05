@@ -34,7 +34,7 @@ class StateTransitionValidation implements StateTransitionValidationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getValidTransitions(RegistrationInterface $registration, AccountInterface $user = NULL): array {
+  public function getValidTransitions(RegistrationInterface $registration, ?AccountInterface $user = NULL): array {
     if (is_null($user)) {
       $user = $this->currentUser;
     }
@@ -50,7 +50,7 @@ class StateTransitionValidation implements StateTransitionValidationInterface {
   /**
    * {@inheritdoc}
    */
-  public function isTransitionValid(WorkflowInterface $workflow, StateInterface $original_state, StateInterface $new_state, RegistrationInterface $registration, AccountInterface $user = NULL): bool {
+  public function isTransitionValid(WorkflowInterface $workflow, StateInterface $original_state, StateInterface $new_state, RegistrationInterface $registration, ?AccountInterface $user = NULL): bool {
     if (is_null($user)) {
       $user = $this->currentUser;
     }

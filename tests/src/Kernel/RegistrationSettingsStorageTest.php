@@ -4,9 +4,9 @@ namespace Drupal\Tests\registration\Kernel;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceModifierInterface;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\node\NodeInterface;
-use Drupal\Tests\registration\Traits\NodeCreationTrait;
 
 /**
  * Tests registration settings storage.

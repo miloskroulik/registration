@@ -118,7 +118,7 @@ class RegistrationSetStateAction extends ConfigurableActionBase implements Conta
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $account = $this->prepareUser($account);
     /** @var \Drupal\registration\Entity\RegistrationInterface $object */
     $type = $object->getType()->id();
@@ -157,7 +157,7 @@ class RegistrationSetStateAction extends ConfigurableActionBase implements Conta
    * @return \Drupal\Core\Session\AccountInterface
    *   Returns the current account object.
    */
-  protected function prepareUser(AccountInterface $account = NULL): AccountInterface {
+  protected function prepareUser(?AccountInterface $account = NULL): AccountInterface {
     if (!$account) {
       $account = \Drupal::currentUser();
     }

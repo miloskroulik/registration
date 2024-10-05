@@ -62,7 +62,7 @@ class EmailConfirmationAction extends ConfigurableEmailActionBase implements Que
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     if ($object && ($registration = $this->getRegistration($object))) {
       $action = $this->actionManager->createInstance('registration_send_email_action');
       return $action->access($registration);

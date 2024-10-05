@@ -4,9 +4,9 @@ namespace Drupal\Tests\registration_scheduled_action\Kernel;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
+use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 
 /**
  * Tests registration state transitions.

@@ -6,9 +6,9 @@ use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Tests\UnitTestCase;
 use Drupal\registration\Access\UserRegistrationsAccessCheck;
 use Drupal\registration\RegistrationManagerInterface;
-use Drupal\Tests\UnitTestCase;
 use Drupal\user\UserInterface;
 use Symfony\Component\HttpFoundation\ParameterBag;
 

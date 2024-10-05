@@ -21,7 +21,7 @@ interface HostEntityInterface extends BaseHostEntityInterface {
    *   The spaces remaining on the wait list, if available. Returns NULL if the
    *   wait list is disabled or the wait list capacity is unlimited (0).
    */
-  public function getWaitListSpacesRemaining(RegistrationInterface $registration = NULL): ?int;
+  public function getWaitListSpacesRemaining(?RegistrationInterface $registration = NULL): ?int;
 
   /**
    * Gets the reserved spaces for registrations in the wait list.
@@ -32,7 +32,7 @@ interface HostEntityInterface extends BaseHostEntityInterface {
    * @return int
    *   The total number of reserved spaces for registrations in the wait list.
    */
-  public function getWaitListSpacesReserved(RegistrationInterface $registration = NULL): int;
+  public function getWaitListSpacesReserved(?RegistrationInterface $registration = NULL): int;
 
   /**
    * Determines if a host entity has spaces remaining off the wait list.
@@ -47,7 +47,7 @@ interface HostEntityInterface extends BaseHostEntityInterface {
    * @return bool
    *   TRUE if there are spaces remaining off the wait list, FALSE otherwise.
    */
-  public function hasRoomOffWaitList(int $spaces = 1, RegistrationInterface $registration = NULL): bool;
+  public function hasRoomOffWaitList(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool;
 
   /**
    * Determines if a host entity has spaces remaining on its wait list.
@@ -60,7 +60,7 @@ interface HostEntityInterface extends BaseHostEntityInterface {
    * @return bool
    *   TRUE if there are spaces remaining on the wait list, FALSE otherwise.
    */
-  public function hasRoomOnWaitList(int $spaces = 1, RegistrationInterface $registration = NULL): bool;
+  public function hasRoomOnWaitList(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool;
 
   /**
    * Determines whether the wait list is enabled.
@@ -90,6 +90,6 @@ interface HostEntityInterface extends BaseHostEntityInterface {
    * @return bool
    *   TRUE if the registration should be wait listed, FALSE otherwise.
    */
-  public function shouldAddToWaitList(int $spaces = 1, RegistrationInterface $registration = NULL): bool;
+  public function shouldAddToWaitList(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool;
 
 }

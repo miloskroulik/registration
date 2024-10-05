@@ -24,7 +24,7 @@ interface StateTransitionValidationInterface {
    * @return \Drupal\workflows\Transition[]
    *   The valid transitions.
    */
-  public function getValidTransitions(RegistrationInterface $registration, AccountInterface $user = NULL): array;
+  public function getValidTransitions(RegistrationInterface $registration, ?AccountInterface $user = NULL): array;
 
   /**
    * Checks if a transition between two states is valid for the given user.
@@ -44,6 +44,6 @@ interface StateTransitionValidationInterface {
    * @return bool
    *   Returns TRUE if the transition is valid, otherwise FALSE.
    */
-  public function isTransitionValid(WorkflowInterface $workflow, StateInterface $original_state, StateInterface $new_state, RegistrationInterface $registration, AccountInterface $user = NULL): bool;
+  public function isTransitionValid(WorkflowInterface $workflow, StateInterface $original_state, StateInterface $new_state, RegistrationInterface $registration, ?AccountInterface $user = NULL): bool;
 
 }

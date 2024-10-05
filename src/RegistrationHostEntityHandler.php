@@ -18,7 +18,7 @@ class RegistrationHostEntityHandler extends EntityHandlerBase implements Registr
   /**
    * {@inheritdoc}
    */
-  public function createHostEntity(EntityInterface $entity, string $langcode = NULL): HostEntityInterface {
+  public function createHostEntity(EntityInterface $entity, ?string $langcode = NULL): HostEntityInterface {
     return new HostEntity($entity, $langcode);
   }
 

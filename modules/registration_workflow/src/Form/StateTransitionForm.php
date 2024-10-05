@@ -37,7 +37,7 @@ class StateTransitionForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, RegistrationInterface $registration = NULL, $transition = NULL): array {
+  public function buildForm(array $form, FormStateInterface $form_state, ?RegistrationInterface $registration = NULL, $transition = NULL): array {
     $this->registration = $registration;
     $this->transition = $transition;
     return parent::buildForm($form, $form_state);

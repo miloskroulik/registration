@@ -2,9 +2,9 @@
 
 namespace Drupal\registration_test_event\EventSubscriber;
 
+use Drupal\Tests\RandomGeneratorTrait;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\Event\RegistrationEvents;
-use Drupal\Tests\RandomGeneratorTrait;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**

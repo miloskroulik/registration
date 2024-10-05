@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\registration\Kernel;
 
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Drupal\node\NodeInterface;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationManagerInterface;
-use Drupal\Tests\registration\Traits\NodeCreationTrait;
-use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Symfony\Component\HttpFoundation\ParameterBag;
 
 /**

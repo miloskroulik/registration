@@ -2,13 +2,13 @@
 
 namespace Drupal\registration\FormElement;
 
-use Drupal\config_translation\FormElement\FormElementBase;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\TypedData\TypedDataInterface;
+use Drupal\config_translation\FormElement\FormElementBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\language\Config\LanguageConfigOverride;
 use Drupal\registration\RegistrationHelper;

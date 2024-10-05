@@ -3,9 +3,9 @@
 namespace Drupal\Tests\registration_waitlist\Kernel;
 
 use Drupal\Core\Routing\RouteMatch;
-use Drupal\registration_waitlist\Access\StateTransitionAccessCheck;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
+use Drupal\registration_waitlist\Access\StateTransitionAccessCheck;
 use Symfony\Component\Routing\Route;
 
 /**
