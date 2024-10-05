@@ -3,11 +3,11 @@
 namespace Drupal\Tests\registration_admin_overrides\Kernel\Access;
 
 use Drupal\Core\Routing\RouteMatch;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\Tests\registration_admin_overrides\Kernel\RegistrationAdminOverridesKernelTestBase;
 use Drupal\registration\RegistrationManagerInterface;
 use Drupal\registration_admin_overrides\Access\RegisterAccessCheck;
 use Drupal\registration_admin_overrides\RegistrationOverrideCheckerInterface;
-use Drupal\Tests\registration\Traits\NodeCreationTrait;
-use Drupal\Tests\registration_admin_overrides\Kernel\RegistrationAdminOverridesKernelTestBase;
 
 /**
  * Tests the "register" access check.

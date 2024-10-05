@@ -56,7 +56,7 @@ class EmailRegistrantsAction extends ConfigurableEmailActionBase implements Quer
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     // Allow the action to execute if there is at least one registrant.
     $entity = NULL;
     $result = NULL;

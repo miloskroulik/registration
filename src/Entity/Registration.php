@@ -154,7 +154,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   /**
    * {@inheritdoc}
    */
-  public function getHostEntity(string $langcode = NULL): ?HostEntityInterface {
+  public function getHostEntity(?string $langcode = NULL): ?HostEntityInterface {
     if (!isset($this->hostEntity)) {
       $this->hostEntity = NULL;
       if (!$this->get('host_entity')->isEmpty()) {

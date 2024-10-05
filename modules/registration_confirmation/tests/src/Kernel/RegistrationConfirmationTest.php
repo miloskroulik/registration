@@ -3,9 +3,9 @@
 namespace Drupal\Tests\registration_confirmation\Kernel;
 
 use Drupal\Core\Database\Database;
-use Drupal\registration\Entity\RegistrationType;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
+use Drupal\registration\Entity\RegistrationType;
 
 /**
  * Tests registration confirmation emails.

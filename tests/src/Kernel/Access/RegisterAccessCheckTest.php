@@ -3,11 +3,11 @@
 namespace Drupal\Tests\registration\Kernel\Access;
 
 use Drupal\Core\Routing\RouteMatch;
-use Drupal\registration\Access\RegisterAccessCheck;
-use Drupal\registration\RegistrationManagerInterface;
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
+use Drupal\registration\Access\RegisterAccessCheck;
+use Drupal\registration\RegistrationManagerInterface;
 
 /**
  * Tests the "register" access check.

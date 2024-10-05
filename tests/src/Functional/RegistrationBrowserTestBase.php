@@ -4,8 +4,8 @@ namespace Drupal\Tests\registration\Functional;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Tests\block\Traits\BlockCreationTrait;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\block\Traits\BlockCreationTrait;
 use Drupal\user\UserInterface;
 
 /**

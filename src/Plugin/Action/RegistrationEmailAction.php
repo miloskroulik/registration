@@ -131,7 +131,7 @@ class RegistrationEmailAction extends EmailAction {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $entity = NULL;
     $result = NULL;
 

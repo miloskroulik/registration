@@ -18,6 +18,6 @@ interface RegistrationItemFieldItemListInterface {
    * @return \Drupal\registration\HostEntityInterface
    *   The host entity. This is a wrapper and not a real entity.
    */
-  public function createHostEntity(string $langcode = NULL): HostEntityInterface;
+  public function createHostEntity(?string $langcode = NULL): HostEntityInterface;
 
 }

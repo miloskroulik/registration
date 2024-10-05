@@ -41,7 +41,7 @@ class RegistrationSettingsStorage extends RegistrationStorage {
    * @return \Drupal\registration\Entity\RegistrationSettings
    *   The settings entity.
    */
-  public function loadSettingsForHostEntity(HostEntityInterface $host_entity, string $langcode = NULL): RegistrationSettings {
+  public function loadSettingsForHostEntity(HostEntityInterface $host_entity, ?string $langcode = NULL): RegistrationSettings {
     // If no language set, use the current site language.
     if (!$langcode) {
       $langcode = $this->languageManager->getCurrentLanguage()->getId();

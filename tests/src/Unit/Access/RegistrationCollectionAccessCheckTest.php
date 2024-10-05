@@ -6,8 +6,8 @@ use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\registration\Access\RegistrationCollectionAccessCheck;
 use Drupal\Tests\UnitTestCase;
+use Drupal\registration\Access\RegistrationCollectionAccessCheck;
 use Symfony\Component\Routing\Route;
 
 /**

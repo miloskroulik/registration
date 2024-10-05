@@ -124,7 +124,7 @@ interface RegistrationManagerInterface {
    *   FALSE otherwise. If a bundle name is also provided, then TRUE
    *   is only returned if the specific bundle has a registration field.
    */
-  public function hasRegistrationField(EntityTypeInterface $entity_type, string $bundle = NULL): bool;
+  public function hasRegistrationField(EntityTypeInterface $entity_type, ?string $bundle = NULL): bool;
 
   /**
    * Determines if a user has any registrations.

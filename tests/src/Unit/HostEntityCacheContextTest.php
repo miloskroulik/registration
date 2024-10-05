@@ -8,11 +8,11 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Context\ContextInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
+use Drupal\Tests\UnitTestCase;
 use Drupal\registration\Cache\Context\HostEntityCacheContext;
 use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationHostEntityHandlerInterface;
 use Drupal\registration\RegistrationManagerInterface;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * Tests the cache context for a host entity.

@@ -134,7 +134,7 @@ interface HostEntityInterface {
    * @return int
    *   The total number of reserved spaces for active registrations.
    */
-  public function getActiveSpacesReserved(RegistrationInterface $registration = NULL): int;
+  public function getActiveSpacesReserved(?RegistrationInterface $registration = NULL): int;
 
   /**
    * Gets the spaces remaining.
@@ -146,7 +146,7 @@ interface HostEntityInterface {
    * @return int|null
    *   The number of spaces remaining, or NULL if the capacity is unlimited (0).
    */
-  public function getSpacesRemaining(RegistrationInterface $registration = NULL): ?int;
+  public function getSpacesRemaining(?RegistrationInterface $registration = NULL): ?int;
 
   /**
    * Gets the default registration settings.
@@ -158,7 +158,7 @@ interface HostEntityInterface {
    * @return array
    *   The default registration settings for.
    */
-  public function getDefaultSettings(string $langcode = NULL): array;
+  public function getDefaultSettings(?string $langcode = NULL): array;
 
   /**
    * Gets the total number of registrations.
@@ -191,7 +191,7 @@ interface HostEntityInterface {
    * @return \Drupal\registration\Entity\Registration[]
    *   The list of registrations.
    */
-  public function getRegistrationList(array $states = [], string $langcode = NULL): array;
+  public function getRegistrationList(array $states = [], ?string $langcode = NULL): array;
 
   /**
    * Gets a query of registrations for the host.
@@ -211,7 +211,7 @@ interface HostEntityInterface {
    * @return \Drupal\Core\Entity\Query\QueryInterface
    *   The registrations query.
    */
-  public function getRegistrationQuery(array $properties = [], AccountInterface $account = NULL, $email = NULL): QueryInterface;
+  public function getRegistrationQuery(array $properties = [], ?AccountInterface $account = NULL, $email = NULL): QueryInterface;
 
   /**
    * Gets the registration type.
@@ -261,7 +261,7 @@ interface HostEntityInterface {
    * @return bool
    *   TRUE if there are spaces remaining, FALSE otherwise.
    */
-  public function hasRoom(int $spaces = 1, RegistrationInterface $registration = NULL): bool;
+  public function hasRoom(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool;
 
   /**
    * Determines whether a host entity is configured for registration.
@@ -295,7 +295,7 @@ interface HostEntityInterface {
    * @return bool
    *   TRUE if new registrations are allowed, FALSE otherwise.
    */
-  public function isEnabledForRegistration(int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool;
+  public function isEnabledForRegistration(int $spaces = 1, ?RegistrationInterface $registration = NULL, array &$errors = []): bool;
 
   /**
    * Determines whether an email address is already registered.
@@ -372,7 +372,7 @@ interface HostEntityInterface {
    * @return bool
    *   TRUE if the user registered for the host and is in a certain status.
    */
-  public function isRegistrant(AccountInterface $account = NULL, $email = NULL, array $states = []): bool;
+  public function isRegistrant(?AccountInterface $account = NULL, $email = NULL, array $states = []): bool;
 
   /**
    * Determines whether it is currently before the open date.

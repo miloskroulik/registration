@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\registration\Kernel;
 
-use Drupal\registration\Notify\RegistrationMailerInterface;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
+use Drupal\registration\Notify\RegistrationMailerInterface;
 
 /**
  * Tests the RegistrationManager class.

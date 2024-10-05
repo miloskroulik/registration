@@ -3,8 +3,8 @@
 namespace Drupal\Tests\registration\Kernel\Cron;
 
 use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 
 /**
  * Tests the cron job that sends reminders.

@@ -3,10 +3,10 @@
 namespace Drupal\Tests\registration\Kernel;
 
 use Drupal\Core\Url;
+use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\node\NodeInterface;
 use Drupal\registration\Entity\RegistrationSettings;
 use Drupal\registration\Entity\RegistrationType;
-use Drupal\Tests\registration\Traits\NodeCreationTrait;
 
 /**
  * Tests registration settings permissions and access control.

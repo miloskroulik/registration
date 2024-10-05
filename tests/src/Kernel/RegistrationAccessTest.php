@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\registration\Kernel;
 
-use Drupal\registration\Entity\RegistrationType;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
+use Drupal\registration\Entity\RegistrationType;
 
 /**
  * Tests registration permissions and access control.

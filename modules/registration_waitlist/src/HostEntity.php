@@ -17,7 +17,7 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getWaitListSpacesRemaining(RegistrationInterface $registration = NULL): ?int {
+  public function getWaitListSpacesRemaining(?RegistrationInterface $registration = NULL): ?int {
     if ($this->isWaitListEnabled()) {
       if ($capacity = $this->getSetting('registration_waitlist_capacity')) {
         // Allow other modules to alter the number of spaces remaining.
@@ -38,7 +38,7 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getWaitListSpacesReserved(RegistrationInterface $registration = NULL): int {
+  public function getWaitListSpacesReserved(?RegistrationInterface $registration = NULL): int {
     $database = Database::getConnection();
     $query = $database->select('registration')
       ->condition('entity_id', $this->id())
@@ -68,7 +68,7 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function hasRoom(int $spaces = 1, RegistrationInterface $registration = NULL): bool {
+  public function hasRoom(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool {
     if ($this->isWaitListEnabled()) {
       // If wait list is enabled, assume there is room. The wait list is checked
       // for room separately.
@@ -80,14 +80,14 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function hasRoomOffWaitList(int $spaces = 1, RegistrationInterface $registration = NULL): bool {
+  public function hasRoomOffWaitList(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool {
     return parent::hasRoom($spaces, $registration);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function hasRoomOnWaitList(int $spaces = 1, RegistrationInterface $registration = NULL): bool {
+  public function hasRoomOnWaitList(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool {
     if ($this->isWaitListEnabled()) {
       $capacity = $this->getSetting('registration_waitlist_capacity');
       if ($capacity) {
@@ -107,7 +107,7 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function isEnabledForRegistration(int $spaces = 1, RegistrationInterface $registration = NULL, array &$errors = []): bool {
+  public function isEnabledForRegistration(int $spaces = 1, ?RegistrationInterface $registration = NULL, array &$errors = []): bool {
     $settings = $this->getSettings();
     $enabled = parent::isEnabledForRegistration($spaces, $registration, $errors);
     $original_enabled = $enabled;
@@ -192,7 +192,7 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function isRegistrant(AccountInterface $account = NULL, $email = NULL, array $states = []): bool {
+  public function isRegistrant(?AccountInterface $account = NULL, $email = NULL, array $states = []): bool {
     if (!$states) {
       if ($registration_type = $this->getRegistrationType()) {
         $states = array_keys($registration_type->getActiveOrHeldStates());
@@ -212,7 +212,7 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function shouldAddToWaitList(int $spaces = 1, RegistrationInterface $registration = NULL): bool {
+  public function shouldAddToWaitList(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool {
     return !$this->hasRoomOffWaitList($spaces, $registration) && $this->isWaitListEnabled() && $this->hasRoomOnWaitList($spaces, $registration);
   }
 

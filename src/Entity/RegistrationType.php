@@ -91,7 +91,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
   /**
    * {@inheritdoc}
    */
-  public function access($operation, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($operation, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     if ($operation == 'view label') {
       // Allow site visitors to see the labels of registration types.
       $access_result = AccessResult::allowed();
@@ -162,7 +162,7 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
   /**
    * {@inheritdoc}
    */
-  public function getStatesToShowOnForm(StateInterface $current_state = NULL, bool $check_transitions = FALSE): array {
+  public function getStatesToShowOnForm(?StateInterface $current_state = NULL, bool $check_transitions = FALSE): array {
     $states = [];
 
     if ($workflow = $this->getWorkflow()) {
