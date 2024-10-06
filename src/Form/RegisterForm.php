@@ -20,7 +20,6 @@ use Drupal\registration\Event\RegistrationSaveEvent;
 use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationHelper;
 use Drupal\registration\RegistrationManagerInterface;
-use Drupal\workflows\State;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -548,16 +547,9 @@ class RegisterForm extends ContentEntityForm {
     // Update the Status field.
     if (!empty($form['state'])) {
       $registration_type = $registration->getType();
-      $current_state = $registration->getState();
-      $states = $registration_type->getStatesToShowOnForm($current_state, !$registration->isNew());
-
       $type = $registration_type->id();
-      $form['state']['#access'] = !empty($states) && $current_user->hasPermission("edit $type registration state");
-      $form['state']['widget'][0]['#options'] = array_map([
-        State::class,
-        'labelCallback',
-      ], $states);
-      $form['state']['widget'][0]['#default_value'] = $registration->getState()->id();
+      // Hide the field unless the user has permission to edit the state.
+      $form['state']['#access'] = $form['state']['#access'] && $current_user->hasPermission("edit $type registration state");
     }
 
     // Update the created field.

@@ -106,3 +106,29 @@ function registration_update_9007() {
     $role->save();
   }
 }
+
+/**
+ * Adds the hide_single_state setting to state fields on registration forms.
+ */
+function registration_update_10001() {
+  $form_displays = \Drupal::entityTypeManager()
+    ->getStorage('entity_form_display')
+    ->loadByProperties([
+      'targetEntityType' => 'registration',
+    ]);
+  foreach ($form_displays as $form_display) {
+    $components = $form_display->getComponents();
+    foreach ($components as $field_name => $component) {
+      if ($component['type'] == 'registration_state_default') {
+        $form_display->setComponent($field_name, [
+          'settings' => [
+            // The default is TRUE, but set to FALSE for BC reasons, since the
+            // previous behavior was to show the field even if there was only
+            // a single state available to select from.
+            'hide_single_state' => FALSE,
+          ],
+        ] + $component)->save();
+      }
+    }
+  }
+}
