@@ -25,16 +25,66 @@ class RegistrationStateWidget extends OptionsSelectWidget {
   /**
    * {@inheritdoc}
    */
+  public static function defaultSettings(): array {
+    return [
+      'hide_single_state' => TRUE,
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state): array {
+    $element = parent::settingsForm($form, $form_state);
+    $element['hide_single_state'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Hide single state'),
+      '#description' => $this->t('Hide the field unless more than one state is available.'),
+      '#default_value' => (bool) $this->getSetting('hide_single_state'),
+    ];
+    return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary(): array {
+    $summary = parent::settingsSummary();
+    if ($this->getSetting('hide_single_state')) {
+      $summary[] = $this->t('Hide when only one registration state is available: Yes');
+    }
+    else {
+      $summary[] = $this->t('Hide when only one registration state is available: No');
+    }
+    return $summary;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state): array {
     /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
     $entity = $items->getEntity();
 
-    return [
+    $options = $this->getStateOptions($entity);
+
+    $element = $element + [
       '#type' => 'select',
-      '#title' => $this->t('Status'),
-      '#options' => $this->getStateOptions($entity),
+      '#options' => $options,
       '#default_value' => $entity->getState()->id(),
     ];
+
+    // Hide the field in certain cases.
+    if (empty($options)) {
+      // No states configured yet.
+      $element['#access'] = FALSE;
+    }
+    elseif ($this->getSetting('hide_single_state') && (count($options) == 1)) {
+      // Only one state would be available and the hide setting is enabled.
+      $element['#access'] = FALSE;
+    }
+
+    return $element;
   }
 
   /**
@@ -73,16 +123,16 @@ class RegistrationStateWidget extends OptionsSelectWidget {
   /**
    * Gets the available registration state options.
    *
-   * @param \Drupal\registration\Entity\RegistrationInterface $entity
+   * @param \Drupal\registration\Entity\RegistrationInterface $registration
    *   The registration entity.
    *
    * @return array
    *   The states as an options array of labels keyed by ID.
    */
-  protected function getStateOptions(RegistrationInterface $entity): array {
+  protected function getStateOptions(RegistrationInterface $registration): array {
     $options = [];
-    $workflow = $entity->type->entity->getWorkflow();
-    $states = $workflow ? $workflow->getTypePlugin()->getStates() : [];
+    $current_state = $registration->getState();
+    $states = $registration->getType()->getStatesToShowOnForm($current_state, !$registration->isNew());
     foreach ($states as $id => $state) {
       $options[$id] = $state->label();
     }

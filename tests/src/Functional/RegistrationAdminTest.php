@@ -86,6 +86,7 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
       'access user profiles',
       'administer registration',
       'create conference registration other users',
+      'edit conference registration state',
     ]);
     $this->drupalLogin($admin_user);
     $this->drupalGet('/registration/' . $registration->id() . '/edit');
@@ -95,6 +96,28 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     $this->assertSession()->buttonExists('Save Registration');
     $this->getSession()->getPage()->pressButton('Save Registration');
     $this->assertSession()->pageTextContains('Registration has been saved.');
+
+    // The Status field is hidden by default when only one state is available,
+    // which is the case for the installed registration workflow.
+    $entity_form_display->setComponent('state', [
+      'type' => 'registration_state_default',
+    ])->save();
+    $this->drupalGet('/registration/' . $registration->id() . '/edit');
+    $this->assertSession()->fieldNotExists('state[0]');
+    $this->assertSession()->pageTextNotContains('The registration status.');
+
+    // When the "hide_single_state" setting is disabled for the Status field on
+    // the registration form display, the field is shown even when only one
+    // state is available.
+    $entity_form_display->setComponent('state', [
+      'type' => 'registration_state_default',
+      'settings' => [
+        'hide_single_state' => FALSE,
+      ],
+    ])->save();
+    $this->drupalGet('/registration/' . $registration->id() . '/edit');
+    $this->assertSession()->fieldExists('state[0]');
+    $this->assertSession()->pageTextContains('The registration status.');
 
     // When only one space can be registered, the Spaces field is hidden.
     $settings->set('maximum_spaces', 1);

@@ -73,6 +73,14 @@ field.widget.settings.registration_type:
       type: boolean
       label: 'Hide Register Tab'
 
+field.widget.settings.registration_state_default:
+  type: mapping
+  label: 'Registration state widget settings'
+  mapping:
+    hide_single_state:
+      type: boolean
+      label: 'Hide single state'
+
 field.field_settings.registration:
   type: mapping
   label: 'Registration field settings'
