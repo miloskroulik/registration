@@ -23,8 +23,8 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
     /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
     $host_entity = $entity->getHostEntity();
 
-    // Update operations require a host entity configured for registration.
-    if ($operation == 'update') {
+    // Some operations require a host entity configured for registration.
+    if (in_array($operation, ['update', 'administer'])) {
       if (!$host_entity) {
         $result = AccessResult::forbidden("The host entity is missing.");
         return $result->addCacheableDependency($entity);
@@ -44,10 +44,11 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
     if ($result->isNeutral()) {
       // The most global permissions don't depend on anything about the
       // registration or host.
-      $result = AccessResult::allowedIfHasPermissions($account, [
-        "administer registration",
-        "$operation any registration",
-      ], 'OR');
+      $permissions = ["administer registration"];
+      if ($operation !== 'administer') {
+        $permissions[] = "$operation any registration";
+      }
+      $result = AccessResult::allowedIfHasPermissions($account, $permissions, 'OR');
 
       if ($result->isNeutral()) {
         $result = $this->checkEntityUserPermissions($entity, $operation, $account);
@@ -75,6 +76,10 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
    *   The access result.
    */
   protected function checkEntityUserPermissions(EntityInterface $entity, string $operation, AccountInterface $account): AccessResultInterface {
+    if ($operation === 'administer') {
+      return $this->checkEntityUserPermissionsForAdministerOperation($entity, $account);
+    }
+
     $any_result = AccessResult::allowedIfHasPermissions($account, [
       "administer {$entity->bundle()} registration",
       "$operation any {$entity->bundle()} registration",
@@ -124,6 +129,30 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
       }
     }
 
+    return $result;
+  }
+
+  /**
+   * Checks the entity permissions for the 'administer' operation.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity for which to check access.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user for which to check access.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  protected function checkEntityUserPermissionsForAdministerOperation(EntityInterface $entity, AccountInterface $account): AccessResultInterface {
+    $result = AccessResult::allowedIfHasPermission($account, "administer {$entity->bundle()} registration");
+    if ($result->isNeutral()) {
+      if ($account->id() && ($account->id() == $entity->getUserId())) {
+        // The "own" permission is based on the current user's ID, so the
+        // result must be cached per user.
+        $result = AccessResult::allowedIfHasPermission($account, "administer own {$entity->bundle()} registration")
+          ->cachePerUser();
+      }
+    }
     return $result;
   }
 

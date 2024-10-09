@@ -54,6 +54,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
 
     // "Own" permissions.
     $account = $this->createUser(['view own registration']);
@@ -62,6 +63,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
 
     $account = $this->createUser([
       'view own conference registration',
@@ -72,6 +74,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('view', $account));
     $this->assertTrue($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
 
     $account = $this->createUser([
       'view own conference registration',
@@ -83,6 +86,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('view', $account));
     $this->assertTrue($registration->access('update', $account));
     $this->assertTrue($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
 
     // "Own" permissions for the wrong type.
     $account = $this->createUser([
@@ -95,6 +99,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
 
     // "View any" permission.
     $account = $this->createUser(['access content']);
@@ -106,12 +111,14 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
 
     // "View host" permission.
     $account = $this->createUser(['view host registration']);
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
     $account = $this->createUser([
       'bypass node access',
       'view host registration',
@@ -119,30 +126,35 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
 
     // "Administer" permission.
     $account = $this->createUser(['administer registration']);
     $this->assertTrue($registration->access('view', $account));
     $this->assertTrue($registration->access('update', $account));
     $this->assertTrue($registration->access('delete', $account));
+    $this->assertTrue($registration->access('administer', $account));
 
     // "Administer type" permission.
     $account = $this->createUser(['administer conference registration']);
     $this->assertTrue($registration->access('view', $account));
     $this->assertTrue($registration->access('update', $account));
     $this->assertTrue($registration->access('delete', $account));
+    $this->assertTrue($registration->access('administer', $account));
 
     // "Administer type settings" permission applies only to settings.
     $account = $this->createUser(['administer conference registration settings']);
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
 
     // "Administer own type" permission.
     $account = $this->createUser(['administer own conference registration']);
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
     $registration->set('user_uid', $account->id());
     $registration->save();
     // @see https://www.drupal.org/project/drupal/issues/2834344
@@ -150,12 +162,14 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('view', $account));
     $this->assertTrue($registration->access('update', $account));
     $this->assertTrue($registration->access('delete', $account));
+    $this->assertTrue($registration->access('administer', $account));
 
     // "Administer own type settings" permission only applies to settings.
     $account = $this->createUser(['administer own conference registration settings']);
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
     $registration->set('user_uid', $account->id());
     $registration->save();
     // @see https://www.drupal.org/project/drupal/issues/2834344
@@ -163,12 +177,14 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
 
     // "Administer types" permission only applies to types.
     $account = $this->createUser(['administer registration types']);
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
 
     // "Manage" permissions apply to the host entity, not registrations.
     $account = $this->createUser([
@@ -181,6 +197,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
     $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
   }
 
   /**

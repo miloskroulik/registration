@@ -3,6 +3,7 @@
 namespace Drupal\registration_admin_overrides;
 
 use Drupal\Core\Session\AccountInterface;
+use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\HostEntityInterface;
 
 /**
@@ -19,10 +20,12 @@ interface RegistrationOverrideCheckerInterface {
    *   The account.
    * @param string $setting
    *   The name of the registration setting, for example 'capacity'.
+   * @param \Drupal\registration\RegistrationInterface|null $registration
+   *   (optional) The registration entity.
    *
    * @return bool
    *   TRUE if the account can override the setting, FALSE otherwise.
    */
-  public function accountCanOverride(?HostEntityInterface $host_entity, AccountInterface $account, string $setting): bool;
+  public function accountCanOverride(?HostEntityInterface $host_entity, AccountInterface $account, string $setting, ?RegistrationInterface $registration = NULL): bool;
 
 }

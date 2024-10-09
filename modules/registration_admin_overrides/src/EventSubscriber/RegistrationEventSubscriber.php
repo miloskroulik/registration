@@ -208,7 +208,7 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
    *   TRUE if the user can override the setting, FALSE otherwise.
    */
   protected function canOverride(array $context, string $setting): bool {
-    return $this->overrideChecker->accountCanOverride($context['host_entity'], $this->currentUser, $setting);
+    return $this->overrideChecker->accountCanOverride($context['host_entity'], $this->currentUser, $setting, $context['registration'] ?? NULL);
   }
 
 }

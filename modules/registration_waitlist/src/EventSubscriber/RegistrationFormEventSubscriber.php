@@ -48,9 +48,7 @@ class RegistrationFormEventSubscriber implements EventSubscriberInterface {
         $spaces = $registration->getSpacesReserved();
         if ($host_entity->shouldAddToWaitList($spaces, $registration)) {
           $type = $host_entity->getRegistrationTypeBundle();
-          $admin =
-                 $this->currentUser()->hasPermission("administer registration")
-              || $this->currentUser()->hasPermission("administer $type registration");
+          $admin = $registration->access('administer', $this->currentUser());
 
           if ($registration->isNew() || !$admin) {
             // Hide the Status field since the registration will be placed
