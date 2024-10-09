@@ -75,7 +75,7 @@ class RegistrationHostEntityFormatter extends FormatterBase {
       // Get the translated entity if it has one. Let the host entity handler
       // do the heavy lifting since the entity type may not be translatable
       // and calling translation functions on it would throw exceptions.
-      $handler = \Drupal::entityTypeManager()->getHandler('registration', 'host_entity');
+      $handler = \Drupal::entityTypeManager()->getHandler($entity->getEntityTypeId(), 'registration_host_entity');
       $host_entity = $handler->createHostEntity($entity, $langcode);
       $entity = $host_entity->getEntity();
 

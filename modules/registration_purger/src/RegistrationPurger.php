@@ -68,7 +68,7 @@ class RegistrationPurger {
 
     /** @var \Drupal\registration\HostEntityInterface $host_entity */
     $host_entity = $this->entityTypeManager
-      ->getHandler('registration', 'host_entity')
+      ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
       ->createHostEntity($entity);
 
     $this->purgeSettings($host_entity);

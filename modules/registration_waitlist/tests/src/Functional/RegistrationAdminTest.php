@@ -48,7 +48,7 @@ class RegistrationAdminTest extends RegistrationWaitListBrowserTestBase {
     ]);
     $this->drupalLogin($account);
 
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('user', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($user);
 
     /** @var \Drupal\registration\RegistrationSettingsStorage $settings_storage */

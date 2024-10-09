@@ -103,7 +103,7 @@ class SendReminders extends QueueWorkerBase implements ContainerFactoryPluginInt
     if ($entity) {
       /** @var \Drupal\registration\HostEntityInterface $host_entity */
       $host_entity = $this->entityTypeManager
-        ->getHandler('registration', 'host_entity')
+        ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
         ->createHostEntity($entity, $data['langcode']);
       $registration_type = $host_entity->getRegistrationType();
       $states = $registration_type->getActiveStates();

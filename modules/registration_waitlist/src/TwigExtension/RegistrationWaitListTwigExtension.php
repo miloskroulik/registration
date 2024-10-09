@@ -62,7 +62,7 @@ class RegistrationWaitListTwigExtension extends AbstractExtension {
       throw new \InvalidArgumentException('The "host_entity_waitlist_indicator" filter must be given a valid registration entity.');
     }
 
-    $handler = \Drupal::entityTypeManager()->getHandler('registration', 'host_entity');
+    $handler = \Drupal::entityTypeManager()->getHandler($entity->getEntityTypeId(), 'registration_host_entity');
     $host_entity = $handler->createHostEntity($entity);
     if ($host_entity->isConfiguredForRegistration() && $host_entity->isEnabledForRegistration()) {
       if ($host_entity->shouldAddToWaitList($spaces, $registration)) {

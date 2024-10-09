@@ -89,7 +89,7 @@ class RegistrationLinkFormatter extends FormatterBase {
     if ($entity = $items->getEntity()) {
       /** @var \Drupal\registration\HostEntityInterface $host_entity */
       $host_entity = $this->entityTypeManager
-        ->getHandler('registration', 'host_entity')
+        ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
         ->createHostEntity($entity, $langcode);
       $settings = $host_entity->getSettings();
       $cache_entities[] = $settings;

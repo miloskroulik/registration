@@ -348,7 +348,7 @@ class InlineEntityFormWidget extends InlineEntityFormBase {
     if (!$settings) {
       // Settings are not in the current state, so retrieve from the host
       // entity directly.
-      $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+      $handler = $this->entityTypeManager->getHandler($entity->getEntityTypeId(), 'registration_host_entity');
       $host_entity = $handler->createHostEntity($entity);
       if (!$host_entity->isConfiguredForRegistration()) {
         // Configure the host entity for registration for the purposes of

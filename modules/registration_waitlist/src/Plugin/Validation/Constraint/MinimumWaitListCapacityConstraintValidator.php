@@ -49,7 +49,7 @@ class MinimumWaitListCapacityConstraintValidator extends ConstraintValidator imp
       $entity_id = $settings->getHostEntityId();
       $storage = $this->entityTypeManager->getStorage($entity_type_id);
       if ($entity = $storage->load($entity_id)) {
-        $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+        $handler = $this->entityTypeManager->getHandler($entity_type_id, 'registration_host_entity');
         $host_entity = $handler->createHostEntity($entity);
         if ($host_entity->isWaitListEnabled()) {
           // Prevent setting the capacity to a non-zero value that is less than

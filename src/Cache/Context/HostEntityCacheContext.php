@@ -54,7 +54,7 @@ class HostEntityCacheContext implements CacheContextInterface {
     foreach ($populated_contexts as $context) {
       if (in_array($context->getContextDefinition()->getDataType(), $entity_contexts)) {
         $this->hostEntity = $entity_type_manager
-          ->getHandler('registration', 'host_entity')
+          ->getHandler($context->getContextValue()->getEntityTypeId(), 'registration_host_entity')
           ->createHostEntity($context->getContextValue());
         break;
       }

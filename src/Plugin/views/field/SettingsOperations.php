@@ -61,7 +61,7 @@ class SettingsOperations extends EntityOperations {
       if ($entity = $storage->load($entity_id)) {
         /** @var \Drupal\registration\HostEntityInterface $host_entity */
         $host_entity = $this->entityTypeManager
-          ->getHandler('registration', 'host_entity')
+          ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
           ->createHostEntity($entity);
         if ($host_entity->getRegistrationTypeBundle()) {
           $route_name = "entity.$entity_type_id.registration.registration_settings";

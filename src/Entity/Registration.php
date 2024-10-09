@@ -167,7 +167,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
             ->getId();
         }
         $this->hostEntity = \Drupal::entityTypeManager()
-          ->getHandler('registration', 'host_entity')
+          ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
           ->createHostEntity($entity, $langcode);
       }
     }

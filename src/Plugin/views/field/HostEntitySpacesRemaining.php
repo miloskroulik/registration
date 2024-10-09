@@ -49,7 +49,7 @@ class HostEntitySpacesRemaining extends FieldPluginBase {
    */
   public function render(ResultRow $values) {
     if ($entity = $this->getEntity($values)) {
-      $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+      $handler = $this->entityTypeManager->getHandler($entity->getEntityTypeId(), 'registration_host_entity');
       $host_entity = $handler->createHostEntity($entity);
       if ($host_entity->isConfiguredForRegistration()) {
         $spaces_remaining = $host_entity->getSpacesRemaining();

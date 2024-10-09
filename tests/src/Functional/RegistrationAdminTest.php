@@ -17,7 +17,7 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     $user->set('field_registration', 'conference');
     $user->save();
 
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('user', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($user);
 
     /** @var \Drupal\registration\RegistrationSettingsStorage $settings_storage */
@@ -58,7 +58,7 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
       'type' => 'number',
     ])->save();
 
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('user', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($user);
 
     /** @var \Drupal\registration\RegistrationSettingsStorage $settings_storage */
@@ -170,7 +170,7 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     $user->set('field_registration', 'conference');
     $user->save();
 
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('user', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($user);
 
     /** @var \Drupal\registration\RegistrationSettingsStorage $settings_storage */
