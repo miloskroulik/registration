@@ -5,7 +5,7 @@ namespace Drupal\registration;
 use Drupal\Core\Entity\EntityInterface;
 
 /**
- * Defines the "host_entity" handler class for registrations.
+ * Defines the interface for the "registration_host_entity" handler.
  *
  * Using a handler allows other modules to override the host
  * entity functions and integrate with third party data sources.

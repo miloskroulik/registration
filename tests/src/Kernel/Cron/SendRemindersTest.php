@@ -21,7 +21,7 @@ class SendRemindersTest extends CronTestBase {
    * @covers ::run
    */
   public function testSendReminders() {
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
     /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
     $storage = $this->entityTypeManager->getStorage('registration_settings');
 

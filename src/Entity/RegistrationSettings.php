@@ -56,7 +56,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
   public function getHostEntity(): ?HostEntityInterface {
     if (!$this->get('host_entity')->isEmpty()) {
       if ($entity = $this->get('host_entity')->entity) {
-        $handler = \Drupal::entityTypeManager()->getHandler('registration', 'host_entity');
+        $handler = \Drupal::entityTypeManager()->getHandler($entity->getEntityTypeId(), 'registration_host_entity');
         return $handler->createHostEntity($entity, $this->getLangcode());
       }
     }

@@ -61,7 +61,7 @@ class RegistrationWaitListStateTransitionAccessTest extends RegistrationWaitList
 
     // Enable the wait list with a capacity of 1 in both standard capacity
     // and wait list capacity.
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($node);
     /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
     $storage = $this->entityTypeManager->getStorage('registration_settings');
@@ -88,7 +88,7 @@ class RegistrationWaitListStateTransitionAccessTest extends RegistrationWaitList
 
     // Same scenario but with room this time.
     $node = $this->createAndSaveNode();
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($node);
     /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
     $storage = $this->entityTypeManager->getStorage('registration_settings');
@@ -112,7 +112,7 @@ class RegistrationWaitListStateTransitionAccessTest extends RegistrationWaitList
 
     // Original scenario but moving to canceled is allowed.
     $node = $this->createAndSaveNode();
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($node);
     /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
     $storage = $this->entityTypeManager->getStorage('registration_settings');

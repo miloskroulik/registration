@@ -54,7 +54,7 @@ class MinimumCapacityConstraintValidator extends ConstraintValidator implements 
       $entity_id = $settings->getHostEntityId();
       $storage = $this->entityTypeManager->getStorage($entity_type_id);
       if ($entity = $storage->load($entity_id)) {
-        $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+        $handler = $this->entityTypeManager->getHandler($entity->getEntityTypeId(), 'registration_host_entity');
         $host_entity = $handler->createHostEntity($entity);
         // Prevent setting the capacity to a non-zero value that is less than
         // the number of spaces already reserved by active registrations.

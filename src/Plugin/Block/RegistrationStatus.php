@@ -305,7 +305,7 @@ class RegistrationStatus extends BlockBase implements ContainerFactoryPluginInte
     /** @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $this->getContextValue('entity');
     /** @var \Drupal\registration\RegistrationHostEntityHandlerInterface $host_entity_handler */
-    $host_entity_handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $host_entity_handler = $this->entityTypeManager->getHandler($entity->getEntityTypeId(), 'registration_host_entity');
     $host_entity = $host_entity_handler->createHostEntity($entity);
 
     // If registrations are only available on specific bundles, the context will

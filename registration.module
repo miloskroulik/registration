@@ -21,6 +21,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\FieldConfigInterface;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\RegistrationHelper;
+use Drupal\registration\RegistrationHostEntityHandler;
 
 /**
  * Implements hook_help().
@@ -91,6 +92,21 @@ function registration_entity_type_alter(array &$entity_types) {
   // @todo Remove once issue #2706431 is resolved.
   if (\Drupal::moduleHandler()->moduleExists('entity')) {
     $entity_types['registration']->setHandlerClass('views_data', 'Drupal\entity\EntityViewsData');
+  }
+
+  // If the host_entity handler is overridden, ensure that the
+  // registration_host_entity handler is too, providing back compatibility.
+  // @todo Remove before registration:4.0.0.
+  $modern = $entity_types['registration']->getHandlerClass('registration_host_entity');
+  $legacy = $entity_types['registration']->getHandlerClass('host_entity');
+  if ($legacy !== $modern) {
+    // The registration and registration_waitlist modules provide
+    // their own host_entity handlers, but they also provide
+    // registration_host_entity handlers too, so can be ignored.
+    if (!in_array($legacy, [RegistrationHostEntityHandler::class, 'Drupal\registration_waitlist\HostEntityHandler'])) {
+      @trigger_error("Using the host_entity handler of the registration entity type is deprecated in registration:3.1.5 and is removed from registration:4.0.0. Use the registration_host_entity handler for the host entity type instead. See https://www.drupal.org/node/3462126", E_USER_DEPRECATED);
+      $entity_types['registration']->setHandlerClass('registration_host_entity', $legacy);
+    }
   }
 }
 
@@ -371,5 +387,34 @@ function registration_migration_plugins_alter(array &$migrations) {
     // Migrate registration types before field instances since the field
     // instances have references to the registration types as field bundles.
     $migrations['d7_field_instance']['migration_dependencies']['optional'][] = 'd7_registration_type';
+  }
+}
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function registration_entity_type_build(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    if (!$entity_type->getHandlerClass('registration_host_entity')) {
+      $entity_type->setHandlerClass('registration_host_entity', RegistrationHostEntityHandler::class);
+    }
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * In order to ensure backwards compatibility for the change of handler id
+ * from host_entity to registration_host_entity, our alter hook needs to be
+ * last.
+ *
+ * @todo Remove before registration:4.0.0.
+ */
+function registration_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'entity_type_alter' && isset($implementations['registration'])) {
+    $group = $implementations['registration'];
+    unset($implementations['registration']);
+    $implementations['registration'] = $group;
   }
 }

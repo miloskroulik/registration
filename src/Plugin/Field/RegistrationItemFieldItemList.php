@@ -22,7 +22,7 @@ class RegistrationItemFieldItemList extends FieldItemList implements Registratio
    * {@inheritdoc}
    */
   public function createHostEntity(?string $langcode = NULL): HostEntityInterface {
-    $handler = \Drupal::entityTypeManager()->getHandler('registration', 'host_entity');
+    $handler = \Drupal::entityTypeManager()->getHandler($this->getEntity()->getEntityTypeId(), 'registration_host_entity');
     return $handler->createHostEntity($this->getEntity(), $langcode);
   }
 

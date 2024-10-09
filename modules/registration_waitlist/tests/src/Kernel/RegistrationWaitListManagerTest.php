@@ -40,7 +40,7 @@ class RegistrationWaitListManagerTest extends RegistrationWaitListKernelTestBase
    */
   public function testRegistrationWaitListManager() {
     $node = $this->createAndSaveNode();
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($node);
     /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
     $storage = $this->entityTypeManager->getStorage('registration_settings');

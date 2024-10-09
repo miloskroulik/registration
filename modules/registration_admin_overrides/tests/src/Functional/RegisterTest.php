@@ -18,7 +18,7 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     $this->adminUser->set('field_registration', 'conference');
     $this->adminUser->save();
 
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('user', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($this->adminUser);
 
     /** @var \Drupal\registration\RegistrationSettingsStorage $storage */

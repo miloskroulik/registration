@@ -153,7 +153,7 @@ class RegisterAccessCheckTest extends RegistrationAdminOverridesKernelTestBase {
    * @covers ::access
    */
   public function testAccessRegistrationConfiguredWithOverrides() {
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
     $access_checker = new RegisterAccessCheck($this->entityTypeManager, $this->registrationManager, $this->overrideChecker);
 
     $node = $this->createAndSaveNode();

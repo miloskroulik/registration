@@ -79,7 +79,7 @@ class RegistrationSettingsStorageTest extends RegistrationKernelTestBase impleme
    * @covers ::loadSettingsForHostEntity
    */
   public function testSettingsStorage() {
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($this->node);
 
     /** @var \Drupal\registration\RegistrationSettingsStorage $storage */

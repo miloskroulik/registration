@@ -38,7 +38,7 @@ class ManageRegistrationsCaption extends AreaPluginBase {
     if (!$empty || !empty($this->options['empty'])) {
       $storage = $this->entityTypeManager->getStorage($this->view->args[0]);
       if ($storage && ($entity = $storage->load($this->view->args[1]))) {
-        $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+        $handler = $this->entityTypeManager->getHandler($entity->getEntityTypeId(), 'registration_host_entity');
         $host_entity = $handler->createHostEntity($entity);
         if ($host_entity->getRegistrationTypeBundle()) {
           $settings = $host_entity->getSettings();

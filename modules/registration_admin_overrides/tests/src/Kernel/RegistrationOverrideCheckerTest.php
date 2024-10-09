@@ -36,7 +36,7 @@ class RegistrationOverrideCheckerTest extends RegistrationAdminOverridesKernelTe
    * @covers ::accountCanOverride
    */
   public function testRegistrationOverrideChecker() {
-    $handler = $this->entityTypeManager->getHandler('registration', 'host_entity');
+    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
 
     $node = $this->createAndSaveNode();
     $host_entity = $handler->createHostEntity($node);

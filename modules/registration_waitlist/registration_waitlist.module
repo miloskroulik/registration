@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
+use Drupal\registration\RegistrationHostEntityHandler;
 use Drupal\registration_waitlist\Event\RegistrationWaitListEvents;
 use Drupal\registration_waitlist\Plugin\Field\RegistrationItemFieldItemList;
 
@@ -110,9 +111,27 @@ function registration_waitlist_form_registration_type_submit(&$form, FormStateIn
  */
 function registration_waitlist_entity_type_alter(array &$entity_types) {
   // Override the host entity handler.
+  // @todo remove host_entity override before registration:4.0.0
   $entity_types['registration']->setHandlerClass('host_entity', 'Drupal\registration_waitlist\HostEntityHandler');
   // Add a wait list constraint to registration settings.
   $entity_types['registration_settings']->addConstraint('MinimumWaitListCapacity');
+}
+
+/**
+ * Implements hook_entity_type_build().
+ *
+ * Override the host entity handler. Uses the build hook not the alter hook
+ * in order to make it easier for other modules to customize using the alter
+ * hook.
+ */
+function registration_waitlist_entity_type_build(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    $handler_class = $entity_type->getHandlerClass('registration_host_entity');
+    if (!$handler_class || $handler_class === RegistrationHostEntityHandler::class) {
+      $entity_type->setHandlerClass('registration_host_entity', 'Drupal\registration_waitlist\HostEntityHandler');
+    }
+  }
 }
 
 /**
