@@ -179,7 +179,7 @@ class RegistrationManager implements RegistrationManagerInterface {
     $my_registration = ($registration->getUserId() == $this->currentUser->id());
     $allow_multiple = $settings->getSetting('multiple_registrations');
     if ($this->currentUser->isAuthenticated()
-      && $this->currentUser->hasPermission("create $type registration self")
+      && $host_entity->access('register self', $this->currentUser)
       && ($my_registration || $allow_multiple || !$host_entity->isRegistrant($this->currentUser))
     ) {
       $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME] = $this->t('Myself');
@@ -187,17 +187,17 @@ class RegistrationManager implements RegistrationManagerInterface {
 
     // Other users:
     $user_is_anonymous = $this->currentUser->isAnonymous();
-    if ($this->currentUser->hasPermission("create $type registration other users") && !$user_is_anonymous) {
+    if ($host_entity->access('register other users', $this->currentUser) && !$user_is_anonymous) {
       $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER] = $this->t('Other account');
     }
 
     // Other anonymous people:
-    if ($this->currentUser->hasPermission("create $type registration other anonymous") && !$user_is_anonymous) {
+    if ($host_entity->access('register other anonymous', $this->currentUser) && !$user_is_anonymous) {
       $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON] = $this->t('Other person');
     }
 
     // Anonymous self-registration:
-    if ($user_is_anonymous && $this->currentUser->hasPermission("create $type registration self")) {
+    if ($user_is_anonymous && $host_entity->access('register self', $this->currentUser)) {
       $options[RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON] = $this->t('Myself');
     }
 

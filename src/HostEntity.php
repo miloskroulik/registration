@@ -114,6 +114,14 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function access($operation, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    $handler = $this->entityTypeManager()->getHandler($this->getEntityTypeId(), 'registration_host_access');
+    return $handler->access($this, $operation, $account, $return_as_object);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function bundle(): string {
     return $this->getEntity()->bundle();
   }
