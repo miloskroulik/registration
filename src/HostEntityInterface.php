@@ -2,6 +2,7 @@
 
 namespace Drupal\registration;
 
+use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -18,7 +19,7 @@ use Drupal\registration\Entity\RegistrationTypeInterface;
  * mechanism for extending the functionality of content entities without
  * having to override the content entity base class.
  */
-interface HostEntityInterface {
+interface HostEntityInterface extends AccessibleInterface {
 
   /**
    * Gets the bundle of the wrapped entity.

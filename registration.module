@@ -21,6 +21,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\FieldConfigInterface;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\RegistrationHelper;
+use Drupal\registration\RegistrationHostAccessControlHandler;
 use Drupal\registration\RegistrationHostEntityHandler;
 
 /**
@@ -396,6 +397,9 @@ function registration_migration_plugins_alter(array &$migrations) {
 function registration_entity_type_build(array &$entity_types) {
   /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
   foreach ($entity_types as $entity_type_id => $entity_type) {
+    if (!$entity_type->getHandlerClass('registration_host_access')) {
+      $entity_type->setHandlerClass('registration_host_access', RegistrationHostAccessControlHandler::class);
+    }
     if (!$entity_type->getHandlerClass('registration_host_entity')) {
       $entity_type->setHandlerClass('registration_host_entity', RegistrationHostEntityHandler::class);
     }

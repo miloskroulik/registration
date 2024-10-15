@@ -5,9 +5,12 @@
  * Provides hooks for registration tests.
  */
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\registration\Entity\RegistrationInterface;
+use Drupal\registration\HostEntityInterface;
 
 /**
  * Implements hook_entity_base_field_info().
@@ -53,4 +56,20 @@ function registration_test_registration_presave(RegistrationInterface $registrat
   if ($registration->getAnonymousEmail() == 'trigger_presave_hook@example.org') {
     $registration->set('state', 'complete');
   }
+}
+
+/**
+ * Implements hook_registration_host__access().
+ */
+function registration_test_registration_host__access(HostEntityInterface $host_entity, $operation, AccountInterface $account) {
+  if ($operation === 'manage') {
+    \Drupal::state()->set("registration_test_host_access_manage_hook_fired", TRUE);
+    if (\Drupal::state()->get("registration_test_host_access_manage_result") === 'allowed') {
+      return AccessResult::allowed();
+    }
+    elseif (\Drupal::state()->get("registration_test_host_access_manage_result") === 'forbidden') {
+      return AccessResult::forbidden();
+    }
+  }
+  return AccessResult::neutral();
 }
