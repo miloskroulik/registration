@@ -21,6 +21,10 @@ class RegistrationIdFormatterTest extends FormatterTestBase {
    * @covers ::render
    */
   public function testRegistrationIdFormatter() {
+    // The user must be able to view the registration in order to view its ID.
+    $account = $this->createUser(['view any registration']);
+    $this->setCurrentUser($account);
+
     $node = $this->createAndSaveNode();
     $registration = $this->createAndSaveRegistration($node);
     $build = $registration->get('registration_id')->view([

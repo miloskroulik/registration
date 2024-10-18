@@ -49,9 +49,6 @@ class RegistrationManagerTest extends RegistrationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $admin_user = $this->createUser();
-    $this->setCurrentUser($admin_user);
-
     $this->node = $this->createAndSaveNode();
 
     $this->registrationManager = $this->container->get('registration.manager');
@@ -88,8 +85,14 @@ class RegistrationManagerTest extends RegistrationKernelTestBase {
     $settings = $this->hostEntity->getSettings();
     $list = $this->hostEntity->getRegistrationList();
     $registration = reset($list);
-    $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
 
+    $account = $this->createUser([
+      'create conference registration self',
+      'create conference registration other users',
+      'create conference registration other anonymous',
+    ]);
+    $this->setCurrentUser($account);
+    $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
@@ -105,28 +108,28 @@ class RegistrationManagerTest extends RegistrationKernelTestBase {
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
     $account = $this->createUser(['access registration overview']);
-    $this->container->get('current_user')->setAccount($account);
+    $this->setCurrentUser($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
     $account = $this->createUser(['create conference registration self']);
-    $this->container->get('current_user')->setAccount($account);
+    $this->setCurrentUser($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
     $account = $this->createUser(['create conference registration other users']);
-    $this->container->get('current_user')->setAccount($account);
+    $this->setCurrentUser($account);
     $options = $this->registrationManager->getRegistrantOptions($registration2, $settings);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
     $account = $this->createUser(['create conference registration other anonymous']);
-    $this->container->get('current_user')->setAccount($account);
+    $this->setCurrentUser($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);

@@ -21,6 +21,10 @@ class RegistrationHostEntityFormatterTest extends FormatterTestBase {
    * @covers ::render
    */
   public function testRegistrationHostEntityFormatter() {
+    // The user must be able to view the host entity in order to view its title.
+    $account = $this->createUser(['access content']);
+    $this->setCurrentUser($account);
+
     $node = $this->createAndSaveNode();
     $registration = $this->createAndSaveRegistration($node);
     $host_entity = $registration->getHostEntity();

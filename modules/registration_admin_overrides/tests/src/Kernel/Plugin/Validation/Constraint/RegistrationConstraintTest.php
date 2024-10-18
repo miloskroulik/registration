@@ -5,7 +5,6 @@ namespace Drupal\Tests\registration_admin_overrides\Kernel\Plugin\Validation\Con
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Drupal\Tests\registration_admin_overrides\Kernel\RegistrationAdminOverridesKernelTestBase;
-use Drupal\user\UserInterface;
 
 /**
  * Tests the Registration constraint.
@@ -22,24 +21,6 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
 
   use NodeCreationTrait;
   use RegistrationCreationTrait;
-
-  /**
-   * The admin user.
-   *
-   * @var \Drupal\user\UserInterface
-   */
-  protected UserInterface $adminUser;
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-
-    $admin_user = $this->createUser();
-    $this->setCurrentUser($admin_user);
-    $this->adminUser = $admin_user;
-  }
 
   /**
    * @covers ::validate
@@ -177,7 +158,7 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     $registration->set('author_uid', 1);
     $registration->set('user_uid', 1);
     $violations = $registration->validate();
-    $this->assertEquals('<em class="placeholder">' . $this->adminUser->getAccountName() . '</em> is already registered for this event.', (string) $violations[0]->getMessage());
+    $this->assertEquals('You are already registered for this event.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
 
     $user = $this->createUser();
@@ -205,11 +186,10 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     $registration->set('user_uid', 1);
     $registration->set('anon_mail', NULL);
     $violations = $registration->validate();
-    $this->assertEquals('<em class="placeholder">' . $this->adminUser->getAccountName() . '</em> is already registered for this event.', (string) $violations[0]->getMessage());
+    $this->assertEquals('You are already registered for this event.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
 
     // Administrators can always edit existing registrations.
-    $this->setCurrentUser($this->adminUser);
     $settings->set('status', FALSE);
     $settings->save();
     $registration = $this->createRegistration($node);
@@ -272,6 +252,18 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
    * @covers ::validate
    */
   public function testRegistrationConstraintWithOverrides() {
+    $admin_user = $this->createUser([
+      'administer registration',
+    ]);
+    $overriding_user = $this->createUser([
+      'administer registration',
+      'registration override status',
+      'registration override maximum spaces',
+      'registration override capacity',
+      'registration override open',
+      'registration override close',
+    ]);
+
     // Exceeds maximum spaces.
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
@@ -279,14 +271,11 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     // Capacity 5 and max 2 spaces per registration are set in the
     // registration_test module.
     $registration->set('count', 5);
-    $account = $this->createUser([
-      'administer registration',
-    ]);
-    $this->setCurrentUser($account);
+    $this->setCurrentUser($admin_user);
     $violations = $registration->validate();
     $this->assertEquals('You may not register for more than 2 spaces.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
-    $this->setCurrentUser($this->adminUser);
+    $this->setCurrentUser($overriding_user);
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
 
@@ -302,11 +291,11 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
     $registration->set('count', 2);
-    $this->setCurrentUser($account);
+    $this->setCurrentUser($admin_user);
     $violations = $registration->validate();
     $this->assertEquals('Sorry, unable to register for <em class="placeholder">My event</em> due to: insufficient spaces remaining.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
-    $this->setCurrentUser($this->adminUser);
+    $this->setCurrentUser($overriding_user);
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
 
@@ -316,11 +305,11 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     $settings->set('open', '2220-01-01T00:00:00');
     $settings->save();
     $registration->set('count', 1);
-    $this->setCurrentUser($account);
+    $this->setCurrentUser($admin_user);
     $violations = $registration->validate();
     $this->assertEquals('Registration for <em class="placeholder">My event</em> is not open yet.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
-    $this->setCurrentUser($this->adminUser);
+    $this->setCurrentUser($overriding_user);
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
 
@@ -328,11 +317,11 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     $settings->set('open', NULL);
     $settings->set('close', '2020-01-01T00:00:00');
     $settings->save();
-    $this->setCurrentUser($account);
+    $this->setCurrentUser($admin_user);
     $violations = $registration->validate();
     $this->assertEquals('Registration for <em class="placeholder">My event</em> is closed.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
-    $this->setCurrentUser($this->adminUser);
+    $this->setCurrentUser($overriding_user);
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
 
@@ -344,15 +333,47 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     $settings = $host_entity->getSettings();
     $settings->set('capacity', 1);
     $settings->save();
+    // Exceed capacity. This is not allowed through the registration UI but can
+    // be done through the entity API since validation is separate.
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    $registration->save();
+    // Nothing has changed, so editing should be allowed.
+    $this->setCurrentUser($admin_user);
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+    $this->setCurrentUser($overriding_user);
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
 
     // Try to increase the spaces reserved while capacity is exceeded.
     $registration->set('count', 2);
+    $this->setCurrentUser($admin_user);
+    $violations = $registration->validate();
+    $this->assertEquals('Sorry, unable to register for <em class="placeholder">My event</em> due to: insufficient spaces remaining.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $this->setCurrentUser($overriding_user);
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
 
     // Try to complete a pending registration while capacity is exceeded.
     $registration->set('count', 1);
     $registration->set('state', 'complete');
+    $this->setCurrentUser($admin_user);
+    $violations = $registration->validate();
+    $this->assertEquals('Sorry, unable to register for <em class="placeholder">My event</em> due to: insufficient spaces remaining.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $this->setCurrentUser($overriding_user);
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+
+    // Canceling a registration is always allowed.
+    $registration->set('count', 2);
+    $registration->set('state', 'canceled');
+    $this->setCurrentUser($admin_user);
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+    $this->setCurrentUser($overriding_user);
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
   }
