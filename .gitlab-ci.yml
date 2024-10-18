@@ -33,7 +33,7 @@ include:
   # View these include files at https://git.drupalcode.org/project/gitlab_templates/
   ################
   - project: $_GITLAB_TEMPLATES_REPO
-    ref: $_GITLAB_TEMPLATES_REF
+    ref: 1.5.10
     file:
       - '/includes/include.drupalci.main.yml'
       - '/includes/include.drupalci.variables.yml'
