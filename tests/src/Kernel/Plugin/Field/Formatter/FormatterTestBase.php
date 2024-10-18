@@ -20,9 +20,6 @@ abstract class FormatterTestBase extends RegistrationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $admin_user = $this->createUser();
-    $this->setCurrentUser($admin_user);
-
     $this->installConfig(['system']);
 
     $formats = $this->entityTypeManager

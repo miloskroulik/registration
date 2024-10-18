@@ -35,6 +35,14 @@ class RegistrationWorkflowStateTransitionTest extends RegistrationWorkflowKernel
       'waitlist',
     ];
 
+    $permissions = [
+      'use registration hold transition',
+      'use registration complete transition',
+      'use registration cancel transition',
+    ];
+    $user = $this->createUser($permissions);
+    $this->setCurrentUser($user);
+
     /** @var \Drupal\registration\RegistrationState[] $states */
     $states = [];
     foreach ($state_names as $state_name) {

@@ -32,7 +32,7 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $admin_user = $this->createUser();
+    $admin_user = $this->createUser(['administer registration']);
     $this->setCurrentUser($admin_user);
     $this->adminUser = $admin_user;
   }

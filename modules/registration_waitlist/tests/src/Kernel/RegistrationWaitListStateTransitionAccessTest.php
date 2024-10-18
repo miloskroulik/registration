@@ -76,6 +76,9 @@ class RegistrationWaitListStateTransitionAccessTest extends RegistrationWaitList
     $registration2->set('state', 'waitlist');
     $registration2->save();
 
+    $completer = $this->createUser(['use registration complete transition']);
+    $canceler = $this->createUser(['use registration cancel transition']);
+
     // Access to complete a wait listed registration cannot be granted if there
     // is no room for it within standard capacity.
     $account = $this->createUser(['use registration complete transition']);
@@ -83,7 +86,7 @@ class RegistrationWaitListStateTransitionAccessTest extends RegistrationWaitList
       'registration' => $registration2,
       'transition' => 'complete',
     ]);
-    $access_result = $access_checker->access($account, $route_match);
+    $access_result = $access_checker->access($completer, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
     // Same scenario but with room this time.
@@ -107,8 +110,10 @@ class RegistrationWaitListStateTransitionAccessTest extends RegistrationWaitList
       'registration' => $registration2,
       'transition' => 'complete',
     ]);
-    $access_result = $access_checker->access($account, $route_match);
+    $access_result = $access_checker->access($completer, $route_match);
     $this->assertTrue($access_result->isAllowed());
+    $access_result = $access_checker->access($canceler, $route_match);
+    $this->assertFalse($access_result->isAllowed());
 
     // Original scenario but moving to canceled is allowed.
     $node = $this->createAndSaveNode();
@@ -131,13 +136,15 @@ class RegistrationWaitListStateTransitionAccessTest extends RegistrationWaitList
       'registration' => $registration2,
       'transition' => 'complete',
     ]);
-    $access_result = $access_checker->access($account, $route_match);
+    $access_result = $access_checker->access($completer, $route_match);
     $this->assertFalse($access_result->isAllowed());
     $route_match = new RouteMatch('registration_workflow.transition', $route, [
       'registration' => $registration2,
       'transition' => 'cancel',
     ]);
-    $access_result = $access_checker->access($account, $route_match);
+    $access_result = $access_checker->access($completer, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+    $access_result = $access_checker->access($canceler, $route_match);
     $this->assertTrue($access_result->isAllowed());
   }
 

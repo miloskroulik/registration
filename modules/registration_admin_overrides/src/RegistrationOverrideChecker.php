@@ -21,8 +21,9 @@ class RegistrationOverrideChecker implements RegistrationOverrideCheckerInterfac
       if ($registration) {
         $admin = $registration->access('administer', $account);
       }
-      if ($admin && $account->hasPermission('registration override ' . $setting)) {
-        return (bool) $host_entity->getRegistrationType()->getThirdPartySetting('registration_admin_overrides', $setting);
+      if ($admin && $account->hasPermission('registration override ' . str_replace('_', ' ', $setting))) {
+        $setting_result = (bool) $host_entity->getRegistrationType()->getThirdPartySetting('registration_admin_overrides', $setting);
+        return $setting_result;
       }
     }
     return FALSE;

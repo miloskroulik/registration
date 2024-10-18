@@ -29,6 +29,11 @@ abstract class RegistrationKernelTestBase extends EntityKernelTestBase {
   ];
 
   /**
+   * {@inheritdoc}
+   */
+  protected bool $usesSuperUserAccessPolicy = FALSE;
+
+  /**
    * The registration type.
    *
    * @var \Drupal\registration\Entity\RegistrationTypeInterface
