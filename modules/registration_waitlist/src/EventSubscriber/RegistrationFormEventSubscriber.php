@@ -47,7 +47,6 @@ class RegistrationFormEventSubscriber implements EventSubscriberInterface {
       if ($registration = $form_state->get('registration')) {
         $spaces = $registration->getSpacesReserved();
         if ($host_entity->shouldAddToWaitList($spaces, $registration)) {
-          $type = $host_entity->getRegistrationTypeBundle();
           $admin = $registration->access('administer', $this->currentUser());
 
           if ($registration->isNew() || !$admin) {

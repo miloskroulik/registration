@@ -23,14 +23,6 @@ class RegistrationHostAccessTest extends RegistrationKernelTestBase {
   protected bool $usesSuperUserAccessPolicy = FALSE;
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-    $this->state = $this->container->get('state');
-  }
-
-  /**
    * @covers ::access
    */
   public function testAccessHook() {

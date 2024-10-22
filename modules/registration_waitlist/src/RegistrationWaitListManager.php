@@ -50,6 +50,7 @@ class RegistrationWaitListManager implements RegistrationWaitListManagerInterfac
     if ($spaces_to_fill && $host_entity->isConfiguredForRegistration() && $host_entity->isEnabledForRegistration()) {
       if ($new_state = $host_entity->getSetting('registration_waitlist_autofill_state')) {
         $count = 0;
+        $spaces_filled = 0;
         $wait_listed_registrations = $host_entity->getRegistrationList(['waitlist']);
         foreach ($wait_listed_registrations as $registration) {
           if ($host_entity->hasRoomOffWaitList($registration->getSpacesReserved())) {
@@ -59,6 +60,7 @@ class RegistrationWaitListManager implements RegistrationWaitListManagerInterfac
             $registration->save();
             $this->eventDispatcher->dispatch($event, RegistrationWaitListEvents::REGISTRATION_WAITLIST_AUTOFILL);
             $count++;
+            $spaces_filled += $registration->getSpacesReserved();
           }
 
           // Stop filling when there is no room left. This is checked even if
@@ -70,7 +72,15 @@ class RegistrationWaitListManager implements RegistrationWaitListManagerInterfac
         }
 
         if ($count) {
-          $this->logger->info($this->formatPlural($count, 'Automatically filled 1 registration from the wait list.', 'Automatically filled @count registrations from the wait list.'));
+          if ($spaces_filled == 1) {
+            $this->logger->info($this->formatPlural($count, 'Automatically filled 1 registration from the wait list.', 'Automatically filled @count registrations from the wait list.'));
+
+          }
+          else {
+            $this->logger->info($this->formatPlural($count, 'Automatically filled 1 registration and @spaces_filled spaces from the wait list.', 'Automatically filled @count registrations and @spaces_filled spaces from the wait list.', [
+              '@spaces_filled' => $spaces_filled,
+            ]));
+          }
         }
       }
     }
