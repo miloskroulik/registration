@@ -132,3 +132,29 @@ function registration_update_10001() {
     }
   }
 }
+
+/**
+ * Changes the field widget for spaces fields on registration forms.
+ */
+function registration_update_10002() {
+  $form_displays = \Drupal::entityTypeManager()
+    ->getStorage('entity_form_display')
+    ->loadByProperties([
+      'targetEntityType' => 'registration',
+    ]);
+  foreach ($form_displays as $form_display) {
+    $components = $form_display->getComponents();
+    foreach ($components as $field_name => $component) {
+      if (($field_name == 'count') && ($component['type'] == 'number')) {
+        $form_display->setComponent($field_name, [
+          'type' => 'registration_spaces_default',
+          'settings' => [
+            // Hide the Spaces field unless the user can register for more than
+            // one space.
+            'hide_single_space' => TRUE,
+          ],
+        ] + $component)->save();
+      }
+    }
+  }
+}

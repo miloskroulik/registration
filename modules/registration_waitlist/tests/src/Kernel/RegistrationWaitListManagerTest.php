@@ -97,7 +97,7 @@ class RegistrationWaitListManagerTest extends RegistrationWaitListKernelTestBase
     $this->assertEquals(10, $host_entity->getActiveSpacesReserved());
     $this->assertEquals(4, $host_entity->getWaitListSpacesReserved());
     // Two registrations were autofilled.
-    $this->assertTrue($this->loggedRegistrationCountMatches(2));
+    $this->assertTrue($this->loggedRegistrationCountMatches(2, 5));
 
     // Delete a registration. Autofill is enabled and fills the available spots.
     $registration = $this->entityTypeManager->getStorage('registration')->load(1);
@@ -105,7 +105,7 @@ class RegistrationWaitListManagerTest extends RegistrationWaitListKernelTestBase
     $this->assertEquals(9, $host_entity->getActiveSpacesReserved());
     $this->assertEquals(0, $host_entity->getWaitListSpacesReserved());
     // One registration was autofilled.
-    $this->assertTrue($this->loggedRegistrationCountMatches(1));
+    $this->assertTrue($this->loggedRegistrationCountMatches(1, 4));
 
     // Fill standard capacity.
     $registration = $this->createRegistration($node);
@@ -137,16 +137,25 @@ class RegistrationWaitListManagerTest extends RegistrationWaitListKernelTestBase
   }
 
   /**
-   * Determines if the autofill registration count matches a given count.
+   * Determines if autofilled registrations match a given count and spaces.
    *
    * @param int $count
    *   The count to check.
+   * @param int $spaces
+   *   The spaces to check.
    *
    * @return bool
    *   TRUE if the autofill registration count matches, FALSE otherwise.
    */
-  protected function loggedRegistrationCountMatches(int $count): bool {
-    $message = \Drupal::translation()->formatPlural($count, 'Automatically filled 1 registration from the wait list.', 'Automatically filled @count registrations from the wait list.');
+  protected function loggedRegistrationCountMatches(int $count, int $spaces): bool {
+    if ($spaces == 1) {
+      $message = \Drupal::translation()->formatPlural($count, 'Automatically filled 1 registration from the wait list.', 'Automatically filled @count registrations from the wait list.');
+    }
+    else {
+      $message = \Drupal::translation()->formatPlural($count, 'Automatically filled 1 registration and @spaces_filled spaces from the wait list.', 'Automatically filled @count registrations and @spaces_filled spaces from the wait list.', [
+        '@spaces_filled' => $spaces,
+      ]);
+    }
     $database = Database::getConnection();
     $query = $database->select('watchdog')
       ->condition('message', $message);

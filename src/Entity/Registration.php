@@ -533,7 +533,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
       ->setDescription(t('How many spaces the registration should use towards the total capacity for the event.'))
       ->setSetting('min', 1)
       ->setDisplayOptions('form', [
-        'type' => 'number',
+        'type' => 'registration_spaces_default',
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',

@@ -55,7 +55,10 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     $display_repository = \Drupal::service('entity_display.repository');
     $entity_form_display = $display_repository->getFormDisplay('registration', 'conference', 'default');
     $entity_form_display->setComponent('count', [
-      'type' => 'number',
+      'type' => 'registration_spaces_default',
+      'settings' => [
+        'hide_single_space' => TRUE,
+      ],
     ])->save();
 
     $handler = $this->entityTypeManager->getHandler('user', 'registration_host_entity');
@@ -119,7 +122,25 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     $this->assertSession()->fieldExists('state[0]');
     $this->assertSession()->pageTextContains('The registration status.');
 
+    // Remove permission to edit the Status field.
+    $admin_user = $this->drupalCreateUser([
+      'access user profiles',
+      'administer registration',
+      'create conference registration other users',
+    ]);
+    $this->drupalLogin($admin_user);
+    $this->drupalGet('/registration/' . $registration->id() . '/edit');
+    $this->assertSession()->fieldNotExists('state[0]');
+    $this->assertSession()->pageTextNotContains('The registration status.');
+
     // When only one space can be registered, the Spaces field is hidden.
+    $admin_user = $this->drupalCreateUser([
+      'access user profiles',
+      'administer registration',
+      'create conference registration other users',
+      'edit conference registration state',
+    ]);
+    $this->drupalLogin($admin_user);
     $settings->set('maximum_spaces', 1);
     $settings->save();
     $this->drupalGet('/registration/' . $registration->id() . '/edit');
@@ -127,6 +148,17 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     $this->assertSession()->buttonExists('Save Registration');
     $this->assertSession()->fieldNotExists('count[0][value]');
     $this->assertSession()->pageTextNotContains('The number of spaces you wish to reserve.');
+
+    // Disable hiding the Spaces field when only one space can be registered.
+    $entity_form_display->setComponent('count', [
+      'type' => 'registration_spaces_default',
+      'settings' => [
+        'hide_single_space' => FALSE,
+      ],
+    ])->save();
+    $this->drupalGet('/registration/' . $registration->id() . '/edit');
+    $this->assertSession()->fieldExists('count[0][value]');
+    $this->assertSession()->pageTextContains('The number of spaces you wish to reserve.');
 
     // No valid registration options.
     $admin_user = $this->drupalCreateUser([

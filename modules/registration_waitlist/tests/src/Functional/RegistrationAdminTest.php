@@ -22,7 +22,10 @@ class RegistrationAdminTest extends RegistrationWaitListBrowserTestBase {
         'region' => 'content',
       ])
       ->setComponent('count', [
-        'type' => 'number',
+        'type' => 'registration_spaces_default',
+        'settings' => [
+          'hide_single_space' => TRUE,
+        ],
         'region' => 'content',
       ])
       ->save();
@@ -118,6 +121,7 @@ class RegistrationAdminTest extends RegistrationWaitListBrowserTestBase {
     $settings->save();
     $this->drupalGet('user/' . $user->id() . '/register');
     $this->assertSession()->buttonExists('Save Registration');
+    $this->assertSession()->pageTextContains('The number of spaces you wish to reserve on the wait list. You may register up to 2 spaces.');
     $this->assertSession()->pageTextNotContains('insufficient spaces remaining');
     $this->submitForm([], 'Save Registration');
     $this->assertSession()->statusMessageExists('warning', 'Registration placed on the wait list.');
@@ -128,6 +132,7 @@ class RegistrationAdminTest extends RegistrationWaitListBrowserTestBase {
     $this->assertFalse($registration->isComplete());
     $this->drupalGet('/registration/' . $registration->id() . '/edit');
     $this->assertSession()->pageTextContains('Edit Registration #' . $registration->id());
+    $this->assertSession()->pageTextContains('The number of spaces you wish to reserve.');
     $edit = [
       'state[0]' => 'complete',
     ];

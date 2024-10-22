@@ -146,6 +146,7 @@ function registration_waitlist_validation_constraint_alter(array &$definitions) 
  * Implements hook_field_widget_info_alter().
  */
 function registration_waitlist_field_widget_info_alter(array &$info) {
+  $info['registration_spaces_default']['class'] = 'Drupal\registration_waitlist\Plugin\Field\FieldWidget\RegistrationSpacesWidget';
   $info['registration_state_default']['class'] = 'Drupal\registration_waitlist\Plugin\Field\FieldWidget\RegistrationStateWidget';
 }
 
