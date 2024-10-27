@@ -9,12 +9,7 @@ registration.type.*.third_party.registration_confirmation:
       type: boolean
     subject:
       label: 'Confirmation email subject'
-      type: string
+      type: label
     message:
       label: 'Confirmation email message'
-      type: mapping
-      mapping:
-        value:
-          type: string
-        format:
-          type: string
+      type: text_format
