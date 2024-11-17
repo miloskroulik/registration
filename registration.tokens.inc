@@ -53,16 +53,16 @@ function registration_token_info() {
     'name' => t('Author'),
     'type' => 'user',
   ];
-  $node['created'] = [
+  $registration['created'] = [
     'name' => t("Date created"),
     'type' => 'date',
   ];
-  $node['changed'] = [
+  $registration['changed'] = [
     'name' => t("Date changed"),
     'description' => t("The date the registration was most recently updated."),
     'type' => 'date',
   ];
-  $node['completed'] = [
+  $registration['completed'] = [
     'name' => t("Date completed"),
     'description' => t("The date the registration was completed."),
     'type' => 'date',
