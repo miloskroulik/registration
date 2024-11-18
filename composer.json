@@ -16,7 +16,8 @@
         "drupal/core": "^9.3 || ^10"
     },
     "require-dev": {
-        "drupal/inline_entity_form": "^1.0"
+        "drupal/inline_entity_form": "^1.0",
+        "drupal/token": "^1.15"
     },
     "support": {
         "issues": "https://www.drupal.org/project/issues/registration",
