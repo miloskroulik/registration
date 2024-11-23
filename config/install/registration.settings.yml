@@ -1,4 +1,5 @@
 set_and_forget: true
+broadcast_filter: true
 limit_field_values: false
 hide_filter: 10
 queue_notifications: 50

@@ -158,3 +158,14 @@ function registration_update_10002() {
     }
   }
 }
+
+/**
+ * Adds a setting for the email broadcast form.
+ */
+function registration_update_10003() {
+  \Drupal::service('config.factory')
+    ->getEditable('registration.settings')
+    // The default for new installs is TRUE, but set to FALSE for BC reasons.
+    ->set('broadcast_filter', FALSE)
+    ->save();
+}
