@@ -11,7 +11,7 @@ use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\user\Entity\User;
 
 /**
- * Implements hook_token_info().
+ * Implements hook_token_info_alter().
  */
 function registration_token_info_alter(&$info) {
   // If the token module is installed, add a few tokens that it doesn't already

@@ -3,6 +3,7 @@
 namespace Drupal\registration\Form;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Renderer;
@@ -17,6 +18,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Defines the broadcast to email registrants form.
  */
 class EmailRegistrantsForm extends RegistrationFormBase {
+
+  /**
+   * The configuration.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected ImmutableConfig $config;
 
   /**
    * The registration mailer.
@@ -44,6 +52,7 @@ class EmailRegistrantsForm extends RegistrationFormBase {
    */
   public static function create(ContainerInterface $container): static {
     $instance = parent::create($container);
+    $instance->config = $container->get('config.factory')->get('registration.settings');
     $instance->registrationMailer = $container->get('registration.notifier');
     $instance->renderer = $container->get('renderer');
     $instance->token = $container->get('token');
@@ -95,6 +104,23 @@ class EmailRegistrantsForm extends RegistrationFormBase {
     $preview = ($triggering_element['#id'] == 'edit-preview');
 
     if ($preview) {
+      // In preview mode, display selected states if status filter is enabled.
+      if ($this->config->get('broadcast_filter')) {
+        $filtered_states = array_keys(array_filter($values['states'] ?? []));
+        if (empty($filtered_states)) {
+          $states = $registration_type->getActiveStates();
+          $filtered_states = array_keys($states);
+        }
+        $state_names = $this->getSelectedStateNames($form_state, $filtered_states);
+        $form['states_preview'] = [
+          '#type' => 'item',
+          '#title' => $this->t('Status'),
+          '#markup' => $this->formatPlural(count($filtered_states), 'Email will be sent to registrants in @states status', 'Email will be sent to registrants in these states: @states', [
+            '@states' => $state_names,
+          ]),
+        ];
+      }
+
       // In preview mode, display subject and message with tokens replaced
       // so the user can see what the resulting subject and message will be.
       $form['subject_preview'] = [
@@ -129,6 +155,12 @@ class EmailRegistrantsForm extends RegistrationFormBase {
       $this->replaceTokens($form['message_preview'], $host_entity, $registration, $message);
 
       // Hidden fields for the next submit.
+      if ($this->config->get('broadcast_filter')) {
+        $form['states'] = [
+          '#type' => 'hidden',
+          '#value' => $values['states'],
+        ];
+      }
       $form['subject'] = [
         '#type' => 'hidden',
         '#value' => $values['subject'],
@@ -140,6 +172,17 @@ class EmailRegistrantsForm extends RegistrationFormBase {
     }
     else {
       // Not in preview mode, do a standard form build.
+      if ($this->config->get('broadcast_filter')) {
+        $state_options = $this->getStateOptions($form_state);
+        $form['states'] = [
+          '#type' => 'checkboxes',
+          '#title' => $this->t('Status'),
+          '#options' => $state_options,
+          '#required' => FALSE,
+          '#default_value' => array_keys($states),
+          '#description' => $this->t('Email registrants in the selected registration states. If none are selected, registrants in all active states will be included.'),
+        ];
+      }
       $form['subject'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Subject'),
@@ -196,6 +239,9 @@ class EmailRegistrantsForm extends RegistrationFormBase {
       ];
     }
 
+    // Rebuild the form if the configuration changes.
+    $this->renderer->addCacheableDependency($form, $this->config);
+
     return $form;
   }
 
@@ -228,8 +274,11 @@ class EmailRegistrantsForm extends RegistrationFormBase {
       // The Send button was submitted. Fire off the emails.
       $host_entity = $this->getHostEntity($form_state);
       $registration_type = $host_entity->getRegistrationType();
-      $states = $registration_type->getActiveStates();
-      $values['states'] = array_keys($states);
+      $values['states'] = array_keys(array_filter($values['states'] ?? []));
+      if (empty($values['states'])) {
+        $states = $registration_type->getActiveStates();
+        $values['states'] = array_keys($states);
+      }
       $values['mail_tag'] = 'broadcast';
       $success_count = $this->registrationMailer->notify($host_entity, $values);
       $message = $this->formatPlural($success_count,
@@ -256,6 +305,51 @@ class EmailRegistrantsForm extends RegistrationFormBase {
       // Either the Preview or Edit message button was submitted.
       $form_state->setRebuild();
     }
+  }
+
+  /**
+   * Gets the names of the selected states.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param array $states
+   *   The selected states.
+   *
+   * @return string
+   *   The names of the selected states, e.g. 'Pending, Complete'.
+   */
+  protected function getSelectedStateNames(FormStateInterface $form_state, array $states) {
+    $names = [];
+    $state_options = $this->getStateOptions($form_state);
+    foreach ($states as $state) {
+      $names[] = $state_options[$state];
+    }
+    return implode(', ', $names);
+  }
+
+  /**
+   * Gets the available registration state options.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return array
+   *   The states as an options array of labels keyed by ID.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function getStateOptions(FormStateInterface $form_state): array {
+    $host_entity = $this->getHostEntity($form_state);
+    $registration_type = $host_entity->getRegistrationType();
+    $workflow = $registration_type->getWorkflow();
+
+    $options = [];
+    $states = $workflow ? $workflow->getTypePlugin()->getStates() : [];
+    foreach ($states as $id => $state) {
+      $options[$id] = $state->label();
+    }
+    return $options;
   }
 
   /**

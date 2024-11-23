@@ -96,6 +96,17 @@ class RegistrationAdminForm extends ConfigFormBase {
       '#description' => $this->t('Adds "text/html; charset=UTF-8; format=flowed; delsp=yes" as a Content-Type header.'),
     ];
 
+    $form['email_registrants'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Email registrants form'),
+    ];
+    $form['email_registrants']['broadcast_filter'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Add a status filter'),
+      '#default_value' => $config->get('broadcast_filter'),
+      '#description' => $this->t('Allows email to only those registrants in the selected states, instead of always sending to registrants in all active states.'),
+    ];
+
     $form['multilingual'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Multilingual'),
@@ -132,6 +143,7 @@ class RegistrationAdminForm extends ConfigFormBase {
 
     $this->config('registration.settings')
       ->set('set_and_forget', $form_state->getValue('set_and_forget'))
+      ->set('broadcast_filter', $form_state->getValue('broadcast_filter'))
       ->set('limit_field_values', $form_state->getValue('limit_field_values'))
       ->set('hide_filter', $form_state->getValue('hide_filter'))
       ->set('queue_notifications', $form_state->getValue('queue_notifications'))

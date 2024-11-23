@@ -30,6 +30,9 @@ registration.settings:
     set_and_forget:
       type: boolean
       label: 'Set and forget mode'
+    broadcast_filter:
+      type: boolean
+      label: 'Add a status filter to the Email registrants form'
     limit_field_values:
       type: boolean
       label: 'Limit registration field values by role'
