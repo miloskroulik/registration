@@ -8,6 +8,9 @@ administer registration:
   title: 'Administer registrations'
   description: 'View, edit, delete and manage all registrations and registration settings, regardless of type.'
   restrict access: true
+create registration:
+  title: 'Create registrations'
+  description: 'Create registrations, regardless of type. Allows registering other user accounts, registering other people by email address, and self registration.'
 delete host registration:
   title: 'Delete host registrations'
   description: 'Delete registrations for host entities to which a user has edit access, regardless of type.'

@@ -215,6 +215,8 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $account = $this->createUser(['administer registration']);
     $this->assertTrue($access_control_handler->createAccess('conference', $account));
 
+    $account = $this->createUser(['create registration']);
+    $this->assertTrue($access_control_handler->createAccess('conference', $account));
     $account = $this->createUser(['create conference registration self']);
     $this->assertTrue($access_control_handler->createAccess('conference', $account));
     $account = $this->createUser(['create conference registration other users']);
