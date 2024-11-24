@@ -57,6 +57,19 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
       }
     }
 
+    // Only administrators can edit registrations for disabled hosts.
+    if (($operation == 'update') && $result->isAllowed()) {
+      if (!$host_entity->isEnabledForRegistration($entity->getSpacesReserved(), $entity)) {
+        $admin_result = $entity->access('administer', $account, TRUE);
+        $result = $result->andIf($admin_result);
+      }
+      // This check depends on the settings and the registration.
+      if ($settings = $host_entity->getSettings()) {
+        $result->addCacheableDependency($settings);
+      }
+      $result->addCacheableDependency($entity);
+    }
+
     return $result;
   }
 
