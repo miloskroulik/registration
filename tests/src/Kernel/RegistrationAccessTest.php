@@ -298,6 +298,20 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $access_control_handler->resetCache();
     $this->assertTrue($registration->access('update', $account));
 
+    // Only administrators can edit registrations for disabled hosts.
+    $host_entity = $registration->getHostEntity();
+    $settings = $host_entity->getSettings();
+    $settings->set('status', FALSE);
+    $settings->save();
+    $access_control_handler->resetCache();
+    $this->assertFalse($registration->access('update', $account));
+    $account = $this->createUser(['administer conference registration']);
+    $access_control_handler->resetCache();
+    $this->assertTrue($registration->access('update', $account));
+    $settings->set('status', TRUE);
+    $settings->save();
+    $access_control_handler->resetCache();
+
     // Update "any" permission.
     $account = $this->createUser(['update any conference registration']);
     $this->assertTrue($registration->access('update', $account));
