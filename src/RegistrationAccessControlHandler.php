@@ -8,6 +8,7 @@ use Drupal\Core\Access\AccessResultReasonInterface;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Site\Settings;
 
 /**
  * Access control for registrations.
@@ -149,6 +150,9 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
         $this->entityType->getAdminPermission() ?: 'administer registration',
         'create registration',
       ];
+      if ($entity_bundle && !Settings::get('registration_disable_create_by_administer_bundle_permission')) {
+        $permissions[] = 'administer ' . $entity_bundle . ' registration';
+      }
       if ($entity_bundle) {
         $permissions[] = 'create ' . $entity_bundle . ' registration self';
         $permissions[] = 'create ' . $entity_bundle . ' registration other users';

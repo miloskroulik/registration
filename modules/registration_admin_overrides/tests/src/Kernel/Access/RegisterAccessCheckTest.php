@@ -71,6 +71,14 @@ class RegisterAccessCheckTest extends RegistrationAdminOverridesKernelTestBase {
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
+    $account = $this->createUser(['administer conference registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    $account = $this->createUser(['create registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
     $account = $this->createUser(['create conference registration self']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
@@ -94,6 +102,14 @@ class RegisterAccessCheckTest extends RegistrationAdminOverridesKernelTestBase {
     $this->assertFalse($access_result->isAllowed());
 
     $account = $this->createUser(['administer registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['administer conference registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['create registration']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 
@@ -133,6 +149,14 @@ class RegisterAccessCheckTest extends RegistrationAdminOverridesKernelTestBase {
     $this->assertFalse($access_result->isAllowed());
 
     $account = $this->createUser(['administer registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['administer conference registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['create registration']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
 

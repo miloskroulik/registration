@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\registration\Kernel;
 
+use Drupal\Core\Site\Settings;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Drupal\registration\Entity\RegistrationType;
@@ -214,6 +215,17 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
 
     $account = $this->createUser(['administer registration']);
     $this->assertTrue($access_control_handler->createAccess('conference', $account));
+
+    $account = $this->createUser(['administer conference registration']);
+    $this->assertTrue($access_control_handler->createAccess('conference', $account));
+    $account = $this->createUser(['administer seminar registration']);
+    $this->assertFalse($access_control_handler->createAccess('conference', $account));
+
+    $settings = Settings::getInstance() ? Settings::getAll() : [];
+    $settings['registration_disable_create_by_administer_bundle_permission'] = TRUE;
+    new Settings($settings);
+    $account = $this->createUser(['administer conference registration']);
+    $this->assertFalse($access_control_handler->createAccess('conference', $account));
 
     $account = $this->createUser(['create registration']);
     $this->assertTrue($access_control_handler->createAccess('conference', $account));
