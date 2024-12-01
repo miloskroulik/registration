@@ -15,6 +15,7 @@ use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\Event\RegistrationEvents;
 use Drupal\registration\HostEntityInterface;
+use Drupal\registration\RegistrationHelper;
 use Drupal\registration\RegistrationManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -183,7 +184,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
     // Build parameters. These are common to every email sent.
     $params = [];
     $params['subject'] = $data['subject'];
-    $params['from'] = $settings->getSetting('from_address');
+    $params['from'] = RegistrationHelper::getMailboxHeader('From', $settings->getSetting('from_address'));
     $build = [
       '#type' => 'processed_text',
       '#text' => $data['message']['value'],

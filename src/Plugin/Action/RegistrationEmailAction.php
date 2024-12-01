@@ -11,6 +11,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\Event\RegistrationEvents;
+use Drupal\registration\RegistrationHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -69,7 +70,7 @@ class RegistrationEmailAction extends EmailAction {
 
     $params = [];
     $params['subject'] = $this->configuration['subject'];
-    $params['from'] = $settings->getSetting('from_address');
+    $params['from'] = RegistrationHelper::getMailboxHeader('From', $settings->getSetting('from_address'));
     $build = [
       '#type' => 'processed_text',
       '#text' => $this->configuration['message']['value'],

@@ -2,6 +2,9 @@
 
 namespace Drupal\registration;
 
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Header\MailboxHeader;
+
 /**
  * Defines a utility class.
  */
@@ -89,6 +92,41 @@ class RegistrationHelper {
       $result[$field] = $value;
     }
     return $result;
+  }
+
+  /**
+   * Gets a mailbox header.
+   *
+   * Currently, only the "From" header is supported.
+   *
+   * @param string $header_name
+   *   The header to get, currently must be "From".
+   * @param string|null $header_input
+   *   Any input that should be used to calculate the returned header.
+   *   For the "From" header, pass the "from address" in registration settings.
+   *
+   * @return string|null
+   *   The derived header, if available.
+   */
+  public static function getMailboxHeader(string $header_name, ?string $header_input = NULL): ?string {
+    $header = NULL;
+
+    if ($header_name == 'From') {
+      // Default to using the from address from registration settings.
+      $header = $from_address = $header_input;
+
+      // Check if the from address is a simple email address, or is already in
+      // the form of a "From" header, e.g. "My Site <email@example.org>".
+      if ($from_address && (!str_contains($from_address, '<'))) {
+        // Convert a simple email address to a header using the site name.
+        if ($site_name = \Drupal::config('system.site')->get('name')) {
+          $mailbox = new MailboxHeader('From', new Address($from_address, $site_name));
+          $header = $mailbox->getBodyAsString();
+        }
+      }
+    }
+
+    return $header;
   }
 
 }

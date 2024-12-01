@@ -1,0 +1,6 @@
+name: Registration Test Email
+type: module
+description: 'Test module for Registration email.'
+package: Testing
+dependencies:
+  - registration:registration

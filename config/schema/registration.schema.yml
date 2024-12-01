@@ -45,6 +45,9 @@ registration.settings:
     html_email:
       type: boolean
       label: 'Send email as HTML'
+    replace_from_header:
+      type: boolean
+      label: 'Replace the "From" header'
     sync_registration_settings:
       type: boolean
       label: 'Synchronize registration settings'

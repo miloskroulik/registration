@@ -59,7 +59,7 @@ After enabling the module, perform the following steps to configure Registration
 1. Extend your registration types with additional fields as needed. For example, if your site allows users to register for classes, it may be useful to add biographical data such as First name and Last name fields to your registration type. These fields automatically appear on the registration form.
 1. Add registration related permissions to the appropriate roles at /admin/people/permissions.
 1. (Optional) Adjust the default registration states at /admin/config/workflow/workflows. This link is available via the Workflow menu item in the Configuration menu of Drupal administration. If you want administrators to be able to edit the state for new or existing registrations, you should configure the "show on form" setting for the appropriate states.
-1. (Optional) Adjust general module settings at /admin/structure/registration-settings. This link is available from the main Configuration page of Drupal administration. If you want registration related emails to be sent as HTML, you need to visit this page.
+1. (Optional) Adjust general module settings at /admin/structure/registration-settings. This link is available from the main Configuration page of Drupal administration. If you want registration related emails to be sent as HTML, you need to visit this page. See the Email Handling section below for more information.
 
 
 INCLUDED ADD-ON MODULES
@@ -77,6 +77,15 @@ The Registration module includes the following submodules that can be enabled to
 
 See the README file in each submodule folder for more information.
 
+
+EMAIL HANDLING
+-----------
+
+The Registration module includes a "from address" in the registration settings for each entity configured for registration. This allows your registration related emails to be sent from a different address depending on the entity the user registers for. However this can negatively impact email deliverability if the address is not using the same domain as your website.
+
+The recommended configuration is to set a default "from address" on your Registration field that matches the site email, and then hide the "from address" on the registration settings form at /admin/structure/registration-settings/form-display. Keep the "Replace the From header" box unchecked on the admin settings form at /admin/structure/registration-settings. Ensure your site email in Basic settings at /admin/config/system/site-information uses the same domain as your website. In this configuration, the "from address" is unused and all registration related emails will be sent from the same address, derived from the site name and email, which is best for email deliverability.
+
+Note that if you choose a different configuration and the "from address" is used when sending email, it can optionally include a full header and not just a simple email address. For example, it can contain "My site \<mail@example.org\>" instead of just "mail@example.org". When a simple email address is entered, the site name in Basic settings will be added to the "from address" to create the "From:" mailbox header.
 
 USERS AND REGISTRATIONS IN VIEWS
 -----------
