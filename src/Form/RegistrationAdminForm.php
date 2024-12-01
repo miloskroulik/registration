@@ -95,6 +95,12 @@ class RegistrationAdminForm extends ConfigFormBase {
       '#default_value' => $config->get('html_email'),
       '#description' => $this->t('Adds "text/html; charset=UTF-8; format=flowed; delsp=yes" as a Content-Type header.'),
     ];
+    $form['mail_handling']['replace_from_header'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Replace the "From" header'),
+      '#default_value' => $config->get('replace_from_header'),
+      '#description' => $this->t('Replaces any existing "From" header with a header derived from the host entity registration settings. For improved email deliverability, the default mail handler in Drupal core generates a "From" header using the site name and email address in Basic settings. Selecting this option will replace the header set by Drupal core or other modules, so use with caution.'),
+    ];
 
     $form['email_registrants'] = [
       '#type' => 'fieldset',
@@ -148,6 +154,7 @@ class RegistrationAdminForm extends ConfigFormBase {
       ->set('hide_filter', $form_state->getValue('hide_filter'))
       ->set('queue_notifications', $form_state->getValue('queue_notifications'))
       ->set('html_email', $form_state->getValue('html_email'))
+      ->set('replace_from_header', $form_state->getValue('replace_from_header'))
       ->set('sync_registration_settings', $form_state->getValue('sync_registration_settings'))
       ->set('sync_registration_settings_all_fields', $form_state->getValue('sync_registration_settings_all_fields'))
       ->save();

@@ -169,3 +169,13 @@ function registration_update_9010() {
     ->set('broadcast_filter', FALSE)
     ->save();
 }
+
+/**
+ * Adds a setting for mail handling.
+ */
+function registration_update_9011() {
+  \Drupal::service('config.factory')
+    ->getEditable('registration.settings')
+    ->set('replace_from_header', FALSE)
+    ->save();
+}
