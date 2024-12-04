@@ -39,11 +39,11 @@ class ReminderConstraintValidator extends ConstraintValidator {
 
         // Ensure reminder date is not in the past.
         if (!empty($reminder_date)) {
-          $reminder_date = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $reminder_date);
+          $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+          $reminder_date = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $reminder_date, $storage_timezone);
+
           if ($reminder_date instanceof DrupalDateTime) {
             // Ensure dates are compared using the storage timezone for both.
-            $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
-            $reminder_date->setTimezone($storage_timezone);
             $now = new DrupalDateTime('now', $storage_timezone);
 
             if ($reminder_date <= $now) {
