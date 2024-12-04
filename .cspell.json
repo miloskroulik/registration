@@ -16,6 +16,7 @@
         "PREAUTOFILL",
         "preautofill",
         "Rhime",
+        "tradeshow",
         "Tsypin",
         "WAITLIST",
         "Waitlist",
@@ -59,6 +60,7 @@
         "ruleset",
         "subform",
         "Symfony",
+        "tnid",
         "upcasted"
     ]
 }
