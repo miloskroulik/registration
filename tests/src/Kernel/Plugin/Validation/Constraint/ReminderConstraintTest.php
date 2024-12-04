@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\registration\Kernel\Plugin\Validation\Constraint;
 
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
@@ -74,6 +76,26 @@ class ReminderConstraintTest extends RegistrationKernelTestBase {
     $settings->set('reminder_template', NULL);
     $violations = $settings->validate();
     $this->assertEquals(0, $violations->count());
+
+    // Allow a reminder in the near future.
+    $near_future = (new DrupalDateTime('now', new \DateTimeZone('Europe/Amsterdam')))->modify('+1 hour');
+    $settings->set('send_reminder', TRUE);
+    $settings->set('reminder_date', $near_future->format(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, [
+      'timezone' => 'UTC',
+    ]));
+    $settings->set('reminder_template', 'This is an example reminder template');
+    $violations = $settings->validate();
+    $this->assertEquals(0, $violations->count());
+
+    // Prevent a reminder in the recent past.
+    $near_future = (new DrupalDateTime('now', new \DateTimeZone('Europe/Amsterdam')))->modify('-1 hour');
+    $settings->set('send_reminder', TRUE);
+    $settings->set('reminder_date', $near_future->format(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, [
+      'timezone' => 'UTC',
+    ]));
+    $settings->set('reminder_template', 'This is an example reminder template');
+    $violations = $settings->validate();
+    $this->assertEquals(1, $violations->count());
   }
 
 }
