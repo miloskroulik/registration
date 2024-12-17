@@ -77,14 +77,14 @@ class RegistrationPermissionProvider implements ContainerInjectionInterface {
       ],
       "administer own $type_id registration" => [
         'title' => $this->t('%type_name: Administer own registrations', $type_params),
-        'description' => $this->t('View, edit and delete own registrations of this type. Manage registrations and registration settings of this type for host entities to which a user has edit access.'),
+        'description' => $this->t('View, edit and delete own registrations of this type.'),
       ],
       "administer $type_id registration settings" => [
         'title' => $this->t('%type_name: Administer settings', $type_params),
         'description' => $this->t('Manage registrations and registration settings of this type for all host entities.'),
       ],
       "administer own $type_id registration settings" => [
-        'title' => $this->t('%type_name: Administer own settings', $type_params),
+        'title' => $this->t('%type_name: Administer settings for editable entities', $type_params),
         'description' => $this->t('Manage registrations and registration settings of this type for host entities to which a user has edit access.'),
       ],
       "manage $type_id registration" => [
