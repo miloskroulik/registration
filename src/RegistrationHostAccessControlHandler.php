@@ -132,8 +132,8 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
     if (in_array($operation, ['view registrations', 'update registrations', 'delete registrations'])) {
       $result = $this->checkViewUpdateDeleteRegistrationsAccess($operation, $host_entity, $type, $account);
     }
-    elseif ($operation === 'administer registrations') {
-      $result = $this->checkAdministerRegistrationsAccess($host_entity, $type, $account);
+    elseif (in_array($operation, ['administer registration', 'administer registrations'], TRUE) {
+      $result = $this->checkAdministerRegistrationAccess($host_entity, $type, $account);
     }
     // 'manage' the host entity.
     elseif ($operation === 'manage') {
@@ -187,13 +187,14 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
   }
 
   /**
-   * Checks access for the 'administer registrations' operation.
+   * Checks access for the 'administer registration(s)' operations.
    *
-   * This grants the ability to perform the 'administer' operation on any
-   * registration for this host.
-   *
-   * N.B. The legacy 'administer own $type permission' is not used here, as
-   * it's usage is complex.
+   * 'administer registration'  grants the ability to perform any
+   * registration-related action for the host, its settings or its
+   * registrations.
+   * 
+   * 'administer registrations' is only for granting the 'administer'
+   * operation to registrations for the host.
    *
    * @param \Drupal\Core\Entity\HostEntityInterface $host_entity
    *   The host entity.
@@ -205,19 +206,14 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  protected function checkAdministerRegistrationsAccess(HostEntityInterface $host_entity, $type, AccountInterface $account): AccessResultInterface {
+  protected function checkAdministerRegistrationAccess(HostEntityInterface $host_entity, $type, AccountInterface $account): AccessResultInterface {
     $result = AccessResult::allowedIfHasPermissions($account, [
       "administer registration",
       "administer $type registration",
     ], 'OR');
     if ($result->isNeutral()) {
-      // Avoid firing additional host access hooks for 'manage' operation
-      // unless it's actually needed.
-      $host_result = AccessResult::allowedIfHasPermission($account, "administer host registration");
-      if ($host_result->isAllowed()) {
-        $host_result->andIf($host_entity->access('manage', $account, TRUE));
-      }
-      $result = $result->orIf($host_result);
+      $result = AccessResult::allowedIfHasPermission($account, "administer host registration")
+        ->andIf($host_entity->access('manage', $account, TRUE));
     }
     return $result;
   }
@@ -278,13 +274,20 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    */
   protected function checkManagedAccess($operation, HostEntityInterface $host_entity, $type, AccountInterface $account): AccessResultInterface {
     // Check administrative permissions.
-    $result = $host_entity->access('administer registrations', $account, TRUE);
-    $result = $result->orIf(AccessResult::allowedIfHasPermission($account, "administer $type registration settings"));
+    $result = $host_entity->access('administer registration', $account, TRUE);
+    $result = AccessResult::allowedIfHasPermission($account, "administer $type registration settings");
 
     // 'manage broadcast' and 'manage settings' operations require additional
     // permissions that the 'manage registrations' operation does not.
     $managed = trim(substr($operation, strlen('manage')));
-    $managed_permissions = $managed !== 'registrations' ? ["manage $type registration $managed"] : [];
+    if ($managed === 'registrations') {
+      $managed_permissions = [];
+      $result = $result->orIf($host_entity->access('administer registrations', $account, TRUE));
+    }
+    else {
+      $managed_permissions = ["manage $type registration $managed"];
+      $result = $result->orIf($host_entity->access('administer registration', $account, TRUE));
+    }
 
     // Check the global manage permissions.
     if ($result->isNeutral()) {
@@ -296,7 +299,6 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
       $manage_result = $this->checkManageAccess($host_entity, $account);
 
       $administer_own_result = AccessResult::allowedIfHasPermissions($account, [
-        "administer host registration",
         "administer own $type registration",
         "administer own $type registration settings",
       ], 'OR')
