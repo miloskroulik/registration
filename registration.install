@@ -179,3 +179,26 @@ function registration_update_9011() {
     ->set('replace_from_header', FALSE)
     ->save();
 }
+
+/**
+ * Grant "manage own $type" permission to users with "administer own $type".
+ */
+function registration_update_9012() {
+  $bundle_info = \Drupal::service('entity_type.bundle.info')->getBundleInfo('registration');
+  $roles = \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple();
+  foreach ($roles as $role) {
+    $changed = FALSE;
+    $permissions = $role->getPermissions();
+    foreach ($bundle_info as $bundle => $info) {
+      $admin_perm = "administer own {$bundle} registration";
+      $manage_perm = "manage own {$bundle} registration";
+      if (in_array($admin_perm, $permissions) && !in_array($manage_perm, $permissions)) {
+        $role->grantPermission($manage_perm);
+        $changed = TRUE;
+      }
+    }
+    if ($changed) {
+      $role->save();
+    }
+  }
+}

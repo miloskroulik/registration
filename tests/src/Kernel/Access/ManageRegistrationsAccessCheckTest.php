@@ -115,9 +115,20 @@ class ManageRegistrationsAccessCheckTest extends RegistrationKernelTestBase {
         'permissions' => ['administer own conference registration'],
         'host update' => TRUE,
         'route' => 'manage',
+        'expected' => FALSE,
+      ],
+      'administer own conference registration settings without host update' => [
+        'permissions' => ['administer own conference registration settings'],
+        'host update' => FALSE,
+        'route' => 'manage',
+        'expected' => FALSE,
+      ],
+      'administer own conference registration settings with host update' => [
+        'permissions' => ['administer own conference registration settings'],
+        'host update' => TRUE,
+        'route' => 'manage',
         'expected' => TRUE,
       ],
-
       'update conference registration' => [
         'permissions' => ['update any conference registration'],
         'host update' => TRUE,

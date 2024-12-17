@@ -192,9 +192,6 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    * This grants the ability to perform the 'administer' operation on any
    * registration for this host.
    *
-   * N.B. The legacy 'administer own $type permission' is not used here, as
-   * it's usage is complex.
-   *
    * @param \Drupal\Core\Entity\HostEntityInterface $host_entity
    *   The host entity.
    * @param string $type
@@ -286,10 +283,7 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
     if ($result->isNeutral()) {
       $manage_host_result = $this->checkManageAccess($host_entity, $account);
 
-      $administer_own_result = AccessResult::allowedIfHasPermissions($account, [
-        "administer own $type registration",
-        "administer own $type registration settings",
-      ], 'OR')
+      $administer_own_result = AccessResult::allowedIfHasPermission($account, "administer own $type registration settings")
         ->andIf($manage_host_result);
       $result = $result->orIf($administer_own_result);
 
