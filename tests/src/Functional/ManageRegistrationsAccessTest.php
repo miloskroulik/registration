@@ -135,6 +135,25 @@ class ManageRegistrationsAccessTest extends RegistrationBrowserTestBase {
     $this->drupalGet('user/' . $user->id() . '/registrations');
     $this->assertSession()->statusCodeEquals(403);
 
+    // Administer host permission provides access to the listing.
+    $test_user = $this->drupalCreateUser([
+      'administer host registration',
+      'administer users',
+    ]);
+    $this->drupalLogin($test_user);
+    $this->drupalGet('user/' . $user->id() . '/registrations');
+    $this->assertSession()->pageTextNotContains('Registration summary for');
+    $this->assertSession()->pageTextContains('List of registrations for');
+
+    // Administer host permission requires edit access to the host entity.
+    $test_user = $this->drupalCreateUser([
+      'administer host registration',
+      'access user profiles',
+    ]);
+    $this->drupalLogin($test_user);
+    $this->drupalGet('user/' . $user->id() . '/registrations');
+    $this->assertSession()->statusCodeEquals(403);
+
     // Manage type permission only provides summary access.
     $test_user = $this->drupalCreateUser([
       'manage conference registration',
@@ -218,6 +237,37 @@ class ManageRegistrationsAccessTest extends RegistrationBrowserTestBase {
     $this->drupalLogin($test_user);
     $this->drupalGet('user/' . $user->id() . '/registrations');
     $this->assertSession()->statusCodeEquals(403);
+
+    // Manage host permission only provides summary access.
+    $test_user = $this->drupalCreateUser([
+      'manage host registration',
+      'administer users',
+    ]);
+    $this->drupalLogin($test_user);
+    $this->drupalGet('user/' . $user->id() . '/registrations');
+    $this->assertSession()->pageTextContains('Registration summary for');
+    $this->assertSession()->pageTextNotContains('List of registrations for');
+
+    // Adding view host permission provides access to the listing.
+    $test_user = $this->drupalCreateUser([
+      'manage host registration',
+      'administer users',
+      'view host registration',
+    ]);
+    $this->drupalLogin($test_user);
+    $this->drupalGet('user/' . $user->id() . '/registrations');
+    $this->assertSession()->pageTextContains('List of registrations for');
+    $this->assertSession()->pageTextNotContains('Registration summary for');
+
+    // Manage host permission requires edit access to the host entity.
+    $test_user = $this->drupalCreateUser([
+      'manage host registration',
+      'access user profiles',
+    ]);
+    $this->drupalLogin($test_user);
+    $this->drupalGet('user/' . $user->id() . '/registrations');
+    $this->assertSession()->statusCodeEquals(403);
+
   }
 
   /**

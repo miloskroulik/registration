@@ -142,7 +142,6 @@ class ManageRegistrationsAccessCheckTest extends RegistrationKernelTestBase {
         'expected' => TRUE,
       ],
 
-      
       'update conference registration' => [
         'permissions' => ['update any conference registration'],
         'host update' => TRUE,
@@ -261,7 +260,6 @@ class ManageRegistrationsAccessCheckTest extends RegistrationKernelTestBase {
         'route' => $route_name,
         'expected' => TRUE,
       ],
-
     ];
   }
 

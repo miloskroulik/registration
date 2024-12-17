@@ -144,7 +144,6 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertTrue($registration->access('delete', $account));
     $this->assertTrue($registration->access('administer', $account));
 
-
     // "Administer" permission.
     $account = $this->createUser(['administer registration']);
     $this->assertTrue($registration->access('view', $account));
