@@ -192,7 +192,7 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    * 'administer registration'  grants the ability to perform any
    * registration-related action for the host, its settings or its
    * registrations.
-   * 
+   *
    * 'administer registrations' is only for granting the 'administer'
    * operation to registrations for the host.
    *
@@ -274,7 +274,6 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    */
   protected function checkManagedAccess($operation, HostEntityInterface $host_entity, $type, AccountInterface $account): AccessResultInterface {
     // Check administrative permissions.
-    $result = $host_entity->access('administer registration', $account, TRUE);
     $result = AccessResult::allowedIfHasPermission($account, "administer $type registration settings");
 
     // 'manage broadcast' and 'manage settings' operations require additional
@@ -296,7 +295,7 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
 
     // Check host-specific permissions if access not granted yet.
     if ($result->isNeutral()) {
-      $manage_result = $this->checkManageAccess($host_entity, $account);
+      $manage_result = $host_entity->access('manage', $account, TRUE);
 
       $administer_own_result = AccessResult::allowedIfHasPermissions($account, [
         "administer own $type registration",

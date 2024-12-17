@@ -231,7 +231,7 @@ class ManageRegistrationsAccessCheckTest extends RegistrationKernelTestBase {
         'expected' => FALSE,
       ],
       "$route_name: administer host registration with host update" => [
-        'permissions' => ['manage own conference registration'],
+        'permissions' => ['administer host registration'],
         'host update' => TRUE,
         'route' => $route_name,
         'expected' => TRUE,
