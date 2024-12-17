@@ -88,14 +88,11 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
    *   The access result.
    */
   protected function checkEntityUserPermissions(EntityInterface $entity, string $operation, AccountInterface $account): AccessResultInterface {
-    if ($operation === 'administer') {
-      return $this->checkEntityUserPermissionsForAdministerOperation($entity, $account);
+    $permissions = ["administer {$entity->bundle()} registration"];
+    if ($operation !== 'administer') {
+      $permissions[] = "$operation any {$entity->bundle()} registration";
     }
-
-    $result = AccessResult::allowedIfHasPermissions($account, [
-      "administer {$entity->bundle()} registration",
-      "$operation any {$entity->bundle()} registration",
-    ], 'OR');
+    $result = AccessResult::allowedIfHasPermissions($account, $permissions, 'OR');
 
     // The "host" permission grants access if the user can edit the host entity.
     if (($result->isNeutral()) && ($host_entity = $entity->getHostEntity())) {
@@ -122,34 +119,6 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
       }
     }
 
-    return $result;
-  }
-
-  /**
-   * Checks the entity permissions for the 'administer' operation.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity for which to check access.
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   The user for which to check access.
-   *
-   * @return \Drupal\Core\Access\AccessResultInterface
-   *   The access result.
-   */
-  protected function checkEntityUserPermissionsForAdministerOperation(EntityInterface $entity, AccountInterface $account): AccessResultInterface {
-    $result = AccessResult::allowedIfHasPermission($account, "administer {$entity->bundle()} registration");
-    if ($result->isNeutral() && ($host_entity = $entity->getHostEntity())) {
-      $result = $host_entity->access('administer registrations', $account, TRUE)->orIf($result);
-    }
-    if ($result->isNeutral()) {
-      if ($account->id() && ($account->id() == $entity->getUserId())) {
-        // The "own" permission is based on the current user's ID, so the
-        // result must be cached per user.
-        $result = AccessResult::allowedIfHasPermission($account, "administer own {$entity->bundle()} registration")
-          ->cachePerUser()
-          ->orIf($result);
-      }
-    }
     return $result;
   }
 
