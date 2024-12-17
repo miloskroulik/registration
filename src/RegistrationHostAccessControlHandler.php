@@ -210,9 +210,13 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
       "administer registration",
       "administer $type registration",
     ], 'OR');
-    if ($result->isNeutral) {
-      $host_result = AccessResult::allowedIfHasPermission($account, "$base_operation host registration")
-        ->andIf($host_entity->access('manage', $account, TRUE));
+    if ($result->isNeutral()) {
+      // Avoid firing additional host access hooks for 'manage' operation
+      // unless it's actually needed.
+      $host_result = AccessResult::allowedIfHasPermission($account, "administer host registration");
+      if ($host_result->isAllowed()) {
+        $host_result->andIf($host_entity->access('manage', $account, TRUE));
+      }
       $result = $result->orIf($host_result);
     }
     return $result;
