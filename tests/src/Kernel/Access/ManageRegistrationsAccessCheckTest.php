@@ -71,6 +71,18 @@ class ManageRegistrationsAccessCheckTest extends RegistrationKernelTestBase {
         'route' => 'manage',
         'expected' => TRUE,
       ],
+      'manage: manage host registration without host update' => [
+        'permissions' => ['manage host registration'],
+        'host update' => FALSE,
+        'route' => 'manage',
+        'expected' => FALSE,
+      ],
+      'manage: manage host registration with host update' => [
+        'permissions' => ['manage host registration'],
+        'host update' => TRUE,
+        'route' => 'manage',
+        'expected' => TRUE,
+      ],
     ];
 
     $settings = $this->basicManageScenarios('settings');
@@ -125,18 +137,6 @@ class ManageRegistrationsAccessCheckTest extends RegistrationKernelTestBase {
       ],
       'administer host registration with host update' => [
         'permissions' => ['administer host registration'],
-        'host update' => TRUE,
-        'route' => 'manage',
-        'expected' => TRUE,
-      ],
-      'manage host registration without host update' => [
-        'permissions' => ['manage host registration'],
-        'host update' => FALSE,
-        'route' => 'manage',
-        'expected' => FALSE,
-      ],
-      'manage host registration with host update' => [
-        'permissions' => ['manage host registration'],
         'host update' => TRUE,
         'route' => 'manage',
         'expected' => TRUE,
