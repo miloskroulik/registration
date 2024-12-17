@@ -132,7 +132,7 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
     if (in_array($operation, ['view registrations', 'update registrations', 'delete registrations'])) {
       $result = $this->checkViewUpdateDeleteRegistrationsAccess($operation, $host_entity, $type, $account);
     }
-    elseif (in_array($operation, ['administer registration', 'administer registrations'], TRUE) {
+    elseif (in_array($operation, ['administer registration', 'administer registrations'], TRUE)) {
       $result = $this->checkAdministerRegistrationAccess($host_entity, $type, $account);
     }
     // 'manage' the host entity.
