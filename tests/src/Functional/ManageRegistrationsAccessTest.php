@@ -76,17 +76,7 @@ class ManageRegistrationsAccessTest extends RegistrationBrowserTestBase {
     $this->assertSession()->pageTextContains('List of registrations for');
     $this->assertSession()->pageTextNotContains('Registration summary for');
 
-    // Administer "own" type permission only provides summary access.
-    $test_user = $this->drupalCreateUser([
-      'administer own conference registration',
-      'administer users',
-    ]);
-    $this->drupalLogin($test_user);
-    $this->drupalGet('user/' . $user->id() . '/registrations');
-    $this->assertSession()->pageTextContains('Registration summary for');
-    $this->assertSession()->pageTextNotContains('List of registrations for');
-
-    // Adding view "any" permission provides access to the listing.
+    // Administer "own" type permission never gives access.
     $test_user = $this->drupalCreateUser([
       'administer own conference registration',
       'administer users',
@@ -94,8 +84,7 @@ class ManageRegistrationsAccessTest extends RegistrationBrowserTestBase {
     ]);
     $this->drupalLogin($test_user);
     $this->drupalGet('user/' . $user->id() . '/registrations');
-    $this->assertSession()->pageTextContains('List of registrations for');
-    $this->assertSession()->pageTextNotContains('Registration summary for');
+    $this->assertSession()->statusCodeEquals(403);
 
     // Administer "own" type settings permission only provides summary access.
     $test_user = $this->drupalCreateUser([
@@ -117,15 +106,6 @@ class ManageRegistrationsAccessTest extends RegistrationBrowserTestBase {
     $this->drupalGet('user/' . $user->id() . '/registrations');
     $this->assertSession()->pageTextContains('List of registrations for');
     $this->assertSession()->pageTextNotContains('Registration summary for');
-
-    // Administer "own" permissions require edit access to the host entity.
-    $test_user = $this->drupalCreateUser([
-      'administer own conference registration',
-      'access user profiles',
-    ]);
-    $this->drupalLogin($test_user);
-    $this->drupalGet('user/' . $user->id() . '/registrations');
-    $this->assertSession()->statusCodeEquals(403);
 
     $test_user = $this->drupalCreateUser([
       'administer own conference registration settings',
@@ -303,19 +283,10 @@ class ManageRegistrationsAccessTest extends RegistrationBrowserTestBase {
     $this->drupalGet('user/' . $user->id() . '/registrations/settings');
     $this->assertSession()->pageTextContains('Registration settings');
 
-    // Administer "own" type permission.
+    // Administer "own" type permission never gives access.
     $test_user = $this->drupalCreateUser([
       'administer own conference registration',
       'administer users',
-    ]);
-    $this->drupalLogin($test_user);
-    $this->drupalGet('user/' . $user->id() . '/registrations/settings');
-    $this->assertSession()->pageTextContains('Registration settings');
-
-    // Administer "own" type permission requires edit access to the host entity.
-    $test_user = $this->drupalCreateUser([
-      'administer own conference registration',
-      'access user profiles',
     ]);
     $this->drupalLogin($test_user);
     $this->drupalGet('user/' . $user->id() . '/registrations/settings');
@@ -410,19 +381,10 @@ class ManageRegistrationsAccessTest extends RegistrationBrowserTestBase {
     $this->drupalGet('user/' . $user->id() . '/registrations/broadcast');
     $this->assertSession()->pageTextContains('Email registrants');
 
-    // Administer "own" type permission.
+    // Administer "own" type permission never gives access.
     $test_user = $this->drupalCreateUser([
       'administer own conference registration',
       'administer users',
-    ]);
-    $this->drupalLogin($test_user);
-    $this->drupalGet('user/' . $user->id() . '/registrations/broadcast');
-    $this->assertSession()->pageTextContains('Email registrants');
-
-    // Administer "own" type permission requires edit access to the host entity.
-    $test_user = $this->drupalCreateUser([
-      'administer own conference registration',
-      'access user profiles',
     ]);
     $this->drupalLogin($test_user);
     $this->drupalGet('user/' . $user->id() . '/registrations/broadcast');

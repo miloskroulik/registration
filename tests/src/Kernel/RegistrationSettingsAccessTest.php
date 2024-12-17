@@ -70,15 +70,24 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
 
     // "Own" permission also requires edit access to the host entity.
     $account = $this->createUser([
-      'administer own conference registration',
+      'administer own conference registration settings',
+    ]);
+    $this->assertFalse($settings->access('view', $account));
+    $this->assertFalse($settings->access('update', $account));
+    $this->assertFalse($settings->access('delete', $account));
+
+    $account = $this->createUser([
+      'administer own conference registration settings',
       'bypass node access',
     ]);
     $this->assertTrue($settings->access('view', $account));
     $this->assertTrue($settings->access('update', $account));
     $this->assertTrue($settings->access('delete', $account));
 
+    // Only settings permission gives access.
     $account = $this->createUser([
       'administer own conference registration',
+      'bypass node access',
     ]);
     $this->assertFalse($settings->access('view', $account));
     $this->assertFalse($settings->access('update', $account));
@@ -87,7 +96,7 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
     // The node is configured for conference registration, so seminar
     // registration permission should not grant access.
     $account = $this->createUser([
-      'administer own seminar registration',
+      'administer own seminar registration settings',
       'bypass node access',
     ]);
     $this->assertFalse($settings->access('view', $account));
@@ -123,10 +132,6 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
     $account = $this->createUser([
       'administer own conference registration',
       'bypass node access',
-    ]);
-    $this->assertTrue($url->access($account));
-    $account = $this->createUser([
-      'administer own conference registration',
     ]);
     $this->assertFalse($url->access($account));
     $account = $this->createUser([
@@ -172,10 +177,6 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
       'administer own conference registration',
       'bypass node access',
     ]);
-    $this->assertTrue($url->access($account));
-    $account = $this->createUser([
-      'administer own conference registration',
-    ]);
     $this->assertFalse($url->access($account));
     $account = $this->createUser([
       'administer own seminar registration',
@@ -205,6 +206,28 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
       'manage conference registration settings',
     ]);
     $this->assertTrue($url->access($account));
+    $account = $this->createUser([
+      'manage own conference registration',
+      'bypass node access',
+    ]);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser([
+      'manage own conference registration',
+      'manage conference registration settings',
+    ]);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser([
+      'manage own conference registration',
+      'manage conference registration settings',
+      'bypass node access',
+    ]);
+    $this->assertTrue($url->access($account));
+    $account = $this->createUser([
+      'manage own conference registration',
+      'manage conference registration broadcast',
+      'bypass node access',
+    ]);
+    $this->assertFalse($url->access($account));
 
     // Broadcast route.
     $url = Url::fromRoute('entity.node.registration.broadcast', [
@@ -217,10 +240,6 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
     $account = $this->createUser([
       'administer own conference registration',
       'bypass node access',
-    ]);
-    $this->assertTrue($url->access($account));
-    $account = $this->createUser([
-      'administer own conference registration',
     ]);
     $this->assertFalse($url->access($account));
     $account = $this->createUser([
@@ -256,6 +275,28 @@ class RegistrationSettingsAccessTest extends RegistrationKernelTestBase {
       'manage conference registration broadcast',
     ]);
     $this->assertTrue($url->access($account));
+    $account = $this->createUser([
+      'manage own conference registration',
+      'bypass node access',
+    ]);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser([
+      'manage own conference registration',
+      'manage conference registration broadcast',
+    ]);
+    $this->assertFalse($url->access($account));
+    $account = $this->createUser([
+      'manage own conference registration',
+      'manage conference registration broadcast',
+      'bypass node access',
+    ]);
+    $this->assertTrue($url->access($account));
+    $account = $this->createUser([
+      'manage own conference registration',
+      'manage conference registration settings',
+      'bypass node access',
+    ]);
+    $this->assertFalse($url->access($account));
   }
 
 }
