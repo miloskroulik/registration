@@ -284,18 +284,23 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
 
     // Check host-specific permissions if access not granted yet.
     if ($result->isNeutral()) {
-      $manage_host_result = $this->checkManageAccess($host_entity, $account);
+      $manage_result = $this->checkManageAccess($host_entity, $account);
 
       $administer_own_result = AccessResult::allowedIfHasPermissions($account, [
+        "administer host registration",
         "administer own $type registration",
         "administer own $type registration settings",
       ], 'OR')
-        ->andIf($manage_host_result);
+        ->andIf($manage_result);
       $result = $result->orIf($administer_own_result);
 
       $manage_own_result = AccessResult::allowedIfHasPermissions($account, array_merge($managed_permissions, ["manage own $type registration"]), 'AND')
-        ->andIf($manage_host_result);
+        ->andIf($manage_result);
       $result = $result->orIf($manage_own_result);
+
+      $manage_host_result = AccessResult::allowedIfHasPermissions($account, array_merge($managed_permissions, ["manage host registration"]), 'AND')
+        ->andIf($manage_result);
+      $result = $result->orIf($manage_host_result);
     }
 
     return $result;

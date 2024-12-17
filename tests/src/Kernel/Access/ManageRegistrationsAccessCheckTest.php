@@ -117,7 +117,32 @@ class ManageRegistrationsAccessCheckTest extends RegistrationKernelTestBase {
         'route' => 'manage',
         'expected' => TRUE,
       ],
+      'administer host registration without host update' => [
+        'permissions' => ['administer host registration'],
+        'host update' => FALSE,
+        'route' => 'manage',
+        'expected' => FALSE,
+      ],
+      'administer host registration with host update' => [
+        'permissions' => ['administer host registration'],
+        'host update' => TRUE,
+        'route' => 'manage',
+        'expected' => TRUE,
+      ],
+      'manage host registration without host update' => [
+        'permissions' => ['manage host registration'],
+        'host update' => FALSE,
+        'route' => 'manage',
+        'expected' => FALSE,
+      ],
+      'manage host registration with host update' => [
+        'permissions' => ['manage host registration'],
+        'host update' => TRUE,
+        'route' => 'manage',
+        'expected' => TRUE,
+      ],
 
+      
       'update conference registration' => [
         'permissions' => ['update any conference registration'],
         'host update' => TRUE,
@@ -200,6 +225,43 @@ class ManageRegistrationsAccessCheckTest extends RegistrationKernelTestBase {
         'route' => $route_name,
         'expected' => TRUE,
       ],
+      "$route_name: administer host registration without host update" => [
+        'permissions' => ['administer host registration'],
+        'host update' => FALSE,
+        'route' => $route_name,
+        'expected' => FALSE,
+      ],
+      "$route_name: administer host registration with host update" => [
+        'permissions' => ['manage own conference registration'],
+        'host update' => TRUE,
+        'route' => $route_name,
+        'expected' => TRUE,
+      ],
+      "$route_name: manage host registration alone without host update" => [
+        'permissions' => ['manage host registration'],
+        'host update' => FALSE,
+        'route' => $route_name,
+        'expected' => FALSE,
+      ],
+      "$route_name: manage host registration alone with host update" => [
+        'permissions' => ['manage host registration'],
+        'host update' => TRUE,
+        'route' => $route_name,
+        'expected' => FALSE,
+      ],
+      "$route_name: manage host registration without host update" => [
+        'permissions' => ['manage host registration', "manage conference registration $route_name"],
+        'host update' => FALSE,
+        'route' => $route_name,
+        'expected' => FALSE,
+      ],
+      "$route_name: manage host registration with host update" => [
+        'permissions' => ['manage host registration', "manage conference registration $route_name"],
+        'host update' => TRUE,
+        'route' => $route_name,
+        'expected' => TRUE,
+      ],
+
     ];
   }
 

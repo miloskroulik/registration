@@ -129,6 +129,22 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->access('delete', $account));
     $this->assertFalse($registration->access('administer', $account));
 
+    // "Administer host" permission.
+    $account = $this->createUser(['administer host registration']);
+    $this->assertFalse($registration->access('view', $account));
+    $this->assertFalse($registration->access('update', $account));
+    $this->assertFalse($registration->access('delete', $account));
+    $this->assertFalse($registration->access('administer', $account));
+    $account = $this->createUser([
+      'bypass node access',
+      'administer host registration',
+    ]);
+    $this->assertTrue($registration->access('view', $account));
+    $this->assertTrue($registration->access('update', $account));
+    $this->assertTrue($registration->access('delete', $account));
+    $this->assertTrue($registration->access('administer', $account));
+
+
     // "Administer" permission.
     $account = $this->createUser(['administer registration']);
     $this->assertTrue($registration->access('view', $account));
@@ -194,6 +210,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
       'manage conference registration',
       'manage conference registration settings',
       'manage conference registration broadcast',
+      'manage host registration',
     ]);
     $this->assertFalse($registration->access('view', $account));
     $this->assertFalse($registration->access('update', $account));
