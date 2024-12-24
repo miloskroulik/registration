@@ -7,11 +7,11 @@ use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 
 /**
- * Tests registration tokens.
+ * Tests registration tokens with the token module enabled.
  *
  * @group registration
  */
-class RegistrationTokensTest extends RegistrationKernelTestBase {
+class RegistrationTokensWithTokenModuleTest extends RegistrationKernelTestBase {
 
   use NodeCreationTrait;
   use RegistrationCreationTrait;
@@ -20,6 +20,13 @@ class RegistrationTokensTest extends RegistrationKernelTestBase {
    * The token service.
    */
   protected Token $tokenService;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'token',
+  ];
 
   /**
    * {@inheritdoc}
@@ -33,9 +40,9 @@ class RegistrationTokensTest extends RegistrationKernelTestBase {
   }
 
   /**
-   * Tests token generation and chaining.
+   * Tests registration tokens with fields added by the token module.
    */
-  public function testRegistrationTokens() {
+  public function testRegistrationTokensWithFields() {
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
     $registration->set('anon_mail', 'test@example.org');
@@ -44,17 +51,15 @@ class RegistrationTokensTest extends RegistrationKernelTestBase {
     // Simple tokens.
     $test_data = [
       '[registration:id]' => '1',
+      '[registration:registration_id:value]' => '1',
       '[registration:count]' => '1',
+      '[registration:count:value]' => '1',
       '[registration:label]' => 'Registration #1 for My event',
       '[registration:mail]' => 'test@example.org',
+      '[registration:mail:value]' => 'test@example.org',
       '[registration:state]' => 'Pending',
       '[registration:type]' => 'conference',
       '[registration:type-name]' => 'Conference',
-
-      // Since the token module is not installed, field tokens will not resolve.
-      '[registration:registration_id:value]' => '[registration:registration_id:value]',
-      '[registration:count:value]' => '[registration:count:value]',
-      '[registration:mail:value]' => '[registration:mail:value]',
     ];
 
     $token_data = [

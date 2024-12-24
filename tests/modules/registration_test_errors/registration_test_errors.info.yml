@@ -1,0 +1,6 @@
+name: Registration Test Errors
+type: module
+description: 'Test module for Registration host entity tests.'
+package: Testing
+dependencies:
+  - registration:registration
