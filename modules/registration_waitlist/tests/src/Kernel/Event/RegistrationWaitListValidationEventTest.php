@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\registration_waitlist\Kernel\Plugin\Validation\Constraint;
+namespace Drupal\Tests\registration_waitlist\Kernel\Event;
 
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
@@ -8,13 +8,13 @@ use Drupal\Tests\registration_waitlist\Kernel\RegistrationWaitListKernelTestBase
 use Drupal\user\UserInterface;
 
 /**
- * Tests the wait list extended Registration constraint.
+ * Tests the wait list validation event subscriber.
  *
- * @coversDefaultClass \Drupal\registration_waitlist\Plugin\Validation\Constraint\RegistrationConstraint
+ * @coversDefaultClass \Drupal\registration_waitlist\EventSubscriber\RegistrationValidationEventSubscriber
  *
  * @group registration
  */
-class RegistrationWaitListConstraintTest extends RegistrationWaitListKernelTestBase {
+class RegistrationWaitListValidationEventTest extends RegistrationWaitListKernelTestBase {
 
   use NodeCreationTrait;
   use RegistrationCreationTrait;
@@ -38,9 +38,9 @@ class RegistrationWaitListConstraintTest extends RegistrationWaitListKernelTestB
   }
 
   /**
-   * @covers ::validate
+   * @covers ::alterValidationResult
    */
-  public function testWaitListRegistrationConstraint() {
+  public function testWaitListRegistrationValidation() {
     $node = $this->createAndSaveNode();
 
     // Fill the regular capacity.

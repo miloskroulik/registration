@@ -27,7 +27,10 @@ final class RegistrationEvents {
    *
    * @Event
    *
-   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   * @deprecated in registration:3.1.8 and is removed from registration:4.0.0.
+   *   Use REGISTRATION_ALTER_VALIDATION_RESULT instead.
+   *
+   * @see https://www.drupal.org/node/3496339
    */
   const REGISTRATION_ALTER_ENABLED = 'registration.alter.enabled';
 
@@ -77,6 +80,24 @@ final class RegistrationEvents {
    * @see \Drupal\registration\Event\RegistrationDataAlterEvent
    */
   const REGISTRATION_ALTER_USAGE = 'registration.alter.usage';
+
+  /**
+   * Name of the event fired to validate host entities against any value.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_HOST_VALIDATION = 'registration.alter.host.validate';
+
+  /**
+   * Name of the event fired to allow alter of registration validation results.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_VALIDATION_RESULT = 'registration.alter.validation_result';
 
   /**
    * Name of the event fired to allow alter of the registration form.

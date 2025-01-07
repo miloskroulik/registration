@@ -4,6 +4,15 @@ services:
     class: \Drupal\registration_admin_overrides\EventSubscriber\RegistrationEventSubscriber
     arguments: [
       '@current_user',
+      '@registration_admin_overrides.override_checker'
+    ]
+    tags:
+      - { name: event_subscriber }
+
+  registration_admin_overrides.validation_event_subscriber:
+    class: \Drupal\registration_admin_overrides\EventSubscriber\RegistrationValidationEventSubscriber
+    arguments: [
+      '@current_user',
       '@module_handler',
       '@registration_admin_overrides.override_checker'
     ]

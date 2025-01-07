@@ -37,7 +37,9 @@ class HostEntityTest extends RegistrationKernelTestBase {
    * @covers ::getRegistrationList
    * @covers ::getRegistrationTypeBundle
    * @covers ::hasRoom
+   * @covers ::isAvailableForRegistration
    * @covers ::isConfiguredForRegistration
+   * @covers ::isEditableRegistration
    * @covers ::isEnabledForRegistration
    * @covers ::isEmailRegistered
    * @covers ::isEmailRegisteredInStates
@@ -162,22 +164,26 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertFalse($host_entity->isUserRegisteredInStates($user, $states));
 
     // Out of room.
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
 
     // Add more capacity.
     $settings = $host_entity->getSettings();
     $settings->set('capacity', 10);
     $settings->save();
+    $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
 
     // Reached capacity.
     $settings->set('capacity', 5);
     $settings->save();
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
 
     // Unlimited capacity.
     $settings->set('capacity', 0);
     $settings->save();
+    $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
 
     // Before open and after close.
@@ -187,23 +193,56 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $settings->save();
     $this->assertTrue($host_entity->isBeforeOpen());
     $this->assertFalse($host_entity->isAfterClose());
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
     $settings->set('open', NULL);
     $settings->set('close', '2020-01-01T00:00:00');
     $settings->save();
     $this->assertFalse($host_entity->isBeforeOpen());
     $this->assertTrue($host_entity->isAfterClose());
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
+
+    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+
+    // Reload the registration so the updated settings are reflected.
+    $registration = $this->reloadEntity($registration);
+
+    // An administrator can edit a registration after the close date.
+    $this->assertTrue($host_entity->isEditableRegistration($registration, $user));
+
+    // A regular user cannot edit a registration after the close date.
+    $regular_user = $this->createUser(['update any conference registration']);
+    $this->assertFalse($host_entity->isEditableRegistration($registration, $regular_user));
 
     $settings->set('open', NULL);
     $settings->set('close', NULL);
     $settings->save();
+    $this->assertFalse($host_entity->isBeforeOpen());
+    $this->assertFalse($host_entity->isAfterClose());
+    $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
+
+    // Reload the registration so the updated settings are reflected.
+    $registration = $this->reloadEntity($registration);
+
+    // A regular user can now edit the registration.
+    $this->assertTrue($host_entity->isEditableRegistration($registration, $regular_user));
 
     // Disable registration.
     $settings->set('status', FALSE);
     $settings->save();
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
+
+    // Reload the registration so the updated settings are reflected.
+    $registration = $this->reloadEntity($registration);
+
+    // An administrator can edit a registration when registration is disabled.
+    $this->assertTrue($host_entity->isEditableRegistration($registration, $user));
+
+    // A regular user cannot edit a registration when registration is disabled.
+    $this->assertFalse($host_entity->isEditableRegistration($registration, $regular_user));
 
     // Not configured for registration.
     $node = $this->createNode();
@@ -211,11 +250,12 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $node->save();
     $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($node);
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isConfiguredForRegistration());
   }
 
   /**
-   * Test deprecation of 'host_entity' handler on registration entity.
+   * Tests deprecation of 'host_entity' handler on registration entity.
    *
    * @group legacy
    */

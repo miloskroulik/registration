@@ -88,6 +88,16 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $this->assertEquals('You may not register for more than 2 spaces.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
 
+    $host_entity = $registration->getHostEntity();
+    $settings = $host_entity->getSettings();
+    $settings->set('maximum_spaces', 1);
+    $settings->save();
+    $violations = $registration->validate();
+    $this->assertEquals('You may not register for more than 1 space.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+
+    $settings->set('maximum_spaces', 2);
+    $settings->save();
     $registration->set('count', 2);
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
@@ -204,6 +214,8 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $settings->set('status', FALSE);
     $settings->save();
     $registration = $this->createRegistration($node);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $registration->set('author_uid', 1);
     $violations = $registration->validate();
     $this->assertEquals(1, $violations->count());

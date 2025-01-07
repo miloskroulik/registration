@@ -51,9 +51,10 @@ class RegistrationWaitListTwigExtension extends AbstractExtension {
    * @throws \InvalidArgumentException
    */
   public static function hostEntityWaitListIndicator(mixed $entity, int $spaces = 1, mixed $registration = NULL): array {
+    $build = [];
     if (empty($entity)) {
       // Nothing to render.
-      return [];
+      return $build;
     }
     if (!($entity instanceof ContentEntityInterface)) {
       throw new \InvalidArgumentException('The "host_entity_waitlist_indicator" filter must be given a content entity as the host entity.');
@@ -64,14 +65,16 @@ class RegistrationWaitListTwigExtension extends AbstractExtension {
 
     $handler = \Drupal::entityTypeManager()->getHandler($entity->getEntityTypeId(), 'registration_host_entity');
     $host_entity = $handler->createHostEntity($entity);
-    if ($host_entity->isConfiguredForRegistration() && $host_entity->isEnabledForRegistration()) {
+    $validation_result = $host_entity->isAvailableForRegistration(TRUE);
+    if ($validation_result->isValid()) {
       if ($host_entity->shouldAddToWaitList($spaces, $registration)) {
-        return [
+        $build = [
           '#theme' => 'host_entity_waitlist_indicator',
         ];
       }
     }
-    return [];
+    $validation_result->getCacheableMetadata()->applyTo($build);
+    return $build;
   }
 
 }

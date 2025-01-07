@@ -24,6 +24,11 @@ services:
     tags:
       - { name: event_subscriber }
 
+  registration_waitlist.registration_validation_event_subscriber:
+    class: Drupal\registration_waitlist\EventSubscriber\RegistrationValidationEventSubscriber
+    tags:
+      - { name: event_subscriber }
+
   registration_waitlist.manager:
     class: Drupal\registration_waitlist\RegistrationWaitListManager
     arguments: [

@@ -126,3 +126,19 @@ services:
     arguments: ['@datetime.time']
     tags:
       - { name: event_subscriber }
+
+  registration.validation.constraint:
+    class: Drupal\registration\Validation\RegistrationConstraintManager
+    parent: default_plugin_manager
+    tags:
+      - { name: plugin_manager_cache_clear }
+
+  registration.validator:
+    class: Drupal\registration\RegistrationValidator
+    arguments: [
+      '@class_resolver',
+      '@entity_type.manager',
+      '@event_dispatcher',
+      '@registration.validation.constraint',
+      '@typed_data_manager',
+    ]

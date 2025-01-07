@@ -92,21 +92,34 @@ class RegisterForm extends ContentEntityForm {
     // Initialize host entity needed by the form.
     $this->setHostEntity($form_state);
 
-    // Set cache directives so the form rebuilds when needed.
-    $this->addCacheableDependencies($form, $form_state);
-
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->getEntity();
     $form_state->set('registration', $registration);
 
-    // Make sure registration is still allowed.
+    // Make sure registration is still allowed. Although access control often
+    // prevents access to the register route when registration would fail, the
+    // passing of time can make the access control cache "stale" if the close
+    // date is reached just prior to the form being displayed, and in other
+    // edge cases. The ability to register, or update an existing registration,
+    // is checked again here. If there are errors, registration is prevented by
+    // disabling the registration form. This keeps the user from wasting time
+    // filling out a form that would never succeed on submit.
     $host_entity = $form_state->get('host_entity');
-    $count = $registration->getSpacesReserved();
-    $errors = [];
-    if ($registration->isNew() && !$host_entity->isEnabledForRegistration($count, $registration, $errors)) {
-      foreach ($errors as $error) {
+    if ($registration->isNew()) {
+      $validation_result = $host_entity->isAvailableForRegistration(TRUE);
+    }
+    else {
+      $validation_result = $host_entity->isEditableRegistration($registration, NULL, TRUE);
+    }
+
+    // Apply cacheable metadata to the form so it rebuilds when needed.
+    $validation_result->getCacheableMetadata()->applyTo($form);
+
+    // Display any errors.
+    if (!$validation_result->isValid()) {
+      foreach ($validation_result->getViolations() as $violation) {
         $form['notice'][] = [
-          '#markup' => '<p class="registration-error">' . $error . '</p>',
+          '#markup' => '<p class="registration-error">' . $violation->getMessage() . '</p>',
         ];
       }
     }
@@ -517,7 +530,7 @@ class RegisterForm extends ContentEntityForm {
       /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
       $registration = $this->getEntity();
       $count = $registration->getSpacesReserved();
-      if (!$registration->isNew() || $host_entity->isEnabledForRegistration($count, $registration)) {
+      if (!$registration->isNew() || $host_entity->isAvailableForRegistration()) {
         // Override the button label for the Save button.
         $actions = parent::actions($form, $form_state);
         $actions['submit']['#value'] = $this->t('Save Registration');
@@ -540,21 +553,6 @@ class RegisterForm extends ContentEntityForm {
     }
 
     return $actions;
-  }
-
-  /**
-   * Adds cache directives to the form.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   */
-  protected function addCacheableDependencies(array &$form, FormStateInterface $form_state) {
-    $host_entity = $form_state->get('host_entity');
-    $settings = $form_state->get('settings');
-
-    $host_entity->addCacheableDependencies($form, [$settings]);
   }
 
   /**

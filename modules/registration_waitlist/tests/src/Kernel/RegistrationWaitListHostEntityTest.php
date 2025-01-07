@@ -55,6 +55,7 @@ class RegistrationWaitListHostEntityTest extends RegistrationWaitListKernelTestB
     $this->assertFalse($host_entity->hasRoomOffWaitList());
     // There is room on the wait list.
     $this->assertTrue($host_entity->hasRoomOnWaitList());
+    $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
     $this->assertTrue($host_entity->shouldAddToWaitList());
 
@@ -66,6 +67,7 @@ class RegistrationWaitListHostEntityTest extends RegistrationWaitListKernelTestB
     $this->assertFalse($host_entity->hasRoomOffWaitList());
     $this->assertTrue($host_entity->hasRoomOnWaitList());
     $this->assertTrue($host_entity->shouldAddToWaitList());
+    $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
 
     // Complete a registration while the wait list is active.
@@ -76,6 +78,7 @@ class RegistrationWaitListHostEntityTest extends RegistrationWaitListKernelTestB
     $this->assertFalse($host_entity->hasRoomOffWaitList());
     $this->assertTrue($host_entity->hasRoomOnWaitList());
     $this->assertTrue($host_entity->shouldAddToWaitList());
+    $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
 
     // Wait list spaces reserved and remaining.
@@ -94,6 +97,7 @@ class RegistrationWaitListHostEntityTest extends RegistrationWaitListKernelTestB
     $this->assertTrue($host_entity->hasRoomOnWaitList());
     $this->assertFalse($host_entity->hasRoomOffWaitList());
     $this->assertTrue($host_entity->shouldAddToWaitList());
+    $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
 
     // Disable the wait list.
@@ -113,6 +117,7 @@ class RegistrationWaitListHostEntityTest extends RegistrationWaitListKernelTestB
     $this->assertFalse($host_entity->hasRoomOffWaitList());
     $this->assertFalse($host_entity->hasRoomOnWaitList());
     $this->assertFalse($host_entity->shouldAddToWaitList());
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
     $this->assertNull($host_entity->getWaitListSpacesRemaining());
   }

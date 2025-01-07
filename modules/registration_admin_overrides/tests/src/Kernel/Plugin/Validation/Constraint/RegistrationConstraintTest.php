@@ -194,6 +194,8 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     $settings->save();
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $violations = $registration->validate();
     $this->assertEquals(1, $violations->count());
     $registration->save();

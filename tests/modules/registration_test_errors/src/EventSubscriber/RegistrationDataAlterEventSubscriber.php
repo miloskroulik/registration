@@ -47,6 +47,7 @@ class RegistrationDataAlterEventSubscriber implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents(): array {
     return [
+      // @phpstan-ignore-next-line
       RegistrationEvents::REGISTRATION_ALTER_ENABLED => 'alterEnabled',
     ];
   }

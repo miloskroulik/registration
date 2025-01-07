@@ -3,8 +3,10 @@
 namespace Drupal\registration_test_event\EventSubscriber;
 
 use Drupal\Tests\RandomGeneratorTrait;
+use Drupal\node\NodeInterface;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\Event\RegistrationEvents;
+use Drupal\registration\RegistrationValidationResult;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -15,7 +17,7 @@ class RegistrationDataAlterEventSubscriber implements EventSubscriberInterface {
   use RandomGeneratorTrait;
 
   /**
-   * Alter the registration count.
+   * Alters the registration count.
    *
    * @param \Drupal\registration\Event\RegistrationDataAlterEvent $event
    *   The registration data alter event.
@@ -26,7 +28,7 @@ class RegistrationDataAlterEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Alter enabled status.
+   * Alters enabled status.
    *
    * @param \Drupal\registration\Event\RegistrationDataAlterEvent $event
    *   The registration data alter event.
@@ -44,7 +46,7 @@ class RegistrationDataAlterEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Alter email recipients.
+   * Alters email recipients.
    *
    * @param \Drupal\registration\Event\RegistrationDataAlterEvent $event
    *   The registration data alter event.
@@ -63,7 +65,7 @@ class RegistrationDataAlterEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Alter the number of spaces remaining.
+   * Alters the number of spaces remaining.
    *
    * @param \Drupal\registration\Event\RegistrationDataAlterEvent $event
    *   The registration data alter event.
@@ -74,7 +76,7 @@ class RegistrationDataAlterEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   * Alter the number of spaces reserved.
+   * Alters the number of spaces reserved.
    *
    * @param \Drupal\registration\Event\RegistrationDataAlterEvent $event
    *   The registration data alter event.
@@ -84,15 +86,32 @@ class RegistrationDataAlterEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * Provides host validation for a node.
+   *
+   * @param \Drupal\registration\Event\RegistrationDataAlterEvent $event
+   *   The registration data alter event.
+   */
+  public function alterHostValidation(RegistrationDataAlterEvent $event) {
+    $context = $event->getContext();
+    if ($context['value'] instanceof NodeInterface) {
+      $validation_result = new RegistrationValidationResult([], $context['value']);
+      $validation_result->addViolation('This is an example error message 1.', [], NULL, NULL, NULL, 'example_error_code1');
+      $event->setData($validation_result);
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function getSubscribedEvents(): array {
     return [
       RegistrationEvents::REGISTRATION_ALTER_COUNT => 'alterCount',
+      // @phpstan-ignore-next-line
       RegistrationEvents::REGISTRATION_ALTER_ENABLED => 'alterEnabled',
       RegistrationEvents::REGISTRATION_ALTER_RECIPIENTS => 'alterRecipients',
       RegistrationEvents::REGISTRATION_ALTER_SPACES_REMAINING => 'alterRemaining',
       RegistrationEvents::REGISTRATION_ALTER_USAGE => 'alterUsage',
+      RegistrationEvents::REGISTRATION_ALTER_HOST_VALIDATION => 'alterHostValidation',
     ];
   }
 

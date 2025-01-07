@@ -85,6 +85,13 @@ class HostEntity implements HostEntityInterface {
   protected RegistrationSettings|NULL $settings;
 
   /**
+   * The registration validator.
+   *
+   * @var \Drupal\registration\RegistrationValidatorInterface
+   */
+  protected RegistrationValidatorInterface $validator;
+
+  /**
    * Creates a HostEntity object.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
@@ -376,7 +383,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrationQuery(array $properties = [], ?AccountInterface $account = NULL, $email = NULL): QueryInterface {
+  public function getRegistrationQuery(array $properties = [], ?AccountInterface $account = NULL, ?string $email = NULL): QueryInterface {
     $query = $this->entityTypeManager()->getStorage('registration')->getQuery()
       ->accessCheck(FALSE)
       ->condition('entity_type_id', $this->getEntityTypeId())
@@ -500,6 +507,19 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function isAvailableForRegistration(bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface {
+    $validation_result = $this->validator()->execute('available_for_registration', [
+      'HostHasSettings',
+      'HostIsOpen',
+      'HostIsEnabled',
+      'HostHasRoom',
+    ], $this);
+    return $return_as_object ? $validation_result : $validation_result->isValid();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isConfiguredForRegistration(): bool {
     return !is_null($this->getRegistrationTypeBundle());
   }
@@ -507,79 +527,37 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function isEditableRegistration(RegistrationInterface $registration, ?AccountInterface $account = NULL, bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface {
+    $validation_result = $this->validator()->execute('editable_registration', [
+      'HostHasSettings' => ['hostEntity' => $registration->getHostEntity()],
+      'RegistrationIsEditable' => ['account' => $account],
+    ], $registration);
+    return $return_as_object ? $validation_result : $validation_result->isValid();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isEnabledForRegistration(int $spaces = 1, ?RegistrationInterface $registration = NULL, array &$errors = []): bool {
-    $settings = $this->getSettings();
-    if (!$settings) {
-      $errors['settings'] = $this->t('Host entity settings not available for %label.', [
-        '%label' => $this->label(),
-      ]);
-      return FALSE;
-    }
-    $enabled = $settings->getSetting('status');
+    @trigger_error('HostEntity::isEnabledForRegistration() is deprecated in registration:3.1.8 and is removed from registration:4.0.0. See https://www.drupal.org/node/3496339', E_USER_DEPRECATED);
 
-    // Only explore other settings if main status is enabled.
-    if ($enabled) {
-      // Check maximum allowed spaces per registration.
-      $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
-      if ($maximum_spaces && ($spaces > $maximum_spaces)) {
-        $enabled = FALSE;
-        $errors['maximum_spaces'] = $this->formatPlural($maximum_spaces,
-          'You may not register for more than 1 space.',
-          'You may not register for more than @count spaces.', [
-            '@count' => $maximum_spaces,
-          ]);
-      }
+    $validation_result = $this->validator()->execute('available_for_registration', [
+      'HostHasSettings' => ['hostEntity' => $this],
+      'HostIsOpen' => ['hostEntity' => $this],
+      'HostIsEnabled' => ['hostEntity' => $this],
+      'HostHasRoom' => ['hostEntity' => $this],
+      'RegistrationWithinMaximumSpaces' => ['spaces' => $spaces],
+    ], $registration ?? $this);
 
-      // Check capacity.
-      if (!$this->hasRoom($spaces, $registration)) {
-        $enabled = FALSE;
-        $errors['capacity'] = $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
-          '%label' => $this->label(),
-        ]);
-      }
-
-      // Check open date.
-      if ($this->isBeforeOpen()) {
-        $enabled = FALSE;
-        $errors['open'] = $this->t('Registration for %label is not open yet.', [
-          '%label' => $this->label(),
-        ]);
-      }
-
-      // Check close date.
-      if ($this->isAfterClose()) {
-        $enabled = FALSE;
-        $errors['close'] = $this->t('Registration for %label is closed.', [
-          '%label' => $this->label(),
-        ]);
-      }
-    }
-    else {
-      $errors['status'] = $this->t('Registration for %label is disabled.', [
-        '%label' => $this->label(),
-      ]);
-    }
-
-    // Allow other modules to override the result.
-    $event = new RegistrationDataAlterEvent($enabled, [
-      'host_entity' => $this,
-      'settings' => $settings,
-      'spaces' => $spaces,
-      'registration' => $registration,
-      'errors' => $errors,
-    ]);
-    $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_ENABLED);
-    if ($event->hasErrors()) {
-      $errors = $event->getErrors();
-    }
-    return $event->getData() ?? FALSE;
+    $errors = $validation_result->getLegacyErrors();
+    return $validation_result->isValid();
   }
 
   /**
    * {@inheritdoc}
    */
   public function isEmailRegistered(string $email): bool {
-    @trigger_error('Calling HostEntity::isEmailRegistered() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
+    @trigger_error('HostEntity::isEmailRegistered() is deprecated in registration:3.1.5 and is removed from registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     $states = [];
 
     if ($registration_type = $this->getRegistrationType()) {
@@ -606,7 +584,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isEmailRegisteredInStates(string $email, array $states): bool {
-    @trigger_error('Calling HostEntity::isEmailRegisteredInStates() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
+    @trigger_error('HostEntity::isEmailRegisteredInStates() is deprecated in registration:3.1.5 and is removed from registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     // Ensure we have states before querying against them.
     if (empty($states)) {
       return FALSE;
@@ -627,7 +605,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isUserRegistered(AccountInterface $account): bool {
-    @trigger_error('Calling HostEntity::isUserRegistered() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
+    @trigger_error('HostEntity::isUserRegistered() is deprecated in registration:3.1.5 and is removed from registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     $states = [];
 
     if ($registration_type = $this->getRegistrationType()) {
@@ -654,7 +632,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isUserRegisteredInStates(AccountInterface $account, array $states): bool {
-    @trigger_error('Calling HostEntity::isUserRegisteredInStates() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
+    @trigger_error('HostEntity::isUserRegisteredInStates() is deprecated in registration:3.1.5 and is removed from registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     // Ensure we have states before querying against them.
     if (empty($states)) {
       return FALSE;
@@ -674,7 +652,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function isRegistrant(?AccountInterface $account = NULL, $email = NULL, array $states = []): bool {
+  public function isRegistrant(?AccountInterface $account = NULL, ?string $email = NULL, array $states = []): bool {
     if (!$account && !$email) {
       throw new \InvalidArgumentException("Either an account or an email must be passed to HostEntity::isRegistrant().");
     }
@@ -722,6 +700,60 @@ class HostEntity implements HostEntityInterface {
       $close = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $close, $storage_timezone);
     }
     return ($close && ($now >= $close));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validate(mixed $value): RegistrationValidationResultInterface {
+    // Validate a registration.
+    if ($value instanceof RegistrationInterface) {
+      $configuration = ['hostEntity' => $this];
+
+      // All registrations must have a host entity with settings.
+      $pipeline = [
+        'HostHasSettings' => $configuration,
+      ];
+
+      // Checks that apply to new registrations.
+      if ($value->isNew()) {
+        $pipeline += [
+          'HostIsOpen' => $configuration,
+          'HostIsEnabled' => $configuration,
+          'HostHasRoom' => $configuration,
+        ];
+      }
+
+      $configuration += ['spaces' => $value->getSpacesReserved()];
+
+      // Checks that apply to all registrations.
+      $pipeline += [
+        'RegistrationIsEditable' => [],
+        'RegistrationWithinMaximumSpaces' => $configuration,
+        'RegistrationWithinCapacity' => [],
+        'UniqueRegistrant' => [],
+      ];
+
+      $validation_result = $this->validator()->execute('available_for_registration', $pipeline, $value);
+    }
+
+    // Dispatch an event so other objects can be validated.
+    $event = new RegistrationDataAlterEvent($validation_result ?? NULL, [
+      'host_entity' => $this,
+      'value' => $value,
+    ]);
+    $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_HOST_VALIDATION);
+
+    /** @var \Drupal\registration\RegistrationValidationResultInterface $validation_result */
+    $validation_result = $event->getData();
+
+    // An object other than a registration was validated, but an event
+    // subscriber to handle the validation was not provided.
+    if (!isset($validation_result)) {
+      throw new \InvalidArgumentException("Value could not be validated");
+    }
+
+    return $validation_result;
   }
 
   /**
@@ -781,6 +813,8 @@ class HostEntity implements HostEntityInterface {
    *
    * New registrations are always checked. Existing registrations are checked
    * in cases when the spaces reserved or registration state have changed.
+   * However, the check can be skipped for any registration that is canceled,
+   * whether new or existing.
    *
    * @param int $spaces
    *   The number of spaces requested.
@@ -792,13 +826,13 @@ class HostEntity implements HostEntityInterface {
    */
   protected function needsCapacityCheck(int $spaces, ?RegistrationInterface $registration): bool {
     $needs_check = TRUE;
-    if ($registration && !$registration->isNew()) {
-      // The check can be skipped for an existing registration if it is canceled
-      // or in the process of being canceled.
+    if ($registration) {
+      // The check can be skipped if a registration is canceled or in the
+      // process of being canceled.
       if ($registration->getState()->isCanceled()) {
         $needs_check = FALSE;
       }
-      else {
+      elseif (!$registration->isNew()) {
         // The check can be skipped for an existing registration if its spaces
         // reserved and registration state fields are unchanged. Skipping the
         // check in this case allows an existing registration to be editable
@@ -825,6 +859,19 @@ class HostEntity implements HostEntityInterface {
       $this->renderer = $this->container()->get('renderer');
     }
     return $this->renderer;
+  }
+
+  /**
+   * Retrieves the registration validator.
+   *
+   * @return \Drupal\registration\RegistrationValidatorInterface
+   *   The registration validator.
+   */
+  protected function validator(): RegistrationValidatorInterface {
+    if (!isset($this->validator)) {
+      $this->validator = $this->container()->get('registration.validator');
+    }
+    return $this->validator;
   }
 
   /**

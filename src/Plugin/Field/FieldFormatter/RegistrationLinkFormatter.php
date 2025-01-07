@@ -100,7 +100,11 @@ class RegistrationLinkFormatter extends FormatterBase {
             ->load($id);
           if ($registration_type) {
             $cache_entities[] = $registration_type;
-            if ($host_entity->isEnabledForRegistration()) {
+
+            $validation_result = $host_entity->isAvailableForRegistration(TRUE);
+            $validation_result->getCacheableMetadata()->applyTo($elements);
+
+            if ($validation_result->isValid()) {
               $entity_type_id = $host_entity->getEntityTypeId();
               $url = Url::fromRoute("entity.$entity_type_id.registration.register", [
                 $entity_type_id => $host_entity->id(),

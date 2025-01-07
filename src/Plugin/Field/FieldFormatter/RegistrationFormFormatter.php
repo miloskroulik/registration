@@ -63,7 +63,10 @@ class RegistrationFormFormatter extends FormatterBase {
           $registration_type = $this->entityTypeManager->getStorage('registration_type')->load($id);
           if ($registration_type) {
             $cache_entities[] = $registration_type;
-            if ($host_entity->isEnabledForRegistration()) {
+            $validation_result = $host_entity->isAvailableForRegistration(TRUE);
+            $validation_result->getCacheableMetadata()->applyTo($elements);
+
+            if ($validation_result->isValid()) {
               $registration = $this->entityTypeManager->getStorage('registration')->create([
                 'entity_type_id' => $host_entity->getEntityTypeId(),
                 'entity_id' => $host_entity->id(),

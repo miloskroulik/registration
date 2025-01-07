@@ -45,6 +45,8 @@ class RegistrationDataAlterEventTest extends EventTestBase {
     // The subscriber disables registration for node 2.
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $registration->set('author_uid', 1);
     $violations = $registration->validate();
     $this->assertCount(1, $violations);
@@ -76,6 +78,32 @@ class RegistrationDataAlterEventTest extends EventTestBase {
     $this->assertCount(2, $violations);
     $this->assertEquals('You may not register for more than 2 spaces.', (string) $violations[0]->getMessage());
     $this->assertEquals('Sorry, unable to register for <em class="placeholder">My event</em> due to: insufficient spaces remaining.', (string) $violations[1]->getMessage());
+
+    // Validate a node using the host entity. The event subscriber handles
+    // node validation, and adds a single violation.
+    $node = $this->createAndSaveNode();
+    $registration = $this->createRegistration($node);
+    $host_entity = $registration->getHostEntity();
+    $other_node = $this->createNode();
+    $validation_result = $host_entity->validate($other_node);
+    $violations = $validation_result->getViolations();
+    $this->assertCount(1, $violations);
+  }
+
+  /**
+   * Tests the value not validated exception.
+   */
+  public function testRegistrationDataAlterEventValueNotValidatedException() {
+    $this->expectException(\InvalidArgumentException::class);
+    $this->expectExceptionMessage('Value could not be validated');
+    $node = $this->createAndSaveNode();
+    $registration = $this->createRegistration($node);
+    $host_entity = $registration->getHostEntity();
+    $account = $this->createUser();
+    // Validating an account results in an exception, since the host entity
+    // class handles registrations natively, and the event subscriber handles
+    // nodes, but nothing handles accounts.
+    $validation_result = $host_entity->validate($account);
   }
 
 }

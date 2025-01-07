@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Utility\Token;
 use Drupal\registration\HostEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -22,6 +23,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class RegistrationStatus extends BlockBase implements ContainerFactoryPluginInterface {
+
+  use StringTranslationTrait;
 
   /**
    * List of states this block supports.
@@ -196,6 +199,14 @@ class RegistrationStatus extends BlockBase implements ContainerFactoryPluginInte
     // Merge cache metadata from the build and the token replacements.
     $token_cache_metadata->merge($build_cache_metadata)->applyTo($build);
 
+    // The block states depend on registration availability, apply its
+    // cacheability so the block rebuilds when availability changes.
+    // Although the host entity and settings are already covered through
+    // methods called above, an event subscriber could have added other
+    // entities to the cacheability, and those will be picked up here.
+    $validation_result = $host_entity->isAvailableForRegistration(TRUE);
+    $validation_result->getCacheableMetadata()->applyTo($build);
+
     return $build;
   }
 
@@ -252,33 +263,33 @@ class RegistrationStatus extends BlockBase implements ContainerFactoryPluginInte
   protected function setStates(): void {
     $this->states = [
       'enabled' => [
-        'label' => t('Enabled'),
+        'label' => $this->t('Enabled'),
         'callback' => function (HostEntityInterface $hostEntity) {
-          return $hostEntity->isEnabledForRegistration();
+          return $hostEntity->isAvailableForRegistration();
         },
       ],
       'disabled_before_open' => [
-        'label' => t('Disabled - before open date'),
+        'label' => $this->t('Disabled - before open date'),
         'callback' => function (HostEntityInterface $hostEntity) {
           return $hostEntity->isBeforeOpen();
         },
       ],
       'disabled_after_close' => [
-        'label' => t('Disabled - after close date'),
+        'label' => $this->t('Disabled - after close date'),
         'callback' => function (HostEntityInterface $hostEntity) {
           return $hostEntity->isAfterClose();
         },
       ],
       'disabled_capacity' => [
-        'label' => t('Disabled - at capacity'),
+        'label' => $this->t('Disabled - at capacity'),
         'callback' => function (HostEntityInterface $hostEntity) {
           return $hostEntity->getSpacesRemaining() === 0;
         },
       ],
       'disabled' => [
-        'label' => t('Disabled'),
+        'label' => $this->t('Disabled'),
         'callback' => function (HostEntityInterface $hostEntity) {
-          return !$hostEntity->isEnabledForRegistration();
+          return !$hostEntity->isAvailableForRegistration();
         },
       ],
     ];
