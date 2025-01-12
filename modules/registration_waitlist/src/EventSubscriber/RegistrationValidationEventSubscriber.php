@@ -19,22 +19,18 @@ class RegistrationValidationEventSubscriber implements EventSubscriberInterface 
    *   The registration data alter event.
    */
   public function alterValidationResult(RegistrationDataAlterEvent $event): void {
-    $validation_result = $event->getData();
     $context = $event->getContext();
+    $host_entity = $context['host_entity'] ?? NULL;
 
-    $pipeline_id = $context['pipeline_id'];
-    $host_entity = $context['host_entity'];
-    $registration = $context['registration'];
-
-    // Add a violation when checking availability and the wait list is full.
-    if ($pipeline_id == 'available_for_registration') {
-      if ($host_entity instanceof HostEntityInterface) {
-        if ($host_entity->isWaitListEnabled() && !$host_entity->hasRoomOffWaitList()) {
-          if (!$host_entity->hasRoomOnWaitList($registration?->getSpacesReserved() ?? 1, $registration)) {
-            $validation_result->addViolation('Sorry, unable to register for %label because the wait list is full.', [
-              '%label' => $host_entity->label(),
-            ], NULL, NULL, NULL, 'waitlist_capacity');
-          }
+    // Change the capacity violation if waitlist enabled.
+    if ($host_entity instanceof HostEntityInterface) {
+      if ($host_entity->isWaitListEnabled()) {
+        $validation_result = $event->getData();
+        if ($validation_result->hasViolationWithCode('capacity')) {
+          $validation_result->removeViolationWithCode('capacity');
+          $validation_result->addViolation('Sorry, unable to register for %label because the wait list is full.', [
+            '%label' => $host_entity->label(),
+          ], NULL, NULL, NULL, 'waitlist_capacity', t('No room on waitlist.'));
         }
       }
     }

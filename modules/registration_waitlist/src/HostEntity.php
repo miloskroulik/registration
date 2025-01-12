@@ -70,9 +70,7 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
    */
   public function hasRoom(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool {
     if ($this->isWaitListEnabled()) {
-      // If wait list is enabled, assume there is room. The wait list is checked
-      // for room separately.
-      return TRUE;
+      return $this->hasRoomOffWaitList($spaces, $registration) || $this->hasRoomOnWaitList($spaces, $registration);
     }
     return parent::hasRoom($spaces, $registration);
   }

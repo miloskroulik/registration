@@ -31,10 +31,8 @@ class RegistrationWaitListValidationEventTest extends RegistrationWaitListKernel
    */
   protected function setUp(): void {
     parent::setUp();
-
-    $admin_user = $this->createUser();
-    $this->setCurrentUser($admin_user);
-    $this->adminUser = $admin_user;
+    // Create user 1.
+    $user = $this->createUser();
   }
 
   /**
