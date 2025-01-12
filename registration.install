@@ -181,7 +181,7 @@ function registration_update_9011() {
 }
 
 /**
- * Grant "manage own $type" permission to users with "administer own $type".
+ * Grant "administer own $type settings" to users with "administer own $type".
  */
 function registration_update_9012() {
   $bundle_info = \Drupal::service('entity_type.bundle.info')->getBundleInfo('registration');
@@ -191,7 +191,7 @@ function registration_update_9012() {
     $permissions = $role->getPermissions();
     foreach ($bundle_info as $bundle => $info) {
       $admin_perm = "administer own {$bundle} registration";
-      $manage_perm = "manage own {$bundle} registration";
+      $manage_perm = "administer own {$bundle} registration settings";
       if (in_array($admin_perm, $permissions) && !in_array($manage_perm, $permissions)) {
         $role->grantPermission($manage_perm);
         $changed = TRUE;
