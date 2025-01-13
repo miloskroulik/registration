@@ -205,4 +205,12 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    */
   public function isHeld(): bool;
 
+  /**
+   * Determines whether a registration is new to the host.
+   *
+   * @return bool
+   *   TRUE if the registration is new or the host is changed, FALSE otherwise.
+   */
+  public function isNewToHost(): bool;
+
 }

@@ -716,7 +716,7 @@ class HostEntity implements HostEntityInterface {
       ];
 
       // Checks that apply to new registrations.
-      if ($value->isNew()) {
+      if ($value->isNewToHost()) {
         $pipeline += [
           'HostIsOpen' => $configuration,
           'HostIsEnabled' => $configuration,
@@ -832,7 +832,7 @@ class HostEntity implements HostEntityInterface {
       if ($registration->getState()->isCanceled()) {
         $needs_check = FALSE;
       }
-      elseif (!$registration->isNew()) {
+      elseif (!$registration->isNewToHost()) {
         // The check can be skipped for an existing registration if its spaces
         // reserved and registration state fields are unchanged. Skipping the
         // check in this case allows an existing registration to be editable

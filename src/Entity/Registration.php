@@ -360,6 +360,21 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   /**
    * {@inheritdoc}
    */
+  public function isNewToHost(): bool {
+    if (!$this->isNew()) {
+      $original = \Drupal::entityTypeManager()->getStorage('registration')->loadUnchanged($this->id());
+      if ($original instanceof RegistrationInterface) {
+        $different_host_entity_type = $original->getHostEntityTypeId() !== $this->getHostEntityTypeId();
+        $different_host_id = $original->getHostEntityId() !== $this->getHostEntityId();
+        return $different_host_entity_type || $different_host_id;
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 

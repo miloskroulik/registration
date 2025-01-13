@@ -103,7 +103,7 @@ class RegistrationSpacesWidget extends NumberWidget {
 
     // Allow an existing registration to keep its reserved spaces, even if the
     // capacity or maximum spaces was reduced after the registration occurred.
-    if (!$registration->isNew() && ($spaces > $max)) {
+    if (!$registration->isNewToHost() && ($spaces > $max)) {
       $max = $spaces;
       $description = $this->t('The number of spaces you wish to reserve.');
     }

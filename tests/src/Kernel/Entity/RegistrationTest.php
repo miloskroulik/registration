@@ -136,4 +136,40 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $this->assertNull($registration->getHostEntityTypeLabel());
   }
 
+  /**
+   * @covers ::isNewToHost
+   */
+  public function testIsNewToHost(): void {
+    $node = $this->createAndSaveNode();
+    $node = $this->reloadEntity($node);
+    $node2 = $this->createAndSaveNode();
+
+    $storage = $this->entityTypeManager->getStorage('registration');
+    $registration = $storage->create(['type' => 'conference']);
+    $this->assertTrue($registration->isNewToHost());
+
+    $registration = $this->createRegistration($node);
+    $this->assertTrue($registration->isNewToHost());
+    $registration->set('entity_id', $node2->id());
+    $this->assertTrue($registration->isNewToHost());
+
+    $registration->save();
+    $this->assertFalse($registration->isNewToHost());
+    $registration->set('entity_id', $node->id());
+    $this->assertTrue($registration->isNewToHost());
+    $registration->set('entity_id', $node2->id());
+    $this->assertFalse($registration->isNewToHost());
+    $registration->set('entity_id', $node->id());
+    $registration->save();
+    $this->assertFalse($registration->isNewToHost());
+
+    $registration->set('entity_type_id', 'user');
+    $this->assertTrue($registration->isNewToHost());
+    $registration->set('entity_type_id', 'node');
+    $this->assertFalse($registration->isNewToHost());
+    $registration->set('entity_type_id', 'user');
+    $registration->save();
+    $this->assertFalse($registration->isNewToHost());
+  }
+
 }

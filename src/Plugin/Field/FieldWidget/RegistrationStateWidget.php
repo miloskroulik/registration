@@ -138,7 +138,7 @@ class RegistrationStateWidget extends OptionsSelectWidget {
   protected function getStateOptions(RegistrationInterface $registration): array {
     $options = [];
     $current_state = $registration->getState();
-    $states = $registration->getType()->getStatesToShowOnForm($current_state, !$registration->isNew());
+    $states = $registration->getType()->getStatesToShowOnForm($current_state, !$registration->isNewToHost());
     foreach ($states as $id => $state) {
       $options[$id] = $state->label();
     }

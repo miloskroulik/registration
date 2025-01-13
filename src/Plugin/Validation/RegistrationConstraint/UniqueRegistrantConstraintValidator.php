@@ -52,7 +52,7 @@ class UniqueRegistrantConstraintValidator extends ConstraintValidator implements
         if (!$allow_multiple) {
 
           // Multiple registrations per person are not allowed.
-          if ($registration->isNew()) {
+          if ($registration->isNewToHost()) {
 
             // Check the email address when registering an anonymous user.
             if ($email = $registration->getAnonymousEmail()) {
