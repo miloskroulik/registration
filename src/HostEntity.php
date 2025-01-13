@@ -2,6 +2,7 @@
 
 namespace Drupal\registration;
 
+use Drupal\Component\Datetime\DateTimePlus;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -285,6 +286,32 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function getCloseDate(): ?DateTimePlus {
+    $close = $this->getSetting('close');
+    if ($close) {
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      return DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $close, $storage_timezone);
+    }
+
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOpenDate(): ?DateTimePlus {
+    $open = $this->getSetting('open');
+    if ($open) {
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      return DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $open, $storage_timezone);
+    }
+
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSpacesRemaining(?RegistrationInterface $registration = NULL): ?int {
     if ($capacity = $this->getSetting('capacity')) {
       // Allow other modules to alter the number of spaces remaining.
@@ -392,7 +419,7 @@ class HostEntity implements HostEntityInterface {
     // Add property conditions using same logic as
     // EntityStorageBase::loadByProperties().
     foreach ($properties as $name => $value) {
-      // Cast scalars to array so we can consistently use an IN condition.
+      // Cast scalars to array, so we can consistently use an IN condition.
       $query->condition($name, (array) $value, 'IN');
     }
 
@@ -674,14 +701,11 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isBeforeOpen(): bool {
-    // Initialize the current time.
-    $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
-    $now = new DrupalDateTime('now', $storage_timezone);
-
     // Check open date.
-    $open = $this->getSetting('open');
+    $open = $this->getOpenDate();
     if ($open) {
-      $open = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $open, $storage_timezone);
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      $now = new DrupalDateTime('now', $storage_timezone);
     }
     return ($open && ($now < $open));
   }
@@ -690,14 +714,11 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isAfterClose(): bool {
-    // Initialize the current time.
-    $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
-    $now = new DrupalDateTime('now', $storage_timezone);
-
     // Check close date.
-    $close = $this->getSetting('close');
+    $close = $this->getCloseDate();
     if ($close) {
-      $close = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $close, $storage_timezone);
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      $now = new DrupalDateTime('now', $storage_timezone);
     }
     return ($close && ($now >= $close));
   }
@@ -838,6 +859,7 @@ class HostEntity implements HostEntityInterface {
         // check in this case allows an existing registration to be editable
         // even if the overall capacity has been exceeded by the actions of
         // some other module.
+        /** @var \Drupal\registration\Entity\RegistrationInterface $original */
         $original = $this->entityTypeManager()->getStorage('registration')->loadUnchanged($registration->id());
         // A reduction to spaces reserved should not trigger a capacity check.
         $spaces_changed = ($spaces > $original->getSpacesReserved());

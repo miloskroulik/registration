@@ -2,6 +2,7 @@
 
 namespace Drupal\registration;
 
+use Drupal\Component\Datetime\DateTimePlus;
 use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
@@ -136,6 +137,22 @@ interface HostEntityInterface extends AccessibleInterface {
    *   The total number of reserved spaces for active registrations.
    */
   public function getActiveSpacesReserved(?RegistrationInterface $registration = NULL): int;
+
+  /**
+   * Gets the close date.
+   *
+   * @return \Drupal\Component\Datetime\DateTimePlus|null
+   *   The close date, if one has been set in the host entity settings.
+   */
+  public function getCloseDate(): ?DateTimePlus;
+
+  /**
+   * Gets the open date.
+   *
+   * @return \Drupal\Component\Datetime\DateTimePlus|null
+   *   The open date, if one has been set in the host entity settings.
+   */
+  public function getOpenDate(): ?DateTimePlus;
 
   /**
    * Gets the spaces remaining.
@@ -307,7 +324,7 @@ interface HostEntityInterface extends AccessibleInterface {
    * @param \Drupal\registration\Entity\RegistrationInterface $registration
    *   The registration to check.
    * @param \Drupal\Core\Session\AccountInterface|null $account
-   *   (optional) The account. Defaults to the logged in user if not set.
+   *   (optional) The account. Defaults to the logged-in user if not set.
    * @param bool $return_as_object
    *   (optional) Defaults to FALSE.
    *
@@ -435,7 +452,7 @@ interface HostEntityInterface extends AccessibleInterface {
    *   (optional) The user account of the registrant.
    * @param string|null $email
    *   (optional) The email address of the registrant.
-   * @param array|null $states
+   * @param array $states
    *   (optional) A list of statuses to check. Defaults to active states.
    *
    * @return bool
