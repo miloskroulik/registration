@@ -832,11 +832,6 @@ class HostEntity implements HostEntityInterface {
   /**
    * Determines if a registration needs a capacity check.
    *
-   * New registrations are always checked. Existing registrations are checked
-   * in cases when the spaces reserved or registration state have changed.
-   * However, the check can be skipped for any registration that is canceled,
-   * whether new or existing.
-   *
    * @param int $spaces
    *   The number of spaces requested.
    * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
@@ -846,28 +841,10 @@ class HostEntity implements HostEntityInterface {
    *   TRUE if a check is needed, FALSE otherwise.
    */
   protected function needsCapacityCheck(int $spaces, ?RegistrationInterface $registration): bool {
-    $needs_check = TRUE;
     if ($registration) {
-      // The check can be skipped if a registration is canceled or in the
-      // process of being canceled.
-      if ($registration->getState()->isCanceled()) {
-        $needs_check = FALSE;
-      }
-      elseif (!$registration->isNewToHost()) {
-        // The check can be skipped for an existing registration if its spaces
-        // reserved and registration state fields are unchanged. Skipping the
-        // check in this case allows an existing registration to be editable
-        // even if the overall capacity has been exceeded by the actions of
-        // some other module.
-        /** @var \Drupal\registration\Entity\RegistrationInterface $original */
-        $original = $this->entityTypeManager()->getStorage('registration')->loadUnchanged($registration->id());
-        // A reduction to spaces reserved should not trigger a capacity check.
-        $spaces_changed = ($spaces > $original->getSpacesReserved());
-        $status_changed = ($registration->getState()->id() != $original->getState()->id());
-        $needs_check = $spaces_changed || $status_changed;
-      }
+      return $registration->requiresCapacityCheck() || ($spaces > $registration->getSpacesReserved());
     }
-    return $needs_check;
+    return TRUE;
   }
 
   /**

@@ -24,17 +24,19 @@ class RegistrationWithinMaximumSpacesConstraintValidator extends ConstraintValid
     if ($host_entity instanceof HostEntityInterface) {
       if ($settings = $host_entity->getSettings()) {
         $registration = ($value instanceof RegistrationInterface) ? $value : NULL;
-        $spaces = $constraint->spaces ?? ($registration ? $registration->getSpacesReserved() : 1);
-        $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
-        if ($maximum_spaces && ($spaces > $maximum_spaces)) {
-          $this->context
-            ->buildViolation($constraint->tooManySpacesMessage)
-            ->setParameter('@count', $maximum_spaces)
-            ->setPlural($maximum_spaces)
-            ->atPath('count')
-            ->setCode($constraint->tooManySpacesCode)
-            ->setCause(t($constraint->tooManySpacesCause))
-            ->addViolation();
+        if (!$registration || $registration->requiresCapacityCheck()) {
+          $spaces = $constraint->spaces ?? ($registration ? $registration->getSpacesReserved() : 1);
+          $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
+          if ($maximum_spaces && ($spaces > $maximum_spaces)) {
+            $this->context
+              ->buildViolation($constraint->tooManySpacesMessage)
+              ->setParameter('@count', $maximum_spaces)
+              ->setPlural($maximum_spaces)
+              ->atPath('count')
+              ->setCode($constraint->tooManySpacesCode)
+              ->setCause(t($constraint->tooManySpacesCause))
+              ->addViolation();
+          }
         }
       }
     }

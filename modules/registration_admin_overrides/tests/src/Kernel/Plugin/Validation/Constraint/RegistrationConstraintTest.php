@@ -265,6 +265,10 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
       'registration override open',
       'registration override close',
     ]);
+    $regular_user = $this->createUser([
+      'view any conference registration',
+      'update any conference registration',
+    ]);
 
     // Exceeds maximum spaces.
     $node = $this->createAndSaveNode();
@@ -272,7 +276,7 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     $registration->set('author_uid', 1);
     // Capacity 5 and max 2 spaces per registration are set in the
     // registration_test module.
-    $registration->set('count', 5);
+    $registration->set('count', 4);
     $this->setCurrentUser($admin_user);
     $violations = $registration->validate();
     $this->assertEquals('You may not register for more than 2 spaces.', (string) $violations[0]->getMessage());
@@ -280,6 +284,25 @@ class RegistrationConstraintTest extends RegistrationAdminOverridesKernelTestBas
     $this->setCurrentUser($overriding_user);
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
+
+    // A regular user can save an existing registration, even if it exceeds
+    // maximum spaces, as long as the number of spaces has not changed.
+    $this->setCurrentUser($regular_user);
+    $violations = $registration->validate();
+    // The registration is new, so the maximum spaces cannot be exceeded.
+    $this->assertEquals('You may not register for more than 2 spaces.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $registration->save();
+    // The registration is existing, but the maximum spaces can be exceeded
+    // since the spaces field was not changed.
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+    // The registration is existing, and spaces is increasing from 4 to 5,
+    // so the maximum spaces cannot be exceeded by a regular user.
+    $registration->set('count', 5);
+    $violations = $registration->validate();
+    $this->assertEquals('You may not register for more than 2 spaces.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
 
     // Add registrations for subsequent assertions.
     $registration->set('count', 2);

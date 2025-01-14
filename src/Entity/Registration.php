@@ -375,6 +375,29 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   /**
    * {@inheritdoc}
    */
+  public function requiresCapacityCheck(): bool {
+    $requires_check = TRUE;
+
+    // A check is not needed for canceled registrations.
+    if ($this->getState()->isCanceled()) {
+      $requires_check = FALSE;
+    }
+
+    // An existing registration must be checked if its host has changed,
+    // its state has changed, or the number of spaces reserved has increased.
+    elseif (!$this->isNewToHost()) {
+      $original = $this->entityTypeManager()->getStorage('registration')->loadUnchanged($this->id());
+      $status_changed = ($this->getState()->id() != $original->getState()->id());
+      $spaces_increased = ($this->getSpacesReserved() > $original->getSpacesReserved());
+      $requires_check = $status_changed || $spaces_increased;
+    }
+
+    return $requires_check;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
