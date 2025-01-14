@@ -18,6 +18,11 @@ use Drupal\registration\Validation\RegistrationConstraintBase;
 class RegistrationIsEditableConstraint extends RegistrationConstraintBase {
 
   /**
+   * This constraint requires a host entity with settings.
+   */
+  protected array $dependencies = ['HostHasSettings'];
+
+  /**
    * The account passed as a constraint option.
    */
   public ?AccountInterface $account;

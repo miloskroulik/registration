@@ -20,6 +20,11 @@ use Drupal\registration\Validation\RegistrationConstraintBase;
 class UniqueRegistrantConstraint extends RegistrationConstraintBase {
 
   /**
+   * This constraint requires a host entity with settings.
+   */
+  protected array $dependencies = ['HostHasSettings'];
+
+  /**
    * Email address is already registered.
    */
   public string $emailAlreadyRegisteredMessage = "%mail is already registered for this event.";

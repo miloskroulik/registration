@@ -17,6 +17,11 @@ use Drupal\registration\Validation\RegistrationConstraintBase;
 class RegistrationWithinCapacityConstraint extends RegistrationConstraintBase {
 
   /**
+   * This constraint requires a host entity with settings.
+   */
+  protected array $dependencies = ['HostHasSettings'];
+
+  /**
    * Would exceed event capacity.
    */
   public string $noRoomMessage = "Sorry, unable to register for %label due to: insufficient spaces remaining.";

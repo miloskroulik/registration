@@ -729,6 +729,9 @@ class HostEntity implements HostEntityInterface {
   public function validate(mixed $value): RegistrationValidationResultInterface {
     // Validate a registration.
     if ($value instanceof RegistrationInterface) {
+      // Setup configuration for those constraints that can take either a host
+      // entity or a registration as the value, and require the host entity to
+      // be passed as an option when the value is a registration.
       $configuration = ['hostEntity' => $this];
 
       // All registrations must have a host entity with settings.
@@ -744,8 +747,6 @@ class HostEntity implements HostEntityInterface {
           'HostHasRoom' => $configuration,
         ];
       }
-
-      $configuration += ['spaces' => $value->getSpacesReserved()];
 
       // Checks that apply to all registrations.
       $pipeline += [
