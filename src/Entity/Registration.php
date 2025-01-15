@@ -155,8 +155,9 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    * {@inheritdoc}
    */
   public function getHostEntity(?string $langcode = NULL): ?HostEntityInterface {
-    if (!isset($this->hostEntity)) {
+    if ($this->shouldBuildHostEntity()) {
       $this->hostEntity = NULL;
+      $this->get('host_entity')->reset();
       if (!$this->get('host_entity')->isEmpty()) {
         $entity = $this->get('host_entity')->first()->get('entity')->getValue();
         // Check if a specific language was requested. If not then default
@@ -166,7 +167,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
             ->getCurrentLanguage()
             ->getId();
         }
-        $this->hostEntity = \Drupal::entityTypeManager()
+        $this->hostEntity = $this->entityTypeManager()
           ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
           ->createHostEntity($entity, $langcode);
       }
@@ -362,7 +363,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    */
   public function isNewToHost(): bool {
     if (!$this->isNew()) {
-      $original = \Drupal::entityTypeManager()->getStorage('registration')->loadUnchanged($this->id());
+      $original = $this->entityTypeManager()->getStorage('registration')->loadUnchanged($this->id());
       if ($original instanceof RegistrationInterface) {
         $different_host_entity_type = $original->getHostEntityTypeId() !== $this->getHostEntityTypeId();
         $different_host_id = $original->getHostEntityId() !== $this->getHostEntityId();
@@ -393,6 +394,21 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
     }
 
     return $requires_check;
+  }
+
+  /**
+   * Determines whether the host entity needs to be built.
+   *
+   * @return bool
+   *   TRUE if the host entity needs to be built, FALSE otherwise.
+   */
+  protected function shouldBuildHostEntity(): bool {
+    if (isset($this->hostEntity)) {
+      // Rebuild if there is a new host.
+      return ($this->hostEntity->id() != $this->getHostEntityId()) || ($this->hostEntity->getEntityTypeId() != $this->getHostEntityTypeId());
+    }
+    // Build if not set yet.
+    return TRUE;
   }
 
   /**
@@ -465,7 +481,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
     if (!$update) {
       $settings = NULL;
       $host_entity = $this->getHostEntity();
-      $entity_type_manager = \Drupal::entityTypeManager();
+      $entity_type_manager = $this->entityTypeManager();
       if ($langcode = $this->getLangcode()) {
         $settings = $entity_type_manager
           ->getStorage('registration_settings')

@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Plugin\Field\FieldType;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -28,7 +29,7 @@ use Drupal\Core\TypedData\DataReferenceDefinition;
 class HostEntityItem extends FieldItemBase {
 
   /**
-   * Whether or not the value has been calculated.
+   * Whether the value has been calculated.
    *
    * @var bool
    */
@@ -85,6 +86,13 @@ class HostEntityItem extends FieldItemBase {
   }
 
   /**
+   * Resets the calculated state of the field.
+   */
+  public function reset(): void {
+    $this->isCalculated = FALSE;
+  }
+
+  /**
    * Calculates the value of the field and sets it.
    */
   protected function ensureCalculated() {
@@ -94,8 +102,13 @@ class HostEntityItem extends FieldItemBase {
       /** @var \Drupal\registration\Entity\HostEntityKeysInterface $entity */
       if ($entity_id = $entity->getHostEntityId()) {
         $entity_type_id = $entity->getHostEntityTypeId();
-        $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
-        $this->set('entity', $storage->load($entity_id));
+        try {
+          $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
+          $this->set('entity', $storage->load($entity_id));
+        }
+        catch (PluginNotFoundException) {
+          $this->set('entity', NULL);
+        }
         $this->isCalculated = TRUE;
       }
     }
