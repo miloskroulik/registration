@@ -32,7 +32,7 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $admin_user = $this->createUser(['administer registration']);
+    $admin_user = $this->createUser(['administer registration', 'create registration']);
     $this->setCurrentUser($admin_user);
     $this->adminUser = $admin_user;
   }
@@ -55,6 +55,8 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $host_entity = $registration->getHostEntity();
     $settings = $host_entity->getSettings();
     $settings->set('status', FALSE);
@@ -72,6 +74,8 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $registration->set('entity_id', 999);
     $violations = $registration->validate();
     $this->assertEquals('Missing host entity.', (string) $violations[0]->getMessage());
@@ -81,6 +85,8 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     // Capacity 5 and max 2 spaces per registration are set in the
     // registration_test module.
     $registration->set('count', 5);
@@ -113,6 +119,8 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     // No room.
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $registration->set('count', 2);
     $violations = $registration->validate();
     $this->assertEquals('Sorry, unable to register for <em class="placeholder">My event</em> due to: insufficient spaces remaining.', (string) $violations[0]->getMessage());
@@ -177,7 +185,7 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $this->assertEquals('You are already registered for this event.', (string) $violations[0]->getMessage());
     $this->assertEquals(1, $violations->count());
 
-    $user = $this->createUser();
+    $user = $this->createUser(['create registration']);
     $registration->set('user_uid', $user->id());
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
@@ -246,6 +254,8 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     // be done through the entity API since validation is separate.
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $registration->save();
     $this->setCurrentUser($this->adminUser);
     // Nothing has changed, so editing should be allowed.
@@ -270,6 +280,85 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
     $registration->set('state', 'canceled');
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
+  }
+
+  /**
+   * Tests the AllowedRegistrantConstraint.
+   *
+   * @covers ::validate
+   */
+  public function testAllowedRegistrantConstraint() {
+    $node = $this->createAndSaveNode();
+    $node->save();
+
+    $ordinary_user = $this->createUser();
+    $registrant_user = $this->createUser(['create conference registration self']);
+
+    // Without permissions, no registrant is valid for a new registration.
+    $this->setCurrentUser($ordinary_user);
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    $registration->set('user_uid', $ordinary_user->id());
+    $violations = $registration->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('You are not allowed to register yourself.', (string) $violations[0]->getMessage());
+    $this->assertNotEmpty($ordinary_user->getEmail());
+    $registration->set('anon_mail', $ordinary_user->getEmail());
+    $violations = $registration->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('You are not allowed to register yourself.', (string) $violations[0]->getMessage());
+    $registration->set('user_uid', NULL);
+    $violations = $registration->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('You are not allowed to register other people.', (string) $violations[0]->getMessage());
+    $registration->set('user_uid', $registrant_user->id());
+    $violations = $registration->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('You are not allowed to register other users.', (string) $violations[0]->getMessage());
+    $this->assertNotEmpty($registrant_user->getEmail());
+    $registration->set('anon_mail', $registrant_user->getEmail());
+    $violations = $registration->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('You are not allowed to register other users.', (string) $violations[0]->getMessage());
+    $registration->set('user_uid', NULL);
+    $violations = $registration->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('You are not allowed to register other people.', (string) $violations[0]->getMessage());
+
+    // But the registrant is not validated for an existing registration.
+    $registration->save();
+    $violations = $registration->validate();
+    $this->assertCount(0, $violations);
+    // Unless the registrant type is changed.
+    $registration->set('user_uid', $ordinary_user->id());
+    $violations = $registration->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('You are not allowed to register yourself.', (string) $violations[0]->getMessage());
+
+    // With permissions, the appropriate registrant is valid.
+    $this->setCurrentUser($registrant_user);
+    $registration->delete();
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    $registration->set('user_uid', $ordinary_user->id());
+    $violations = $registration->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('You are not allowed to register other users.', (string) $violations[0]->getMessage());
+    $registration->set('user_uid', $registrant_user->id());
+    $violations = $registration->validate();
+    $this->assertCount(0, $violations);
+
+    // For existing registrations also.
+    $registration->save();
+    $violations = $registration->validate();
+    $this->assertCount(0, $violations);
+    $registration->set('user_uid', $ordinary_user->id());
+    $violations = $registration->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('You are not allowed to register other users.', (string) $violations[0]->getMessage());
+    $registration->save();
+    $violations = $registration->validate();
+    $this->assertCount(0, $violations);
   }
 
 }

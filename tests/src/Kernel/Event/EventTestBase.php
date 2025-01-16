@@ -20,8 +20,8 @@ abstract class EventTestBase extends RegistrationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $admin_user = $this->createUser();
-    $this->setCurrentUser($admin_user);
+    $user = $this->createUser(['create registration']);
+    $this->setCurrentUser($user);
   }
 
 }

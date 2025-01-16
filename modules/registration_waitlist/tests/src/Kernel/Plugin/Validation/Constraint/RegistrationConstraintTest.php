@@ -36,8 +36,15 @@ class RegistrationConstraintTest extends RegistrationWaitListKernelTestBase {
    */
   public function testRegistrationCapacityConstraint() {
     $node = $this->createAndSaveNode();
+    $user = $this->createUser([
+      'create registration',
+    ]);
+    $this->setCurrentUser($user);
+
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     /** @var \Drupal\registration_waitlist\HostEntityInterface $host_entity */
     $host_entity = $registration->getHostEntity();
     $settings = $host_entity->getSettings();
@@ -63,6 +70,8 @@ class RegistrationConstraintTest extends RegistrationWaitListKernelTestBase {
     // Second registration exceeds capacity.
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $violations = $registration->validate();
     $this->assertEquals(1, $violations->count());
     $this->assertEquals('Sorry, unable to register for <em class="placeholder">My event</em> due to: insufficient spaces remaining.', (string) $violations[0]->getMessage());
@@ -79,8 +88,15 @@ class RegistrationConstraintTest extends RegistrationWaitListKernelTestBase {
    */
   public function testRegistrationCapacityConstraintWithWaitlist() {
     $node = $this->createAndSaveNode();
+    $user = $this->createUser([
+      'create registration',
+    ]);
+    $this->setCurrentUser($user);
+
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     /** @var \Drupal\registration_waitlist\HostEntityInterface $host_entity */
     $host_entity = $registration->getHostEntity();
     /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
@@ -114,6 +130,8 @@ class RegistrationConstraintTest extends RegistrationWaitListKernelTestBase {
     $this->assertTrue($host_entity->hasRoomOnWaitlist());
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $this->assertSame('pending', $registration->getState()->id());
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
@@ -127,6 +145,8 @@ class RegistrationConstraintTest extends RegistrationWaitListKernelTestBase {
     $this->assertFalse($host_entity->hasRoomOnWaitlist());
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $this->assertFalse($host_entity->hasRoomOffWaitlist(1, $registration));
     $this->assertFalse($host_entity->hasRoomOnWaitlist(1, $registration));
     $this->assertSame('pending', $registration->getState()->id());

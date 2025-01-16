@@ -171,8 +171,6 @@ class RegistrationManager implements RegistrationManagerInterface {
    */
   public function getRegistrantOptions(RegistrationInterface $registration, RegistrationSettings $settings): array {
     $options = [];
-
-    $type = $registration->getType()->id();
     $host_entity = $registration->getHostEntity();
 
     // Me:

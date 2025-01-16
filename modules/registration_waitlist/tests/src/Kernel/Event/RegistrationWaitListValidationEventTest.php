@@ -40,16 +40,24 @@ class RegistrationWaitListValidationEventTest extends RegistrationWaitListKernel
    */
   public function testWaitListRegistrationValidation() {
     $node = $this->createAndSaveNode();
+    $user = $this->createUser([
+      'create registration',
+    ]);
+    $this->setCurrentUser($user);
 
     // Fill the regular capacity.
     $active_registration = $this->createRegistration($node);
     $active_registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $active_registration->set('user_uid', $user->id());
     $active_registration->set('count', 5);
     $active_registration->save();
 
     // Add to the wait list.
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $registration->set('count', 5);
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
@@ -58,6 +66,8 @@ class RegistrationWaitListValidationEventTest extends RegistrationWaitListKernel
 
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $registration->set('count', 5);
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
@@ -67,6 +77,8 @@ class RegistrationWaitListValidationEventTest extends RegistrationWaitListKernel
     // No more room on the wait list.
     $registration2 = $this->createRegistration($node);
     $registration2->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration2->set('user_uid', $user->id());
     $violations = $registration2->validate();
     $this->assertEquals('Sorry, unable to register for %label because the wait list is full.', (string) $violations[0]->getMessageTemplate());
     $this->assertEquals(1, $violations->count());
@@ -91,6 +103,8 @@ class RegistrationWaitListValidationEventTest extends RegistrationWaitListKernel
 
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $violations = $registration->validate();
     $this->assertEquals(0, $violations->count());
     $registration->save();

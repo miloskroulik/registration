@@ -56,6 +56,8 @@ class RegistrationDataAlterEventTest extends EventTestBase {
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $violations = $registration->validate();
     $this->assertCount(0, $violations);
 
@@ -64,6 +66,8 @@ class RegistrationDataAlterEventTest extends EventTestBase {
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $registration->set('count', 6);
     $violations = $registration->validate();
     $this->assertCount(0, $violations);
@@ -73,6 +77,8 @@ class RegistrationDataAlterEventTest extends EventTestBase {
     $node = $this->createAndSaveNode();
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
     $registration->set('count', 6);
     $violations = $registration->validate();
     $this->assertCount(2, $violations);
