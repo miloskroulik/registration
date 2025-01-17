@@ -135,6 +135,12 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
     elseif ($operation === 'administer registrations') {
       $result = $this->checkAdministerRegistrationsAccess($host_entity, $type, $account);
     }
+    elseif ($operation === 'edit registrations state') {
+      // There is no matching permission for this operation, but it is
+      // supported so other modules can customize this result using the
+      // registration_host__access function.
+      $result = AccessResult::neutral();
+    }
     // 'manage' the host entity.
     elseif ($operation === 'manage') {
       $result = $this->checkManageAccess($host_entity, $account);

@@ -89,7 +89,6 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
       'access user profiles',
       'administer registration',
       'create conference registration other users',
-      'edit conference registration state',
     ]);
     $this->drupalLogin($admin_user);
     $this->drupalGet('/registration/' . $registration->id() . '/edit');
@@ -125,7 +124,7 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     // Remove permission to edit the Status field.
     $admin_user = $this->drupalCreateUser([
       'access user profiles',
-      'administer registration',
+      'update any conference registration',
       'create conference registration other users',
     ]);
     $this->drupalLogin($admin_user);
@@ -138,7 +137,6 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
       'access user profiles',
       'administer registration',
       'create conference registration other users',
-      'edit conference registration state',
     ]);
     $this->drupalLogin($admin_user);
     $settings->set('maximum_spaces', 1);

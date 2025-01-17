@@ -22,6 +22,25 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
     /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
     $host_entity = $entity->getHostEntity();
 
+    // The "edit state" operation is unique to registrations, so no need to
+    // check the parent. Simply check it here and return the result.
+    if ($operation == 'edit state') {
+      $permissions = [
+        "administer registration",
+        "administer {$entity->bundle()} registration",
+        "edit {$entity->bundle()} registration state",
+      ];
+      $result = AccessResult::allowedIfHasPermissions($account, $permissions, 'OR')
+        ->andIf($entity->access('update', $account, TRUE));
+
+      // If access not granted, check the host.
+      if ($result->isNeutral() && $host_entity) {
+        $host_result = $host_entity->access('edit registrations state', $account, TRUE);
+        $result = $result->orIf($host_result);
+      }
+      return $result;
+    }
+
     // Some operations require a host entity configured for registration.
     if (in_array($operation, ['update', 'administer'])) {
       if (!$host_entity) {

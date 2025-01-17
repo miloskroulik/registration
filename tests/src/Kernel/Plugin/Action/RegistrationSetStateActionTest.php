@@ -54,19 +54,28 @@ class RegistrationSetStateActionTest extends RegistrationKernelTestBase {
     $node = $this->createAndSaveNode();
     $registration = $this->createAndSaveRegistration($node);
 
-    $account = $this->createUser(['administer registration']);
-    $this->assertFalse($action->access($registration, $account));
-
-    $account = $this->createUser(['edit conference registration state']);
-    $this->assertFalse($action->access($registration, $account));
-
     // Must be able to update the registration and edit state to access the
     // action.
+    $account = $this->createUser(['edit conference registration state']);
+    $this->assertFalse($action->access($registration, $account));
+    $account = $this->createUser(['update any conference registration']);
+    $this->assertFalse($action->access($registration, $account));
     $account = $this->createUser([
       'update any conference registration',
       'edit conference registration state',
     ]);
     $this->assertTrue($action->access($registration, $account));
+
+    // Administrators have an implied right to edit state.
+    $account = $this->createUser(['administer registration']);
+    $this->assertTrue($action->access($registration, $account));
+    $account = $this->createUser(['administer conference registration']);
+    $this->assertTrue($action->access($registration, $account));
+    // But "administer own" is not enough.
+    $account = $this->createUser(['administer own conference registration']);
+    $this->assertFalse($action->access($registration, $account));
+    $account = $this->createUser(['administer own conference registration settings']);
+    $this->assertFalse($action->access($registration, $account));
 
     $action->execute($registration);
     $this->assertEquals('complete', $registration->getState()->id());

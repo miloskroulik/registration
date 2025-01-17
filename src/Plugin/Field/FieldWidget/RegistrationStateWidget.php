@@ -87,7 +87,7 @@ class RegistrationStateWidget extends OptionsSelectWidget {
       $registration_type = $entity->getType();
       $type = $registration_type->id();
       // Hide the field unless the user has permission to edit the state.
-      $element['#access'] = \Drupal::currentUser()->hasPermission("edit $type registration state");
+      $element['#access'] = $entity->access("edit state");
     }
 
     return $element;
