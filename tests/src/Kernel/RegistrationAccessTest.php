@@ -333,7 +333,9 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
    */
   public function testRouteAccess() {
     $node = $this->createAndSaveNode();
-    $registration = $this->createAndSaveRegistration($node);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', 1);
+    $registration->save();
 
     $account = $this->createUser(['administer registration']);
     $this->assertTrue($registration->toUrl('collection')->access($account));

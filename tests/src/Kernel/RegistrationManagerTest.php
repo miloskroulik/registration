@@ -110,14 +110,16 @@ class RegistrationManagerTest extends RegistrationKernelTestBase {
     $account = $this->createUser(['access registration overview']);
     $this->setCurrentUser($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
-    $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
+    // The existing option is always included for an existing registration.
+    $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 
     $account = $this->createUser(['create conference registration self']);
     $this->setCurrentUser($account);
     $options = $this->registrationManager->getRegistrantOptions($registration, $settings);
-    $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
+    // The existing option is always included for an existing registration.
+    $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON, $options);
     $this->assertArrayNotHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_USER, $options);
     $this->assertArrayHasKey(RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ME, $options);
 

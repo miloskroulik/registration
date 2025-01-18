@@ -158,17 +158,15 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     $this->assertSession()->fieldExists('count[0][value]');
     $this->assertSession()->pageTextContains('The number of spaces you wish to reserve.');
 
-    // No valid registration options.
+    // Editing a registration for another account.
     $admin_user = $this->drupalCreateUser([
-      'access user profiles',
       'administer registration',
-      'create conference registration other anonymous',
     ]);
     $this->drupalLogin($admin_user);
     $this->drupalGet('/registration/' . $registration->id() . '/edit');
     $this->assertSession()->pageTextContains('Edit Registration #' . $registration->id());
-    $this->assertSession()->buttonNotExists('Save Registration');
-    $this->assertSession()->pageTextContainsOnce('No valid registration options exist. Registration permissions may need to be adjusted.');
+    $this->assertSession()->buttonExists('Save Registration');
+    $this->assertSession()->pageTextContainsOnce('Other account');
 
     // Editing a registration for anonymous.
     $registration->set('user_uid', NULL);
@@ -177,19 +175,20 @@ class RegistrationAdminTest extends RegistrationBrowserTestBase {
     $this->drupalGet('/registration/' . $registration->id() . '/edit');
     $this->assertSession()->pageTextContains('Edit Registration #' . $registration->id());
     $this->assertSession()->buttonExists('Save Registration');
-    $this->assertSession()->pageTextNotContains('No valid registration options exist. Registration permissions may need to be adjusted.');
+    $this->assertSession()->pageTextContainsOnce('Other person');
 
-    // No valid registration options.
-    $admin_user = $this->drupalCreateUser([
-      'access user profiles',
-      'administer registration',
-      'create conference registration other users',
+    // Editing own registration.
+    $user = $this->drupalCreateUser([
+      'update own conference registration',
     ]);
-    $this->drupalLogin($admin_user);
+    $registration->set('user_uid', $user->id());
+    $registration->set('anon_mail', NULL);
+    $registration->save();
+    $this->drupalLogin($user);
     $this->drupalGet('/registration/' . $registration->id() . '/edit');
     $this->assertSession()->pageTextContains('Edit Registration #' . $registration->id());
-    $this->assertSession()->buttonNotExists('Save Registration');
-    $this->assertSession()->pageTextContainsOnce('No valid registration options exist. Registration permissions may need to be adjusted.');
+    $this->assertSession()->buttonExists('Save Registration');
+    $this->assertSession()->pageTextContainsOnce('Yourself');
   }
 
   /**

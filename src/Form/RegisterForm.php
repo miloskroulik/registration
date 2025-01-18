@@ -394,22 +394,8 @@ class RegisterForm extends ContentEntityForm {
     $host_entity = $form_state->get('host_entity');
     $settings = $host_entity->getSettings();
 
-    // Get the registrant options and give an error if there aren't any.
+    // Get the registrant options and the default option.
     $registrant_options = $registration_manager->getRegistrantOptions($registration, $settings);
-    if (empty($registrant_options)) {
-      $allow_multiple = $settings->getSetting('multiple_registrations');
-      if (!$allow_multiple && $registration->isNew() && $current_user->isAuthenticated() && $host_entity->isRegistrant($current_user)) {
-        $message = t('You are already registered for this event.');
-      }
-      else {
-        $message = t('No valid registration options exist. Registration permissions may need to be adjusted.');
-      }
-      $form['notice'][] = [
-        '#markup' => '<p class="registration-error">' . $message . '</p>',
-        '#weight' => -1,
-      ];
-    }
-
     $default = NULL;
     if (!$registration->isNew()) {
       $default = $registration->getRegistrantType($current_user);

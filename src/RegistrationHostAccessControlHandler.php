@@ -219,9 +219,6 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
   /**
    * Checks access for 'view_', 'update_' & 'delete_' 'registrations'.
    *
-   * This grants the ability to perform the 'administer' operation on any
-   * registration for this host.
-   *
    * @param string $operation
    *   The operation.
    * @param \Drupal\Core\Entity\HostEntityInterface $host_entity

@@ -540,6 +540,7 @@ class HostEntity implements HostEntityInterface {
       'HostIsOpen',
       'HostIsEnabled',
       'HostHasRoom',
+      'HostAllowsRegistrant',
     ], $this);
     return $return_as_object ? $validation_result : $validation_result->isValid();
   }
