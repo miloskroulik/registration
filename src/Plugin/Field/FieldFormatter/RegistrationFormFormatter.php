@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -48,6 +49,45 @@ class RegistrationFormFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
+  public static function defaultSettings(): array {
+    $options = parent::defaultSettings();
+
+    $options['show_reason'] = FALSE;
+    return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state): array {
+    $form = parent::settingsForm($form, $form_state);
+    $form['show_reason'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show a reason when the form is hidden'),
+      '#description' => $this->t("Displays a short message when registration is not available and the form is hidden."),
+      '#default_value' => $this->getSetting('show_reason'),
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary(): array {
+    $summary = [];
+    if ($show_reason = $this->getSetting('show_reason')) {
+      $summary[] = $this->t('Show reason when hidden: True');
+    }
+    else {
+      $summary[] = $this->t('Show reason when hidden: False');
+    }
+    return $summary;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
     $cache_entities = [];
@@ -76,6 +116,11 @@ class RegistrationFormFormatter extends FormatterBase {
               $elements[] = $this->entityFormBuilder->getForm($registration, 'register', [
                 'host_entity' => $host_entity,
               ]);
+            }
+            elseif ($this->getSetting('show_reason')) {
+              $elements[] = [
+                '#markup' => $validation_result->getReason(),
+              ];
             }
           }
         }

@@ -140,6 +140,22 @@ class RegistrationValidationResult implements RegistrationValidationResultInterf
   /**
    * {@inheritdoc}
    */
+  public function getReason(): ?TranslatableMarkup {
+    if (!$this->isValid()) {
+      $causes = [];
+      foreach ($this->getViolations() as $violation) {
+        $causes[] = (string) $violation->getCause();
+      }
+      return new TranslatableMarkup('Registration is not available: @causes', [
+        '@causes' => implode(' ', $causes),
+      ]);
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getValue(): mixed {
     return $this->value;
   }

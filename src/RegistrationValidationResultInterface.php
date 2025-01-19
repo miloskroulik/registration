@@ -4,6 +4,7 @@ namespace Drupal\registration;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
@@ -79,6 +80,25 @@ interface RegistrationValidationResultInterface {
    *   The constraints that were validated, as an array of plugin IDs.
    */
   public function getConstraints(): array;
+
+  /**
+   * Gets the reason when there are one or more violations.
+   *
+   * This is a convenience method that provides a short message with the
+   * violation causes appended, e.g. "Registration is not available: No room."
+   *
+   * This method can be used when there is limited space to display messages,
+   * or in contexts when the full message text is not needed, such as throwing
+   * exceptions. In most cases, it is preferable to loop on the violations and
+   * use the getMessage() method of the violation interface to display the full
+   * error message text.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|null
+   *   The reason, if available. Returns NULL if the result is valid.
+   *
+   * @see \Symfony\Component\Validator\ConstraintViolationInterface
+   */
+  public function getReason(): ?TranslatableMarkup;
 
   /**
    * Gets the value that was validated.

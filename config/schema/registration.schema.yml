@@ -63,6 +63,14 @@ field.formatter.settings.registration_host_entity:
       type: boolean
       label: 'Link'
 
+field.formatter.settings.registration_form:
+  type: mapping
+  label: 'Registration form format settings'
+  mapping:
+    show_reason:
+      type: boolean
+      label: 'Show reason when form is hidden'
+
 field.formatter.settings.registration_link:
   type: mapping
   label: 'Registration link format settings'
@@ -70,6 +78,9 @@ field.formatter.settings.registration_link:
     label:
       type: string
       label: 'Label'
+    show_reason:
+      type: boolean
+      label: 'Show reason when link is hidden'
 
 field.widget.settings.registration_type:
   type: mapping

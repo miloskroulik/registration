@@ -46,6 +46,7 @@ class RegistrationLinkFormatter extends FormatterBase {
     $options = parent::defaultSettings();
 
     $options['label'] = '';
+    $options['show_reason'] = FALSE;
     return $options;
   }
 
@@ -59,6 +60,12 @@ class RegistrationLinkFormatter extends FormatterBase {
       '#title' => $this->t('Label'),
       '#description' => $this->t("Optional label to use when displaying the registration title or link. Leave blank to use the parent event's label."),
       '#default_value' => $this->getSetting('label'),
+    ];
+    $form['show_reason'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show a reason when the link is hidden'),
+      '#description' => $this->t("Displays a short message when registration is not available and the link is hidden."),
+      '#default_value' => $this->getSetting('show_reason'),
     ];
 
     return $form;
@@ -76,6 +83,12 @@ class RegistrationLinkFormatter extends FormatterBase {
     }
     else {
       $summary[] = $this->t('Registration label: Parent label');
+    }
+    if ($show_reason = $this->getSetting('show_reason')) {
+      $summary[] = $this->t('Show reason when hidden: True');
+    }
+    else {
+      $summary[] = $this->t('Show reason when hidden: False');
     }
     return $summary;
   }
@@ -112,6 +125,11 @@ class RegistrationLinkFormatter extends FormatterBase {
               $label = $this->getSetting('label') ?: $registration_type->label();
               $elements[] = [
                 '#markup' => Link::fromTextAndUrl($label, $url)->toString(),
+              ];
+            }
+            elseif ($this->getSetting('show_reason')) {
+              $elements[] = [
+                '#markup' => $validation_result->getReason(),
               ];
             }
           }

@@ -39,6 +39,30 @@ class RegistrationFormFormatterTest extends FormatterTestBase implements Service
     ]);
     $output = $this->renderPlain($build);
     $this->assertStringContainsString('<form class="registration-conference-register-form', $output);
+
+    // Disable registration.
+    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
+    $host_entity = $handler->createHostEntity($node);
+    $settings = $host_entity->getSettings();
+    $settings->set('open', '2220-01-01T00:00:00');
+    $settings->save();
+
+    $build = $node->get('event_registration')->view([
+      'type' => 'registration_form',
+      'label' => 'hidden',
+    ]);
+    $output = $this->renderPlain($build);
+    $this->assertEmpty($output);
+
+    $build = $node->get('event_registration')->view([
+      'type' => 'registration_form',
+      'label' => 'hidden',
+      'settings' => [
+        'show_reason' => TRUE,
+      ],
+    ]);
+    $output = $this->renderPlain($build);
+    $this->assertEquals('Registration is not available: Not open yet.', $output);
   }
 
 }
