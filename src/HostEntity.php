@@ -754,7 +754,7 @@ class HostEntity implements HostEntityInterface {
         'RegistrationIsEditable' => [],
         'RegistrationWithinMaximumSpaces' => $configuration,
         'RegistrationWithinCapacity' => [],
-        'AllowedRegistrant' => [],
+        'RegistrationAllowsRegistrant' => [],
         'UniqueRegistrant' => [],
       ];
 

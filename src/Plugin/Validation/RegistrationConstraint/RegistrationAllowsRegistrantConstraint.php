@@ -5,16 +5,16 @@ namespace Drupal\registration\Plugin\Validation\RegistrationConstraint;
 use Drupal\registration\Validation\RegistrationConstraintBase;
 
 /**
- * Validates that a registrant is allowed for the current user.
+ * Validates that a registration allows a registrant.
  *
  * @RegistrationConstraint(
- *   id = "AllowedRegistrant",
- *   label = @Translation("Validates that a registrant is allowed.", context = "Validation")
+ *   id = "RegistrationAllowsRegistrant",
+ *   label = @Translation("Validates that a registration allows a registrant", context = "Validation")
  * )
  *
  * @phpcs:disable Drupal.Commenting.VariableComment.Missing
  */
-class AllowedRegistrantConstraint extends RegistrationConstraintBase {
+class RegistrationAllowsRegistrantConstraint extends RegistrationConstraintBase {
 
   /**
    * This constraint requires a host entity with settings.

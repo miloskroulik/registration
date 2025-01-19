@@ -10,11 +10,11 @@ use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
 /**
- * Validates the AllowedRegistrant constraint.
+ * Validates the RegistrationAllowsRegistrant constraint.
  *
  * @phpcs:disable Drupal.Semantics.FunctionT.NotLiteralString
  */
-class AllowedRegistrantConstraintValidator extends ConstraintValidator implements ContainerInjectionInterface {
+class RegistrationAllowsRegistrantConstraintValidator extends ConstraintValidator implements ContainerInjectionInterface {
 
   /**
    * The current user service.
@@ -22,7 +22,7 @@ class AllowedRegistrantConstraintValidator extends ConstraintValidator implement
   protected AccountProxy $currentUser;
 
   /**
-   * Constructs a new AllowedRegistrantConstraintValidator.
+   * Constructs a new RegistrationAllowsRegistrantConstraintValidator.
    *
    * @param \Drupal\Core\Session\AccountProxy $current_user
    *   The current user.
@@ -34,7 +34,7 @@ class AllowedRegistrantConstraintValidator extends ConstraintValidator implement
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container): AllowedRegistrantConstraintValidator {
+  public static function create(ContainerInterface $container): RegistrationAllowsRegistrantConstraintValidator {
     return new static(
       $container->get('current_user')
     );
@@ -44,7 +44,7 @@ class AllowedRegistrantConstraintValidator extends ConstraintValidator implement
    * {@inheritdoc}
    */
   public function validate($registration, Constraint $constraint) {
-    /** @var AllowedRegistrantConstraint $constraint */
+    /** @var RegistrationAllowsRegistrantConstraint $constraint */
     if ($registration instanceof RegistrationInterface) {
       $this->context->getCacheableMetadata()->addCacheContexts(['user']);
       $registrant_type = $registration->getRegistrantType($this->currentUser);

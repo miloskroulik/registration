@@ -283,11 +283,11 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
   }
 
   /**
-   * Tests the AllowedRegistrantConstraint.
+   * Tests whether various types of registrants are allowed.
    *
    * @covers ::validate
    */
-  public function testAllowedRegistrantConstraint() {
+  public function testAllowedRegistrants() {
     $node = $this->createAndSaveNode();
     $node->save();
 
