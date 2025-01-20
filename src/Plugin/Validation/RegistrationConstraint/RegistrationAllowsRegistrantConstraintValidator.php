@@ -66,7 +66,8 @@ class RegistrationAllowsRegistrantConstraintValidator extends ConstraintValidato
           $message = $constraint->otherMessage;
         }
         elseif ($registrant_type == RegistrationInterface::REGISTRATION_REGISTRANT_TYPE_ANON) {
-          $access = $host_entity->access('register other anonymous', $this->currentUser, TRUE);
+          $operation = $this->currentUser->isAnonymous() ? 'register self' : 'register other anonymous';
+          $access = $host_entity->access($operation, $this->currentUser, TRUE);
           $message = $constraint->otherAnonymousMessage;
         }
         else {

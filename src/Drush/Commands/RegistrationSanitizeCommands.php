@@ -23,8 +23,6 @@ use Symfony\Component\Console\Input\InputInterface;
  * Based on the:
  *  - Drush\Drupal\Commands\sql\SanitizeUserTableCommands
  *  - Drush\Drupal\Commands\sql\SanitizeUserFieldsCommands.
- *
- * @phpcs:disable Drupal.Classes.FullyQualifiedNamespace.UseStatementMissing
  */
 final class RegistrationSanitizeCommands extends DrushCommands implements SanitizePluginInterface {
 
