@@ -46,8 +46,7 @@ class HostAllowsRegistrantConstraintValidator extends ConstraintValidator implem
   public function validate($host_entity, Constraint $constraint) {
     /** @var HostAllowsRegistrantConstraint $constraint */
     if ($host_entity instanceof HostEntityInterface) {
-      $settings = $host_entity->getSettings();
-      $allow_multiple = (bool) $settings->getSetting('multiple_registrations');
+      $allow_multiple = $host_entity->isMultipleRegistrationAllowed();
       if (!$allow_multiple && $this->currentUser->isAuthenticated()) {
         // Whether a violation is added or not depends on the logged-in
         // user, so add a cache context based on the user.

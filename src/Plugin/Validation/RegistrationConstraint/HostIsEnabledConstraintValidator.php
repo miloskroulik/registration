@@ -21,10 +21,7 @@ class HostIsEnabledConstraintValidator extends ConstraintValidator {
     $host_entity = $constraint->hostEntity ?? $value;
 
     if ($host_entity instanceof HostEntityInterface) {
-      $settings = $host_entity->getSettings();
-
-      $enabled = (bool) $settings->getSetting('status');
-      if (!$enabled) {
+      if (!$host_entity->isEnabled()) {
         $this->context
           ->buildViolation($constraint->disabledMessage, [
             '%label' => $host_entity->label(),

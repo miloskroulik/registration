@@ -95,19 +95,19 @@ class HostIsOpenConstraintValidator extends ConstraintValidator implements Conta
     // Expire this validation result on the open date if one exists and it's in
     // the future.
     if ($host_entity->isBeforeOpen()) {
-      $expiration = $host_entity->getOpenDate();
+      $expiration = $host_entity->getOpenTime();
     }
 
     // Expire this validation result on the close date if one exists and it's in
     // the future.
-    elseif (($close = $host_entity->getCloseDate()) && !$host_entity->isAfterClose()) {
+    elseif (($close = $host_entity->getCloseTime()) && !$host_entity->isAfterClose()) {
       $expiration = $close;
     }
 
     // If an open or close date in the future was found, calculate the amount
     // of time before the relevant date, and use that as the max age.
     if ($expiration) {
-      return $expiration->getTimestamp() - $this->time->getCurrentTime();
+      return $expiration - $this->time->getCurrentTime();
     }
 
     return NULL;
