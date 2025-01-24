@@ -1,0 +1,6 @@
+name: Registration Change Host Test
+type: module
+description: 'Test module for Registration Change Host.'
+package: Testing
+dependencies:
+  - registration:registration_change_host

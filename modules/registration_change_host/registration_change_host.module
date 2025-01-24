@@ -1,0 +1,138 @@
+<?php
+
+/**
+ * @file
+ * Contains registration_change_host.module.
+ */
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\registration\Entity\RegistrationInterface;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function registration_change_host_entity_type_build(array &$entity_types) {
+  if (isset($entity_types['registration'])) {
+    $entity_types['registration']->setFormClass('change_host', 'Drupal\registration_change_host\Form\ChangeHostForm');
+    $entity_types['registration']->setLinkTemplate('change-host', '/registration/{registration}/host');
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_access().
+ */
+function registration_change_host_registration_access(RegistrationInterface $entity, $op, AccountInterface $account) {
+  // Set the default access result.
+  $access = AccessResult::neutral();
+
+  // Change host access requires:
+  // - update access, checked here; and
+  // - permission to change host, checked later in
+  //   RegistrationAccessControlHandler::checkEntityUserPermissions()
+  //   (which also checks the 'change host registrations' operation on
+  //   the current host entity.)
+  // This hook returns neutral if there are no reasons to deny access,
+  // rather than allowed which would override the access control handler.
+  // Additional access checking is done on an per-host basis in
+  // PossibleHostEntity::access() considering the host entity being changed to.
+  if ('change host' == $op) {
+    // Forbid change host access if there is no update access.
+    $update_access = $entity->access('update', $account, TRUE);
+    if (!$update_access->isAllowed()) {
+      $access = AccessResult::forbidden($update_access->getReason())->addCacheableDependency($update_access);
+    }
+  }
+  return $access;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function registration_change_host_theme() {
+  return [
+    'registration_change_host_list' => [
+      'variables' => [
+        'hosts' => [],
+        'set' => NULL,
+      ],
+    ],
+  ];
+}
+
+/**
+ * Prepares variables for the list of available hosts.
+ *
+ * Default template: registration-change-host-list.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - hosts: An array of hosts with the label, description, and other keys.
+ */
+function template_preprocess_registration_change_host_list(&$variables) {
+  $items = [];
+  /** @var \Drupal\registration_change_host\PossibleHostSetInterface $set */
+  $set = $variables['set'];
+  /** @var \Drupal\registration_change_host\PossibleHostEntityInterface $possible_host */
+  foreach ($set->getHosts() as $host_id => $possible_host) {
+    $items[$host_id]['possible_host'] = $possible_host;
+    // Convert possible host objects to renderable strings.
+    $items[$host_id]['description'] = ['#markup' => $possible_host->getDescription()];
+    $items[$host_id]['label'] = ['#markup' => $possible_host->label()];
+    $items[$host_id]['is_available'] = $possible_host->isAvailable();
+    $items[$host_id]['is_current'] = $possible_host->isCurrent();
+
+    if ($violations = $possible_host->isAvailable(TRUE)->getViolations()) {
+      $causes = [];
+      foreach ($violations as $violation) {
+        // Ignore null or zero-length causes.
+        if ($cause = $violation->getCause()) {
+          if (!empty((string) $cause)) {
+            $causes[] = $cause;
+          }
+        }
+      }
+      $items[$host_id]['causes'] = $causes;
+    }
+
+    if ($url = $possible_host->getUrl()) {
+      $items[$host_id]['url'] = $url;
+      $items[$host_id]['link'] = Link::fromTextAndUrl($possible_host->label(), $url);
+    }
+  }
+  $variables['hosts'] = $items;
+  $variables['#attached']['library'][] = 'registration_change_host/possible_hosts_list';
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function registration_change_host_form_registration_type_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $registration_type = $form_state->getFormObject()->getEntity();
+
+  $form['registration_change_host'] = [
+    '#type' => 'fieldset',
+    '#title' => t('Changing host'),
+  ];
+  $form['registration_change_host']['allow_data_loss'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Allow data loss when changing to a host of a different type.'),
+    '#default_value' => $registration_type->getThirdPartySetting('registration_change_host', 'allow_data_loss'),
+    '#description' => t('Data loss occurs when there are non-empty fields on a registration using this registration type that are not present on the registration type used by the new host.'),
+  ];
+  $form['actions']['submit']['#submit'][] = 'registration_change_host_form_registration_type_submit';
+}
+
+/**
+ * Implements submit handler for hook_form_BASE_FORM_ID_alter().
+ */
+function registration_change_host_form_registration_type_submit(&$form, FormStateInterface $form_state) {
+  $registration_type = $form_state->getFormObject()->getEntity();
+  $registration_type->setThirdPartySetting('registration_change_host', 'allow_data_loss', $form_state->getValue([
+    'registration_change_host',
+    'allow_data_loss',
+  ]));
+  $registration_type->save();
+}

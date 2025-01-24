@@ -128,7 +128,7 @@ class RegisterForm extends ContentEntityForm {
     $form = parent::form($form, $form_state);
 
     // Alter the form.
-    self::alterRegisterForm($form, $form_state);
+    static::alterRegisterForm($form, $form_state);
 
     // If an admin is editing an existing registration use the advanced form.
     $admin_theme = $this->currentUser()->hasPermission('view the administration theme');
@@ -396,11 +396,8 @@ class RegisterForm extends ContentEntityForm {
 
     // Get the registrant options and the default option.
     $registrant_options = $registration_manager->getRegistrantOptions($registration, $settings);
-    $default = NULL;
-    if (!$registration->isNew()) {
-      $default = $registration->getRegistrantType($current_user);
-    }
-    elseif (count($registrant_options) == 1) {
+    $default = $registration->getRegistrantType($current_user);
+    if (count($registrant_options) == 1) {
       $keys = array_keys($registrant_options);
       $default = reset($keys);
     }

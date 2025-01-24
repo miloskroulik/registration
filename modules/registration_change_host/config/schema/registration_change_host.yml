@@ -1,0 +1,10 @@
+# Schema for the configuration files of the Registration Administrative Overrides module.
+
+registration.type.*.third_party.registration_change_host:
+  type: mapping
+  label: 'Change host settings'
+  mapping:
+    allow_data_loss:
+      label: 'Allow data loss when changing to a host of a different type'
+      type: boolean
+      default: false
