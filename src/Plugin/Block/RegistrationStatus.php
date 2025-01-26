@@ -205,7 +205,8 @@ class RegistrationStatus extends BlockBase implements ContainerFactoryPluginInte
     // methods called above, an event subscriber could have added other
     // entities to the cacheability, and those will be picked up here.
     $validation_result = $host_entity->isAvailableForRegistration(TRUE);
-    $validation_result->getCacheableMetadata()->applyTo($build);
+    $build_cache_metadata = CacheableMetadata::createFromRenderArray($build);
+    $build_cache_metadata->merge($validation_result->getCacheableMetadata())->applyTo($build);
 
     return $build;
   }

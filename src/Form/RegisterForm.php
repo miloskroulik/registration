@@ -4,6 +4,7 @@ namespace Drupal\registration\Form;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
@@ -113,7 +114,8 @@ class RegisterForm extends ContentEntityForm {
     }
 
     // Apply cacheable metadata to the form so it rebuilds when needed.
-    $validation_result->getCacheableMetadata()->applyTo($form);
+    $form_metadata = CacheableMetadata::createFromRenderArray($form);
+    $form_metadata->merge($validation_result->getCacheableMetadata())->applyTo($form);
 
     // Display any errors.
     if (!$validation_result->isValid()) {

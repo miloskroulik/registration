@@ -66,7 +66,8 @@ class SingleStepChangeHostForm extends RegisterForm {
       $host_metadata = CacheableMetadata::createFromObject($host);
       $build_metadata = $build_metadata->merge($host_metadata);
     }
-    $build_metadata->applyTo($form);
+    $form_metadata = CacheableMetadata::createFromRenderArray($form);
+    $form_metadata->merge($build_metadata)->applyTo($form);
 
     $options = [];
     foreach ($set->getHosts() as $host) {
