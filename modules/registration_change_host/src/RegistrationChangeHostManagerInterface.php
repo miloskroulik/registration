@@ -62,11 +62,19 @@ interface RegistrationChangeHostManagerInterface {
    *   The type of the new host entity.
    * @param string|int $host_entity_id
    *   The id of the new host entity.
+   * @param bool $ignore_data
+   *   (Optional) Whether to check only for a field mismatch. Defaults to FALSE.
+   *   If this parameter is skipped or set to FALSE, the registration is checked
+   *   for non-empty values in any fields that are missing on the new
+   *   registration type, and TRUE is returned if any are found. If this
+   *   parameter is set to TRUE, and there any field differences between the old
+   *   and new registration types, then TRUE is returned regardless of whether
+   *   the registration has data in missing fields or not.
    *
    * @return bool
    *   TRUE if data will be lost, FALSE otherwise.
    */
-  public function isDataLostWhenHostChanges(RegistrationInterface $registration, string $host_entity_type_id, string|int $host_entity_id): bool;
+  public function isDataLostWhenHostChanges(RegistrationInterface $registration, string $host_entity_type_id, string|int $host_entity_id, bool $ignore_data = FALSE): bool;
 
   /**
    * Saves a registration and deletes any old registration with same id.

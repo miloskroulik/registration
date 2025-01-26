@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\registration_change_host\Functional;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
@@ -9,14 +10,19 @@ use Drupal\Tests\registration\Functional\RegistrationBrowserTestBase;
 use Drupal\Tests\registration_change_host\Traits\RegistrationChangeHostTrait;
 
 /**
- * Test the registration change host form.
+ * Test the registration single step change host form.
  *
  * @group registration
  * @group registration_change_host
  */
-class FormTest extends RegistrationBrowserTestBase {
+class SingleStepFormTest extends RegistrationBrowserTestBase {
 
   use RegistrationChangeHostTrait;
+
+  /**
+   * The configuration factory.
+   */
+  protected ConfigFactoryInterface $configFactory;
 
   /**
    * Modules to enable.
@@ -36,6 +42,13 @@ class FormTest extends RegistrationBrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+
+    $this->configFactory = $this->container->get('config.factory');
+
+    $config = $this->configFactory->getEditable('registration_change_host.settings');
+    $config->set('workflow', 'single_step');
+    $config->save();
+
     $this->registrationChangeHostSetUp();
   }
 
@@ -43,10 +56,7 @@ class FormTest extends RegistrationBrowserTestBase {
    * Helper to get registration URL.
    */
   protected function getFormUrl(?NodeInterface $node = NULL) {
-    $url = 'registration/' . $this->registration->id() . '/update';
-    if ($node) {
-      $url .= '/' . $node->id() . '/node';
-    }
+    $url = 'registration/' . $this->registration->id() . '/host';
     return $url;
   }
 
@@ -67,16 +77,6 @@ class FormTest extends RegistrationBrowserTestBase {
     $this->assertEquals($expected_url, $this->getSession()->getCurrentUrl());
     $this->assertSession()->statusCodeEquals(403);
     $this->assertRegistrationHost($this->originalHostNode);
-  }
-
-  /**
-   * Tests registrant no host change.
-   */
-  public function testRegistrantUserSameHost() {
-    $this->drupalLogin($this->registrantUser);
-    $this->drupalGet($this->getFormUrl());
-    // The form requires a new host to be specified.
-    $this->assertSession()->statusCodeEquals(404);
   }
 
   /**
@@ -108,7 +108,7 @@ class FormTest extends RegistrationBrowserTestBase {
     $possibleHost->save();
     $this->assertTrue($possibleHost->bundle() !== $this->originalHostNode->bundle());
     $this->drupalLogin($this->registrantUser);
-    $this->updateRegistrationByForm($possibleHost);
+    $this->updateRegistrationByForm($possibleHost, TRUE);
   }
 
   /**
@@ -124,7 +124,7 @@ class FormTest extends RegistrationBrowserTestBase {
     $possibleHost->save();
     $this->assertTrue($possibleHost->bundle() !== $this->originalHostNode->bundle());
     $this->drupalLogin($this->staffUser);
-    $this->updateRegistrationByForm($possibleHost);
+    $this->updateRegistrationByForm($possibleHost, TRUE);
   }
 
   /**
@@ -132,25 +132,35 @@ class FormTest extends RegistrationBrowserTestBase {
    *
    * @param \Drupal\node\NodeInterface $node
    *   The host.
+   * @param bool $error
+   *   (Optional) Whether an error is expected.
+   *   TRUE if an error should be expected, FALSE otherwise.
    *
    * @throws \Behat\Mink\Exception\ElementNotFoundException
    */
-  protected function updateRegistrationByForm(NodeInterface $node) {
+  protected function updateRegistrationByForm(NodeInterface $node, bool $error = FALSE) {
     $this->drupalGet($this->getFormUrl($node));
     $expected_url = $this->baseUrl . '/' . $this->getFormUrl($node);
     $this->assertEquals($expected_url, $this->getSession()->getCurrentUrl());
     $this->assertSession()->statusCodeEquals(200);
 
-    // Fill in the bundle field specific to
-    // the registration type for the new host.
-    $field = $node->bundle() . '_text[0][value]';
-    $value = $this->randomMachineName();
+    // Select the new host.
+    $field = 'new_host';
     $this->assertSession()->fieldExists($field);
-    $this->getSession()->getPage()->fillField($field, $value);
+    $this->getSession()->getPage()->fillField($field, $node->getEntityTypeId() . ':' . $node->id());
 
     // Save and check the host updated.
-    $this->getSession()->getPage()->pressButton("Save and confirm");
-    $this->assertSession()->pageTextNotContains('Registration could not be updated.');
+    $this->getSession()->getPage()->pressButton("Save Registration");
+
+    // Check for error.
+    if ($error) {
+      $this->assertSession()->pageTextContains('The selection has an incompatible registration type.');
+      $this->assertSession()->pageTextNotContains('The registration was saved.');
+      return;
+    }
+
+    // Save and check the host updated.
+    $this->assertSession()->pageTextNotContains('The selection has an incompatible registration type.');
     $this->assertSession()->pageTextContains('The registration was saved.');
     $this->assertRegistrationHost($node);
 
@@ -160,8 +170,6 @@ class FormTest extends RegistrationBrowserTestBase {
     // We use the same names for registration and
     // corresponding host node types for convenience.
     $this->assertSame($registration->bundle(), $node->bundle(), "Registration and host should have same bundle name.");
-    $this->assertTrue($registration->hasField($registration->bundle() . '_text'), "The registration should have a bundle specific field.");
-    $this->assertSame($value, $registration->get($registration->bundle() . '_text')->value);
   }
 
   /**

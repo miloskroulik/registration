@@ -128,13 +128,15 @@ class ChangeHostForm extends RegisterForm {
    *
    * @return string
    *   The title.
+   *
+   * @phpcs:disable Drupal.Semantics.FunctionT.NotLiteralString
    */
   public function title(RouteMatchInterface $route_match, RegistrationInterface $registration) {
     /** @var \Drupal\registration\Entity\RegistrationInterface $changed_registration */
     $changed_registration = $this->getEntityFromRouteMatch($route_match, $registration);
-    $host_type_label = $changed_registration->getHostEntityTypeLabel();
-    return $this->t('Confirm change of @host_type_label for Registration #%id', [
-      '@host_type_label' => $host_type_label,
+    $config = $this->config('registration_change_host.settings');
+    return $this->t($config->get('confirm_form_title'), [
+      '@host_type_label' => $changed_registration->getHostEntityTypeLabel(),
       '%id' => $changed_registration->id(),
     ]);
   }

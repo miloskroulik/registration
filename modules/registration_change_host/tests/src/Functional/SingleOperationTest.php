@@ -8,6 +8,9 @@ use Drupal\Tests\registration_change_host\Traits\RegistrationChangeHostTrait;
 
 /**
  * Test the Registration Change Host Single Operation module.
+ *
+ * @group registration
+ * @group registration_change_host
  */
 class SingleOperationTest extends RegistrationBrowserTestBase {
 

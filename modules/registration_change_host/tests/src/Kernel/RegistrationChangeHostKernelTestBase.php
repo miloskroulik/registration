@@ -35,6 +35,8 @@ class RegistrationChangeHostKernelTestBase extends RegistrationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->installConfig('registration_change_host');
+
     $schema = $this->container->get('database')->schema();
     if (!$schema->tableExists('node_access')) {
       $this->installSchema('node', 'node_access');

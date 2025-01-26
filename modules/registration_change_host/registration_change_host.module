@@ -17,6 +17,7 @@ use Drupal\registration\Entity\RegistrationInterface;
 function registration_change_host_entity_type_build(array &$entity_types) {
   if (isset($entity_types['registration'])) {
     $entity_types['registration']->setFormClass('change_host', 'Drupal\registration_change_host\Form\ChangeHostForm');
+    $entity_types['registration']->setFormClass('single_step_change_host', 'Drupal\registration_change_host\Form\SingleStepChangeHostForm');
     $entity_types['registration']->setLinkTemplate('change-host', '/registration/{registration}/host');
   }
 }
@@ -118,7 +119,7 @@ function registration_change_host_form_registration_type_form_alter(&$form, Form
   ];
   $form['registration_change_host']['allow_data_loss'] = [
     '#type' => 'checkbox',
-    '#title' => t('Allow data loss when changing to a host of a different type.'),
+    '#title' => t('Allow data loss when changing to a host with a different registration type'),
     '#default_value' => $registration_type->getThirdPartySetting('registration_change_host', 'allow_data_loss'),
     '#description' => t('Data loss occurs when there are non-empty fields on a registration using this registration type that are not present on the registration type used by the new host.'),
   ];
@@ -135,4 +136,75 @@ function registration_change_host_form_registration_type_submit(&$form, FormStat
     'allow_data_loss',
   ]));
   $registration_type->save();
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function registration_change_host_form_registration_admin_settings_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $config = \Drupal::config('registration_change_host.settings');
+  $form['registration_change_host'] = [
+    '#type' => 'fieldset',
+    '#title' => t('Change host form'),
+  ];
+  $form['registration_change_host']['workflow'] = [
+    '#type' => 'radios',
+    '#title' => t('Workflow'),
+    '#options' => [
+      'single_step' => t('Single step'),
+      'multistep'  => t('Multistep'),
+    ],
+    '#default_value' => $config->get('workflow') ?? 'multistep',
+    '#description' => t('Choose the workflow used for the change host form. The single step workflow is recommended for sites with a single registration type, or sites with multiple registration types that all have the same fields. The multistep workflow is required for sites having registration types with varying fields.'),
+    '#required' => TRUE,
+  ];
+  $form['registration_change_host']['task_title'] = [
+    '#type' => 'textfield',
+    '#title' => t('Local task title'),
+    '#default_value' => $config->get('task_title'),
+    '#description' => t('Sets the title of the change host tab when viewing a registration. The default results in a title of "Change Event" if the host entity is an Event node.'),
+    '#required' => TRUE,
+  ];
+  $form['registration_change_host']['form_title'] = [
+    '#type' => 'textfield',
+    '#title' => t('Form title'),
+    '#default_value' => $config->get('form_title'),
+    '#description' => t('Sets the title of the change host form in the single step workflow. The default results in a title of "Change Event for Registration #1" if the host entity is an Event node and the registration ID is 1.'),
+    '#required' => TRUE,
+  ];
+  $form['registration_change_host']['page_title'] = [
+    '#type' => 'textfield',
+    '#title' => t('Page title'),
+    '#default_value' => $config->get('page_title'),
+    '#description' => t('Sets the title of the change host page in the multistep workflow. The default results in a title of "Select Event" if the host entity is an Event node.'),
+    '#required' => TRUE,
+  ];
+  $form['registration_change_host']['confirm_form_title'] = [
+    '#type' => 'textfield',
+    '#title' => t('Confirmation form title'),
+    '#default_value' => $config->get('confirm_form_title'),
+    '#description' => t('Sets the title of the change host confirmation form in the multistep workflow. The default results in a title of "Confirm change of Event for Registration #1" if the host entity is an Event node and the registration ID is 1.'),
+    '#required' => TRUE,
+  ];
+  $form['actions']['submit']['#submit'][] = 'registration_change_host_form_registration_admin_settings_submit';
+}
+
+/**
+ * Implements submit handler for hook_form_FORM_ID_alter().
+ */
+function registration_change_host_form_registration_admin_settings_submit(&$form, FormStateInterface $form_state) {
+  $config = \Drupal::service('config.factory')->getEditable('registration_change_host.settings');
+  $task_changed = ($config->get('task_title') != $form_state->getValue('task_title'));
+  $config
+    ->set('workflow', $form_state->getValue('workflow'))
+    ->set('task_title', $form_state->getValue('task_title'))
+    ->set('form_title', $form_state->getValue('form_title'))
+    ->set('page_title', $form_state->getValue('page_title'))
+    ->set('confirm_form_title', $form_state->getValue('confirm_form_title'))
+    ->save();
+
+  // Clear the local task cache if the title of the local task changed.
+  if ($task_changed) {
+    \Drupal::service('plugin.manager.menu.local_task')->clearCachedDefinitions();
+  }
 }

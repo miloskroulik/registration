@@ -4,6 +4,8 @@ namespace Drupal\registration_change_host\Controller;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Form\FormState;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration_change_host\RegistrationChangeHostManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -31,15 +33,50 @@ class RegistrationChangeHostController extends ControllerBase {
   }
 
   /**
-   * Displays the available hosts a registration can change to.
+   * Displays the appropriate interface to allow change of host entity.
    *
-   * Redirects if there are no candidates other than the current host.
+   * Checks the settings and displays either the single step change host form
+   * or the change host page that is step one of the multistep workflow.
    *
    * @param \Drupal\registration\Entity\RegistrationInterface $registration
    *   The registration.
    *
    * @return array|\Symfony\Component\HttpFoundation\RedirectResponse
-   *   Return a render array showing each possible host.
+   *   The render array for a form or page.
+   *   Classes that extend this method may return a redirect response.
+   */
+  public function changeHost(RegistrationInterface $registration): array|RedirectResponse {
+    $config = $this->config('registration_change_host.settings');
+    if ($config->get('workflow') == 'single_step') {
+      // Single step workflow.
+      $form_state = new FormState();
+      $form_object = $this->entityTypeManager()->getFormObject('registration', 'single_step_change_host');
+      $form_object->setEntity($registration);
+      $form = $this->formBuilder()->buildForm($form_object, $form_state);
+    }
+    else {
+      // Multistep workflow.
+      $form = $this->changeHostPage($registration);
+    }
+
+    // Add the settings configuration entity to the form cacheability.
+    if (is_array($form)) {
+      $config_metadata = CacheableMetadata::createFromObject($config);
+      $form_metadata = CacheableMetadata::createFromRenderArray($form);
+      $form_metadata->merge($config_metadata)->applyTo($form);
+    }
+
+    return $form;
+  }
+
+  /**
+   * Displays the available hosts a registration can change to.
+   *
+   * @param \Drupal\registration\Entity\RegistrationInterface $registration
+   *   The registration.
+   *
+   * @return array|\Symfony\Component\HttpFoundation\RedirectResponse
+   *   The render array showing each possible host.
    *   Classes that extend this method may return a redirect response.
    */
   public function changeHostPage(RegistrationInterface $registration): array|RedirectResponse {
@@ -75,10 +112,16 @@ class RegistrationChangeHostController extends ControllerBase {
    *
    * @return string
    *   The title.
+   *
+   * @phpcs:disable Drupal.Semantics.FunctionT.NotLiteralString
    */
-  public function title(RegistrationInterface $registration) {
-    $host_type_label = $registration->getHostEntityTypeLabel();
-    return (string) $this->t('Select @host_type_label', ['@host_type_label' => $host_type_label]);
+  public function title(RegistrationInterface $registration): TranslatableMarkup {
+    $config = $this->config('registration_change_host.settings');
+    $title = $config->get('workflow') == 'single_step' ? 'form_title' : 'page_title';
+    return $this->t($config->get($title), [
+      '@host_type_label' => $registration->getHostEntityTypeLabel(),
+      '%id' => $registration->id(),
+    ]);
   }
 
 }

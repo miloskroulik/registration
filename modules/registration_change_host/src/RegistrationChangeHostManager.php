@@ -150,7 +150,7 @@ class RegistrationChangeHostManager implements RegistrationChangeHostManagerInte
   /**
    * {@inheritdoc}
    */
-  public function isDataLostWhenHostChanges(RegistrationInterface $registration, string $host_entity_type_id, string|int $host_entity_id): bool {
+  public function isDataLostWhenHostChanges(RegistrationInterface $registration, string $host_entity_type_id, string|int $host_entity_id, bool $ignore_data = FALSE): bool {
     // Establish the old and new registration types.
     $storage = $this->entityTypeManager->getStorage('registration');
     $original_registration = $storage->loadUnchanged($registration->id());
@@ -172,7 +172,13 @@ class RegistrationChangeHostManager implements RegistrationChangeHostManagerInte
     $new_field_definitions = $this->entityFieldManager->getFieldDefinitions('registration', $new_registration_type_id);
     $new_field_ids = array_keys(array_filter($new_field_definitions, fn($definition) => !$definition->isComputed()));
 
-    // If a field is empty in the original registration, and missing in the new
+    // If only fields are being compared and not data, simply check for any
+    // fields that are different between the old and new registration type.
+    if ($ignore_data) {
+      return (!empty(array_diff($original_field_ids, $new_field_ids)) || !empty(array_diff($new_field_ids, $original_field_ids)));
+    }
+
+    // If a field is set in the original registration, and missing in the new
     // registration, there is data loss.
     $missing_fields = array_diff($original_field_ids, $new_field_ids);
     foreach ($missing_fields as $field_id) {

@@ -8,6 +8,9 @@ use Drupal\Tests\registration_change_host\Traits\RegistrationChangeHostTrait;
 
 /**
  * Test the /registration/[registration]/host page.
+ *
+ * @group registration
+ * @group registration_change_host
  */
 class PageTest extends RegistrationBrowserTestBase {
 

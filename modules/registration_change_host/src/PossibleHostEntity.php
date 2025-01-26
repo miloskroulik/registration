@@ -4,6 +4,7 @@ namespace Drupal\registration_change_host;
 
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\registration\Entity\RegistrationInterface;
@@ -32,6 +33,13 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
    * @var string
    */
   protected string $entityTypeId;
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * Possible host entity.
@@ -87,7 +95,7 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
    *
    * This is an unsaved clone of the original registration.
    *
-   * @var \Drupal\registration\RegistrationInterface
+   * @var \Drupal\registration\Entity\RegistrationInterface
    */
   protected RegistrationInterface $registration;
 
@@ -104,6 +112,13 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
    * @var \Drupal\Core\Entity\EntityInterface
    */
   protected EntityInterface $entity;
+
+  /**
+   * The registration change host manager.
+   *
+   * @var \Drupal\registration_change_host\RegistrationChangeHostManagerInterface
+   */
+  protected RegistrationChangeHostManagerInterface $registrationChangeHostManager;
 
   /**
    * Creates a PossibleHostEntity object.
@@ -133,7 +148,7 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
   /**
    * Sets the registration and changes the host if necessary.
    *
-   * @param \Drupal\registration\RegistrationInterface $registration
+   * @param \Drupal\registration\Entity\RegistrationInterface $registration
    *   The registration.
    */
   protected function setRegistration(RegistrationInterface $registration) {
@@ -141,8 +156,7 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
     $this->currentHostEntity = $registration->getHostEntity();
     $this->registration = $registration;
     if ($this->getHostEntity()->isConfiguredForRegistration() && !$this->isCurrent()) {
-      $manager = \Drupal::service('registration_change_host.manager');
-      $this->registration = $manager->changeHost($registration, $this->getHostEntity()->getEntityTypeId(), $this->getHostEntity()->id(), TRUE);
+      $this->registration = $this->registrationChangeHostManager()->changeHost($registration, $this->getHostEntity()->getEntityTypeId(), $this->getHostEntity()->id(), TRUE);
     }
   }
 
@@ -215,10 +229,13 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
 
         // Add a data loss violation if appropriate.
         if ($this->getHostEntity()->isConfiguredForRegistration()) {
-          $registration_type = $this->getHostEntity()->getRegistrationType();
-          if (!$registration_type->getThirdPartySetting('registration_change_host', 'allow_data_loss')) {
-            $manager = \Drupal::service('registration_change_host.manager');
-            if ($manager->isDataLostWhenHostChanges($this->registration, $this->getEntityTypeId(), $this->id())) {
+          $storage = $this->entityTypeManager()->getStorage('registration');
+          $original_registration = $storage->loadUnchanged($this->registration->id());
+          $original_host_entity = $original_registration->getHostEntity();
+          $original_registration_type = $original_host_entity->getRegistrationType();
+          $this->validationResult->addCacheableDependency($original_registration_type);
+          if (!$original_registration_type->getThirdPartySetting('registration_change_host', 'allow_data_loss')) {
+            if ($this->registrationChangeHostManager()->isDataLostWhenHostChanges($this->registration, $this->getEntityTypeId(), $this->id())) {
               $this->validationResult->addViolation('Host cannot be changed to %host_label because data will be lost as there are non-empty fields on the registration that are not present on the %type registration type.', [
                 '%label' => $this->label(),
                 '%type' => $this->getHostEntity()->getRegistrationType()->label(),
@@ -344,10 +361,37 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
     }
     if (!empty($this->_registrationId)) {
       $registration_storage = \Drupal::entityTypeManager()->getStorage('registration');
+      /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
       $registration = $registration_storage->load($this->_registrationId);
       unset($this->_registrationId);
       $this->setRegistration($registration);
     }
+  }
+
+  /**
+   * Retrieves the entity type manager.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
+   *   The entity type manager.
+   */
+  protected function entityTypeManager(): EntityTypeManagerInterface {
+    if (!isset($this->entityTypeManager)) {
+      $this->entityTypeManager = \Drupal::getContainer()->get('entity_type.manager');
+    }
+    return $this->entityTypeManager;
+  }
+
+  /**
+   * Retrieves the registration change host manager.
+   *
+   * @return \Drupal\registration_change_host\RegistrationChangeHostManagerInterface
+   *   The registration change host manager.
+   */
+  protected function registrationChangeHostManager(): RegistrationChangeHostManagerInterface {
+    if (!isset($this->registrationChangeHostManager)) {
+      $this->registrationChangeHostManager = \Drupal::getContainer()->get('registration_change_host.manager');
+    }
+    return $this->registrationChangeHostManager;
   }
 
 }
