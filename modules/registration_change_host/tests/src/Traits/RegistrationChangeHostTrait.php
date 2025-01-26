@@ -46,11 +46,18 @@ trait RegistrationChangeHostTrait {
   protected NodeInterface $originalHostNode;
 
   /**
-   * An staff user.
+   * A staff user.
    *
    * @var \Drupal\user\UserInterface
    */
   protected UserInterface $staffUser;
+
+  /**
+   * A staff user without update permission.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected UserInterface $staffUserWithoutUpdate;
 
   /**
    * An admin user.
@@ -119,6 +126,12 @@ trait RegistrationChangeHostTrait {
       'change host any registration',
     ];
     $this->staffUser = $this->drupalCreateUser($staff_permissions);
+    $staff_permissions_without_update = [
+      'create event registration other users',
+      'create conference registration other users',
+      'change host any registration',
+    ];
+    $this->staffUserWithoutUpdate = $this->drupalCreateUser($staff_permissions_without_update);
     $this->adminUser = $this->drupalCreateUser([
       'administer registration',
       // Having admin permissions is not enough to register.

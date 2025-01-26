@@ -96,6 +96,22 @@ class SingleStepFormTest extends RegistrationBrowserTestBase {
   }
 
   /**
+   * Tests registrant change host to same type without update permission.
+   */
+  public function testStaffUserNewHostSameTypeWithoutUpdate() {
+    $possibleHost = Node::create([
+      'type' => 'conference',
+      'title' => 'possible available conference',
+      'host_possible' => 'always',
+      'host_violation' => 'NONE',
+    ]);
+    $possibleHost->save();
+    $this->assertTrue($possibleHost->bundle() === $this->originalHostNode->bundle());
+    $this->drupalLogin($this->staffUserWithoutUpdate);
+    $this->updateRegistrationByForm($possibleHost);
+  }
+
+  /**
    * Tests registrant change host to different type.
    */
   public function testRegistrantUserNewHostDifferentType() {

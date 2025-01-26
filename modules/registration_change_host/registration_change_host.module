@@ -30,21 +30,29 @@ function registration_change_host_registration_access(RegistrationInterface $ent
   $access = AccessResult::neutral();
 
   // Change host access requires:
-  // - update access, checked here; and
   // - permission to change host, checked later in
   //   RegistrationAccessControlHandler::checkEntityUserPermissions()
   //   (which also checks the 'change host registrations' operation on
   //   the current host entity.)
+  // - update access, checked here for the multistep workflow only.
+  //   The single step workflow does not allow field update, and thus
+  //   does not require update access.
   // This hook returns neutral if there are no reasons to deny access,
   // rather than allowed which would override the access control handler.
-  // Additional access checking is done on an per-host basis in
-  // PossibleHostEntity::access() considering the host entity being changed to.
   if ('change host' == $op) {
-    // Forbid change host access if there is no update access.
-    $update_access = $entity->access('update', $account, TRUE);
-    if (!$update_access->isAllowed()) {
-      $access = AccessResult::forbidden($update_access->getReason())->addCacheableDependency($update_access);
+    $config = \Drupal::config('registration_change_host.settings');
+
+    // Skip additional checking for the single step workflow.
+    if ($config->get('workflow') != 'single_step') {
+      // Forbid change host access if there is no update access.
+      $update_access = $entity->access('update', $account, TRUE);
+      if (!$update_access->isAllowed()) {
+        $access = AccessResult::forbidden($update_access->getReason())->addCacheableDependency($update_access);
+      }
     }
+
+    // Add the settings configuration entity to access result cacheability.
+    $access->addCacheableDependency($config);
   }
   return $access;
 }
@@ -155,7 +163,7 @@ function registration_change_host_form_registration_admin_settings_alter(&$form,
       'multistep'  => t('Multistep'),
     ],
     '#default_value' => $config->get('workflow') ?? 'multistep',
-    '#description' => t('Choose the workflow used for the change host form. The single step workflow is recommended for sites with a single registration type, or sites with multiple registration types that all have the same fields. The multistep workflow is required for sites having registration types with varying fields.'),
+    '#description' => t('Choose the workflow used for the change host form. The single step workflow uses a simple form and is recommended for sites with a single registration type, or sites with multiple registration types that all have the same fields. The multistep workflow has a selection interface that leads to a confirmation form where the fields can be reviewed and edited if necessary, and is required for sites having registration types with varying fields.'),
     '#required' => TRUE,
   ];
   $form['registration_change_host']['task_title'] = [

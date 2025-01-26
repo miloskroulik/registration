@@ -62,6 +62,15 @@ class PageTest extends RegistrationBrowserTestBase {
   }
 
   /**
+   * Tests page is not accessible to users without update permission.
+   */
+  public function testStaffUserPageWithoutUpdate() {
+    $this->drupalLogin($this->staffUserWithoutUpdate);
+    $this->drupalGet($this->pageUrl);
+    $this->assertSession()->statusCodeEquals(403);
+  }
+
+  /**
    * Tests page shows possible hosts to registrant.
    */
   public function testRegistrantUserPage() {
