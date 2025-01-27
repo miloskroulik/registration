@@ -2,6 +2,7 @@
 
 namespace Drupal\registration;
 
+use Drupal\Component\Datetime\DateTimePlus;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -103,45 +104,39 @@ abstract class Scope implements ScopeInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCloseTime(): ?int {
-    $times = [];
-
-    $close = $this->getSetting('close');
-    if ($close) {
-      $date = new DrupalDateTime($close, new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
-      $times[] = $date->getTimestamp();
+  public function getCloseDate(): ?DateTimePlus {
+    $dates = [];
+    if ($close = $this->getSetting('close')) {
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      $dates[] = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $close, $storage_timezone);
     }
 
     foreach ($this->getScopes() as $scope) {
-      $times[] = $scope->getCloseTime();
+      $dates[] = $scope->getCloseDate();
     }
-    $times = array_filter($times);
-    if (!empty($times)) {
-      return min($times);
-    }
-    return NULL;
+
+    // Filter out null values and get the earliest date.
+    $dates = array_filter($dates);
+    return !empty($dates) ? min($dates) : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getOpenTime(): ?int {
-    $times = [];
-
-    $open = $this->getSetting('open');
-    if ($open) {
-      $date = new DrupalDateTime($open, new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
-      $times[] = $date->getTimestamp();
+  public function getOpenDate(): ?DateTimePlus {
+    $dates = [];
+    if ($open = $this->getSetting('open')) {
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      $dates[] = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $open, $storage_timezone);
     }
 
     foreach ($this->getScopes() as $scope) {
-      $times[] = $scope->getOpenTime();
+      $dates[] = $scope->getOpenDate();
     }
-    $times = array_filter($times);
-    if (!empty($times)) {
-      return max($times);
-    }
-    return NULL;
+
+    // Filter out null values and get the latest date.
+    $dates = array_filter($dates);
+    return !empty($dates) ? max($dates) : NULL;
   }
 
   /**
@@ -375,24 +370,22 @@ abstract class Scope implements ScopeInterface {
    * {@inheritdoc}
    */
   public function isBeforeOpen(): bool {
-    // Check open date.
-    $open = $this->getOpenTime();
+    $open = $this->getOpenDate();
     if ($open) {
       $now = $this->container()->get('datetime.time')->getCurrentTime();
     }
-    return ($open && ($now < $open));
+    return ($open && ($now < $open->getTimestamp()));
   }
 
   /**
    * {@inheritdoc}
    */
   public function isAfterClose(): bool {
-    // Check close date.
-    $close = $this->getCloseTime();
+    $close = $this->getCloseDate();
     if ($close) {
       $now = $this->container()->get('datetime.time')->getCurrentTime();
     }
-    return ($close && ($now >= $close));
+    return ($close && ($now >= $close->getTimestamp()));
   }
 
   /**

@@ -2,6 +2,7 @@
 
 namespace Drupal\registration;
 
+use Drupal\Component\Datetime\DateTimePlus;
 use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -38,24 +39,20 @@ interface ScopeInterface extends AccessibleInterface {
   public function getSpacesReserved(?array $state_ids = []): int;
 
   /**
-   * Gets the close time.
+   * Gets the close date.
    *
-   * This is the earliest close time of all the scopes.
-   *
-   * @return int|null
-   *   The close timestamp, or NULL if not set.
+   * @return \Drupal\Component\Datetime\DateTimePlus|null
+   *   The close date, if one has been set in the host entity settings.
    */
-  public function getCloseTime(): ?int;
+  public function getCloseDate(): ?DateTimePlus;
 
   /**
-   * Gets the open time.
+   * Gets the open date.
    *
-   * This is the latest open time of all the scopes.
-   *
-   * @return int|null
-   *   The open timestamp, or NULL if not set.
+   * @return \Drupal\Component\Datetime\DateTimePlus|null
+   *   The open date, if one has been set in the host entity settings.
    */
-  public function getOpenTime(): ?int;
+  public function getOpenDate(): ?DateTimePlus;
 
   /**
    * Gets the maximum spaces per registration for this scope.

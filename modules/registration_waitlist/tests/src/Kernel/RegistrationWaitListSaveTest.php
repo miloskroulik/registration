@@ -63,6 +63,7 @@ class RegistrationWaitListSaveTest extends RegistrationWaitListKernelTestBase {
     $this->assertTrue($host_entity->hasRoomOffWaitlist(1, $registration));
     $settings->set('capacity', 1);
     $settings->save();
+    $host_entity = $handler->createHostEntity($node);
     $this->assertTrue($host_entity->hasRoomOffWaitlist(1, $registration));
     $registration->save();
     $this->assertSame('complete', $registration->getState()->id());

@@ -193,8 +193,8 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $settings->set('open', '2004-01-28T00:00:00');
     $settings->set('close', '2022-01-01T00:00:00');
     $settings->save();
-    //$this->assertSame('2004-01-28T00:00:00', $host_entity->getOpenDate()->format('Y-m-d\T00:00:00'));
-    //$this->assertSame('2022-01-01T00:00:00', $host_entity->getCloseDate()->format('Y-m-d\T00:00:00'));
+    $this->assertSame('2004-01-28T00:00:00', $host_entity->getOpenDate()->format('Y-m-d\T00:00:00'));
+    $this->assertSame('2022-01-01T00:00:00', $host_entity->getCloseDate()->format('Y-m-d\T00:00:00'));
     $settings->set('close', NULL);
     $settings->set('open', NULL);
     $settings->save();
