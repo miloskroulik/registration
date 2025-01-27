@@ -569,7 +569,7 @@ class HostEntity implements HostEntityInterface {
   public function isEnabledForRegistration(int $spaces = 1, ?RegistrationInterface $registration = NULL, array &$errors = []): bool {
     @trigger_error('HostEntity::isEnabledForRegistration() is deprecated in registration:3.1.8 and is removed from registration:4.0.0. See https://www.drupal.org/node/3496339', E_USER_DEPRECATED);
 
-    $validation_result = $this->validator()->execute('available_for_registration', [
+    $validation_result = $this->validator()->execute('enabled_for_registration', [
       'HostHasSettings' => ['hostEntity' => $this],
       'HostIsOpen' => ['hostEntity' => $this],
       'HostIsEnabled' => ['hostEntity' => $this],
@@ -758,7 +758,7 @@ class HostEntity implements HostEntityInterface {
         'UniqueRegistrant' => [],
       ];
 
-      $validation_result = $this->validator()->execute('available_for_registration', $pipeline, $value);
+      $validation_result = $this->validator()->execute('validate_registration', $pipeline, $value);
     }
 
     // Dispatch an event so other objects can be validated.

@@ -147,6 +147,11 @@ class RegisterForm extends ContentEntityForm {
       }
     }
 
+    // Rebuild the form per anonymous session.
+    if ($this->currentUser()->isAnonymous()) {
+      $build['#cache']['contexts'][] = 'session';
+    }
+
     return $form;
   }
 

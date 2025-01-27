@@ -58,6 +58,7 @@ class RegistrationValidatorTest extends RegistrationKernelTestBase {
     $metadata = $validation_result->getCacheableMetadata();
     $this->assertContains('node:1', $metadata->getCacheTags());
     $this->assertContains('node:2', $metadata->getCacheTags());
+    $this->assertCount(2, $metadata->getCacheTags());
     $this->assertEmpty($metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
 
@@ -72,6 +73,7 @@ class RegistrationValidatorTest extends RegistrationKernelTestBase {
     $this->assertContains('node:1', $metadata->getCacheTags());
     $this->assertContains('node:2', $metadata->getCacheTags());
     $this->assertContains('node:3', $metadata->getCacheTags());
+    $this->assertCount(3, $metadata->getCacheTags());
     $this->assertEmpty($metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
     $this->assertEquals(1, $validation_result->getViolations()->count());
@@ -87,7 +89,9 @@ class RegistrationValidatorTest extends RegistrationKernelTestBase {
     $this->assertContains('node:1', $metadata->getCacheTags());
     $this->assertContains('node:2', $metadata->getCacheTags());
     $this->assertContains('node:3', $metadata->getCacheTags());
+    $this->assertCount(3, $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertCount(1, $metadata->getCacheContexts());
     $this->assertEquals(0, $metadata->getCacheMaxAge());
     $this->assertEquals(2, $validation_result->getViolations()->count());
     $violations = $validation_result->getViolations();

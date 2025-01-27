@@ -21,6 +21,9 @@ class HostHasRoomConstraintValidator extends ConstraintValidator {
     $host_entity = $constraint->hostEntity ?? $value;
 
     if ($host_entity instanceof HostEntityInterface) {
+      // Recheck when registrations are added and deleted.
+      $this->context->getCacheableMetadata()->addCacheTags(['registration_list']);
+
       if (!$host_entity->hasRoom()) {
         $this->context
           ->buildViolation($constraint->noRoomMessage, [

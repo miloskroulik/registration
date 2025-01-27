@@ -59,9 +59,11 @@ class HostAllowsRegistrantConstraintValidator extends ConstraintValidator implem
         $result3 = $host_entity->access('register other anonymous', $this->currentUser, TRUE);
 
         // Accumulate cacheability.
-        $this->context->getCacheableMetadata()->addCacheableDependency($result1);
-        $this->context->getCacheableMetadata()->addCacheableDependency($result2);
-        $this->context->getCacheableMetadata()->addCacheableDependency($result3);
+        $this->context
+          ->getCacheableMetadata()
+          ->addCacheableDependency($result1)
+          ->addCacheableDependency($result2)
+          ->addCacheableDependency($result3);
 
         if ($result1->isAllowed() && !$result2->isAllowed() && !$result3->isAllowed()) {
           if ($host_entity->isRegistrant($this->currentUser)) {

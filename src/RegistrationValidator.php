@@ -2,6 +2,8 @@
 
 namespace Drupal\registration;
 
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Cache\VariationCacheInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -16,8 +18,31 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Defines the class for a registration validator.
+ *
+ * Uses a variation cache wrapped around a memory cache backend to cache
+ * validation results within a single page request. This improves performance
+ * for forms and blocks that call the validator multiple times within a single
+ * request, and when running tests.
  */
 class RegistrationValidator implements RegistrationValidatorInterface {
+
+  /**
+   * The variation cache.
+   */
+  protected VariationCacheInterface $cache;
+
+  /**
+   * The default cache contexts to vary every cache item by.
+   *
+   * Tests can change the current user or the language within a single
+   * test run, so ensure results are cached per user and per language.
+   *
+   * @var string[]
+   */
+  protected array $cacheContexts = [
+    'languages',
+    'user',
+  ];
 
   /**
    * The class resolver.
@@ -47,6 +72,8 @@ class RegistrationValidator implements RegistrationValidatorInterface {
   /**
    * Creates a RegistrationValidator object.
    *
+   * @param \Drupal\Core\Cache\VariationCacheInterface $cache
+   *   The variation cache.
    * @param \Drupal\Core\DependencyInjection\ClassResolverInterface $class_resolver
    *   The class resolver.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -58,7 +85,8 @@ class RegistrationValidator implements RegistrationValidatorInterface {
    * @param \Drupal\Core\TypedData\TypedDataManagerInterface $typed_data_manager
    *   The typed data manager.
    */
-  public function __construct(ClassResolverInterface $class_resolver, EntityTypeManagerInterface $entity_type_manager, EventDispatcherInterface $event_dispatcher, RegistrationConstraintManager $registration_constraint_manager, TypedDataManagerInterface $typed_data_manager) {
+  public function __construct(VariationCacheInterface $cache, ClassResolverInterface $class_resolver, EntityTypeManagerInterface $entity_type_manager, EventDispatcherInterface $event_dispatcher, RegistrationConstraintManager $registration_constraint_manager, TypedDataManagerInterface $typed_data_manager) {
+    $this->cache = $cache;
     $this->classResolver = $class_resolver;
     $this->entityTypeManager = $entity_type_manager;
     $this->eventDispatcher = $event_dispatcher;
@@ -77,6 +105,14 @@ class RegistrationValidator implements RegistrationValidatorInterface {
     // Ensure the constraint IDs variable is an array.
     if (is_string($constraint_ids)) {
       $constraint_ids = [$constraint_ids];
+    }
+
+    // Check the cache.
+    if ($cache_keys = $this->getCacheKeys($pipeline_id, $constraint_ids, $value)) {
+      $cached = $this->cache->get($cache_keys, (new CacheableMetadata())->setCacheContexts($this->cacheContexts));
+      if ($cached) {
+        return $cached->data;
+      }
     }
 
     // Calculate the original entity if the value is an existing entity.
@@ -144,8 +180,8 @@ class RegistrationValidator implements RegistrationValidatorInterface {
     // Extract host entity and registration.
     [$host_entity, $registration] = RegistrationHelper::extractEntitiesFromValue($value);
 
-    // Dispatch a legacy event for BC reasons when checking availability.
-    if ($pipeline_id == 'available_for_registration') {
+    // Dispatch a legacy event for BC reasons.
+    if ($this->shouldDispatchLegacyEvent($pipeline_id)) {
       if ($host_entity instanceof HostEntityInterface) {
         if ($settings = $host_entity->getSettings()) {
           // @phpstan-ignore-next-line
@@ -169,7 +205,11 @@ class RegistrationValidator implements RegistrationValidatorInterface {
           // Remove all violations if status changed to enabled.
           $enabled = $event->getData() ?? FALSE;
           if ($enabled && !$validation_result->isValid()) {
+            // Create a new valid result, but retain cacheability from the
+            // original result.
+            $cacheable_metadata = $validation_result->getCacheableMetadata();
             $validation_result = new RegistrationValidationResult($constraint_ids, $value);
+            $validation_result->addCacheableDependency($cacheable_metadata);
           }
 
           // Status changed to disabled.
@@ -219,6 +259,19 @@ class RegistrationValidator implements RegistrationValidatorInterface {
     /** @var \Drupal\registration\RegistrationValidationResultInterface $validation_result */
     $validation_result = $event->getData();
 
+    // Store in the cache if cacheable.
+    if ($cache_keys) {
+      $cacheable_metadata = $validation_result->getCacheableMetadata();
+      $this->cache->set(
+        $cache_keys,
+        $validation_result,
+        // Add cache contexts without affecting actual result cacheability.
+        (new CacheableMetadata())->addCacheableDependency($cacheable_metadata)->addCacheContexts($this->cacheContexts),
+        // Set the initial cache contexts, also used when doing cache lookups.
+        (new CacheableMetadata())->setCacheContexts($this->cacheContexts)
+      );
+    }
+
     return $validation_result;
   }
 
@@ -243,6 +296,38 @@ class RegistrationValidator implements RegistrationValidatorInterface {
         }
       }
     }
+  }
+
+  /**
+   * Gets the cache keys for a given validation check.
+   *
+   * @param string $pipeline_id
+   *   An identifier for the constraint pipeline.
+   * @param array $constraint_ids
+   *   A list of constraint plugin IDs.
+   * @param mixed $value
+   *   The value to validate, e.g. an entity or other object. This is most
+   *   often a registration entity, but can be any value or object relevant
+   *   to registrations.
+   *
+   * @return string[]|null
+   *   The cache keys, or NULL if the validation check is not cacheable.
+   */
+  protected function getCacheKeys(string $pipeline_id, array $constraint_ids, mixed $value): ?array {
+    // Only the availability check is cacheable, as the results of other checks
+    // can vary per invocation.
+    if ($pipeline_id == 'available_for_registration') {
+      if ($value instanceof HostEntityInterface) {
+        $host_entity_id = $value->id();
+        if (!empty($host_entity_id)) {
+          $cache_keys = [$pipeline_id];
+          $cache_keys[] = $value->getEntityTypeId();
+          $cache_keys[] = (string) $host_entity_id;
+          return $cache_keys;
+        }
+      }
+    }
+    return NULL;
   }
 
   /**
@@ -297,6 +382,25 @@ class RegistrationValidator implements RegistrationValidatorInterface {
     }
 
     return $associative_constraint_ids;
+  }
+
+  /**
+   * Determines if a legacy event should be dispatched for a given pipeline.
+   *
+   * @param string $pipeline_id
+   *   The pipeline ID.
+   *
+   * @return bool
+   *   TRUE if a legacy event should be dispatched, FALSE otherwise.
+   */
+  protected function shouldDispatchLegacyEvent(string $pipeline_id): bool {
+    $availability_pipelines = [
+      'available_for_registration',
+      'enabled_for_registration',
+      'validate_registration',
+    ];
+
+    return in_array($pipeline_id, $availability_pipelines);
   }
 
 }

@@ -133,9 +133,22 @@ services:
     tags:
       - { name: plugin_manager_cache_clear }
 
+  cache.registration_validator:
+    class: Drupal\Core\Cache\MemoryBackend
+    tags:
+      - { name: cache.bin }
+    factory: ['@cache_factory', 'get']
+    arguments: [registration_validator]
+
+  variation_cache.registration_validator:
+    class: Drupal\Core\Cache\VariationCacheInterface
+    factory: ['@variation_cache_factory', 'get']
+    arguments: [registration_validator]
+
   registration.validator:
     class: Drupal\registration\RegistrationValidator
     arguments: [
+      '@variation_cache.registration_validator',
       '@class_resolver',
       '@entity_type.manager',
       '@event_dispatcher',

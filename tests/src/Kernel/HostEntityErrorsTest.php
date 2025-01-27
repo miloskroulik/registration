@@ -321,6 +321,18 @@ class HostEntityErrorsTest extends RegistrationKernelTestBase {
     $this->assertEquals('Registration for %label is not open yet.', $errors['open']->getUntranslatedString());
     $this->assertEquals('Registration for %label is closed.', $errors['close']->getUntranslatedString());
 
+    // Confirm that caching does not affect the result or its cacheability.
+    $metadata = $validation_result->getCacheableMetadata();
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertEquals($metadata, $validation_result->getCacheableMetadata());
+    $this->assertFalse($validation_result->isValid());
+    $errors = $validation_result->getLegacyErrors();
+    $this->assertCount(2, $errors);
+    $this->assertArrayHasKey('open', $errors);
+    $this->assertArrayHasKey('close', $errors);
+    $this->assertEquals('Registration for %label is not open yet.', $errors['open']->getUntranslatedString());
+    $this->assertEquals('Registration for %label is closed.', $errors['close']->getUntranslatedString());
+
     // Disable registration. This is ignored because the host entity is already
     // disabled by the open and close date.
     $settings->set('status', FALSE);
