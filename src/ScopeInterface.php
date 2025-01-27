@@ -80,6 +80,20 @@ interface ScopeInterface extends AccessibleInterface {
   public function getSpacesAvailable(?string $capacity_type): ?int;
 
   /**
+   * Gets the capacity of this scope.
+   *
+   * This is the number of spaces, regardless of how many are reserved.
+   *
+   * @param string|null $capacity_type
+   *   (optional) The name of the setting that contains the capacity.
+   *   Defaults to 'capacity'.
+   *
+   * @return int|null
+   *   The capacity of the scope, or NULL if unlimited.
+   */
+  public function getCapacity(?string $capacity_type): ?int;
+
+  /**
    * Gets the total number of registrations.
    *
    * Note that this is the number of registrations, not the spaces reserved.

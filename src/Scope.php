@@ -14,6 +14,8 @@ use Drupal\registration\Event\RegistrationDataAlterEvent;
 use Drupal\registration\Event\RegistrationEvents;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 
 /**
  * Defines the class for the scope entity.
@@ -102,7 +104,14 @@ abstract class Scope implements ScopeInterface {
    * {@inheritdoc}
    */
   public function getCloseTime(): ?int {
-    $times = [(int) $this->getSetting('close')];
+    $times = [];
+
+    $close = $this->getSetting('close');
+    if ($close) {
+      $date = new DrupalDateTime($close, new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
+      $times[] = $date->getTimestamp();
+    }
+
     foreach ($this->getScopes() as $scope) {
       $times[] = $scope->getCloseTime();
     }
@@ -117,13 +126,35 @@ abstract class Scope implements ScopeInterface {
    * {@inheritdoc}
    */
   public function getOpenTime(): ?int {
-    $times = [(int) $this->getSetting('open')];
+    $times = [];
+
+    $open = $this->getSetting('open');
+    if ($open) {
+      $date = new DrupalDateTime($open, new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
+      $times[] = $date->getTimestamp();
+    }
+
     foreach ($this->getScopes() as $scope) {
       $times[] = $scope->getOpenTime();
     }
     $times = array_filter($times);
     if (!empty($times)) {
       return max($times);
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCapacity(?string $capacity_type = 'capacity'): ?int {
+    $spaces = [(int) $this->getSetting($capacity_type)];
+    foreach ($this->getScopes() as $scope) {
+      $spaces[] = $scope->getCapacity($capacity_type);
+    }
+    $spaces = array_filter($spaces);
+    if (!empty($spaces)) {
+      return min($spaces);
     }
     return NULL;
   }
@@ -157,6 +188,13 @@ abstract class Scope implements ScopeInterface {
       return $event->getData() ?? NULL;
     }
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHosts(): array {
+    return [];
   }
 
   /**
@@ -365,13 +403,6 @@ abstract class Scope implements ScopeInterface {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function getHosts(): array {
-    return [];
-  }
-
-  /**
    * Determines if a registration needs a capacity check.
    *
    * @param int $spaces
@@ -383,6 +414,9 @@ abstract class Scope implements ScopeInterface {
    *   TRUE if a check is needed, FALSE otherwise.
    */
   protected function needsCapacityCheck(int $spaces, ?RegistrationInterface $registration): bool {
+    if (empty($this->getCapacity())) {
+      return FALSE;
+    }
     if ($registration) {
       return $registration->requiresCapacityCheck() || ($spaces > $registration->getSpacesReserved());
     }
@@ -396,14 +430,17 @@ abstract class Scope implements ScopeInterface {
    *   The query to modify.
    */
   protected function addHostConditions($query): void {
-    $hostsGroup = $query->orConditionGroup();
-    foreach ($this->getHosts() as $host) {
-      $hostGroup = $query->andConditionGroup();
-      $hostGroup->condition('entity_type_id', $host->getEntityTypeId());
-      $hostGroup->condition('entity_id', $host->id());
-      $hostsGroup->condition($hostGroup);
+    $hosts = $this->getHosts();
+    if ($hosts) {
+      $hostsGroup = $query->orConditionGroup();
+      foreach ($hosts as $host) {
+        $hostGroup = $query->andConditionGroup();
+        $hostGroup->condition('entity_type_id', $host->getEntityTypeId());
+        $hostGroup->condition('entity_id', $host->id());
+        $hostsGroup->condition($hostGroup);
+      }
+      $query->condition($hostsGroup);
     }
-    $query->condition($hostsGroup);
   }
 
   /**

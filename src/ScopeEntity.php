@@ -223,6 +223,7 @@ class ScopeEntity extends Scope implements ScopeEntityInterface {
   public function getSettings(): ?RegistrationSettings {
     if (!isset($this->settings)) {
       // todo
+      $this->settings = NULL;
     }
     return $this->settings;
   }

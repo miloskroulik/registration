@@ -12,6 +12,7 @@ use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\TypedData\TranslatableInterface;
 use Drupal\registration\Entity\RegistrationInterface;
+use Drupal\registration\Entity\RegistrationSettings;
 use Drupal\registration\Entity\RegistrationType;
 use Drupal\registration\Entity\RegistrationTypeInterface;
 use Drupal\registration\Event\RegistrationDataAlterEvent;
@@ -189,6 +190,13 @@ class HostEntity extends ScopeEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function getHosts(): array {
+    return [$this];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDefaultSettings(?string $langcode = NULL): array {
     $entity_type_id = $this->getEntityTypeId();
     $bundle = $this->bundle();
@@ -214,6 +222,22 @@ class HostEntity extends ScopeEntity implements HostEntityInterface {
       }
     }
     return [];
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSettings(): ?RegistrationSettings {
+    if (!isset($this->settings)) {
+      $this->settings = NULL;
+      if ($this->getRegistrationTypeBundle()) {
+        /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
+        $storage = $this->entityTypeManager()->getStorage('registration_settings');
+        $this->settings = $storage->loadSettingsForHostEntity($this);
+      }
+    }
+    return $this->settings;
   }
 
   /**
