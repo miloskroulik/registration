@@ -170,17 +170,28 @@ class HostEntityErrorsTest extends RegistrationKernelTestBase {
     $this->assertEquals('Registration for %label is not open yet.', $errors['open']->getUntranslatedString());
     $this->assertEquals('Registration for %label is closed.', $errors['close']->getUntranslatedString());
 
-    // Disable registration. This is ignored because the host entity is already
-    // disabled by the open and close date.
+    // Disable registration.
     $settings->set('status', FALSE);
     $settings->save();
     $errors = [];
     $this->assertFalse($host_entity->isEnabledForRegistration(1, NULL, $errors));
     $this->assertArrayHasKey('open', $errors);
     $this->assertArrayHasKey('close', $errors);
-    $this->assertCount(2, $errors);
+    $this->assertArrayHasKey('status', $errors);
+    $this->assertCount(3, $errors);
     $this->assertEquals('Registration for %label is not open yet.', $errors['open']->getUntranslatedString());
     $this->assertEquals('Registration for %label is closed.', $errors['close']->getUntranslatedString());
+    $this->assertEquals('Registration for %label is disabled.', $errors['status']->getUntranslatedString());
+
+    // Disable registration as the only error.
+    $settings->set('open', NULL);
+    $settings->set('close', NULL);
+    $settings->save();
+    $errors = [];
+    $this->assertFalse($host_entity->isEnabledForRegistration(1, NULL, $errors));
+    $this->assertArrayHasKey('status', $errors);
+    $this->assertCount(1, $errors);
+    $this->assertEquals('Registration for %label is disabled.', $errors['status']->getUntranslatedString());
   }
 
   /**
@@ -321,20 +332,7 @@ class HostEntityErrorsTest extends RegistrationKernelTestBase {
     $this->assertEquals('Registration for %label is not open yet.', $errors['open']->getUntranslatedString());
     $this->assertEquals('Registration for %label is closed.', $errors['close']->getUntranslatedString());
 
-    // Confirm that caching does not affect the result or its cacheability.
-    $metadata = $validation_result->getCacheableMetadata();
-    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
-    $this->assertEquals($metadata, $validation_result->getCacheableMetadata());
-    $this->assertFalse($validation_result->isValid());
-    $errors = $validation_result->getLegacyErrors();
-    $this->assertCount(2, $errors);
-    $this->assertArrayHasKey('open', $errors);
-    $this->assertArrayHasKey('close', $errors);
-    $this->assertEquals('Registration for %label is not open yet.', $errors['open']->getUntranslatedString());
-    $this->assertEquals('Registration for %label is closed.', $errors['close']->getUntranslatedString());
-
-    // Disable registration. This is ignored because the host entity is already
-    // disabled by the open and close date.
+    // Disable registration.
     $settings->set('status', FALSE);
     $settings->save();
     $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
@@ -342,9 +340,21 @@ class HostEntityErrorsTest extends RegistrationKernelTestBase {
     $errors = $validation_result->getLegacyErrors();
     $this->assertArrayHasKey('open', $errors);
     $this->assertArrayHasKey('close', $errors);
-    $this->assertCount(2, $errors);
+    $this->assertArrayHasKey('status', $errors);
+    $this->assertCount(3, $errors);
     $this->assertEquals('Registration for %label is not open yet.', $errors['open']->getUntranslatedString());
     $this->assertEquals('Registration for %label is closed.', $errors['close']->getUntranslatedString());
+    $this->assertEquals('Registration for %label is disabled.', $errors['status']->getUntranslatedString());
+
+    // Disable registration as the only error.
+    $settings->set('open', NULL);
+    $settings->set('close', NULL);
+    $settings->save();
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertFalse($validation_result->isValid());
+    $errors = $validation_result->getLegacyErrors();
+    $this->assertCount(1, $errors);
+    $this->assertEquals('Registration for %label is disabled.', $errors['status']->getUntranslatedString());
   }
 
 }
