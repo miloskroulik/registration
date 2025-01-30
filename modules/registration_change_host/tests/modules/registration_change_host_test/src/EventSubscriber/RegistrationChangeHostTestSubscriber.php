@@ -45,6 +45,10 @@ class RegistrationChangeHostTestSubscriber implements EventSubscriberInterface {
    *   The registration change host event.
    */
   public function addPossibleHosts(RegistrationChangeHostPossibleHostsEvent $event) {
+    // Increment the counter to track event dispatches
+    $counter = (int) \Drupal::state()->get('registration_change_host_test.event_counter', 0);
+    \Drupal::state()->set('registration_change_host_test.event_counter', $counter + 1);
+
     $storage = $this->entityTypeManager->getStorage('node');
     $query = $storage->getQuery()->accessCheck(FALSE);
     $ids = $query->execute();

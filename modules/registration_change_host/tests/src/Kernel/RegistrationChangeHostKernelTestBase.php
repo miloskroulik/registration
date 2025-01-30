@@ -22,6 +22,7 @@ class RegistrationChangeHostKernelTestBase extends RegistrationKernelTestBase {
    * @var array
    */
   protected static $modules = [
+    'system',
     'node',
     'user',
     'registration_test',

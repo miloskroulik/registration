@@ -2,6 +2,8 @@
 
 namespace Drupal\registration_change_host;
 
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Cache\VariationCacheInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\registration\Entity\RegistrationInterface;
 use Drupal\registration_change_host\Event\RegistrationChangeHostEvents;
@@ -47,6 +49,11 @@ class RegistrationChangeHostManager implements RegistrationChangeHostManagerInte
   protected EntityFieldManagerInterface $entityFieldManager;
 
   /**
+   * The variation cache.
+   */
+  protected VariationCacheInterface $cache;
+
+  /**
    * Creates a RegistrationChangeHostManager object.
    *
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
@@ -57,21 +64,44 @@ class RegistrationChangeHostManager implements RegistrationChangeHostManagerInte
    *   The database connection.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager.
+   * @param \Drupal\Core\Cache\VariationCacheInterface $cache
+   *   The variation cache.
    */
-  public function __construct(EventDispatcherInterface $event_dispatcher, EntityTypeManagerInterface $entity_type_manager, Connection $database, EntityFieldManagerInterface $entity_field_manager) {
+  public function __construct(EventDispatcherInterface $event_dispatcher, EntityTypeManagerInterface $entity_type_manager, Connection $database, EntityFieldManagerInterface $entity_field_manager, VariationCacheInterface $cache) {
     $this->eventDispatcher = $event_dispatcher;
     $this->entityTypeManager = $entity_type_manager;
     $this->database = $database;
     $this->entityFieldManager = $entity_field_manager;
+    $this->cache = $cache;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getPossibleHosts(RegistrationInterface $registration): PossibleHostSetInterface {
+    // Check the cache.
+    if (!$registration->isNew()) {
+      $cached = $this->cache->get([$registration->id()], new CacheableMetadata());
+      if ($cached) {
+        return $cached->data;
+      }
+    }
+
     $event = new RegistrationChangeHostPossibleHostsEvent($registration);
     $this->eventDispatcher->dispatch($event, RegistrationChangeHostEvents::REGISTRATION_CHANGE_HOST_POSSIBLE_HOSTS);
-    return $event->getPossibleHostsSet();
+    $set = $event->getPossibleHostsSet();
+
+    // Store in the cache if cacheable.
+    if (!$registration->isNew()) {
+      $this->cache->set(
+        [$registration->id()],
+        $set,
+        CacheableMetadata::createFromObject($set),
+        new CacheableMetadata()
+      );
+    }
+
+    return $set;
   }
 
   /**
