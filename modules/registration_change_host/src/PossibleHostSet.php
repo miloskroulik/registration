@@ -36,6 +36,11 @@ class PossibleHostSet implements PossibleHostSetInterface {
   protected RegistrationInterface $registration;
 
   /**
+   * The registration id.
+   */
+  protected int $registrationId;
+
+  /**
    * The possible hosts for the the registration.
    */
   protected array $hosts = [];
@@ -48,6 +53,7 @@ class PossibleHostSet implements PossibleHostSetInterface {
    */
   public function __construct(RegistrationInterface $registration) {
     $this->registration = $registration;
+    $this->registrationId = $registration->id();
     $current_host = $this->buildNewPossibleHost($this->registration->getHostEntity());
     $this->addHost($current_host);
     // Any change to the registration may be a change of the host, which
@@ -164,21 +170,19 @@ class PossibleHostSet implements PossibleHostSetInterface {
    */
   public function __sleep() {
     if (!empty($this->registration)) {
-      // @phpstan-ignore-next-line
-      $this->_registrationId = $this->registration->id();
       unset($this->registration);
     }
-    return ['hosts', '_registrationId'];
+    $properties = get_object_vars($this);
+    return array_keys($properties);
   }
 
   /**
    * {@inheritdoc}
    */
   public function __wakeup() {
-    if (!empty($this->_registrationId)) {
+    if (!empty($this->registrationId)) {
       $registration_storage = \Drupal::entityTypeManager()->getStorage('registration');
-      $this->registration = $registration_storage->load($this->_registrationId);
-      unset($this->_registrationId);
+      $this->registration = $registration_storage->load($this->registrationId);
     }
   }
 
