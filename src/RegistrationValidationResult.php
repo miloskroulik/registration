@@ -38,6 +38,11 @@ class RegistrationValidationResult implements RegistrationValidationResultInterf
   protected mixed $value;
 
   /**
+   * Whether the result was retrieved from cache.
+   */
+  protected bool $cached = FALSE;
+
+  /**
    * Creates a RegistrationValidationResult object.
    *
    * @param array $constraints
@@ -200,6 +205,20 @@ class RegistrationValidationResult implements RegistrationValidationResultInterf
         $this->violationList->remove($offset);
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCached(): void {
+    $this->cached = TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function wasCached(): bool {
+    return $this->cached;
   }
 
 }

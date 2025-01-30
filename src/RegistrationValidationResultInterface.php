@@ -154,4 +154,25 @@ interface RegistrationValidationResultInterface {
    */
   public function removeViolationWithCode(string $code): void;
 
+  /**
+   * Indicates that the result was retrieved from cache.
+   *
+   * This method should only be called by registration validators.
+   */
+  public function setCached(): void;
+
+  /**
+   * Determines if the result was retrieved from cache.
+   *
+   * Results are cached within the duration of a single page request using a
+   * memory cache, so most results are recalculated and not retrieved from
+   * cache. This will only return TRUE when the same check to validate the
+   * same value is made within one page build, and the result is not
+   * invalidated in the cache between invocations.
+   *
+   * @return bool
+   *   TRUE if the result was retrieved from cache, FALSE otherwise.
+   */
+  public function wasCached(): bool;
+
 }

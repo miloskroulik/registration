@@ -3,6 +3,7 @@
 namespace Drupal\Tests\registration\Kernel;
 
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
+use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Drupal\registration\RegistrationValidatorInterface;
 use Drupal\registration_test_validator\Plugin\Validation\RegistrationConstraint\Constraint1;
 use Drupal\registration_test_validator\Plugin\Validation\RegistrationConstraint\Constraint3;
@@ -18,6 +19,7 @@ use Drupal\registration_test_validator\Plugin\Validation\RegistrationConstraint\
 class RegistrationValidatorTest extends RegistrationKernelTestBase {
 
   use NodeCreationTrait;
+  use RegistrationCreationTrait;
 
   /**
    * The registration validator.
@@ -99,6 +101,107 @@ class RegistrationValidatorTest extends RegistrationKernelTestBase {
     $this->assertTrue($violations[0]->getConstraint() instanceof Constraint3);
     $this->assertEquals('random4', $violations[1]->getCode());
     $this->assertTrue($violations[1]->getConstraint() instanceof Constraint4);
+  }
+
+  /**
+   * Tests caching.
+   */
+  public function testRegistrationValidatorCaching() {
+    $node = $this->createAndSaveNode();
+    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
+    $host_entity = $handler->createHostEntity($node);
+    $settings = $host_entity->getSettings();
+
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+
+    // A settings change breaks cache.
+    $settings->set('maximum_spaces', 1);
+    $settings->save();
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+
+    // A change to the host entity breaks cache.
+    $node->set('title', 'Example event');
+    $node->save();
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+
+    // A new registration breaks cache.
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    $registration->set('user_uid', 1);
+    $registration->save();
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+
+    // Logging in as a different user breaks cache.
+    $user = $this->createUser(['create registration']);
+    $this->setCurrentUser($user);
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+
+    // Validating a different host breaks cache.
+    $node2 = $this->createAndSaveNode();
+    $handler2 = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
+    $host_entity2 = $handler->createHostEntity($node2);
+    $validation_result = $host_entity2->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity2->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+
+    // The earlier result for host 1 is still cached.
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+
+    // Only availability checks are cached.
+    $validation_result = $host_entity->validate($registration);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity->validate($registration);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+
+    // Validation results with violations are cached.
+    $this->assertFalse($host_entity->isBeforeOpen());
+    $settings->set('open', '2220-01-01T00:00:00');
+    $settings->save();
+    $this->assertTrue($host_entity->isBeforeOpen());
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertFalse($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $violations = $validation_result->getViolations();
+    $this->assertEquals('Registration for <em class="placeholder">Example event</em> is not open yet.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertFalse($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+    $violations = $validation_result->getViolations();
+    $this->assertEquals('Registration for <em class="placeholder">Example event</em> is not open yet.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
   }
 
   /**

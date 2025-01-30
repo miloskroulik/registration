@@ -111,7 +111,9 @@ class RegistrationValidator implements RegistrationValidatorInterface {
     if ($cache_keys = $this->getCacheKeys($pipeline_id, $constraint_ids, $value)) {
       $cached = $this->cache->get($cache_keys, (new CacheableMetadata())->setCacheContexts($this->cacheContexts));
       if ($cached) {
-        return $cached->data;
+        $validation_result = $cached->data;
+        $validation_result->setCached();
+        return $validation_result;
       }
     }
 
