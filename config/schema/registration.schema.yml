@@ -45,6 +45,9 @@ registration.settings:
     html_email:
       type: boolean
       label: 'Send email as HTML'
+    prevent_edit_disabled:
+      type: boolean
+      label: 'Prevent edit of existing registrations when new registration is disabled'
     replace_from_header:
       type: boolean
       label: 'Replace the "From" header'

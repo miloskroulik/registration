@@ -76,7 +76,8 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
       }
     }
 
-    // Only administrators can edit registrations for disabled hosts.
+    // The "update" operation further requires that the registration is in an
+    // editable state according to the host entity settings.
     if (($operation == 'update') && $result->isAllowed()) {
       $validation_result = $host_entity->isEditableRegistration($entity, $account, TRUE);
       $editable_result = AccessResult::allowedIf($validation_result->isValid())

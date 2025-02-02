@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\registration\Kernel;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
@@ -20,10 +21,17 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
   use RegistrationCreationTrait;
 
   /**
+   * The configuration factory.
+   */
+  protected ConfigFactoryInterface $configFactory;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
+
+    $this->configFactory = $this->container->get('config.factory');
 
     $admin_user = $this->createUser();
     $this->setCurrentUser($admin_user);
@@ -298,13 +306,27 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $access_control_handler->resetCache();
     $this->assertTrue($registration->access('update', $account));
 
-    // Only administrators can edit registrations for disabled hosts.
+    // By default, regular users cannot update registrations for disabled hosts.
     $host_entity = $registration->getHostEntity();
     $settings = $host_entity->getSettings();
     $settings->set('status', FALSE);
     $settings->save();
     $access_control_handler->resetCache();
     $this->assertFalse($registration->access('update', $account));
+    $account = $this->createUser(['administer conference registration']);
+    $access_control_handler->resetCache();
+    $this->assertTrue($registration->access('update', $account));
+
+    // When the "prevent edit for disabled hosts" option is turned off, regular
+    // users can edit registrations for disabled hosts.
+    $account = $this->createUser(['update own conference registration']);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $global_settings = $this->configFactory->getEditable('registration.settings');
+    $global_settings->set('prevent_edit_disabled', FALSE);
+    $global_settings->save();
+    $access_control_handler->resetCache();
+    $this->assertTrue($registration->access('update', $account));
     $account = $this->createUser(['administer conference registration']);
     $access_control_handler->resetCache();
     $this->assertTrue($registration->access('update', $account));

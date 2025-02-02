@@ -3,6 +3,7 @@
 namespace Drupal\Tests\registration\Kernel;
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Drupal\registration\HostEntity;
@@ -19,6 +20,20 @@ class HostEntityTest extends RegistrationKernelTestBase {
 
   use NodeCreationTrait;
   use RegistrationCreationTrait;
+
+  /**
+   * The configuration factory.
+   */
+  protected ConfigFactoryInterface $configFactory;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $this->configFactory = $this->container->get('config.factory');
+  }
 
   /**
    * @covers ::bundle
@@ -274,8 +289,19 @@ class HostEntityTest extends RegistrationKernelTestBase {
     // An administrator can edit a registration after the close date.
     $this->assertTrue($host_entity->isEditableRegistration($registration, $user));
 
-    // A regular user cannot edit a registration after the close date.
+    // By default regular users cannot edit a registration after the close date.
     $regular_user = $this->createUser(['update any conference registration']);
+    $this->assertFalse($host_entity->isEditableRegistration($registration, $regular_user));
+
+    // A regular user can edit a registration after the close date if the
+    // global settings are configured to allow it.
+    $global_settings = $this->configFactory->getEditable('registration.settings');
+    $global_settings->set('prevent_edit_disabled', FALSE);
+    $global_settings->save();
+    $this->assertTrue($host_entity->isEditableRegistration($registration, $regular_user));
+    $global_settings = $this->configFactory->getEditable('registration.settings');
+    $global_settings->set('prevent_edit_disabled', TRUE);
+    $global_settings->save();
     $this->assertFalse($host_entity->isEditableRegistration($registration, $regular_user));
 
     $settings->set('open', NULL);

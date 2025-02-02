@@ -202,3 +202,13 @@ function registration_update_10005() {
     }
   }
 }
+
+/**
+ * Adds a setting for edit access to registrations of disabled hosts.
+ */
+function registration_update_10006() {
+  \Drupal::service('config.factory')
+    ->getEditable('registration.settings')
+    ->set('prevent_edit_disabled', TRUE)
+    ->save();
+}

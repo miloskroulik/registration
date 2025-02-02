@@ -102,6 +102,17 @@ class RegistrationAdminForm extends ConfigFormBase {
       '#description' => $this->t('Replaces any existing "From" header with a header derived from the host entity registration settings. For improved email deliverability, the default mail handler in Drupal core generates a "From" header using the site name and email address in Basic settings. Selecting this option will replace the header set by Drupal core or other modules, so use with caution.'),
     ];
 
+    $form['existing_registration'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Existing registration handling'),
+    ];
+    $form['existing_registration']['prevent_edit_disabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Prevent edit of existing registrations when new registration is disabled'),
+      '#default_value' => $config->get('prevent_edit_disabled'),
+      '#description' => $this->t('Prevents editing of existing registrations if new registration is disabled for any reason, e.g. after the close date. This setting is ignored for administrators, who can always edit existing registrations. Note that only administrators can increase the number of spaces or change registration status or the registrant once new registration is disabled. This setting is only applicable to users who have permission to update registrations.'),
+    ];
+
     $form['email_registrants'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Email registrants form'),
@@ -152,6 +163,7 @@ class RegistrationAdminForm extends ConfigFormBase {
       ->set('broadcast_filter', $form_state->getValue('broadcast_filter'))
       ->set('limit_field_values', $form_state->getValue('limit_field_values'))
       ->set('hide_filter', $form_state->getValue('hide_filter'))
+      ->set('prevent_edit_disabled', $form_state->getValue('prevent_edit_disabled'))
       ->set('queue_notifications', $form_state->getValue('queue_notifications'))
       ->set('html_email', $form_state->getValue('html_email'))
       ->set('replace_from_header', $form_state->getValue('replace_from_header'))

@@ -2,6 +2,8 @@
 
 namespace Drupal\registration\Plugin\Validation\RegistrationConstraint;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\registration\Entity\RegistrationInterface;
@@ -22,13 +24,23 @@ class RegistrationIsEditableConstraintValidator extends ConstraintValidator impl
   protected AccountProxy $currentUser;
 
   /**
+   * The configuration.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected ImmutableConfig $config;
+
+  /**
    * Constructs a new RegistrationIsEditableConstraintValidator.
    *
    * @param \Drupal\Core\Session\AccountProxy $current_user
    *   The current user.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The configuration factory.
    */
-  public function __construct(AccountProxy $current_user) {
+  public function __construct(AccountProxy $current_user, ConfigFactoryInterface $config_factory) {
     $this->currentUser = $current_user;
+    $this->config = $config_factory->get('registration.settings');
   }
 
   /**
@@ -36,7 +48,8 @@ class RegistrationIsEditableConstraintValidator extends ConstraintValidator impl
    */
   public static function create(ContainerInterface $container): RegistrationIsEditableConstraintValidator {
     return new static(
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('config.factory')
     );
   }
 
@@ -46,7 +59,7 @@ class RegistrationIsEditableConstraintValidator extends ConstraintValidator impl
   public function validate($registration, Constraint $constraint) {
     /** @var RegistrationIsEditableConstraint $constraint */
     if ($registration instanceof RegistrationInterface) {
-      $host_entity = $registration?->getHostEntity();
+      $host_entity = $registration->getHostEntity();
       $settings = $host_entity?->getSettings();
 
       // These checks only apply to existing registrations for a regular user.
@@ -62,25 +75,37 @@ class RegistrationIsEditableConstraintValidator extends ConstraintValidator impl
           // Check the main status setting.
           $enabled = (bool) $settings->getSetting('status');
           if (!$enabled) {
-            $this->context
-              ->buildViolation($constraint->disabledMessage, [
-                '%label' => $host_entity->label(),
-              ])
-              ->setCode($constraint->disabledCode)
-              ->setCause(t($constraint->disabledCause))
-              ->addViolation();
-            return;
+            $prevent_edit = $this->config->get('prevent_edit_disabled');
+
+            $this->context->getCacheableMetadata()->addCacheableDependency($this->config);
+
+            if ($prevent_edit) {
+              $this->context
+                ->buildViolation($constraint->disabledMessage, [
+                  '%label' => $host_entity->label(),
+                ])
+                ->setCode($constraint->disabledCode)
+                ->setCause(t($constraint->disabledCause))
+                ->addViolation();
+              return;
+            }
           }
 
           // Check close date.
           if ($host_entity->isAfterClose()) {
-            $this->context
-              ->buildViolation($constraint->closedMessage, [
-                '%label' => $host_entity->label(),
-              ])
-              ->setCode($constraint->closedCode)
-              ->setCause(t($constraint->closedCause))
-              ->addViolation();
+            $prevent_edit = $this->config->get('prevent_edit_disabled');
+
+            $this->context->getCacheableMetadata()->addCacheableDependency($this->config);
+
+            if ($prevent_edit) {
+              $this->context
+                ->buildViolation($constraint->closedMessage, [
+                  '%label' => $host_entity->label(),
+                ])
+                ->setCode($constraint->closedCode)
+                ->setCause(t($constraint->closedCause))
+                ->addViolation();
+            }
           }
         }
       }

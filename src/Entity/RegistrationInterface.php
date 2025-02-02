@@ -219,9 +219,13 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    * Returns FALSE for canceled registrations. Otherwise returns TRUE for new
    * registrations, and existing registrations changing state or adding spaces.
    *
+   * @param bool $checkCanceled
+   *   (optional) Whether a canceled registration should be checked.
+   *   Defaults to FALSE.
+   *
    * @return bool
    *   TRUE if a capacity check is needed, FALSE otherwise.
    */
-  public function requiresCapacityCheck(): bool;
+  public function requiresCapacityCheck(bool $checkCanceled = FALSE): bool;
 
 }

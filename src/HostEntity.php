@@ -755,6 +755,7 @@ class HostEntity implements HostEntityInterface {
         'RegistrationWithinMaximumSpaces' => $configuration,
         'RegistrationWithinCapacity' => [],
         'RegistrationAllowsRegistrant' => [],
+        'RegistrationAllowsUpdate' => [],
         'UniqueRegistrant' => [],
       ];
 

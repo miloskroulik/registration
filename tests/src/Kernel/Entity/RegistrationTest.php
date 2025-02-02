@@ -65,6 +65,7 @@ class RegistrationTest extends RegistrationKernelTestBase {
    * @covers ::isCanceled
    * @covers ::isComplete
    * @covers ::isHeld
+   * @covers ::requiresCapacityCheck
    */
   public function testRegistration() {
     $node = $this->createAndSaveNode();
@@ -97,6 +98,23 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->isComplete());
     $this->assertNull($registration->getCompletedTime());
     $this->assertFalse($registration->isHeld());
+    $this->assertFalse($registration->requiresCapacityCheck());
+
+    $registration->set('state', 'canceled');
+    $this->assertFalse($registration->requiresCapacityCheck());
+    $this->assertTrue($registration->requiresCapacityCheck(TRUE));
+    $registration->save();
+    $this->assertFalse($registration->requiresCapacityCheck());
+    $this->assertFalse($registration->requiresCapacityCheck(TRUE));
+    $registration->set('state', 'pending');
+    $registration->save();
+    $registration->set('count', 2);
+    $this->assertTrue($registration->requiresCapacityCheck());
+    $this->assertTrue($registration->requiresCapacityCheck(TRUE));
+    $registration->save();
+    $this->assertFalse($registration->requiresCapacityCheck());
+    $this->assertFalse($registration->requiresCapacityCheck(TRUE));
+    $registration->set('count', 1);
 
     $registration->setCreatedTime(635879700);
     $registration->save();

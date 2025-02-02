@@ -376,11 +376,11 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   /**
    * {@inheritdoc}
    */
-  public function requiresCapacityCheck(): bool {
+  public function requiresCapacityCheck(bool $checkCanceled = FALSE): bool {
     $requires_check = TRUE;
 
-    // A check is not needed for canceled registrations.
-    if ($this->getState()->isCanceled()) {
+    // A check may not be needed for canceled registrations.
+    if (!$checkCanceled && $this->getState()->isCanceled()) {
       $requires_check = FALSE;
     }
 

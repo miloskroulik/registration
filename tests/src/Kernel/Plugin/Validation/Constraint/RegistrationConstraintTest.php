@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\registration\Kernel\Plugin\Validation\Constraint;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
@@ -27,10 +28,17 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
   protected UserInterface $adminUser;
 
   /**
+   * The configuration factory.
+   */
+  protected ConfigFactoryInterface $configFactory;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
+
+    $this->configFactory = $this->container->get('config.factory');
 
     $admin_user = $this->createUser(['administer registration', 'create registration']);
     $this->setCurrentUser($admin_user);
@@ -238,9 +246,64 @@ class RegistrationConstraintTest extends RegistrationKernelTestBase {
       'update any conference registration',
     ]);
     $this->setCurrentUser($account);
+    // Access to edit registrations for disabled hosts is prevented by default
+    // for non-administrative users.
     $violations = $registration->validate();
     $this->assertEquals(1, $violations->count());
     $this->assertEquals('Registration for <em class="placeholder">My event</em> is disabled.', (string) $violations[0]->getMessage());
+    // Access to edit registrations for disabled hosts is allowed for
+    // non-administrative users if the relevant configuration is set.
+    $global_settings = $this->configFactory->getEditable('registration.settings');
+    $global_settings->set('prevent_edit_disabled', FALSE);
+    $global_settings->save();
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+    // However a non-administrative user cannot increase spaces or change status
+    // or the registrant while the host is disabled or closed.
+    $registration->set('count', 2);
+    $violations = $registration->validate();
+    $this->assertEquals('The number of spaces cannot be increased because registration for <em class="placeholder">My event</em> is disabled.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $registration->set('count', 1);
+    $registration->set('state', 'complete');
+    $violations = $registration->validate();
+    $this->assertEquals('The status cannot be changed because registration for <em class="placeholder">My event</em> is disabled.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $settings->set('status', TRUE);
+    $settings->set('close', '2020-01-01T00:00:00');
+    $settings->save();
+    $user = $this->createUser();
+    $registration->set('user_uid', $user->id());
+    $violations = $registration->validate();
+    $this->assertEquals('The status cannot be changed because registration for <em class="placeholder">My event</em> is disabled.', (string) $violations[0]->getMessage());
+    $this->assertEquals('The registrant cannot be changed because registration for <em class="placeholder">My event</em> is disabled.', (string) $violations[1]->getMessage());
+    $this->assertEquals(2, $violations->count());
+    $registration = $this->reloadEntity($registration);
+    $registration->set('user_uid', NULL);
+    $registration->set('anon_mail', 'test@example.org');
+    $registration->save();
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
+    $registration->set('state', 'complete');
+    $violations = $registration->validate();
+    $this->assertEquals('The status cannot be changed because registration for <em class="placeholder">My event</em> is closed.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $registration->set('count', 2);
+    $registration->set('state', 'pending');
+    $violations = $registration->validate();
+    $this->assertEquals('The number of spaces cannot be increased because registration for <em class="placeholder">My event</em> is closed.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    $registration->set('count', 1);
+    $registration->set('anon_mail', 'email@example.org');
+    $violations = $registration->validate();
+    $this->assertEquals('The registrant cannot be changed because registration for <em class="placeholder">My event</em> is closed.', (string) $violations[0]->getMessage());
+    $this->assertEquals(1, $violations->count());
+    // Administrators can change anything about the registration.
+    $this->setCurrentUser($this->adminUser);
+    $registration->set('state', 'complete');
+    $registration->set('count', 2);
+    $violations = $registration->validate();
+    $this->assertEquals(0, $violations->count());
 
     // Capacity should only be checked for existing registrations if spaces
     // reserved or registration state have changed.
