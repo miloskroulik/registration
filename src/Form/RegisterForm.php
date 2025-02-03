@@ -4,6 +4,7 @@ namespace Drupal\registration\Form;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityForm;
@@ -113,10 +114,6 @@ class RegisterForm extends ContentEntityForm {
       $validation_result = $host_entity->isEditableRegistration($registration, NULL, TRUE);
     }
 
-    // Apply cacheable metadata to the form so it rebuilds when needed.
-    $form_metadata = CacheableMetadata::createFromRenderArray($form);
-    $form_metadata->merge($validation_result->getCacheableMetadata())->applyTo($form);
-
     // Display any errors.
     if (!$validation_result->isValid()) {
       foreach ($validation_result->getViolations() as $violation) {
@@ -147,10 +144,23 @@ class RegisterForm extends ContentEntityForm {
       }
     }
 
-    // Rebuild the form per anonymous session.
+    // Get the current form cacheability.
+    $form_metadata = CacheableMetadata::createFromRenderArray($form);
+    // Allow the form to be cached by default.
+    $form_metadata->setCacheMaxAge(Cache::PERMANENT);
+    // Add the cacheability of the validation result.
+    $form_metadata = $form_metadata->merge($validation_result->getCacheableMetadata());
+
+    // The registrant options depend on user permissions or anonymous session.
     if ($this->currentUser()->isAnonymous()) {
-      $build['#cache']['contexts'][] = 'session';
+      $form_metadata->addCacheContexts(['session']);
     }
+    else {
+      $form_metadata->addCacheContexts(['user.permissions']);
+    }
+
+    // Apply the calculated cacheability to the form.
+    $form_metadata->applyTo($form);
 
     return $form;
   }
