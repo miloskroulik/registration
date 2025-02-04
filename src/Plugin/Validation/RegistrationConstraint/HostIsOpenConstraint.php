@@ -18,11 +18,6 @@ use Drupal\registration\Validation\RegistrationConstraintBase;
 class HostIsOpenConstraint extends RegistrationConstraintBase {
 
   /**
-   * This constraint requires a host entity with settings.
-   */
-  protected array $dependencies = ['HostHasSettings'];
-
-  /**
    * The host entity passed as a constraint option.
    */
   public ?HostEntityInterface $hostEntity;

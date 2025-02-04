@@ -17,11 +17,6 @@ use Drupal\registration\Validation\RegistrationConstraintBase;
 class HostAllowsRegistrantConstraint extends RegistrationConstraintBase {
 
   /**
-   * This constraint requires a host entity with settings.
-   */
-  protected array $dependencies = ['HostHasSettings'];
-
-  /**
    * You are already registered.
    */
   public string $youAreAlreadyRegisteredMessage = "You are already registered for this event.";

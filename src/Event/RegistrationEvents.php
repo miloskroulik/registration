@@ -15,8 +15,23 @@ final class RegistrationEvents {
    * @Event
    *
    * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   *
+   * @deprecated in registration:3.4.0 and is removed from registration:4.0.0.
+   *   Use REGISTRATION_ALTER_REGISTRATIONS_COUNT instead.
+   * @see https://www.drupal.org/node/xxxx
    */
   const REGISTRATION_ALTER_COUNT = 'registration.alter.count';
+
+  /**
+   * Name of the event fired to allow alter of the registration count.
+   *
+   * This is the number of registrations, not spaces reserved.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_REGISTRATIONS_COUNT = 'registration.alter.registrations_count';
 
   /**
    * Name of the event fired to allow alter of registration enabled status.
@@ -66,6 +81,11 @@ final class RegistrationEvents {
    *
    * @Event
    *
+   * @deprecated in registration:3.4.0 and is removed from registration:4.0.0.
+   *   Use REGISTRATION_ALTER_SPACES_REMAINING instead.
+   *
+   * @see https://www.drupal.org/node/xxxx
+   *
    * @see \Drupal\registration\Event\RegistrationDataAlterEvent
    */
   const REGISTRATION_ALTER_SPACES_REMAINING = 'registration.alter.remaining';
@@ -77,9 +97,37 @@ final class RegistrationEvents {
    *
    * @Event
    *
+   * @deprecated in registration:3.4.0 and is removed from registration:4.0.0.
+   *   Use REGISTRATION_ALTER_SPACES_RESERVED instead.
+   *
+   * @see https://www.drupal.org/node/xxxx
+   *
    * @see \Drupal\registration\Event\RegistrationDataAlterEvent
    */
   const REGISTRATION_ALTER_USAGE = 'registration.alter.usage';
+
+
+  /**
+   * Name of the event fired to allow alter of spaces remaining.
+   *
+   * This is the capacity minus the number of spaces currently reserved.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_SPACES_AVAILABLE = 'registration.alter.available';
+
+  /**
+   * Name of the event fired to allow alter of spaces reserved.
+   *
+   * This is the number of spaces currently reserved in specified states.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_SPACES_RESERVED = 'registration.alter.reserved';
 
   /**
    * Name of the event fired to validate host entities against any value.
