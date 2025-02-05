@@ -83,7 +83,7 @@ class RegistrationChangeHostManager implements RegistrationChangeHostManagerInte
       throw new \InvalidArgumentException("Cannot get possible hosts for an unsaved registration.");
     }
 
-    // Check the cache.    
+    // Check the cache.
     $cached = $this->cache->get([$registration->id()], new CacheableMetadata());
     if ($cached) {
       $set = $cached->data;
@@ -99,7 +99,7 @@ class RegistrationChangeHostManager implements RegistrationChangeHostManagerInte
     $this->cache->set(
       [
         'possible_hosts',
-        $registration->id()
+        $registration->id(),
       ],
       $set,
       CacheableMetadata::createFromObject($set),

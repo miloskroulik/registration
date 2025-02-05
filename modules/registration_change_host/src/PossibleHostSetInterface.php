@@ -125,7 +125,6 @@ interface PossibleHostSetInterface extends RefinableCacheableDependencyInterface
    */
   public function wasCached(): bool;
 
-
   /**
    * Get a possible host key for a host.
    *

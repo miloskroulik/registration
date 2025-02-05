@@ -397,12 +397,12 @@ class ManagerTest extends RegistrationChangeHostKernelTestBase {
     // First call should not be cached.
     $set = $this->registrationChangeHostManager->getPossibleHosts($this->registration);
     $this->assertCount(1, $set->getHosts(), "Exactly 1 host should be found");
-    $this->assertFalse($set->isCached());
+    $this->assertFalse($set->wasCached());
 
     // Repeated call should use cached result.
     $set = $this->registrationChangeHostManager->getPossibleHosts($this->registration);
     $this->assertCount(1, $set->getHosts(), "Exactly 1 host should be found");
-    $this->assertTrue($set->isCached());
+    $this->assertTrue($set->wasCached());
 
     // Create a new node which should invalidate the cache.
     $new_node = Node::create([
@@ -415,18 +415,18 @@ class ManagerTest extends RegistrationChangeHostKernelTestBase {
     // New call is not cached due to cache invalidation.
     $set = $this->registrationChangeHostManager->getPossibleHosts($this->registration);
     $this->assertCount(2, $set->getHosts(), "Exactly 2 hosts should be found after adding new node");
-    $this->assertFalse($set->isCached());
+    $this->assertFalse($set->wasCached());
 
     // Repeated call should use cached result.
     $set = $this->registrationChangeHostManager->getPossibleHosts($this->registration);
     $this->assertCount(2, $set->getHosts(), "Exactly 2 hosts should be found after adding new node");
-    $this->assertTrue($set->isCached());
+    $this->assertTrue($set->wasCached());
 
     // Changing a possible host should invalidate cache.
     $this->originalHostNode->set('title', 'changed title')->save();
     $set = $this->registrationChangeHostManager->getPossibleHosts($this->registration);
     $this->assertCount(2, $set->getHosts(), "Exactly 2 hosts should be found.");
-    $this->assertFalse($set->isCached());
+    $this->assertFalse($set->wasCached());
   }
 
 }

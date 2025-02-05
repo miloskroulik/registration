@@ -164,7 +164,6 @@ class PossibleHostSet implements PossibleHostSetInterface {
     return $this->cached;
   }
 
-
   /**
    * {@inheritdoc}
    */
