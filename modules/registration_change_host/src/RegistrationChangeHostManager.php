@@ -103,7 +103,7 @@ class RegistrationChangeHostManager implements RegistrationChangeHostManagerInte
       ],
       $set,
       CacheableMetadata::createFromObject($set),
-      CacheableMetadata::createFromObject($set),
+      new CacheableMetadata(),
     );
 
     return $set;
