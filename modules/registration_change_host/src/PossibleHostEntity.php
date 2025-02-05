@@ -152,9 +152,7 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
    *   The registration.
    */
   protected function setRegistration(RegistrationInterface $registration) {
-    if (!$registration->isNew()) {
-      $this->registrationId = $registration->id();
-    }
+    $this->registrationId = $registration->id();
     $this->currentHostEntity = $registration->getHostEntity();
     $this->registration = $registration;
     if ($this->getHostEntity()->isConfiguredForRegistration() && !$this->isCurrent()) {
@@ -300,10 +298,6 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
    */
   public function getUrl(): ?Url {
     if (!isset($this->url)) {
-      if (empty($this->registrationId)) {
-        // If the registration is new, we cannot build urls.
-        return NULL;
-      }
       // By default the current host is not available as it's not a change of
       // host. But if this is overridden and made available, it should link to
       // the edit form not the change host form.

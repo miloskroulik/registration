@@ -79,12 +79,16 @@ class RegistrationChangeHostManager implements RegistrationChangeHostManagerInte
    * {@inheritdoc}
    */
   public function getPossibleHosts(RegistrationInterface $registration): PossibleHostSetInterface {
-    // Check the cache.
-    if (!$registration->isNew()) {
-      $cached = $this->cache->get([$registration->id()], new CacheableMetadata());
-      if ($cached) {
-        return $cached->data;
-      }
+    if ($registration->isNew()) {
+      throw new \InvalidArgumentException("Cannot get possible hosts for an unsaved registration.");
+    }
+
+    // Check the cache.    
+    $cached = $this->cache->get([$registration->id()], new CacheableMetadata());
+    if ($cached) {
+      $set = $cached->data;
+      $set->setCached();
+      return $set;
     }
 
     $event = new RegistrationChangeHostPossibleHostsEvent($registration);
@@ -92,14 +96,15 @@ class RegistrationChangeHostManager implements RegistrationChangeHostManagerInte
     $set = $event->getPossibleHostsSet();
 
     // Store in the cache if cacheable.
-    if (!$registration->isNew()) {
-      $this->cache->set(
-        [$registration->id()],
-        $set,
-        CacheableMetadata::createFromObject($set),
-        new CacheableMetadata()
-      );
-    }
+    $this->cache->set(
+      [
+        'possible_hosts',
+        $registration->id()
+      ],
+      $set,
+      CacheableMetadata::createFromObject($set),
+      CacheableMetadata::createFromObject($set),
+    );
 
     return $set;
   }

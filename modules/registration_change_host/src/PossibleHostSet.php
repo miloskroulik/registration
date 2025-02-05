@@ -46,6 +46,11 @@ class PossibleHostSet implements PossibleHostSetInterface {
   protected array $hosts = [];
 
   /**
+   * Whether the result was retrieved from cache.
+   */
+  protected bool $cached = FALSE;
+
+  /**
    * Constructs a new RegistrationEvent.
    *
    * @param \Drupal\registration\Entity\RegistrationInterface $registration
@@ -144,6 +149,21 @@ class PossibleHostSet implements PossibleHostSetInterface {
       $this->addHost($host);
     }
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCached(): void {
+    $this->cached = TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function wasCached(): bool {
+    return $this->cached;
+  }
+
 
   /**
    * {@inheritdoc}

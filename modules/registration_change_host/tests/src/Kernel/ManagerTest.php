@@ -394,18 +394,15 @@ class ManagerTest extends RegistrationChangeHostKernelTestBase {
    * @covers ::getPossibleHosts
    */
   public function testCaching() {
-    \Drupal::state()->set('registration_change_host_test.event_counter', 0);
+    // First call should not be cached.
+    $set = $this->registrationChangeHostManager->getPossibleHosts($this->registration);
+    $this->assertCount(1, $set->getHosts(), "Exactly 1 host should be found");
+    $this->assertFalse($set->isCached());
 
-    // First call should trigger the event.
-    $hosts = $this->registrationChangeHostManager->getPossibleHosts($this->registration)->getHosts();
-    $this->assertCount(1, $hosts, "Exactly 1 host should be found");
-
-    $this->assertEquals(1, \Drupal::state()->get('registration_change_host_test.event_counter'), 'Event should be triggered on first call');
-
-    // Repeated call should use cached result and not trigger the event.
-    $hosts = $this->registrationChangeHostManager->getPossibleHosts($this->registration)->getHosts();
-    $this->assertCount(1, $hosts, "Exactly 1 host should be found");
-    $this->assertEquals(1, \Drupal::state()->get('registration_change_host_test.event_counter'), 'Event should not be triggered on repeated call');
+    // Repeated call should use cached result.
+    $set = $this->registrationChangeHostManager->getPossibleHosts($this->registration);
+    $this->assertCount(1, $set->getHosts(), "Exactly 1 host should be found");
+    $this->assertTrue($set->isCached());
 
     // Create a new node which should invalidate the cache.
     $new_node = Node::create([
@@ -415,21 +412,21 @@ class ManagerTest extends RegistrationChangeHostKernelTestBase {
     ]);
     $new_node->save();
 
-    // New call should trigger the event again due to cache invalidation.
-    $hosts = $this->registrationChangeHostManager->getPossibleHosts($this->registration)->getHosts();
-    $this->assertCount(2, $hosts, "Exactly 2 hosts should be found after adding new node");
-    $this->assertEquals(2, \Drupal::state()->get('registration_change_host_test.event_counter'), 'Event should be triggered after cache invalidation');
+    // New call is not cached due to cache invalidation.
+    $set = $this->registrationChangeHostManager->getPossibleHosts($this->registration);
+    $this->assertCount(2, $set->getHosts(), "Exactly 2 hosts should be found after adding new node");
+    $this->assertFalse($set->isCached());
 
-    // Repeated call should use cached result and not trigger the event.
-    $hosts = $this->registrationChangeHostManager->getPossibleHosts($this->registration)->getHosts();
-    $this->assertCount(2, $hosts, "Exactly 2 hosts should be found after adding new node");
-    $this->assertEquals(2, \Drupal::state()->get('registration_change_host_test.event_counter'), 'Event should not be triggered on repeated call');
+    // Repeated call should use cached result.
+    $set = $this->registrationChangeHostManager->getPossibleHosts($this->registration);
+    $this->assertCount(2, $set->getHosts(), "Exactly 2 hosts should be found after adding new node");
+    $this->assertTrue($set->isCached());
 
-    // Change a possible host should invalidate cache.
+    // Changing a possible host should invalidate cache.
     $this->originalHostNode->set('title', 'changed title')->save();
-    $hosts = $this->registrationChangeHostManager->getPossibleHosts($this->registration)->getHosts();
-    $this->assertCount(2, $hosts, "Exactly 2 hosts should be found.");
-    $this->assertEquals(3, \Drupal::state()->get('registration_change_host_test.event_counter'), 'Event should be triggered after changing original host');
+    $set = $this->registrationChangeHostManager->getPossibleHosts($this->registration);
+    $this->assertCount(2, $set->getHosts(), "Exactly 2 hosts should be found.");
+    $this->assertFalse($set->isCached());
   }
 
 }
