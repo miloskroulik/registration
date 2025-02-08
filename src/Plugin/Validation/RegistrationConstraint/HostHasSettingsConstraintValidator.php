@@ -33,11 +33,6 @@ class HostHasSettingsConstraintValidator extends ConstraintValidator {
       return;
     }
 
-    // Add the host entity to cacheability.
-    if ($entity = $host_entity->getEntity()) {
-      $this->context->getCacheableMetadata()->addCacheableDependency($entity);
-    }
-
     if (!$host_entity->isConfiguredForRegistration()) {
       $this->context
         ->buildViolation($constraint->disabledMessage, [
@@ -69,9 +64,6 @@ class HostHasSettingsConstraintValidator extends ConstraintValidator {
 
       return;
     }
-
-    // Add the settings to cacheability.
-    $this->context->getCacheableMetadata()->addCacheableDependency($settings);
   }
 
 }

@@ -3,6 +3,7 @@
 namespace Drupal\registration\Entity;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\workflows\StateInterface;
@@ -273,6 +274,20 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
   public function setHeldExpirationState($state): RegistrationTypeInterface {
     $this->heldExpireState = $state;
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
+    $cache_tags = parent::getCacheTags();
+
+    // If this type has a workflow, it should be included in cacheability.
+    if ($workflow = $this->getWorkflow()) {
+      return Cache::mergeTags($cache_tags, $workflow->getCacheTags());
+    }
+
+    return $cache_tags;
   }
 
   /**

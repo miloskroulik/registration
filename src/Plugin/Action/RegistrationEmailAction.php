@@ -135,6 +135,7 @@ class RegistrationEmailAction extends EmailAction {
   public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $entity = NULL;
     $result = NULL;
+    $host_entity = NULL;
 
     // Allow access if the object is a registration with a valid host entity.
     if ($object instanceof RegistrationInterface) {
@@ -150,8 +151,8 @@ class RegistrationEmailAction extends EmailAction {
     }
 
     // Recalculate this result if the host entity is updated.
-    if ($entity) {
-      $result->addCacheableDependency($entity);
+    if ($host_entity) {
+      $result->addCacheableDependency($host_entity);
     }
 
     return $return_as_object ? $result : $result->isAllowed();

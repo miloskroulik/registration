@@ -90,10 +90,7 @@ class RegisterAccessCheck extends BaseRegisterAccessCheck {
           // This is crucial so the Register tab and form can display for
           // some users and host entities, and not for others.
           ->cachePerPermissions()
-          ->addCacheableDependency($registration_type)
-          ->addCacheableDependency($entity)
-          ->addCacheableDependency($settings)
-          ->addCacheableDependency($field);
+          ->addCacheableDependency($host_entity);
       }
     }
 
@@ -106,17 +103,8 @@ class RegisterAccessCheck extends BaseRegisterAccessCheck {
 
     // Recalculate this result if the relevant entities are updated.
     $access_result->cachePerPermissions();
-    if ($registration_type) {
-      $access_result->addCacheableDependency($registration_type);
-    }
-    if ($entity) {
-      $access_result->addCacheableDependency($entity);
-    }
-    if ($settings) {
-      $access_result->addCacheableDependency($settings);
-    }
-    if ($field) {
-      $access_result->addCacheableDependency($field);
+    if ($host_entity) {
+      $access_result->addCacheableDependency($host_entity);
     }
     return $access_result;
   }

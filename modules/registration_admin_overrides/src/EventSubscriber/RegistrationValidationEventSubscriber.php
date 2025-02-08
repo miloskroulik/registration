@@ -66,10 +66,8 @@ class RegistrationValidationEventSubscriber implements EventSubscriberInterface 
       if ($settings = $host_entity->getSettings()) {
         if ($registration_type = $host_entity->getRegistrationType()) {
           $validation_result->getCacheableMetadata()
-            // The override checker inspects the host entity settings.
-            ->addCacheableDependency($settings)
-            // The override checker inspects the registration type.
-            ->addCacheableDependency($registration_type)
+            // The override checker depends on the host entity.
+            ->addCacheableDependency($host_entity)
             // The override checker inspects user permissions.
             ->addCacheContexts(['user.permissions']);
 

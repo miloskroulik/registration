@@ -48,11 +48,9 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
         return $result->addCacheableDependency($entity);
       }
       if (!$host_entity->isConfiguredForRegistration()) {
-        $result = AccessResult::forbidden("The host entity is not configured for registration.");
-        if ($host_entity->getEntity()) {
-          $result->addCacheableDependency($host_entity->getEntity());
-        }
-        return $result->addCacheableDependency($entity);
+        return AccessResult::forbidden("The host entity is not configured for registration.")
+          ->addCacheableDependency($host_entity)
+          ->addCacheableDependency($entity);
       }
     }
 
@@ -111,26 +109,37 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
       return $this->checkEntityUserPermissionsForAdministerOperation($entity, $account);
     }
 
-    // Check administrative access. Although the operation requested was not
-    // the "administer" operation, if administrative access is granted, that
-    // provides implicit access to other operations.
-    $result = $entity->access('administer', $account, TRUE);
-    if ($result->isForbidden()) {
-      // Negate a forbidden result that should only apply to the "administer"
-      // operation, and should not prevent access to other operations.
-      $result = AccessResult::neutral()->addCacheableDependency($result);
-    }
-
-    // Check the bundle permission if administrative access not granted.
-    if ($result->isNeutral()) {
-      $result = AccessResult::allowedIfHasPermission($account, "$operation any {$entity->bundle()} registration")
-        ->orIf($result);
-    }
+    // Check the bundle permission as it is performant compared to other checks.
+    // Although the "administer" permission check here appears to be redundant
+    // with the administrative access check performed below, it is important to
+    // perform the check here, as permission checks are most performant compared
+    // to entity access checks, and cache per permissions instead of per user
+    // even when the current user is the author of the entity being checked.
+    $result = AccessResult::allowedIfHasPermissions($account, [
+      "administer {$entity->bundle()} registration",
+      "$operation any {$entity->bundle()} registration",
+    ], 'OR');
 
     // The "host" permission grants access if the user can edit the host entity.
     if (($result->isNeutral()) && ($host_entity = $entity->getHostEntity())) {
       $result = $host_entity->access($operation . ' registrations', $account, TRUE)
         ->orIf($result);
+    }
+
+    // Check administrative access. Although the operation requested was not
+    // the "administer" operation, if administrative access is granted, that
+    // provides implicit access to other operations. This check is done after
+    // the bundle permission and host checks since it is less performant than
+    // those checks.
+    if ($result->isNeutral()) {
+      $administer_result = $entity->access('administer', $account, TRUE);
+      if ($administer_result->isForbidden()) {
+        // Negate a forbidden result that should only apply to the "administer"
+        // operation, and should not prevent access to other operations.
+        $administer_result = AccessResult::neutral()
+          ->addCacheableDependency($administer_result);
+      }
+      $result = $result->orIf($administer_result);
     }
 
     // The own results cache per user so they're less performant, and only

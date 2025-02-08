@@ -3,6 +3,10 @@
 namespace Drupal\registration;
 
 use Drupal\Component\Datetime\DateTimePlus;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -30,11 +34,11 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  *
  * This is a pseudo-entity wrapper around a real entity.
  */
-class HostEntity implements HostEntityInterface {
-
-  use StringTranslationTrait;
+class HostEntity implements CacheableDependencyInterface, HostEntityInterface {
 
   use DependencySerializationTrait;
+  use RefinableCacheableDependencyTrait;
+  use StringTranslationTrait;
 
   /**
    * The current user.
@@ -83,7 +87,7 @@ class HostEntity implements HostEntityInterface {
    *
    * @var \Drupal\registration\Entity\RegistrationSettings|null
    */
-  protected RegistrationSettings|NULL $settings;
+  protected ?RegistrationSettings $settings;
 
   /**
    * The registration validator.
@@ -91,6 +95,13 @@ class HostEntity implements HostEntityInterface {
    * @var \Drupal\registration\RegistrationValidatorInterface
    */
   protected RegistrationValidatorInterface $validator;
+
+  /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected TimeInterface $time;
 
   /**
    * Creates a HostEntity object.
@@ -117,6 +128,9 @@ class HostEntity implements HostEntityInterface {
       }
     }
     $this->entity = $entity;
+
+    // Initialize cacheability with a dependency on the wrapped entity.
+    $this->addCacheableDependency($this->entity);
   }
 
   /**
@@ -190,7 +204,7 @@ class HostEntity implements HostEntityInterface {
    */
   public function addCacheableDependencies(array &$build, array $other_entities = []) {
     // Rebuild if the host entity is updated.
-    $this->renderer()->addCacheableDependency($build, $this->getEntity());
+    $this->renderer()->addCacheableDependency($build, $this);
 
     // Rebuild if other entities are updated.
     foreach ($other_entities as $entity) {
@@ -281,6 +295,46 @@ class HostEntity implements HostEntityInterface {
     ]);
     $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_USAGE);
     return $event->getData() ?? 0;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge(): int {
+    // Set a cache expiration if applicable.
+    if ($max_age = $this->calculateMaxAge()) {
+      return $max_age;
+    }
+
+    // Default to cache without expiration.
+    return Cache::PERMANENT;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags(): array {
+    $cache_tags = $this->cacheTags;
+
+    // Add cache tags for entities the host depends on.
+    if ($registration_type = $this->getRegistrationType()) {
+      $cache_tags = Cache::mergeTags($cache_tags, $registration_type->getCacheTags());
+    }
+    if ($field = $this->getRegistrationField()) {
+      $cache_tags = Cache::mergeTags($cache_tags, $field->getCacheTags());
+    }
+
+    // If the host has saved settings, they should be included in cacheability.
+    if (($settings = $this->getSettings()) && !$settings->isNew()) {
+      return Cache::mergeTags($cache_tags, $settings->getCacheTags());
+    }
+    else {
+      // No settings, or they have not been saved yet. Add a dependency on the
+      // list, so that when settings are finally saved, anything dependent on
+      // this host entity will rebuild. Without this, changes to the settings
+      // will never be reflected in dependent objects.
+      return Cache::mergeTags($cache_tags, ['registration_settings_list']);
+    }
   }
 
   /**
@@ -782,6 +836,39 @@ class HostEntity implements HostEntityInterface {
   }
 
   /**
+   * Calculates a max-age based on the host entity open or close dates.
+   *
+   * If registration for the host entity has closed, or the host entity does
+   * not have open or close dates, then NULL is returned.
+   *
+   * @return int|null
+   *   The calculated max age, if available.
+   */
+  protected function calculateMaxAge(): ?int {
+    $expiration = NULL;
+
+    // Expire this validation result on the open date if one exists and it's in
+    // the future.
+    if ($this->isBeforeOpen()) {
+      $expiration = $this->getOpenDate();
+    }
+
+    // Expire this validation result on the close date if one exists and it's in
+    // the future.
+    elseif (($close = $this->getCloseDate()) && !$this->isAfterClose()) {
+      $expiration = $close;
+    }
+
+    // If an open or close date in the future was found, calculate the amount
+    // of time before the relevant date, and use that as the max age.
+    if ($expiration) {
+      return $expiration->getTimestamp() - $this->time()->getCurrentTime();
+    }
+
+    return NULL;
+  }
+
+  /**
    * Returns the current user.
    *
    * @return \Drupal\Core\Session\AccountInterface|\Drupal\Core\Session\AccountProxy
@@ -862,6 +949,19 @@ class HostEntity implements HostEntityInterface {
       $this->renderer = $this->container()->get('renderer');
     }
     return $this->renderer;
+  }
+
+  /**
+   * Returns the time service.
+   *
+   * @return \Drupal\Component\Datetime\TimeInterface
+   *   The time service.
+   */
+  protected function time(): TimeInterface {
+    if (!isset($this->time)) {
+      $this->time = $this->container()->get('datetime.time');
+    }
+    return $this->time;
   }
 
   /**

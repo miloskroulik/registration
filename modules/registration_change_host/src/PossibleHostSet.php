@@ -66,8 +66,9 @@ class PossibleHostSet implements PossibleHostSetInterface {
    * {@inheritdoc}
    */
   public function addHostIfAvailable(PossibleHostEntityInterface $host): void {
-    $this->addCacheableDependency($host->isAvailable(TRUE));
-    if ($host->isAvailable()) {
+    $result = $host->isAvailable(TRUE);
+    $this->addCacheableDependency($result);
+    if ($result->isValid()) {
       $this->addHost($host);
     }
   }

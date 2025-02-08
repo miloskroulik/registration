@@ -119,14 +119,10 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
   protected function checkAccess(HostEntityInterface $host_entity, $operation, AccountInterface $account): AccessResultInterface {
     // If the host entity is not configured for registration, we return
     // neutral access.
-    $type = $host_entity?->getRegistrationTypeBundle();
+    $type = $host_entity->getRegistrationTypeBundle();
     if (!$type) {
       // The host entity is not configured for registration.
-      $result = AccessResult::neutral();
-      if ($host_entity) {
-        $result->addCacheableDependency($host_entity->getEntity());
-      }
-      return $result;
+      return AccessResult::neutral()->addCacheableDependency($host_entity);
     }
 
     if (in_array($operation, ['view registrations', 'update registrations', 'delete registrations'])) {
@@ -154,10 +150,8 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
     }
 
     if (isset($result)) {
-      // All the operation results depend on the registration type specified
-      // on the host entity.
-      $result->addCacheableDependency($host_entity->getEntity());
-      return $result;
+      // All the operation results depend on the host entity.
+      return $result->addCacheableDependency($host_entity);
     }
 
     // 'administer' registration' is the super-permission for anything
@@ -232,30 +226,33 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    *   The access result.
    */
   protected function checkViewUpdateDeleteRegistrationsAccess($operation, HostEntityInterface $host_entity, $type, AccountInterface $account): AccessResultInterface {
-    // Check administrative access. Although the operation requested was not
-    // the "administer" operation, if administrative access is granted, that
-    // provides implicit access to other operations.
-    $result = $host_entity->access('administer registrations', $account, TRUE);
-    if ($result->isForbidden()) {
-      // Negate a forbidden result that should only apply to the "administer"
-      // operation, and should not prevent access to other operations.
-      $result = AccessResult::neutral()->addCacheableDependency($result);
-    }
-
+    // Check base permissions first as this check is most performant.
     $base_operation = strstr($operation, ' ', TRUE);
+    $result = AccessResult::allowedIfHasPermissions($account, [
+      "$base_operation any registration",
+      "$base_operation any $type registration",
+    ], 'OR');
+
+    // Check administrative access if access is not granted yet. Although the
+    // operation requested was not the "administer" operation, if administrative
+    // access is granted, that provides implicit access to other operations.
     if ($result->isNeutral()) {
-      $result = AccessResult::allowedIfHasPermissions($account, [
-        "$base_operation any registration",
-        "$base_operation any $type registration",
-      ], 'OR')->orIf($result);
+      $administer_result = $host_entity->access('administer registrations', $account, TRUE);
+      if ($administer_result->isForbidden()) {
+        // Negate a forbidden result that should only apply to the "administer"
+        // operation, and should not prevent access to other operations.
+        $administer_result = AccessResult::neutral()->addCacheableDependency($administer_result);
+      }
+      $result = $result->orIf($administer_result);
     }
 
-    // Check host-specific permissions if access not granted yet.
+    // Check host-specific permissions if access is not granted yet.
     if ($result->isNeutral()) {
       $result = AccessResult::allowedIfHasPermission($account, "$base_operation host registration")
         ->andIf($host_entity->access('manage', $account, TRUE))
         ->orIf($result);
     }
+
     return $result;
   }
 

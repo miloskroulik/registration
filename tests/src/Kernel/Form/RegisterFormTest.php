@@ -55,8 +55,6 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $host_entity = $this->entityTypeManager
       ->getHandler($node->getEntityTypeId(), 'registration_host_entity')
       ->createHostEntity($node);
-    $settings = $host_entity->getSettings();
-    $settings->save();
     $registration = $this->entityTypeManager->getStorage('registration')->create([
       'entity_type_id' => $host_entity->getEntityTypeId(),
       'entity_id' => $host_entity->id(),
@@ -73,7 +71,12 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertStringNotContainsString('Registration for <em class="placeholder">My event</em> is not open yet.', $output);
     $metadata = CacheableMetadata::createFromRenderArray($form);
     $this->assertContains('node:1', $metadata->getCacheTags());
-    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    // Settings have not been saved yet for the host entity, so the cache tags
+    // for the settings entity are not present, but the settings list tag is.
+    $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertContains('registration_settings_list', $metadata->getCacheTags());
     $this->assertContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('session', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -89,13 +92,17 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertStringNotContainsString('Registration for <em class="placeholder">My event</em> is not open yet.', $output);
     $metadata = CacheableMetadata::createFromRenderArray($form);
     $this->assertContains('node:1', $metadata->getCacheTags());
-    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertContains('registration_settings_list', $metadata->getCacheTags());
     $this->assertContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
 
     // Allow multiple registrations per user.
+    $settings = $host_entity->getSettings();
     $settings->set('multiple_registrations', TRUE);
     $settings->save();
     $form = $this->entityFormBuilder->getForm($registration, 'register', [
@@ -106,7 +113,11 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertStringNotContainsString('Registration for <em class="placeholder">My event</em> is not open yet.', $output);
     $metadata = CacheableMetadata::createFromRenderArray($form);
     $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    // Settings were saved so the cache tag for the settings entity is present.
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings_list', $metadata->getCacheTags());
     $this->assertContains('registration_list', $metadata->getCacheTags());
     // The user cache context is not present when multiple registrations per
     // user are allowed, since the current user does not have to be checked
@@ -116,10 +127,8 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
 
     // Disable registration.
-    $settings = $host_entity->getSettings();
     $settings->set('open', '2220-01-01T00:00:00');
     $settings->save();
-
     $form = $this->entityFormBuilder->getForm($registration, 'register', [
       'host_entity' => $host_entity,
     ]);
@@ -129,7 +138,10 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertStringContainsString('Registration for <em class="placeholder">My event</em> is not open yet.', $output);
     $metadata = CacheableMetadata::createFromRenderArray($form);
     $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings_list', $metadata->getCacheTags());
     $this->assertContains('registration_list', $metadata->getCacheTags());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
@@ -147,6 +159,7 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $registration->set('author_uid', $user->id());
     $registration->set('user_uid', $user->id());
     $registration->save();
+    $registration = $this->reloadEntity($registration);
     $form = $this->entityFormBuilder->getForm($registration, 'register', [
       'host_entity' => $host_entity,
     ]);
@@ -155,9 +168,12 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertStringContainsString('Save Registration', $output);
     $metadata = CacheableMetadata::createFromRenderArray($form);
     $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration:1', $metadata->getCacheTags());
     $this->assertContains('registration.user:' . $user->id(), $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings_list', $metadata->getCacheTags());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
