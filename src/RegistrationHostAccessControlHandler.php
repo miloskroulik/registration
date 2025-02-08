@@ -176,7 +176,7 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    * override any other access granted in conjunction with this operation
    * in likely unforeseen ways. This is enforced in the access() method.
    *
-   * @param \Drupal\Core\Entity\HostEntityInterface $host_entity
+   * @param \Drupal\registration\HostEntityInterface $host_entity
    *   The host entity.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The user for which to check access.
@@ -198,7 +198,7 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    * This grants the ability to perform the 'administer' operation on any
    * registration for this host.
    *
-   * @param \Drupal\Core\Entity\HostEntityInterface $host_entity
+   * @param \Drupal\registration\HostEntityInterface $host_entity
    *   The host entity.
    * @param string $type
    *   The host registration type.
@@ -221,7 +221,7 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    *
    * @param string $operation
    *   The operation.
-   * @param \Drupal\Core\Entity\HostEntityInterface $host_entity
+   * @param \Drupal\registration\HostEntityInterface $host_entity
    *   The host entity.
    * @param string $type
    *   The host registration type.
@@ -232,20 +232,29 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    *   The access result.
    */
   protected function checkViewUpdateDeleteRegistrationsAccess($operation, HostEntityInterface $host_entity, $type, AccountInterface $account): AccessResultInterface {
+    // Check administrative access. Although the operation requested was not
+    // the "administer" operation, if administrative access is granted, that
+    // provides implicit access to other operations.
     $result = $host_entity->access('administer registrations', $account, TRUE);
+    if ($result->isForbidden()) {
+      // Negate a forbidden result that should only apply to the "administer"
+      // operation, and should not prevent access to other operations.
+      $result = AccessResult::neutral()->addCacheableDependency($result);
+    }
 
     $base_operation = strstr($operation, ' ', TRUE);
     if ($result->isNeutral()) {
       $result = AccessResult::allowedIfHasPermissions($account, [
         "$base_operation any registration",
         "$base_operation any $type registration",
-      ], 'OR');
+      ], 'OR')->orIf($result);
     }
 
     // Check host-specific permissions if access not granted yet.
     if ($result->isNeutral()) {
       $result = AccessResult::allowedIfHasPermission($account, "$base_operation host registration")
-        ->andIf($host_entity->access('manage', $account, TRUE));
+        ->andIf($host_entity->access('manage', $account, TRUE))
+        ->orIf($result);
     }
     return $result;
   }
@@ -257,7 +266,7 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    *
    * @param string $operation
    *   The operation.
-   * @param \Drupal\Core\Entity\HostEntityInterface $host_entity
+   * @param \Drupal\registration\HostEntityInterface $host_entity
    *   The host entity.
    * @param string $type
    *   The host registration type.
@@ -268,9 +277,19 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    *   The access result.
    */
   protected function checkManagedAccess($operation, HostEntityInterface $host_entity, $type, AccountInterface $account): AccessResultInterface {
-    // Check administrative permissions.
+    // Check administrative access. Although the operation requested was not
+    // the "administer" operation, if administrative access is granted, that
+    // provides implicit access to other operations.
     $result = $host_entity->access('administer registrations', $account, TRUE);
-    $result = $result->orIf(AccessResult::allowedIfHasPermission($account, "administer $type registration settings"));
+    if ($result->isForbidden()) {
+      // Negate a forbidden result that should only apply to the "administer"
+      // operation, and should not prevent access to other operations.
+      $result = AccessResult::neutral()->addCacheableDependency($result);
+    }
+    if ($result->isNeutral()) {
+      $result = AccessResult::allowedIfHasPermission($account, "administer $type registration settings")
+        ->orIf($result);
+    }
 
     // 'manage broadcast' and 'manage settings' operations require additional
     // permissions that the 'manage registrations' operation does not.
@@ -279,7 +298,8 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
 
     // Check the global manage permissions.
     if ($result->isNeutral()) {
-      $result = AccessResult::allowedIfHasPermissions($account, array_merge($managed_permissions, ["manage $type registration"]), 'AND');
+      $result = AccessResult::allowedIfHasPermissions($account, array_merge($managed_permissions, ["manage $type registration"]), 'AND')
+        ->orIf($result);
     }
 
     // Check host-specific permissions if access not granted yet.
@@ -303,7 +323,7 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
    *
    * @param string $operation
    *   The operation.
-   * @param \Drupal\Core\Entity\HostEntityInterface $host_entity
+   * @param \Drupal\registration\HostEntityInterface $host_entity
    *   The host entity.
    * @param string $type
    *   The host registration type.

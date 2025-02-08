@@ -66,10 +66,12 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
       if ($operation !== 'administer') {
         $permissions[] = "$operation any registration";
       }
-      $result = AccessResult::allowedIfHasPermissions($account, $permissions, 'OR');
+      $result = AccessResult::allowedIfHasPermissions($account, $permissions, 'OR')
+        ->orIf($result);
 
       if ($result->isNeutral()) {
-        $result = $this->checkEntityUserPermissions($entity, $operation, $account);
+        $result = $this->checkEntityUserPermissions($entity, $operation, $account)
+          ->orIf($result);
         // All of these checks depend on the registration type, host or
         // registrant.
         $result->addCacheableDependency($entity);
@@ -103,18 +105,32 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
    *   The access result.
    */
   protected function checkEntityUserPermissions(EntityInterface $entity, string $operation, AccountInterface $account): AccessResultInterface {
+    // Perform a special check for the "administer" operation, this avoids
+    // infinite looping when checking administrative access below.
     if ($operation === 'administer') {
       return $this->checkEntityUserPermissionsForAdministerOperation($entity, $account);
     }
 
-    $result = AccessResult::allowedIfHasPermissions($account, [
-      "administer {$entity->bundle()} registration",
-      "$operation any {$entity->bundle()} registration",
-    ], 'OR');
+    // Check administrative access. Although the operation requested was not
+    // the "administer" operation, if administrative access is granted, that
+    // provides implicit access to other operations.
+    $result = $entity->access('administer', $account, TRUE);
+    if ($result->isForbidden()) {
+      // Negate a forbidden result that should only apply to the "administer"
+      // operation, and should not prevent access to other operations.
+      $result = AccessResult::neutral()->addCacheableDependency($result);
+    }
+
+    // Check the bundle permission if administrative access not granted.
+    if ($result->isNeutral()) {
+      $result = AccessResult::allowedIfHasPermission($account, "$operation any {$entity->bundle()} registration")
+        ->orIf($result);
+    }
 
     // The "host" permission grants access if the user can edit the host entity.
     if (($result->isNeutral()) && ($host_entity = $entity->getHostEntity())) {
-      $result = $host_entity->access($operation . ' registrations', $account, TRUE);
+      $result = $host_entity->access($operation . ' registrations', $account, TRUE)
+        ->orIf($result);
     }
 
     // The own results cache per user so they're less performant, and only
@@ -124,7 +140,6 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
       /** @var \Drupal\registration\Entity\RegistrationInterface $entity */
       if ($account->id() && ($account->id() == $entity->getUserId())) {
         $own_result = AccessResult::allowedIfHasPermissions($account, [
-          "administer own {$entity->bundle()} registration",
           "$operation own registration",
           "$operation own {$entity->bundle()} registration",
         ], 'OR')
@@ -187,7 +202,8 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
         $permissions[] = 'create ' . $entity_bundle . ' registration other anonymous';
       }
 
-      $result = AccessResult::allowedIfHasPermissions($account, $permissions, 'OR');
+      $result = AccessResult::allowedIfHasPermissions($account, $permissions, 'OR')
+        ->orIf($result);
     }
 
     return $result;
