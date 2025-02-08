@@ -91,19 +91,19 @@ class RegistrationValidationResultTest extends RegistrationKernelTestBase {
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
 
     // Attempting to add a dependency on a value that does not support cache
-    // dependencies is ignored.
+    // dependencies makes the result uncacheable.
     $validation_result->addCacheableDependency('a string');
     $metadata = $validation_result->getCacheableMetadata();
     $this->assertEmpty($metadata->getCacheTags());
     $this->assertEmpty($metadata->getCacheContexts());
-    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+    $this->assertEquals(0, $metadata->getCacheMaxAge());
 
-    // Attempting to add a dependency on NULL is ignored.
+    // Attempting to add a dependency on NULL makes the result uncacheable.
     $validation_result->addCacheableDependency(NULL);
     $metadata = $validation_result->getCacheableMetadata();
     $this->assertEmpty($metadata->getCacheTags());
     $this->assertEmpty($metadata->getCacheContexts());
-    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+    $this->assertEquals(0, $metadata->getCacheMaxAge());
 
     // Violations can be added.
     $validation_result->addViolation('This is an example error message 1.', [], NULL, NULL, NULL, 'example_error_code1');

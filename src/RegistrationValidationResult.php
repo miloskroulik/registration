@@ -4,6 +4,7 @@ namespace Drupal\registration;
 
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Entity\EntityConstraintViolationList;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -15,17 +16,14 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 /**
  * Defines the class for a registration validation result.
  */
-class RegistrationValidationResult implements RegistrationValidationResultInterface {
+class RegistrationValidationResult implements CacheableDependencyInterface, RegistrationValidationResultInterface {
+
+  use RefinableCacheableDependencyTrait;
 
   /**
    * The validation constraints.
    */
   protected array $constraints;
-
-  /**
-   * The cacheable metadata.
-   */
-  protected CacheableMetadata $cacheableMetadata;
 
   /**
    * The violation list.
@@ -53,28 +51,13 @@ class RegistrationValidationResult implements RegistrationValidationResultInterf
   public function __construct(array $constraints, mixed $value) {
     $this->constraints = $constraints;
     $this->value = $value;
-    $this->cacheableMetadata = new CacheableMetadata();
     $this->violationList = ($value instanceof FieldableEntityInterface) ? new EntityConstraintViolationList($value) : new ConstraintViolationList();
 
     // If the value implements cache dependencies, initialize cacheability of
     // this result with those dependencies.
     if ($value instanceof CacheableDependencyInterface) {
-      $this->cacheableMetadata->addCacheableDependency($value);
+      $this->addCacheableDependency($value);
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function addCacheableDependency(mixed $object): RegistrationValidationResultInterface {
-    if ($object instanceof CacheableDependencyInterface) {
-      $this->cacheableMetadata->addCacheableDependency($object);
-    }
-    elseif ($object instanceof RegistrationValidationResultInterface) {
-      $this->cacheableMetadata->addCacheableDependency($object->getCacheableMetadata());
-    }
-
-    return $this;
   }
 
   /**
@@ -109,7 +92,7 @@ class RegistrationValidationResult implements RegistrationValidationResultInterf
    * {@inheritdoc}
    */
   public function getCacheableMetadata(): CacheableMetadata {
-    return $this->cacheableMetadata;
+    return CacheableMetadata::createFromObject($this);
   }
 
   /**

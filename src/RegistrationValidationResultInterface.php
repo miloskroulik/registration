@@ -13,18 +13,6 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 interface RegistrationValidationResultInterface {
 
   /**
-   * Adds a dependency on an object: merges its cacheability metadata.
-   *
-   * @param mixed $object
-   *   The object. If the object implements CacheableDependencyInterface,
-   *   or the object is also a validation result, then its cacheability
-   *   metadata is merged. Otherwise no action is taken.
-   *
-   * @return $this
-   */
-  public function addCacheableDependency(mixed $object): RegistrationValidationResultInterface;
-
-  /**
    * Adds a violation to the result.
    *
    * This method should not be called from constraint validators. It is intended
@@ -67,6 +55,23 @@ interface RegistrationValidationResultInterface {
 
   /**
    * Gets the cacheable metadata resulting from a validation check.
+   *
+   * This is a convenience function that creates the metadata from the result.
+   * Callers of this method that alter the returned metadata are changing a
+   * copy of the result metadata, and are not changing the metadata within
+   * the result. To alter the metadata within the result, callers should use
+   * the methods in \Drupal\Core\Cache\RefinableCacheableDependencyInterface,
+   * using code similar to this:
+   *
+   * @code
+   *   $validation_result->addCacheableDependency($other_object);
+   *   // or:
+   *   $validation_result->addCacheTags(['other_object:1']);
+   *   // or:
+   *   $validation_result->addCacheContexts(['some_context']);
+   *   // or:
+   *   $validation_result->mergeCacheMaxAge(Cache::PERMANENT);
+   * @endcode
    *
    * @return \Drupal\Core\Cache\CacheableMetadata
    *   The cacheable metadata.

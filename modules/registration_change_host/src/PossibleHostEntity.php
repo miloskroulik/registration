@@ -257,7 +257,7 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
       $this->validationResult->addCacheableDependency($this->registration);
       // The violations are part of the renderable information about the
       // possible host.
-      $this->addCacheableDependency($this->validationResult->getCacheableMetadata());
+      $this->addCacheableDependency($this->validationResult);
     }
     return $return_as_object ? $this->validationResult : $this->validationResult->isValid();
   }
