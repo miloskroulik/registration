@@ -4,6 +4,7 @@ namespace Drupal\registration;
 
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Entity\EntityConstraintViolationList;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
@@ -16,7 +17,7 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
 /**
  * Defines the class for a registration validation result.
  */
-class RegistrationValidationResult implements CacheableDependencyInterface, RegistrationValidationResultInterface {
+class RegistrationValidationResult implements RefinableCacheableDependencyInterface, RegistrationValidationResultInterface {
 
   use RefinableCacheableDependencyTrait;
 
