@@ -300,8 +300,39 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
   /**
    * {@inheritdoc}
    */
+  public function getCacheContexts(): array {
+    $cache_contexts = $this->cacheContexts;
+
+    // Add cache contexts for entities the host depends on.
+    if ($registration_type = $this->getRegistrationType()) {
+      $cache_contexts = Cache::mergeContexts($cache_contexts, $registration_type->getCacheContexts());
+    }
+    if ($field = $this->getRegistrationField()) {
+      $cache_contexts = Cache::mergeContexts($cache_contexts, $field->getCacheContexts());
+    }
+    if ($settings = $this->getSettings()) {
+      $cache_contexts = Cache::mergeContexts($cache_contexts, $settings->getCacheContexts());
+    }
+
+    return $cache_contexts;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCacheMaxAge(): int {
     $cache_max_age = $this->cacheMaxAge;
+
+    // Merge max-age for entities the host depends on.
+    if ($registration_type = $this->getRegistrationType()) {
+      $cache_max_age = Cache::mergeMaxAges($cache_max_age, $registration_type->getCacheMaxAge());
+    }
+    if ($field = $this->getRegistrationField()) {
+      $cache_max_age = Cache::mergeMaxAges($cache_max_age, $field->getCacheMaxAge());
+    }
+    if ($settings = $this->getSettings()) {
+      $cache_max_age = Cache::mergeMaxAges($cache_max_age, $settings->getCacheMaxAge());
+    }
 
     // Set a cache expiration if applicable.
     if ($max_age = $this->calculateMaxAge()) {
@@ -327,15 +358,17 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
 
     // If the host has saved settings, they should be included in cacheability.
     if (($settings = $this->getSettings()) && !$settings->isNew()) {
-      return Cache::mergeTags($cache_tags, $settings->getCacheTags());
+      $cache_tags = Cache::mergeTags($cache_tags, $settings->getCacheTags());
     }
     else {
       // No settings, or they have not been saved yet. Add a dependency on the
       // list, so that when settings are finally saved, anything dependent on
       // this host entity will rebuild. Without this, changes to the settings
       // will never be reflected in dependent objects.
-      return Cache::mergeTags($cache_tags, ['registration_settings_list']);
+      $cache_tags = Cache::mergeTags($cache_tags, ['registration_settings_list']);
     }
+
+    return $cache_tags;
   }
 
   /**
