@@ -395,6 +395,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -413,6 +414,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -431,6 +433,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -449,6 +452,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -467,6 +471,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -486,6 +491,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -505,6 +511,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -530,6 +537,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -554,6 +562,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -574,6 +583,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -601,6 +611,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -625,6 +636,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -652,6 +664,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -675,6 +688,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -695,6 +709,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -710,6 +725,7 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());

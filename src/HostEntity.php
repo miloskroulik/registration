@@ -301,13 +301,14 @@ class HostEntity implements CacheableDependencyInterface, HostEntityInterface {
    * {@inheritdoc}
    */
   public function getCacheMaxAge(): int {
+    $cache_max_age = $this->cacheMaxAge;
+
     // Set a cache expiration if applicable.
     if ($max_age = $this->calculateMaxAge()) {
-      return $max_age;
+      $cache_max_age = Cache::mergeMaxAges($cache_max_age, $max_age);
     }
 
-    // Default to cache without expiration.
-    return Cache::PERMANENT;
+    return $cache_max_age;
   }
 
   /**

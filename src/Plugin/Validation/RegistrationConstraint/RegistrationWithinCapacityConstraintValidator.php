@@ -9,6 +9,11 @@ use Symfony\Component\Validator\ConstraintValidator;
 /**
  * Validates the RegistrationWithinCapacity constraint.
  *
+ * This validator adds a cache dependency on the list of registrations,
+ * and should be avoided when used as part of access control. Otherwise
+ * the access control will need to recalculate too often, making the
+ * caching less effective.
+ *
  * @phpcs:disable Drupal.Semantics.FunctionT.NotLiteralString
  */
 class RegistrationWithinCapacityConstraintValidator extends ConstraintValidator {
@@ -20,6 +25,11 @@ class RegistrationWithinCapacityConstraintValidator extends ConstraintValidator 
     /** @var RegistrationWithinCapacityConstraint $constraint */
     if ($registration instanceof RegistrationInterface) {
       if ($host_entity = $registration->getHostEntity()) {
+
+        // Recheck when registrations are added and deleted.
+        // @todo Make this more granular, ideally a list tag per host entity.
+        $this->context->getCacheableMetadata()->addCacheTags(['registration_list']);
+
         $spaces = $registration->getSpacesReserved();
         if (!$host_entity->hasRoom($spaces, $registration)) {
           if ($spaces > 1) {

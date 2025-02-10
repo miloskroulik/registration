@@ -94,10 +94,15 @@ interface HostEntityInterface extends AccessibleInterface {
   /**
    * Adds cache information to a render array.
    *
+   * This is similar to the addCacheableDependency method in the core renderer,
+   * except it takes an array of objects as a parameter instead of just one.
+   *
    * @param array $build
    *   The render array to modify.
    * @param \Drupal\Core\Entity\EntityInterface[] $other_entities
    *   (optional) Other entities that should be added as dependencies.
+   *
+   * @see \Drupal\Core\Render\Renderer::addCacheableDependency()
    */
   public function addCacheableDependencies(array &$build, array $other_entities = []);
 

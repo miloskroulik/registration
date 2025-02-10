@@ -13,6 +13,11 @@ use Symfony\Component\Validator\ConstraintValidator;
 /**
  * Validates the UniqueRegistrant constraint.
  *
+ * This validator adds a cache dependency on the list of registrations,
+ * and should be avoided when used as part of access control. Otherwise
+ * the access control will need to recalculate too often, making the
+ * caching less effective.
+ *
  * @phpcs:disable Drupal.Semantics.FunctionT.NotLiteralString
  */
 class UniqueRegistrantConstraintValidator extends ConstraintValidator implements ContainerInjectionInterface {
@@ -48,6 +53,11 @@ class UniqueRegistrantConstraintValidator extends ConstraintValidator implements
     if ($registration instanceof RegistrationInterface) {
       $host_entity = $registration->getHostEntity();
       if ($settings = $host_entity?->getSettings()) {
+
+        // Recheck when registrations are added and deleted.
+        // @todo Make this more granular, ideally a list tag per host entity.
+        $this->context->getCacheableMetadata()->addCacheTags(['registration_list']);
+
         $allow_multiple = $settings->getSetting('multiple_registrations');
         if (!$allow_multiple) {
 

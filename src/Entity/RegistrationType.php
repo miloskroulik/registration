@@ -279,12 +279,40 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
   /**
    * {@inheritdoc}
    */
-  public function getCacheTags() {
+  public function getCacheContexts(): array {
+    $cache_contexts = parent::getCacheContexts();
+
+    // If this type has a workflow, it should be included in cacheability.
+    if ($workflow = $this->getWorkflow()) {
+      $cache_contexts = Cache::mergeContexts($cache_contexts, $workflow->getCacheContexts());
+    }
+
+    return $cache_contexts;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge(): int {
+    $cache_max_age = parent::getCacheMaxAge();
+
+    // If this type has a workflow, it should be included in cacheability.
+    if ($workflow = $this->getWorkflow()) {
+      $cache_max_age = Cache::mergeMaxAges($cache_max_age, $workflow->getCacheMaxAge());
+    }
+
+    return $cache_max_age;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags(): array {
     $cache_tags = parent::getCacheTags();
 
     // If this type has a workflow, it should be included in cacheability.
     if ($workflow = $this->getWorkflow()) {
-      return Cache::mergeTags($cache_tags, $workflow->getCacheTags());
+      $cache_tags = Cache::mergeTags($cache_tags, $workflow->getCacheTags());
     }
 
     return $cache_tags;
