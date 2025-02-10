@@ -5,7 +5,7 @@ namespace Drupal\registration;
 use Drupal\Component\Datetime\DateTimePlus;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Datetime\DrupalDateTime;
@@ -34,7 +34,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  *
  * This is a pseudo-entity wrapper around a real entity.
  */
-class HostEntity implements CacheableDependencyInterface, HostEntityInterface {
+class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInterface {
 
   use DependencySerializationTrait;
   use RefinableCacheableDependencyTrait;
