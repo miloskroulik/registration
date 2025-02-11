@@ -523,6 +523,24 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   }
 
   /**
+   * The list cache tags to invalidate for this entity.
+   *
+   * @return string[]
+   *   Set of list cache tags.
+   */
+  protected function getListCacheTagsToInvalidate() {
+    $tags = parent::getListCacheTagsToInvalidate();
+    if ($host_entity = $this->getHostEntity()) {
+      // Invalidate the host entity registration list when registrations are
+      // added, updated or deleted, so registration forms and other objects
+      // that depend on the host entity rebuild. This ensures that the forms
+      // and objects reflect the latest information about host entity capacity.
+      $tags[] = $host_entity->getRegistrationListCacheTag();
+    }
+    return $tags;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {

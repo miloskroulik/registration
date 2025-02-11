@@ -213,9 +213,8 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
       }
     }
 
-    // Rebuild when registrations are added and deleted.
-    // @todo Make this more granular.
-    $build['#cache']['tags'][] = 'registration_list';
+    // Rebuild when registrations are added, updated or deleted for this host.
+    $build['#cache']['tags'][] = $this->getRegistrationListCacheTag();
 
     // Rebuild per user or anonymous session.
     if ($this->currentUser()->isAnonymous()) {
@@ -493,6 +492,13 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
     }
     $ids = $this->getRegistrationQuery($properties)->execute();
     return $ids ? $this->entityTypeManager()->getStorage('registration')->loadMultiple($ids) : [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRegistrationListCacheTag(): string {
+    return 'registration_list.host_entity:' . $this->getEntityTypeId() . ':' . (string) $this->id();
   }
 
   /**

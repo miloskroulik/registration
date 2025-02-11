@@ -77,7 +77,8 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     // for the settings entity are not present, but the settings list tag is.
     $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
     $this->assertContains('registration_settings_list', $metadata->getCacheTags());
-    $this->assertContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     $this->assertContains('session', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
 
@@ -96,7 +97,8 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
     $this->assertContains('registration_settings_list', $metadata->getCacheTags());
-    $this->assertContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
@@ -118,7 +120,8 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     // Settings were saved so the cache tag for the settings entity is present.
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings_list', $metadata->getCacheTags());
-    $this->assertContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     // The user cache context is not present when multiple registrations per
     // user are allowed, since the current user does not have to be checked
     // against the existing registrants.
@@ -142,7 +145,8 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings_list', $metadata->getCacheTags());
-    $this->assertContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     // The cache max-age is set to expire on the open date.
@@ -174,6 +178,8 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertContains('registration.user:' . $user->id(), $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings_list', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());

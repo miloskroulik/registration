@@ -177,13 +177,58 @@ class RegistrationValidatorTest extends RegistrationKernelTestBase {
     $this->assertTrue($validation_result->isValid());
     $this->assertTrue($validation_result->wasCached());
 
+    // A new registration breaks cache, but only for the registration host,
+    // not all hosts.
+    $registration = $this->createRegistration($node2);
+    $registration->set('author_uid', 1);
+    $registration->set('user_uid', 1);
+    $registration->save();
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+    $validation_result = $host_entity2->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity2->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+
+    // Any update to a registration breaks cache.
+    $registration->set('state', 'complete');
+    $registration->save();
+    $validation_result = $host_entity2->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity2->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+
+    // Deleting a registration breaks cache.
+    $registration->delete();
+    $validation_result = $host_entity2->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity2->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+
     // Only availability checks are cached.
+    $registration = $this->createRegistration($node);
+    $registration->set('author_uid', 1);
+    $registration->set('user_uid', 1);
+    $registration->save();
     $validation_result = $host_entity->validate($registration);
     $this->assertTrue($validation_result->isValid());
     $this->assertFalse($validation_result->wasCached());
     $validation_result = $host_entity->validate($registration);
     $this->assertTrue($validation_result->isValid());
     $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
 
     // Validation results with violations are cached.
     $this->assertFalse($host_entity->isBeforeOpen());

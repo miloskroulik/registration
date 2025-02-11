@@ -217,6 +217,19 @@ interface HostEntityInterface extends AccessibleInterface {
   public function getRegistrationList(array $states = [], ?string $langcode = NULL): array;
 
   /**
+   * Gets the cache tag for the list of registrations.
+   *
+   * To improve cache performance, this tag is used instead of registration_list
+   * in host entity cache dependencies. When registrations are added, updated or
+   * deleted, cache breaks for the registration's host entity, but not other
+   * host entities.
+   *
+   * @return string
+   *   The cache tag.
+   */
+  public function getRegistrationListCacheTag(): string;
+
+  /**
    * Gets a query of registrations for the host.
    *
    * Conditions are automatically added for the host and for the specified

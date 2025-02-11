@@ -26,9 +26,9 @@ class RegistrationWithinCapacityConstraintValidator extends ConstraintValidator 
     if ($registration instanceof RegistrationInterface) {
       if ($host_entity = $registration->getHostEntity()) {
 
-        // Recheck when registrations are added and deleted.
-        // @todo Make this more granular, ideally a list tag per host entity.
-        $this->context->getCacheableMetadata()->addCacheTags(['registration_list']);
+        // Recheck if registrations are added, updated or deleted for this host.
+        $list_cache_tag = $host_entity->getRegistrationListCacheTag();
+        $this->context->getCacheableMetadata()->addCacheTags([$list_cache_tag]);
 
         $spaces = $registration->getSpacesReserved();
         if (!$host_entity->hasRoom($spaces, $registration)) {
