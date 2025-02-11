@@ -214,14 +214,15 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
     }
 
     // Rebuild when registrations are added, updated or deleted for this host.
-    $build['#cache']['tags'][] = $this->getRegistrationListCacheTag();
+    $tags = $build['#cache']['tags'];
+    $build['#cache']['tags'] = Cache::mergeTags($tags, [$this->getRegistrationListCacheTag()]);
 
-    // Rebuild per user or anonymous session.
+    // Rebuild per user permissions or anonymous session.
     if ($this->currentUser()->isAnonymous()) {
-      $build['#cache']['contexts'][] = 'session';
+      $build['#cache']['contexts'] = Cache::mergeContexts($build['#cache']['contexts'], ['session']);
     }
     else {
-      $build['#cache']['contexts'][] = 'user.permissions';
+      $build['#cache']['contexts'] = Cache::mergeContexts($build['#cache']['contexts'], ['user.permissions']);
     }
   }
 
