@@ -230,6 +230,19 @@ interface HostEntityInterface extends AccessibleInterface {
   public function getRegistrationListCacheTag(): string;
 
   /**
+   * Gets the cache tag for the list of registration settings.
+   *
+   * To aid performance, this tag is used instead of registration_settings_list
+   * in host entity cache dependencies. When settings are added, updated or
+   * deleted, cache breaks for the settings host entity, but not other
+   * host entities.
+   *
+   * @return string
+   *   The cache tag.
+   */
+  public function getRegistrationSettingsListCacheTag(): string;
+
+  /**
    * Gets a query of registrations for the host.
    *
    * Conditions are automatically added for the host and for the specified

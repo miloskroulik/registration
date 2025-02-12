@@ -107,10 +107,14 @@ class RegistrationValidatorTest extends RegistrationKernelTestBase {
    * Tests caching.
    */
   public function testRegistrationValidatorCaching() {
-    $node = $this->createAndSaveNode();
     $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
+
+    $node = $this->createAndSaveNode();
     $host_entity = $handler->createHostEntity($node);
     $settings = $host_entity->getSettings();
+
+    $node2 = $this->createAndSaveNode();
+    $host_entity2 = $handler->createHostEntity($node2);
 
     $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
     $this->assertTrue($validation_result->isValid());
@@ -118,14 +122,23 @@ class RegistrationValidatorTest extends RegistrationKernelTestBase {
     $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
     $this->assertTrue($validation_result->isValid());
     $this->assertTrue($validation_result->wasCached());
+    $validation_result = $host_entity2->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity2->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
 
-    // A settings change breaks cache.
+    // A settings change breaks cache, but only for its host.
     $settings->set('maximum_spaces', 1);
     $settings->save();
     $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
     $this->assertTrue($validation_result->isValid());
     $this->assertFalse($validation_result->wasCached());
     $validation_result = $host_entity->IsAvailableForRegistration(TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertTrue($validation_result->wasCached());
+    $validation_result = $host_entity2->IsAvailableForRegistration(TRUE);
     $this->assertTrue($validation_result->isValid());
     $this->assertTrue($validation_result->wasCached());
 

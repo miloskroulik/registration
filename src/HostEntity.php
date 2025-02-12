@@ -365,7 +365,7 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
       // list, so that when settings are finally saved, anything dependent on
       // this host entity will rebuild. Without this, changes to the settings
       // will never be reflected in dependent objects.
-      $cache_tags = Cache::mergeTags($cache_tags, ['registration_settings_list']);
+      $cache_tags = Cache::mergeTags($cache_tags, [$this->getRegistrationSettingsListCacheTag()]);
     }
 
     return $cache_tags;
@@ -500,6 +500,13 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
    */
   public function getRegistrationListCacheTag(): string {
     return 'registration_list.host_entity:' . $this->getEntityTypeId() . ':' . (string) $this->id();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRegistrationSettingsListCacheTag(): string {
+    return 'registration_settings_list.host_entity:' . $this->getEntityTypeId() . ':' . (string) $this->id();
   }
 
   /**

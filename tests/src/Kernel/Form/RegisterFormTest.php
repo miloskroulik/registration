@@ -76,7 +76,8 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     // Settings have not been saved yet for the host entity, so the cache tags
     // for the settings entity are not present, but the settings list tag is.
     $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
-    $this->assertContains('registration_settings_list', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings_list', $metadata->getCacheTags());
+    $this->assertContains($host_entity->getRegistrationSettingsListCacheTag(), $metadata->getCacheTags());
     $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     $this->assertContains('session', $metadata->getCacheContexts());
@@ -96,7 +97,8 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
-    $this->assertContains('registration_settings_list', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings_list', $metadata->getCacheTags());
+    $this->assertContains($host_entity->getRegistrationSettingsListCacheTag(), $metadata->getCacheTags());
     $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     $this->assertContains('user', $metadata->getCacheContexts());
@@ -120,6 +122,7 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     // Settings were saved so the cache tag for the settings entity is present.
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationSettingsListCacheTag(), $metadata->getCacheTags());
     $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     // The user cache context is not present when multiple registrations per
@@ -145,6 +148,7 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationSettingsListCacheTag(), $metadata->getCacheTags());
     $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     $this->assertNotContains('user', $metadata->getCacheContexts());
@@ -178,6 +182,7 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertContains('registration.user:' . $user->id(), $metadata->getCacheTags());
     $this->assertContains('registration_settings:1', $metadata->getCacheTags());
     $this->assertNotContains('registration_settings_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationSettingsListCacheTag(), $metadata->getCacheTags());
     $this->assertNotContains('registration_list', $metadata->getCacheTags());
     $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     $this->assertContains('user', $metadata->getCacheContexts());
