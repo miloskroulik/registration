@@ -320,6 +320,12 @@ interface HostEntityInterface extends AccessibleInterface {
    * those are set. If those checks pass and the host entity has room for
    * more registrations, then new registrations are allowed.
    *
+   * Checking if there is room for new registrations is a relatively expensive
+   * operation, and includes a cache dependency on the list of registrations,
+   * so this method should be avoided for use cases like access control where
+   * performance and cacheability is critical. Use the isOpenForRegistration
+   * method for those use cases instead.
+   *
    * @param bool $return_as_object
    *   (optional) Defaults to FALSE.
    *
@@ -327,8 +333,38 @@ interface HostEntityInterface extends AccessibleInterface {
    *   Returns a boolean if $return_as_object is FALSE (this is the default),
    *   and otherwise a RegistrationValidationResultInterface object. When an
    *   object is returned, it contains any violations that prevent registration.
+   *
+   * @see ::isOpenForRegistration()
    */
   public function isAvailableForRegistration(bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface;
+
+  /**
+   * Determines whether registration is open.
+   *
+   * This checks to make sure registrations are enabled in the settings, and
+   * ensures new registrations would occur within the open and close dates if
+   * those are set.
+   *
+   * Unlike the isAvailableForRegistration method, this method does not check
+   * if there is room for new registrations, and thereby avoids any cache
+   * dependencies on the list of registrations. This is better for performance
+   * and cacheability, allowing this method to be used for access control and
+   * in field formatters that appear on host entity pages. For best usability,
+   * the isAvailableForRegistration method is preferred in all other contexts,
+   * especially those where host entity capacity should be considered, e.g. the
+   * checking that takes place on registration forms.
+   *
+   * @param bool $return_as_object
+   *   (optional) Defaults to FALSE.
+   *
+   * @return bool|\Drupal\registration\RegistrationValidationResultInterface
+   *   Returns a boolean if $return_as_object is FALSE (this is the default),
+   *   and otherwise a RegistrationValidationResultInterface object. When an
+   *   object is returned, it contains any violations that prevent registration.
+   *
+   * @see ::isAvailableForRegistration()
+   */
+  public function isOpenForRegistration(bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface;
 
   /**
    * Determines whether a host entity is configured for registration.
@@ -387,7 +423,7 @@ interface HostEntityInterface extends AccessibleInterface {
    * @return bool
    *   TRUE if new registrations are allowed, FALSE otherwise.
    *
-   * @deprecated in registration:3.1.8 and is removed from registration:4.0.0.
+   * @deprecated in registration:3.4.0 and is removed from registration:4.0.0.
    *   Use isAvailableForRegistration() instead.
    *
    * @see https://www.drupal.org/node/3496339

@@ -27,7 +27,7 @@ final class RegistrationEvents {
    *
    * @Event
    *
-   * @deprecated in registration:3.1.8 and is removed from registration:4.0.0.
+   * @deprecated in registration:3.4.0 and is removed from registration:4.0.0.
    *   Use REGISTRATION_ALTER_VALIDATION_RESULT instead.
    *
    * @see https://www.drupal.org/node/3496339

@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -90,45 +91,63 @@ class RegistrationFormFormatter extends FormatterBase {
    */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
-    $cache_entities = [];
     if ($entity = $items->getEntity()) {
-      /** @var \Drupal\registration\HostEntityInterface $host_entity */
-      $host_entity = $this->entityTypeManager
-        ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
-        ->createHostEntity($entity, $langcode);
-      $settings = $host_entity->getSettings();
-      $cache_entities[] = $settings;
       if (isset($items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
           $registration_type = $this->entityTypeManager->getStorage('registration_type')->load($id);
           if ($registration_type) {
-            $cache_entities[] = $registration_type;
-            $validation_result = $host_entity->isAvailableForRegistration(TRUE);
-            $validation_result->getCacheableMetadata()->applyTo($elements);
+            // Check access.
+            $access_result = $this->entityTypeManager
+              ->getAccessControlHandler('registration')
+              ->createAccess($id, NULL, [], TRUE);
+            if ($access_result->isAllowed()) {
+              /** @var \Drupal\registration\HostEntityInterface $host_entity */
+              $host_entity = $this->entityTypeManager
+                ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
+                ->createHostEntity($entity, $langcode);
 
-            if ($validation_result->isValid()) {
-              $registration = $this->entityTypeManager->getStorage('registration')->create([
-                'entity_type_id' => $host_entity->getEntityTypeId(),
-                'entity_id' => $host_entity->id(),
-                'type' => $registration_type->id(),
-              ]);
-              // Add the host entity to the form state.
-              $elements[] = $this->entityFormBuilder->getForm($registration, 'register', [
-                'host_entity' => $host_entity,
-              ]);
+              // Only show the form if the host entity is open for registration.
+              // For performance reasons, the isAvailableForRegistration
+              // method, which takes capacity into account, is not used here.
+              // That method has a dependency on when registrations are added,
+              // updated or deleted, causing this render array to be rebuilt
+              // more often than desired.
+              $validation_result = $host_entity->isOpenForRegistration(TRUE);
+              $validation_result->getCacheableMetadata()->applyTo($elements);
+
+              if ($validation_result->isValid()) {
+                $registration = $this->entityTypeManager->getStorage('registration')->create([
+                  'entity_type_id' => $host_entity->getEntityTypeId(),
+                  'entity_id' => $host_entity->id(),
+                  'type' => $registration_type->id(),
+                ]);
+                // Add the host entity to the form state.
+                $form = $this->entityFormBuilder->getForm($registration, 'register', [
+                  'host_entity' => $host_entity,
+                ]);
+                $elements[] = $form;
+
+                // Add the form to cacheability.
+                $form_metadata = CacheableMetadata::createFromRenderArray($form);
+                $elements_metadata = CacheableMetadata::createFromRenderArray($elements);
+                $elements_metadata = $elements_metadata->merge($form_metadata);
+                $elements_metadata->applyTo($elements);
+              }
+              elseif ($this->getSetting('show_reason')) {
+                $elements[] = [
+                  '#markup' => $validation_result->getReason(),
+                ];
+              }
             }
-            elseif ($this->getSetting('show_reason')) {
-              $elements[] = [
-                '#markup' => $validation_result->getReason(),
-              ];
-            }
+
+            // Add the access result to cacheability.
+            $elements_metadata = CacheableMetadata::createFromRenderArray($elements);
+            $access_results_metadata = CacheableMetadata::createFromObject($access_result);
+            $elements_metadata = $elements_metadata->merge($access_results_metadata);
+            $elements_metadata->applyTo($elements);
           }
         }
       }
-      $host_entity->addCacheableDependencies(
-        $elements,
-        $cache_entities
-      );
     }
     return $elements;
   }

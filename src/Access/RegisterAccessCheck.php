@@ -58,23 +58,16 @@ class RegisterAccessCheck implements AccessInterface {
    *   The access result.
    */
   public function access(AccountInterface $account, RouteMatch $route_match): AccessResultInterface {
+    $validation_result = NULL;
+
     // Retrieve the host entity.
     $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters(), TRUE);
-
-    // If the request has a host entity with its registration field set,
-    // and the host entity has the "enable registrations" setting checked,
-    // then allow access if the user has the appropriate permission. The
-    // registration type must also have a workflow defined to allow access.
-    $entity = $host_entity?->getEntity();
-    $field = $host_entity?->getRegistrationField();
-    $bundle = $host_entity?->getRegistrationTypeBundle();
-    $settings = $host_entity?->getSettings();
-    $registration_type = $host_entity?->getRegistrationType();
-    if ($field && $bundle && $settings && $registration_type?->getWorkflow()) {
-      $status = (bool) $settings->getSetting('status');
-      if ($status) {
-        // Registration is enabled for the host entity. Check if the account
+    if ($host_entity) {
+      $validation_result = $host_entity->isOpenForRegistration(TRUE);
+      if ($validation_result->isValid()) {
+        // Registration is open for the host entity. Check if the account
         // has create registration permissions for the registration type.
+        $bundle = $host_entity->getRegistrationTypeBundle();
         return $this->entityTypeManager
           ->getAccessControlHandler('registration')
           ->createAccess($bundle, $account, [], TRUE)
@@ -82,12 +75,12 @@ class RegisterAccessCheck implements AccessInterface {
           // This is crucial so the Register tab and form can display for
           // some users and host entities, and not for others.
           ->cachePerPermissions()
-          ->addCacheableDependency($host_entity);
+          ->addCacheableDependency($validation_result);
       }
     }
 
-    // No host entity available, or its registration field is disabling
-    // registrations. Return neutral so other modules can have a say in
+    // No host entity is available, or the host entity is not open for
+    // registration. Return neutral so other modules can have a say in
     // whether registration is allowed. Most likely no other module will
     // allow the registration, so this will disable the route. This would
     // in turn hide the Register tab within the host entity local tasks.
@@ -95,8 +88,8 @@ class RegisterAccessCheck implements AccessInterface {
 
     // Recalculate this result if the relevant entities are updated.
     $access_result->cachePerPermissions();
-    if ($host_entity) {
-      $access_result->addCacheableDependency($host_entity);
+    if ($validation_result) {
+      $access_result->addCacheableDependency($validation_result);
     }
     return $access_result;
   }

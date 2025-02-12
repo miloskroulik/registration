@@ -6,6 +6,7 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceModifierInterface;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
+use Drupal\user\Entity\User;
 use Drupal\Tests\registration\Kernel\CurrentRouteMatch;
 use Drupal\Tests\registration\Kernel\Plugin\Field\Formatter\FormatterTestBase;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
@@ -33,6 +34,9 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     parent::setUp();
 
     $this->entityFormBuilder = $this->container->get('entity.form_builder');
+
+    $user = User::getAnonymousUser();
+    $this->setCurrentUser($user);
   }
 
   /**
@@ -103,6 +107,7 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('session', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
 
     // Allow multiple registrations per user.
@@ -130,6 +135,7 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     // against the existing registrants.
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('session', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
 
     // Disable registration.
@@ -153,6 +159,7 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     $this->assertNotContains('user', $metadata->getCacheContexts());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('session', $metadata->getCacheContexts());
     // The cache max-age is set to expire on the open date.
     $this->assertNotEquals(-1, $metadata->getCacheMaxAge());
 
@@ -187,6 +194,7 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
     $this->assertContains('user', $metadata->getCacheContexts());
     $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('session', $metadata->getCacheContexts());
     $this->assertEquals(-1, $metadata->getCacheMaxAge());
   }
 

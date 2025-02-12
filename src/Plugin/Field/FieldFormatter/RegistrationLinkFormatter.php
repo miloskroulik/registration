@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
@@ -98,47 +99,60 @@ class RegistrationLinkFormatter extends FormatterBase {
    */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
-    $cache_entities = [];
     if ($entity = $items->getEntity()) {
-      /** @var \Drupal\registration\HostEntityInterface $host_entity */
-      $host_entity = $this->entityTypeManager
-        ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
-        ->createHostEntity($entity, $langcode);
-      $settings = $host_entity->getSettings();
-      $cache_entities[] = $settings;
       if (isset($items, $items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
           $registration_type = $this->entityTypeManager
             ->getStorage('registration_type')
             ->load($id);
           if ($registration_type) {
-            $cache_entities[] = $registration_type;
+            // Check access.
+            $access_result = $this->entityTypeManager
+              ->getAccessControlHandler('registration')
+              ->createAccess($id, NULL, [], TRUE);
+            if ($access_result->isAllowed()) {
+              /** @var \Drupal\registration\HostEntityInterface $host_entity */
+              $host_entity = $this->entityTypeManager
+                ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
+                ->createHostEntity($entity, $langcode);
 
-            $validation_result = $host_entity->isAvailableForRegistration(TRUE);
-            $validation_result->getCacheableMetadata()->applyTo($elements);
+              // Only show the link if the host entity is open for registration.
+              // For performance reasons, the isAvailableForRegistration
+              // method, which takes capacity into account, is not used here.
+              // That method has a dependency on when registrations are added,
+              // updated or deleted, causing this render array to be rebuilt
+              // more often than desired. The minor downside is the possibility
+              // that capacity has been reached - if that happens, the user may
+              // click on a link that takes them to a page indicating there is
+              // no more room, which is a minor UX consideration.
+              $validation_result = $host_entity->isOpenForRegistration(TRUE);
+              $validation_result->getCacheableMetadata()->applyTo($elements);
 
-            if ($validation_result->isValid()) {
-              $entity_type_id = $host_entity->getEntityTypeId();
-              $url = Url::fromRoute("entity.$entity_type_id.registration.register", [
-                $entity_type_id => $host_entity->id(),
-              ]);
-              $label = $this->getSetting('label') ?: $registration_type->label();
-              $elements[] = [
-                '#markup' => Link::fromTextAndUrl($label, $url)->toString(),
-              ];
+              if ($validation_result->isValid()) {
+                $entity_type_id = $host_entity->getEntityTypeId();
+                $url = Url::fromRoute("entity.$entity_type_id.registration.register", [
+                  $entity_type_id => $host_entity->id(),
+                ]);
+                $label = $this->getSetting('label') ?: $registration_type->label();
+                $elements[] = [
+                  '#markup' => Link::fromTextAndUrl($label, $url)->toString(),
+                ];
+              }
+              elseif ($this->getSetting('show_reason')) {
+                $elements[] = [
+                  '#markup' => $validation_result->getReason(),
+                ];
+              }
             }
-            elseif ($this->getSetting('show_reason')) {
-              $elements[] = [
-                '#markup' => $validation_result->getReason(),
-              ];
-            }
+
+            // Add the access result to cacheability.
+            $elements_metadata = CacheableMetadata::createFromRenderArray($elements);
+            $access_results_metadata = CacheableMetadata::createFromObject($access_result);
+            $elements_metadata = $elements_metadata->merge($access_results_metadata);
+            $elements_metadata->applyTo($elements);
           }
         }
       }
-      $host_entity->addCacheableDependencies(
-        $elements,
-        $cache_entities
-      );
     }
     return $elements;
   }

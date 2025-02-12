@@ -76,9 +76,7 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     ]);
     $this->drupalLogin($user);
     $this->drupalGet('user/' . $this->adminUser->id() . '/register');
-    $this->assertSession()->buttonNotExists('Save Registration');
-    $this->assertSession()->pageTextContains('insufficient spaces remaining');
-    $this->assertSession()->pageTextContains('is not open yet');
+    $this->assertSession()->statusCodeEquals(403);
     $this->drupalLogout();
 
     // Override the capacity. Registration is still before open.
@@ -90,9 +88,7 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     ]);
     $this->drupalLogin($user);
     $this->drupalGet('user/' . $this->adminUser->id() . '/register');
-    $this->assertSession()->buttonNotExists('Save Registration');
-    $this->assertSession()->pageTextNotContains('insufficient spaces remaining');
-    $this->assertSession()->pageTextContains('is not open yet');
+    $this->assertSession()->statusCodeEquals(403);
     $this->drupalLogout();
 
     // Override the capacity and open date.
@@ -122,9 +118,7 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     ]);
     $this->drupalLogin($user);
     $this->drupalGet('user/' . $this->adminUser->id() . '/register');
-    $this->assertSession()->buttonNotExists('Save Registration');
-    $this->assertSession()->pageTextContains('insufficient spaces remaining');
-    $this->assertSession()->pageTextContains('is closed');
+    $this->assertSession()->statusCodeEquals(403);
     $this->drupalLogout();
 
     // Override the capacity. Registration is still after close.
@@ -136,9 +130,7 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     ]);
     $this->drupalLogin($user);
     $this->drupalGet('user/' . $this->adminUser->id() . '/register');
-    $this->assertSession()->buttonNotExists('Save Registration');
-    $this->assertSession()->pageTextNotContains('insufficient spaces remaining');
-    $this->assertSession()->pageTextContains('is closed');
+    $this->assertSession()->statusCodeEquals(403);
     $this->drupalLogout();
 
     // Override the capacity and close date.
@@ -174,9 +166,7 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     ]);
     $this->drupalLogin($user);
     $this->drupalGet('user/' . $this->adminUser->id() . '/register');
-    $this->assertSession()->buttonNotExists('Save Registration');
-    $this->assertSession()->pageTextContains('insufficient spaces remaining');
-    $this->assertSession()->pageTextContains('is closed');
+    $this->assertSession()->statusCodeEquals(403);
 
     // Enable wait list.
     $this->container->get('module_installer')->install(['registration_waitlist']);

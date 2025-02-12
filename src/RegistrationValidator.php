@@ -316,9 +316,13 @@ class RegistrationValidator implements RegistrationValidatorInterface {
    *   The cache keys, or NULL if the validation check is not cacheable.
    */
   protected function getCacheKeys(string $pipeline_id, array $constraint_ids, mixed $value): ?array {
-    // Only the availability check is cacheable, as the results of other checks
-    // can vary per invocation.
-    if ($pipeline_id == 'available_for_registration') {
+    // Only the availability and open checks are cacheable, as the results of
+    // other checks can vary per invocation.
+    $cacheable_pipelines = [
+      'available_for_registration',
+      'open_for_registration',
+    ];
+    if (in_array($pipeline_id, $cacheable_pipelines)) {
       if ($value instanceof HostEntityInterface) {
         $host_entity_id = $value->id();
         if (!empty($host_entity_id)) {
@@ -399,6 +403,7 @@ class RegistrationValidator implements RegistrationValidatorInterface {
     $availability_pipelines = [
       'available_for_registration',
       'enabled_for_registration',
+      'open_for_registration',
       'validate_registration',
     ];
 

@@ -28,6 +28,9 @@ abstract class FormatterTestBase extends RegistrationKernelTestBase {
     $formats['long']->setPattern('l, j. F Y - G:i')->save();
     $formats['medium']->setPattern('j. F Y - G:i')->save();
     $formats['short']->setPattern('Y M j - g:ia')->save();
+
+    $user = $this->createUser(['create registration']);
+    $this->setCurrentUser($user);
   }
 
   /**

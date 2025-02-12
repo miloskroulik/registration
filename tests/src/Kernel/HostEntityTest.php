@@ -56,6 +56,7 @@ class HostEntityTest extends RegistrationKernelTestBase {
    * @covers ::getRegistrationTypeBundle
    * @covers ::hasRoom
    * @covers ::isAvailableForRegistration
+   * @covers ::isOpenForRegistration
    * @covers ::isConfiguredForRegistration
    * @covers ::isEditableRegistration
    * @covers ::isEnabledForRegistration
@@ -185,24 +186,30 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
 
+    // But registration is still open.
+    $this->assertTrue($host_entity->isOpenForRegistration());
+
     // Add more capacity.
     $settings = $host_entity->getSettings();
     $settings->set('capacity', 10);
     $settings->save();
     $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
+    $this->assertTrue($host_entity->isOpenForRegistration());
 
     // Reached capacity.
     $settings->set('capacity', 5);
     $settings->save();
     $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
+    $this->assertTrue($host_entity->isOpenForRegistration());
 
     // Unlimited capacity.
     $settings->set('capacity', 0);
     $settings->save();
     $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
+    $this->assertTrue($host_entity->isOpenForRegistration());
 
     // Get open and close dates.
     $settings->set('open', '2004-01-28T00:00:00');
@@ -223,6 +230,7 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertFalse($host_entity->isAfterClose());
     $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
+    $this->assertFalse($host_entity->isOpenForRegistration());
     $settings->set('open', NULL);
     $settings->set('close', '2020-01-01T00:00:00');
     $settings->save();
@@ -230,6 +238,7 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertTrue($host_entity->isAfterClose());
     $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
+    $this->assertFalse($host_entity->isOpenForRegistration());
 
     // Check cacheability when there are no open or close dates.
     $settings->set('close', NULL);

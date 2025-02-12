@@ -650,6 +650,18 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
   /**
    * {@inheritdoc}
    */
+  public function isOpenForRegistration(bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface {
+    $validation_result = $this->validator()->execute('open_for_registration', [
+      'HostHasSettings',
+      'HostIsOpen',
+      'HostIsEnabled',
+    ], $this);
+    return $return_as_object ? $validation_result : $validation_result->isValid();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isConfiguredForRegistration(): bool {
     return !is_null($this->getRegistrationTypeBundle());
   }
@@ -669,7 +681,7 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
    * {@inheritdoc}
    */
   public function isEnabledForRegistration(int $spaces = 1, ?RegistrationInterface $registration = NULL, array &$errors = []): bool {
-    @trigger_error('HostEntity::isEnabledForRegistration() is deprecated in registration:3.1.8 and is removed from registration:4.0.0. See https://www.drupal.org/node/3496339', E_USER_DEPRECATED);
+    @trigger_error('HostEntity::isEnabledForRegistration() is deprecated in registration:3.4.0 and is removed from registration:4.0.0. See https://www.drupal.org/node/3496339', E_USER_DEPRECATED);
 
     $validation_result = $this->validator()->execute('enabled_for_registration', [
       'HostHasSettings' => ['hostEntity' => $this],

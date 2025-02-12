@@ -113,7 +113,7 @@ class RegistrationValidationResult implements RefinableCacheableDependencyInterf
    *   The errors as an array of error messages indexed by code.
    *   Example codes are "status" and "capacity".
    *
-   * @deprecated in registration:3.1.8 and is removed from registration:4.0.0.
+   * @deprecated in registration:3.4.0 and is removed from registration:4.0.0.
    *   Use getViolations instead.
    *
    * @see https://www.drupal.org/node/3496339
