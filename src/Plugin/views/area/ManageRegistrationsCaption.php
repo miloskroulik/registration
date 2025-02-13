@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Plugin\views\area;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -35,6 +36,7 @@ class ManageRegistrationsCaption extends AreaPluginBase {
    * {@inheritdoc}
    */
   public function render($empty = FALSE): array {
+    $build = [];
     if (!$empty || !empty($this->options['empty'])) {
       $storage = $this->entityTypeManager->getStorage($this->view->args[0]);
       if ($storage && ($entity = $storage->load($this->view->args[1]))) {
@@ -63,12 +65,14 @@ class ManageRegistrationsCaption extends AreaPluginBase {
           $build = [
             '#markup' => $caption,
           ];
-          $host_entity->addCacheableDependencies($build, [$settings]);
-          return $build;
         }
+
+        // Set cache directives so the area rebuilds when needed.
+        $cacheability = CacheableMetadata::createFromObject($host_entity);
+        $cacheability->applyTo($build);
       }
     }
-    return [];
+    return $build;
   }
 
 }

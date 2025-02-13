@@ -141,10 +141,9 @@ class RegistrationFormFormatter extends FormatterBase {
             }
 
             // Add the access result to cacheability.
-            $elements_metadata = CacheableMetadata::createFromRenderArray($elements);
-            $access_results_metadata = CacheableMetadata::createFromObject($access_result);
-            $elements_metadata = $elements_metadata->merge($access_results_metadata);
-            $elements_metadata->applyTo($elements);
+            $cacheability = CacheableMetadata::createFromRenderArray($elements);
+            $cacheability->addCacheableDependency($access_result);
+            $cacheability->applyTo($elements);
           }
         }
       }

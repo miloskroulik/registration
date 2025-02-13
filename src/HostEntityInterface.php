@@ -102,7 +102,10 @@ interface HostEntityInterface extends AccessibleInterface {
    * @param \Drupal\Core\Entity\EntityInterface[] $other_entities
    *   (optional) Other entities that should be added as dependencies.
    *
-   * @see \Drupal\Core\Render\Renderer::addCacheableDependency()
+   * @deprecated in registration:3.4.0 and is removed from registration:4.0.0.
+   *   Use methods in \Drupal\Core\Cache\CacheableMetadata instead.
+   *
+   * @see https://www.drupal.org/node/3506325
    */
   public function addCacheableDependencies(array &$build, array $other_entities = []);
 

@@ -203,6 +203,8 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
    * {@inheritdoc}
    */
   public function addCacheableDependencies(array &$build, array $other_entities = []) {
+    @trigger_error('HostEntity::addCacheableDependencies() is deprecated in registration:3.4.0 and is removed from registration:4.0.0. See https://www.drupal.org/node/3506325', E_USER_DEPRECATED);
+
     // Rebuild if the host entity is updated.
     $this->renderer()->addCacheableDependency($build, $this);
 

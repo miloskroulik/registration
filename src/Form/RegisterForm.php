@@ -149,7 +149,7 @@ class RegisterForm extends ContentEntityForm {
     // Allow the form to be cached by default.
     $form_metadata->setCacheMaxAge(Cache::PERMANENT);
     // Add the cacheability of the validation result.
-    $form_metadata = $form_metadata->merge($validation_result->getCacheableMetadata());
+    $form_metadata->addCacheableDependency($validation_result);
 
     // The registrant options depend on user permissions or anonymous session.
     if ($this->currentUser()->isAnonymous()) {

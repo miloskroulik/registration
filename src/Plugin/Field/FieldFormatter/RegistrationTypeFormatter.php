@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
@@ -41,29 +42,28 @@ class RegistrationTypeFormatter extends FormatterBase {
    */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
-    $cache_entities = [];
     if ($entity = $items->getEntity()) {
       /** @var \Drupal\registration\HostEntityInterface $host_entity */
-      $host_entity = $this->entityTypeManager
-        ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
-        ->createHostEntity($entity, $langcode);
       if (isset($items, $items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
+          // Add a cache dependency on the host entity, this includes the
+          // registration type if it exists.
+          $host_entity = $this->entityTypeManager
+            ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
+            ->createHostEntity($entity, $langcode);
+          $cacheability = CacheableMetadata::createFromObject($host_entity);
+          $cacheability->applyTo($elements);
+
           $registration_type = $this->entityTypeManager
             ->getStorage('registration_type')
             ->load($id);
           if ($registration_type) {
-            $cache_entities[] = $registration_type;
             $elements[] = [
               '#markup' => $registration_type->label(),
             ];
           }
         }
       }
-      $host_entity->addCacheableDependencies(
-        $elements,
-        $cache_entities
-      );
     }
     return $elements;
   }

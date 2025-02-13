@@ -194,19 +194,15 @@ class RegistrationStatus extends BlockBase implements ContainerFactoryPluginInte
     ];
 
     // Cache metadata from the host entity dependency.
-    $host_entity->addCacheableDependencies($build, [$host_entity->getSettings()]);
-    $build_cache_metadata = CacheableMetadata::createFromRenderArray($build);
-    // Merge cache metadata from the build and the token replacements.
-    $token_cache_metadata->merge($build_cache_metadata)->applyTo($build);
+    $build_cache_metadata = CacheableMetadata::createFromObject($host_entity);
 
     // The block states depend on registration availability, apply its
     // cacheability so the block rebuilds when availability changes.
-    // Although the host entity and settings are already covered through
-    // methods called above, an event subscriber could have added other
-    // entities to the cacheability, and those will be picked up here.
     $validation_result = $host_entity->isAvailableForRegistration(TRUE);
-    $build_cache_metadata = CacheableMetadata::createFromRenderArray($build);
-    $build_cache_metadata->merge($validation_result->getCacheableMetadata())->applyTo($build);
+    $build_cache_metadata->addCacheableDependency($validation_result);
+
+    // Merge cache metadata from the build and the token replacements.
+    $token_cache_metadata->merge($build_cache_metadata)->applyTo($build);
 
     return $build;
   }

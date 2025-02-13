@@ -3,6 +3,7 @@
 namespace Drupal\registration\Controller;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\PagerSelectExtender;
@@ -72,16 +73,16 @@ class RegistrationController extends ControllerBase {
    */
   public function manageRegistrations(Request $request): array {
     $build = [];
-    $cache_entities = [];
+
+    // Retrieve the host entity.
     if ($host_entity = $this->registrationManager->getEntityFromParameters($request->attributes, TRUE)) {
-      $settings = $host_entity->getSettings();
-      $cache_entities[] = $settings;
+      $view = NULL;
+      $access_result = NULL;
 
       // Use the built-in manage registrations view if available.
       if ($this->moduleHandler()->moduleExists('views')) {
         if ($view = $this->entityTypeManager()->getStorage('view')->load('manage_registrations')) {
           $display = 'block_1';
-          $cache_entities[] = $view;
           if ($view->getExecutable()->access($display)) {
             $build = [
               '#type' => 'view',
@@ -111,11 +112,16 @@ class RegistrationController extends ControllerBase {
         }
       }
 
-      // Set cache directives so the form rebuilds when needed.
-      $host_entity->addCacheableDependencies(
-        $build,
-        $cache_entities
-      );
+      // Set cache directives so the task rebuilds when needed.
+      $cacheability = CacheableMetadata::createFromObject($host_entity);
+      if ($view) {
+        $cacheability->addCacheableDependency($view);
+      }
+      if ($access_result) {
+        $cacheability->addCacheableDependency($access_result);
+      }
+      $cacheability->addCacheContexts(['user.permissions']);
+      $cacheability->applyTo($build);
     }
 
     return $build;

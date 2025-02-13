@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Plugin\views\field;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\registration\Entity\RegistrationInterface;
@@ -33,14 +34,19 @@ class HostEntity extends FieldPluginBase {
    * {@inheritdoc}
    */
   public function render(ResultRow $values) {
+    $build = [];
+
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->getEntity($values);
 
     if ($registration instanceof RegistrationInterface) {
+      $cacheability = CacheableMetadata::createFromObject($registration);
       if ($host_entity = $registration->getHostEntity()) {
+        // Rebuild when the host entity changes.
+        $cacheability->addCacheableDependency($host_entity);
         $entity = $host_entity->getEntity();
         try {
-          return [
+          $build = [
             '#markup' => Link::fromTextAndUrl($entity->label(), $entity->toUrl())->toString(),
           ];
         }
@@ -52,16 +58,17 @@ class HostEntity extends FieldPluginBase {
       }
       // The entity does not exist and was likely deleted. Give some details.
       else {
-        return [
+        $build = [
           '#markup' => new TranslatableMarkup('@type @id (deleted)', [
             '@type' => $registration->getHostEntityTypeId(),
             '@id' => $registration->getHostEntityId(),
           ]),
         ];
       }
+      $cacheability->applyTo($build);
     }
 
-    return NULL;
+    return $build;
   }
 
 }
