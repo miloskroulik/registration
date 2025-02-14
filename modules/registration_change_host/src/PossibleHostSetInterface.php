@@ -108,6 +108,24 @@ interface PossibleHostSetInterface extends RefinableCacheableDependencyInterface
   public function setHosts(array $hosts): void;
 
   /**
+   * Indicates that the set was retrieved from cache.
+   *
+   * This method should only be called by code that initiates a set.
+   */
+  public function setCached(): void;
+
+  /**
+   * Determines if the set was retrieved from cache.
+   *
+   * Sets are cached within the duration of a single page request using a
+   * memory cache.
+   *
+   * @return bool
+   *   TRUE if the set was retrieved from cache, FALSE otherwise.
+   */
+  public function wasCached(): bool;
+
+  /**
    * Get a possible host key for a host.
    *
    * @param \Drupal\registration_change_host\PossibleHostEntityInterface|\Drupal\registration\HostEntityInterface|\Drupal\Core\Entity\EntityInterface|string|int $host

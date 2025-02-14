@@ -97,7 +97,7 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
    *
    * @var \Drupal\registration\Entity\RegistrationInterface
    */
-  protected RegistrationInterface $registration;
+  protected ?RegistrationInterface $registration;
 
   /**
    * The registration id.
@@ -230,6 +230,7 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
         // Add a data loss violation if appropriate.
         if ($this->getHostEntity()->isConfiguredForRegistration()) {
           $storage = $this->entityTypeManager()->getStorage('registration');
+          /** @var \Drupal\registration\Entity\RegistrationInterface $original_registration */
           $original_registration = $storage->loadUnchanged($this->registration->id());
           $original_host_entity = $original_registration->getHostEntity();
           $original_registration_type = $original_host_entity->getRegistrationType();
@@ -326,21 +327,22 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
    * {@inheritdoc}
    */
   public function isCurrent(): bool {
-    return ($this->currentHostEntity->id() === $this->id()) && ($this->currentHostEntity->getEntityTypeId() === $this->getEntityTypeId());
+    return ($this->currentHostEntity->id() == $this->id()) && ($this->currentHostEntity->getEntityTypeId() === $this->getEntityTypeId());
   }
 
   /**
    * {@inheritdoc}
    */
   public function __sleep() {
-    if (!empty($this->registration)) {
-      // @phpstan-ignore-next-line
-      $this->_registrationId = $this->registration->id();
-      unset($this->registration);
-    }
-
     $properties = get_object_vars($this);
-    $computed_properties = ['entity', 'validationResult', 'hostEntity'];
+    $computed_properties = [
+      'entity',
+      'hostEntity',
+      'registration',
+      'currentHostEntity',
+      'entityTypeManager',
+      'registrationChangeHostManager',
+    ];
     foreach ($computed_properties as $property) {
       if (isset($properties[$property])) {
         unset($properties[$property]);
@@ -354,16 +356,19 @@ class PossibleHostEntity implements PossibleHostEntityInterface {
    * {@inheritdoc}
    */
   public function __wakeup() {
+    // Initialize registration to prevent typed property access error
+    // when this object is cached as part of the set.
+    $this->registration = NULL;
+
     if ($this->id && $this->entityTypeId) {
       $entity_storage = \Drupal::entityTypeManager()->getStorage($this->entityTypeId);
       $entity = $entity_storage->load($this->id);
       $this->hostEntity = $this->buildHostEntity($entity);
     }
-    if (!empty($this->_registrationId)) {
+    if ($this->registrationId) {
       $registration_storage = \Drupal::entityTypeManager()->getStorage('registration');
       /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
-      $registration = $registration_storage->load($this->_registrationId);
-      unset($this->_registrationId);
+      $registration = $registration_storage->load($this->registrationId);
       $this->setRegistration($registration);
     }
   }
