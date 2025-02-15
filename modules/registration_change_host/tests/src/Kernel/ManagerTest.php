@@ -230,6 +230,7 @@ class ManagerTest extends RegistrationChangeHostKernelTestBase {
     $this->registration->set('count', 2)->save();
     $this->assertEquals($this->registrantUser->id(), $this->registration->getUserId());
 
+    $old_host_entity = $this->registration->getHostEntity();
     $registration = $this->registrationChangeHostManager->changeHost($this->registration, 'node', $hostNode2->id());
     $this->assertEquals($this->registration->id(), $registration->id(), "Cloned registration should have same id as original.");
     // @todo Cannot test getHostEntity() because it is stale.
@@ -237,7 +238,7 @@ class ManagerTest extends RegistrationChangeHostKernelTestBase {
     $this->assertEquals(2, $registration->get('count')->value, "Count value should persist through host change.");
     $this->assertEquals($this->registrantUser->id(), $registration->getUserId(), "Registrant id should persist through host change.");
 
-    $this->registrationChangeHostManager->saveChangedHost($registration, fn() => $registration->save());
+    $this->registrationChangeHostManager->saveChangedHost($registration, $old_host_entity, fn() => $registration->save());
     $storage = $this->entityTypeManager->getStorage('registration');
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $storage->loadUnchanged($registration->id());
@@ -266,6 +267,7 @@ class ManagerTest extends RegistrationChangeHostKernelTestBase {
     $this->registration->set('count', 2)->save();
     $this->assertEquals($this->registrantUser->id(), $this->registration->getUserId());
 
+    $old_host_entity = $this->registration->getHostEntity();
     $registration = $this->registrationChangeHostManager->changeHost($this->registration, 'node', $hostNode2->id());
     $this->assertEquals($this->registration->id(), $registration->id(), "Cloned registration should have same id as original.");
     $this->assertEquals($hostNode2->id(), $registration->getHostEntity()->id());
@@ -273,7 +275,7 @@ class ManagerTest extends RegistrationChangeHostKernelTestBase {
     $this->assertEquals(2, $registration->get('count')->value, "Count value should persist despite host change.");
     $this->assertEquals($this->registrantUser->id(), $registration->getUserId(), "Registrant id should persist through host change.");
 
-    $this->registrationChangeHostManager->saveChangedHost($registration, fn() => $registration->save());
+    $this->registrationChangeHostManager->saveChangedHost($registration, $old_host_entity, fn() => $registration->save());
     $storage = $this->entityTypeManager->getStorage('registration');
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $storage->loadUnchanged($registration->id());
@@ -316,10 +318,11 @@ class ManagerTest extends RegistrationChangeHostKernelTestBase {
     $registration->set('registration_id', $id);
     // Set the count so we can check that this object is saved.
     $registration->set('count', 2);
+    $old_host_entity = $registration->getHostEntity();
 
     // saveChangedHost() replaces any existing registration if the passed-in
     // registration is new but has the same id.
-    $this->registrationChangeHostManager->saveChangedHost($registration, fn() => $registration->save());
+    $this->registrationChangeHostManager->saveChangedHost($registration, $old_host_entity, fn() => $registration->save());
 
     $storage = $this->entityTypeManager->getStorage('registration');
     $registration = $storage->loadUnchanged($id);
@@ -333,11 +336,12 @@ class ManagerTest extends RegistrationChangeHostKernelTestBase {
     $registration = $this->createRegistration($this->originalHostNode);
     $registration->set('registration_id', $id);
     $registration->set('count', 3);
+    $old_host_entity = $registration->getHostEntity();
 
     $this->expectException(\Exception::class);
     $this->expectExceptionMessage('Test exception in hook_registration_presave');
 
-    $this->registrationChangeHostManager->saveChangedHost($registration, fn() => $registration->save());
+    $this->registrationChangeHostManager->saveChangedHost($registration, $old_host_entity, fn() => $registration->save());
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->reloadEntity($registration);
 

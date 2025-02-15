@@ -116,6 +116,7 @@ class SingleStepChangeHostForm extends RegisterForm {
   public function save(array $form, FormStateInterface $form_state): int {
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->getEntity();
+    $old_host = $registration->getHostEntity();
     $new_host = $form_state->getValue(['new_host']);
     $values = explode(':', $new_host);
     $entity_type_id = $values[0];
@@ -123,6 +124,7 @@ class SingleStepChangeHostForm extends RegisterForm {
     $registration = $this->registrationChangeHostManager->changeHost($registration, $entity_type_id, $entity_id);
     return $this->registrationChangeHostManager->saveChangedHost(
       $registration,
+      $old_host,
       fn() => parent::save($form, $form_state)
     );
   }

@@ -2,8 +2,10 @@
 
 namespace Drupal\registration_change_host;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\registration\Entity\RegistrationInterface;
+use Drupal\registration\HostEntityInterface;
 use Drupal\registration_change_host\Event\RegistrationChangeHostEvents;
 use Drupal\registration_change_host\Event\RegistrationChangeHostPossibleHostsEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -193,7 +195,7 @@ class RegistrationChangeHostManager implements RegistrationChangeHostManagerInte
   /**
    * {@inheritdoc}
    */
-  public function saveChangedHost(RegistrationInterface $registration, callable $save_callback): int {
+  public function saveChangedHost(RegistrationInterface $registration, HostEntityInterface $old_host_entity, callable $save_callback): int {
     // Start transaction to preserve data integrity.
     $transaction = $this->database->startTransaction();
 
@@ -207,6 +209,11 @@ class RegistrationChangeHostManager implements RegistrationChangeHostManagerInte
 
       // Execute the save callback.
       $result = $save_callback();
+
+      // Invalidate the registration list cache tag for the old host entity. For
+      // example, if the old host had no room for new registrations, it may now,
+      // and forms that gave an error should rebuild so someone can register.
+      Cache::invalidateTags([$old_host_entity->getRegistrationListCacheTag()]);
     }
     catch (\Throwable $e) {
       $transaction->rollBack();

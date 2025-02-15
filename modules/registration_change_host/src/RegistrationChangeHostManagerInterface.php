@@ -3,6 +3,7 @@
 namespace Drupal\registration_change_host;
 
 use Drupal\registration\Entity\RegistrationInterface;
+use Drupal\registration\HostEntityInterface;
 
 /**
  * Defines the interface for the registration change host manager service.
@@ -83,6 +84,8 @@ interface RegistrationChangeHostManagerInterface {
    *
    * @param \Drupal\registration\Entity\RegistrationInterface $registration
    *   The registration to save.
+   * @param \Drupal\registration\HostEntityInterface $old_host_entity
+   *   The old host entity, this is needed for cache invalidation.
    * @param callable $save_callback
    *   The callback that performs the actual save operation.
    *
@@ -92,6 +95,6 @@ interface RegistrationChangeHostManagerInterface {
    * @throws \Drupal\Core\Entity\EntityStorageException
    *   In case of failures an exception is thrown.
    */
-  public function saveChangedHost(RegistrationInterface $registration, callable $save_callback): int;
+  public function saveChangedHost(RegistrationInterface $registration, HostEntityInterface $old_host_entity, callable $save_callback): int;
 
 }

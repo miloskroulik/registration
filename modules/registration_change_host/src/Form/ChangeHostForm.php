@@ -74,6 +74,7 @@ class ChangeHostForm extends RegisterForm {
     $registration = $this->getEntity();
     $original_registration = \Drupal::entityTypeManager()->getStorage('registration')->loadUnchanged($registration->id());
     $old_host = $original_registration->getHostEntity();
+    $form_state->set('old_host_entity', $old_host);
     $new_host = $form_state->get('host_entity');
     $message = $this->t("The registration will be changed from %old_host to %new_host.",
       [
@@ -112,8 +113,10 @@ class ChangeHostForm extends RegisterForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state): int {
+    $old_host = $form_state->get('old_host_entity');
     return $this->registrationChangeHostManager->saveChangedHost(
       $this->getEntity(),
+      $old_host,
       fn() => parent::save($form, $form_state)
     );
   }
