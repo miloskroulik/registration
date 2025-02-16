@@ -1,4 +1,4 @@
-set_and_forget: true
+set_and_forget: false
 broadcast_filter: true
 limit_field_values: false
 hide_filter: 10

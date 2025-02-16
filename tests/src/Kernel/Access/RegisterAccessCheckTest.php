@@ -3,6 +3,7 @@
 namespace Drupal\Tests\registration\Kernel\Access;
 
 use Drupal\Core\Routing\RouteMatch;
+use Drupal\Core\Site\Settings;
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
@@ -55,6 +56,12 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
       'node' => $node,
     ]);
 
+    $parameters = $route_match->getParameters();
+    $host_entity = $this->registrationManager->getEntityFromParameters($parameters, TRUE);
+    $settings = $host_entity->getSettings();
+    $settings->set('status', TRUE);
+    $settings->save();
+
     $account = $this->createUser(['access registration overview']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
@@ -75,15 +82,93 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 
-    $parameters = $route_match->getParameters();
-    $host_entity = $this->registrationManager->getEntityFromParameters($parameters, TRUE);
-    $settings = $host_entity->getSettings();
     $settings->set('status', FALSE);
     $settings->save();
 
     $account = $this->createUser(['access registration overview']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['administer registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration self']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration other users']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration other anonymous']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    // Re-enable.
+    $settings->set('status', TRUE);
+    $settings->save();
+
+    $account = $this->createUser(['administer registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration self']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration other users']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration other anonymous']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    // After close.
+    $settings->set('close', '2020-01-01T00:00:00');
+    $settings->save();
+
+    $account = $this->createUser(['administer registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration self']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration other users']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration other anonymous']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    // Lenient access control.
+    $global_settings = Settings::getInstance() ? Settings::getAll() : [];
+    $global_settings['registration_lenient_access_control'] = TRUE;
+    new Settings($global_settings);
+
+    $account = $this->createUser(['administer registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration self']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration other users']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration other anonymous']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    // Status still matters with lenient access control.
+    $settings->set('status', FALSE);
+    $settings->save();
 
     $account = $this->createUser(['administer registration']);
     $access_result = $access_checker->access($account, $route_match);
@@ -118,6 +203,31 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
     $route_match = new RouteMatch($route_name, $route, [
       'node' => $node,
     ]);
+
+    $account = $this->createUser(['access registration overview']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['administer registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration self']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration other users']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    $account = $this->createUser(['create conference registration other anonymous']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    // Lenient access control does not matter when registration not configured.
+    $global_settings = Settings::getInstance() ? Settings::getAll() : [];
+    $global_settings['registration_lenient_access_control'] = TRUE;
+    new Settings($global_settings);
 
     $account = $this->createUser(['access registration overview']);
     $access_result = $access_checker->access($account, $route_match);

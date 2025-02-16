@@ -8,6 +8,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Site\Settings;
+use Drupal\registration\HostEntityInterface;
 use Drupal\registration\RegistrationManagerInterface;
 
 /**
@@ -64,8 +66,8 @@ class RegisterAccessCheck implements AccessInterface {
     $host_entity = $this->registrationManager->getEntityFromParameters($route_match->getParameters(), TRUE);
     if ($host_entity) {
       $validation_result = $host_entity->isOpenForRegistration(TRUE);
-      if ($validation_result->isValid()) {
-        // Registration is open for the host entity. Check if the account
+      if ($validation_result->isValid() || $this->isAllowedWithLenientAccessControl($host_entity)) {
+        // Registration is allowed for the host entity. Check if the account
         // has create registration permissions for the registration type.
         $bundle = $host_entity->getRegistrationTypeBundle();
         return $this->entityTypeManager
@@ -92,6 +94,27 @@ class RegisterAccessCheck implements AccessInterface {
       $access_result->addCacheableDependency($validation_result);
     }
     return $access_result;
+  }
+
+  /**
+   * Determines if access is allowed via lenient access control.
+   *
+   * Lenient access control can be enabled in settings.php. If enabled, access
+   * to register routes is allowed if registration is enabled in host entity
+   * settings. This ignores the open and close dates for access. Registration
+   * is still prevented by open and close dates, but users will see a message
+   * on the register form instead of having links to register routes disappear
+   * when registration is closed. See https://www.drupal.org/node/3506982 for
+   * more information.
+   *
+   * @param \Drupal\registration\HostEntityInterface $host_entity
+   *   The host entity.
+   *
+   * @return bool
+   *   TRUE if access is allowed, FALSE otherwise.
+   */
+  protected function isAllowedWithLenientAccessControl(HostEntityInterface $host_entity): bool {
+    return (bool) $host_entity->getSetting('status') && Settings::get('registration_lenient_access_control');
   }
 
 }
