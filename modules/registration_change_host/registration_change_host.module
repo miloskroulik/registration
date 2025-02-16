@@ -194,7 +194,7 @@ function registration_change_host_form_registration_admin_settings_alter(&$form,
     '#description' => t('Sets the title of the change host confirmation form in the multistep workflow. The default results in a title of "Confirm change of Event for Registration #1" if the host entity is an Event node and the registration ID is 1.'),
     '#required' => TRUE,
   ];
-  $form['actions']['submit']['#submit'][] = 'registration_change_host_form_registration_admin_settings_submit';
+  $form['#submit'][] = 'registration_change_host_form_registration_admin_settings_submit';
 }
 
 /**

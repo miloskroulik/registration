@@ -2,8 +2,9 @@
 
 namespace Drupal\Tests\registration\Kernel\Access;
 
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\RouteMatch;
-use Drupal\Core\Site\Settings;
 use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
@@ -23,6 +24,11 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
   use RegistrationCreationTrait;
 
   /**
+   * The configuration factory.
+   */
+  protected ConfigFactoryInterface $configFactory;
+
+  /**
    * The registration manager.
    *
    * @var \Drupal\registration\RegistrationManagerInterface
@@ -38,6 +44,7 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
     $admin_user = $this->createUser();
     $this->setCurrentUser($admin_user);
 
+    $this->configFactory = $this->container->get('config.factory');
     $this->registrationManager = $this->container->get('registration.manager');
   }
 
@@ -45,7 +52,7 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
    * @covers ::access
    */
   public function testAccessRegistrationConfigured() {
-    $access_checker = new RegisterAccessCheck($this->entityTypeManager, $this->registrationManager);
+    $access_checker = new RegisterAccessCheck($this->configFactory, $this->entityTypeManager, $this->registrationManager);
 
     $node = $this->createAndSaveNode();
     $entity_type = $node->getEntityType();
@@ -146,9 +153,9 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
     $this->assertFalse($access_result->isAllowed());
 
     // Lenient access control.
-    $global_settings = Settings::getInstance() ? Settings::getAll() : [];
-    $global_settings['registration_lenient_access_control'] = TRUE;
-    new Settings($global_settings);
+    $global_settings = $this->configFactory->getEditable('registration.settings');
+    $global_settings->set('lenient_access_check', TRUE);
+    $global_settings->save();
 
     $account = $this->createUser(['administer registration']);
     $access_result = $access_checker->access($account, $route_match);
@@ -191,7 +198,7 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
    * @covers ::access
    */
   public function testAccessRegistrationNotConfigured() {
-    $access_checker = new RegisterAccessCheck($this->entityTypeManager, $this->registrationManager);
+    $access_checker = new RegisterAccessCheck($this->configFactory, $this->entityTypeManager, $this->registrationManager);
 
     $node = $this->createNode();
     $node->set('event_registration', NULL);
@@ -225,9 +232,9 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
     $this->assertFalse($access_result->isAllowed());
 
     // Lenient access control does not matter when registration not configured.
-    $global_settings = Settings::getInstance() ? Settings::getAll() : [];
-    $global_settings['registration_lenient_access_control'] = TRUE;
-    new Settings($global_settings);
+    $global_settings = $this->configFactory->getEditable('registration.settings');
+    $global_settings->set('lenient_access_check', TRUE);
+    $global_settings->save();
 
     $account = $this->createUser(['access registration overview']);
     $access_result = $access_checker->access($account, $route_match);
@@ -248,6 +255,88 @@ class RegisterAccessCheckTest extends RegistrationKernelTestBase {
     $account = $this->createUser(['create conference registration other anonymous']);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertFalse($access_result->isAllowed());
+  }
+
+  /**
+   * Tests cacheability of the register access check.
+   */
+  public function testAccessCheckCacheability() {
+    $access_checker = new RegisterAccessCheck($this->configFactory, $this->entityTypeManager, $this->registrationManager);
+
+    $node = $this->createAndSaveNode();
+    $entity_type = $node->getEntityType();
+
+    $route = $this->registrationManager->getRoute($entity_type, 'register');
+    $route_name = $this->registrationManager->getBaseRouteName($entity_type) . '.register';
+    $route_match = new RouteMatch($route_name, $route, [
+      'node' => $node,
+    ]);
+
+    $parameters = $route_match->getParameters();
+    $host_entity = $this->registrationManager->getEntityFromParameters($parameters, TRUE);
+    $settings = $host_entity->getSettings();
+    $settings->set('status', TRUE);
+    $settings->save();
+
+    $account = $this->createUser(['administer registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    // Registration is open so registration configuration is not included in
+    // cacheability.
+    $this->assertNotContains('config:registration.settings', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+
+    // Before open.
+    $settings->set('open', '2220-01-01T00:00:00');
+    $settings->save();
+    $this->assertTrue($host_entity->isBeforeOpen());
+    $account = $this->createUser(['administer registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    // This time registration configuration is included in cacheability,
+    // because of the open date.
+    $this->assertContains('config:registration.settings', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+    // There is a cache max-age based on the open date.
+    $this->assertNotEquals(-1, $metadata->getCacheMaxAge());
+
+    // After close.
+    $settings->set('open', NULL);
+    $settings->set('close', '2020-01-01T00:00:00');
+    $settings->save();
+    $this->assertTrue($host_entity->isAfterClose());
+    $account = $this->createUser(['administer registration']);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    // This time registration configuration is included in cacheability,
+    // because of the close date.
+    $this->assertContains('config:registration.settings', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
   }
 
 }

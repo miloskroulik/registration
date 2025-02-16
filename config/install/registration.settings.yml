@@ -1,5 +1,6 @@
 set_and_forget: false
 broadcast_filter: true
+lenient_access_check: false
 limit_field_values: false
 hide_filter: 10
 queue_notifications: 50

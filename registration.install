@@ -212,3 +212,13 @@ function registration_update_10006() {
     ->set('prevent_edit_disabled', TRUE)
     ->save();
 }
+
+/**
+ * Adds a setting to control register access control.
+ */
+function registration_update_10007() {
+  \Drupal::service('config.factory')
+    ->getEditable('registration.settings')
+    ->set('lenient_access_check', TRUE)
+    ->save();
+}

@@ -67,6 +67,7 @@ services:
   registration.register_access_checker:
     class: Drupal\registration\Access\RegisterAccessCheck
     arguments: [
+      '@config.factory',
       '@entity_type.manager',
       '@registration.manager',
     ]

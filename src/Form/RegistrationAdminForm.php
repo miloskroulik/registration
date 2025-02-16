@@ -64,6 +64,13 @@ class RegistrationAdminForm extends ConfigFormBase {
       $form['set_and_forget']['#access'] = FALSE;
     }
 
+    $form['lenient_access_check'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Disregard open and close dates in register access check'),
+      '#default_value' => $config->get('lenient_access_check'),
+      '#description' => $this->t('By default, access to the register route is disabled, and register links are hidden, if the host entity is not open for registration based on open and close dates in the host entity registration settings. This option causes the open and close dates to be ignored in the register access check, so that registration forms can be reached as long as the Enable box is checked in the host entity registration settings. This option is most useful for sites that place direct links to the registration page on other sites, since it is preferable to see a "registration is closed" message instead of an "access denied" message once registration has closed. Most sites can leave this option disabled. See <a href="https://www.drupal.org/node/3506982" target="_blank">this change record</a> for more information.'),
+    ];
+
     $form['limit_field_values'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Limit registration field values by role'),
@@ -167,6 +174,7 @@ class RegistrationAdminForm extends ConfigFormBase {
     $this->config('registration.settings')
       ->set('set_and_forget', $form_state->getValue('set_and_forget'))
       ->set('broadcast_filter', $form_state->getValue('broadcast_filter'))
+      ->set('lenient_access_check', $form_state->getValue('lenient_access_check'))
       ->set('limit_field_values', $form_state->getValue('limit_field_values'))
       ->set('hide_filter', $form_state->getValue('hide_filter'))
       ->set('prevent_edit_disabled', $form_state->getValue('prevent_edit_disabled'))
