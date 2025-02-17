@@ -90,7 +90,7 @@ class ScheduledActionForm extends EntityForm {
     $form['datetime'] = [
       '#type' => 'registration_scheduled_action_datetime',
       '#title' => $this->t('When'),
-      '#min' => 1,
+      '#min' => 0,
       '#max' => 365,
       '#size' => 3,
       '#required' => TRUE,
@@ -259,6 +259,7 @@ class ScheduledActionForm extends EntityForm {
         $options[$id] = $plugin['label'];
       }
     }
+    asort($options);
     return $options;
   }
 

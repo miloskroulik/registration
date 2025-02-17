@@ -6,7 +6,7 @@ use Drupal\Component\EventDispatcher\Event;
 use Drupal\registration\Entity\RegistrationSettings;
 
 /**
- * Defines the event for load and CRUD operations on registration settings.
+ * Defines the event for operations on registration settings.
  *
  * @see \Drupal\registration\Event\RegistrationEvents
  */

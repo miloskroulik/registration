@@ -5,13 +5,14 @@ namespace Drupal\registration\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Site\Settings;
 use Drupal\registration\Entity\RegistrationType;
 use Drupal\user\Entity\Role;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Allows the site admin to configure global registration settings.
+ *
+ * @phpcs:disable Drupal.Semantics.FunctionT.WhiteSpace
  */
 class RegistrationAdminForm extends ConfigFormBase {
 
@@ -56,13 +57,8 @@ class RegistrationAdminForm extends ConfigFormBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Set and forget mode'),
       '#default_value' => $config->get('set_and_forget'),
-      '#description' => $this->t('Automatically maintains the <strong>Enable</strong> registrations checkbox on the per-entity Settings form based on the open and close dates on the Settings page. This is useful for displaying and removing Register links as soon as registration for a given event opens and closes. Requires a properly configured Cron task that runs at least once an hour. This mode is selected automatically by default, but you can disable it for backwards compatibility with the Drupal 7 version of the module. Sites that enable this may wish to hide the <strong>Enable</strong> field on the Registration settings <a href="/admin/structure/registration-settings/form-display">form display</a>. Note that registrations are still enabled and disabled properly without this, but users may receive messaging such as "Registrations are closed" on the Register page unless the site admin manually unchecks the Enable box on the Settings form at the appropriate time. With this mode set, links to the Register page are automatically removed once the close date is reached for a given event.'),
+      '#description' => $this->t('Automatically maintains the <strong>Enable</strong> registrations checkbox on the per-entity Settings form based on the open and close dates on the Settings page. This is useful for displaying and removing Register links as soon as registration for a given event opens and closes. Requires a properly configured Cron task that runs at least once an hour. This mode is selected automatically by default, but you can disable it for backwards compatibility with the Drupal 7 version of the module. Sites that enable this may wish to hide the <strong>Enable</strong> field on the Registration settings <a href="/admin/structure/registration-settings/form-display">form display</a>. Note that registrations are still enabled and disabled properly without this, but users may receive messaging such as "Registrations are closed" on the Register page unless the site admin manually unchecks the Enable box on the Settings form at the appropriate time. With this mode set, links to the Register page are automatically removed once the close date is reached for a given event.') . $this->t(' <strong>This feature is deprecated and will be removed in registration:4.0.0.</strong> See <a href="https://www.drupal.org/node/3506953" target="_blank">this change record</a> for information about the replacement.'),
     ];
-    // This field is deprecated. Hide it unless BC is enabled in settings.php.
-    // @see https://www.drupal.org/node/3506953
-    if (!Settings::get('registration_enable_set_and_forget')) {
-      $form['set_and_forget']['#access'] = FALSE;
-    }
 
     $form['lenient_access_check'] = [
       '#type' => 'checkbox',

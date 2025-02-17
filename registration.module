@@ -15,7 +15,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -57,7 +56,7 @@ function registration_cron() {
   // The "set and forget" functionality is deprecated.
   // @see https://www.drupal.org/node/3506953
   $config = \Drupal::config('registration.settings');
-  if ($config->get('set_and_forget') && Settings::get('registration_enable_set_and_forget')) {
+  if ($config->get('set_and_forget')) {
     \Drupal::service('registration.cron.set_and_forget')->run();
   }
 }

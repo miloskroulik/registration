@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\registration\Kernel\Cron;
 
-use Drupal\Core\Site\Settings;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 
 /**
@@ -33,10 +32,6 @@ class SetAndForgetTest extends CronTestBase {
    * @covers ::run
    */
   public function testSetAndForget() {
-    $global_settings = Settings::getInstance() ? Settings::getAll() : [];
-    $global_settings['registration_enable_set_and_forget'] = TRUE;
-    new Settings($global_settings);
-
     $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
     /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
     $storage = $this->entityTypeManager->getStorage('registration_settings');
@@ -103,82 +98,6 @@ class SetAndForgetTest extends CronTestBase {
     /** @var \Drupal\registration\Entity\RegistrationSettings $settings */
     $settings = $this->reloadEntity($settings);
     $this->assertTrue((bool) $settings->getSetting('status'));
-  }
-
-  /**
-   * @covers ::run
-   */
-  public function testSetAndForgetNotConfigured() {
-    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
-    /** @var \Drupal\registration\RegistrationSettingsStorage $storage */
-    $storage = $this->entityTypeManager->getStorage('registration_settings');
-
-    // Disable registration for a host entity that is closed.
-    // Fails because "set and forget" is disabled.
-    $node = $this->createAndSaveNode();
-    $host_entity = $handler->createHostEntity($node);
-
-    $settings = $storage->loadSettingsForHostEntity($host_entity);
-    $settings->set('close', '2020-01-01T00:00:00');
-    $settings->save();
-    $this->assertTrue((bool) $settings->getSetting('status'));
-
-    $this->cron->run();
-
-    /** @var \Drupal\registration\Entity\RegistrationSettings $settings */
-    $settings = $this->reloadEntity($settings);
-    $this->assertTrue((bool) $settings->getSetting('status'));
-
-    // Disable registration for a host entity that is not open yet.
-    // Fails because "set and forget" is disabled.
-    $node = $this->createAndSaveNode();
-    $host_entity = $handler->createHostEntity($node);
-
-    $settings = $storage->loadSettingsForHostEntity($host_entity);
-    $settings->set('open', '2220-01-01T00:00:00');
-    $settings->save();
-    $this->assertTrue((bool) $settings->getSetting('status'));
-
-    $this->cron->run();
-
-    /** @var \Drupal\registration\Entity\RegistrationSettings $settings */
-    $settings = $this->reloadEntity($settings);
-    $this->assertTrue((bool) $settings->getSetting('status'));
-
-    // Do not disable registration for a host entity that is still open.
-    // Fails because "set and forget" is disabled.
-    $node = $this->createAndSaveNode();
-    $host_entity = $handler->createHostEntity($node);
-
-    $settings = $storage->loadSettingsForHostEntity($host_entity);
-    $settings->set('open', '2020-01-01T00:00:00');
-    $settings->set('close', '2220-01-01T00:00:00');
-    $settings->save();
-    $this->assertTrue((bool) $settings->getSetting('status'));
-
-    $this->cron->run();
-
-    /** @var \Drupal\registration\Entity\RegistrationSettings $settings */
-    $settings = $this->reloadEntity($settings);
-    $this->assertTrue((bool) $settings->getSetting('status'));
-
-    // Enable registration for a host entity that is open and disabled.
-    // Fails because "set and forget" is disabled.
-    $node = $this->createAndSaveNode();
-    $host_entity = $handler->createHostEntity($node);
-
-    $settings = $storage->loadSettingsForHostEntity($host_entity);
-    $settings->set('open', '2020-01-01T00:00:00');
-    $settings->set('close', '2220-01-01T00:00:00');
-    $settings->set('status', FALSE);
-    $settings->save();
-    $this->assertFalse((bool) $settings->getSetting('status'));
-
-    $this->cron->run();
-
-    /** @var \Drupal\registration\Entity\RegistrationSettings $settings */
-    $settings = $this->reloadEntity($settings);
-    $this->assertFalse((bool) $settings->getSetting('status'));
   }
 
 }
