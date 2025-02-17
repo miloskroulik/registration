@@ -205,4 +205,27 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    */
   public function isHeld(): bool;
 
+  /**
+   * Determines whether a registration is new to the host.
+   *
+   * @return bool
+   *   TRUE if the registration is new or the host is changed, FALSE otherwise.
+   */
+  public function isNewToHost(): bool;
+
+  /**
+   * Determines whether a registration requires a capacity check before save.
+   *
+   * Returns FALSE for canceled registrations. Otherwise returns TRUE for new
+   * registrations, and existing registrations changing state or adding spaces.
+   *
+   * @param bool $checkCanceled
+   *   (optional) Whether a canceled registration should be checked.
+   *   Defaults to FALSE.
+   *
+   * @return bool
+   *   TRUE if a capacity check is needed, FALSE otherwise.
+   */
+  public function requiresCapacityCheck(bool $checkCanceled = FALSE): bool;
+
 }

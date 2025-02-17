@@ -2,6 +2,7 @@
 
 namespace Drupal\registration;
 
+use Drupal\Component\Datetime\DateTimePlus;
 use Drupal\Core\Access\AccessibleInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
@@ -93,10 +94,18 @@ interface HostEntityInterface extends AccessibleInterface {
   /**
    * Adds cache information to a render array.
    *
+   * This is similar to the addCacheableDependency method in the core renderer,
+   * except it takes an array of objects as a parameter instead of just one.
+   *
    * @param array $build
    *   The render array to modify.
    * @param \Drupal\Core\Entity\EntityInterface[] $other_entities
    *   (optional) Other entities that should be added as dependencies.
+   *
+   * @deprecated in registration:3.4.0 and is removed from registration:4.0.0.
+   *   Use methods in \Drupal\Core\Cache\CacheableMetadata instead.
+   *
+   * @see https://www.drupal.org/node/3506325
    */
   public function addCacheableDependencies(array &$build, array $other_entities = []);
 
@@ -136,6 +145,22 @@ interface HostEntityInterface extends AccessibleInterface {
    *   The total number of reserved spaces for active registrations.
    */
   public function getActiveSpacesReserved(?RegistrationInterface $registration = NULL): int;
+
+  /**
+   * Gets the close date.
+   *
+   * @return \Drupal\Component\Datetime\DateTimePlus|null
+   *   The close date, if one has been set in the host entity settings.
+   */
+  public function getCloseDate(): ?DateTimePlus;
+
+  /**
+   * Gets the open date.
+   *
+   * @return \Drupal\Component\Datetime\DateTimePlus|null
+   *   The open date, if one has been set in the host entity settings.
+   */
+  public function getOpenDate(): ?DateTimePlus;
 
   /**
    * Gets the spaces remaining.
@@ -195,13 +220,39 @@ interface HostEntityInterface extends AccessibleInterface {
   public function getRegistrationList(array $states = [], ?string $langcode = NULL): array;
 
   /**
+   * Gets the cache tag for the list of registrations.
+   *
+   * To improve cache performance, this tag is used instead of registration_list
+   * in host entity cache dependencies. When registrations are added, updated or
+   * deleted, cache breaks for the registration's host entity, but not other
+   * host entities.
+   *
+   * @return string
+   *   The cache tag.
+   */
+  public function getRegistrationListCacheTag(): string;
+
+  /**
+   * Gets the cache tag for the list of registration settings.
+   *
+   * To aid performance, this tag is used instead of registration_settings_list
+   * in host entity cache dependencies. When settings are added, updated or
+   * deleted, cache breaks for the settings host entity, but not other
+   * host entities.
+   *
+   * @return string
+   *   The cache tag.
+   */
+  public function getRegistrationSettingsListCacheTag(): string;
+
+  /**
    * Gets a query of registrations for the host.
    *
    * Conditions are automatically added for the host and for the specified
    * properties. If an account or email are passed, further conditions are
    * added to find any registration that person is a registrant for.
    *
-   * @param array|null $properties
+   * @param array $properties
    *   (optional) An associative array where the keys are the property names
    *   and the values are the values those properties must have.
    * @param \Drupal\Core\Session\AccountInterface|null $account
@@ -212,7 +263,7 @@ interface HostEntityInterface extends AccessibleInterface {
    * @return \Drupal\Core\Entity\Query\QueryInterface
    *   The registrations query.
    */
-  public function getRegistrationQuery(array $properties = [], ?AccountInterface $account = NULL, $email = NULL): QueryInterface;
+  public function getRegistrationQuery(array $properties = [], ?AccountInterface $account = NULL, ?string $email = NULL): QueryInterface;
 
   /**
    * Gets the registration type.
@@ -265,6 +316,60 @@ interface HostEntityInterface extends AccessibleInterface {
   public function hasRoom(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool;
 
   /**
+   * Determines whether new registrations are allowed.
+   *
+   * This checks to make sure registrations are enabled in the settings, and
+   * ensures new registrations would occur within the open and close dates if
+   * those are set. If those checks pass and the host entity has room for
+   * more registrations, then new registrations are allowed.
+   *
+   * Checking if there is room for new registrations is a relatively expensive
+   * operation, and includes a cache dependency on the list of registrations,
+   * so this method should be avoided for use cases like access control where
+   * performance and cacheability is critical. Use the isOpenForRegistration
+   * method for those use cases instead.
+   *
+   * @param bool $return_as_object
+   *   (optional) Defaults to FALSE.
+   *
+   * @return bool|\Drupal\registration\RegistrationValidationResultInterface
+   *   Returns a boolean if $return_as_object is FALSE (this is the default),
+   *   and otherwise a RegistrationValidationResultInterface object. When an
+   *   object is returned, it contains any violations that prevent registration.
+   *
+   * @see ::isOpenForRegistration()
+   */
+  public function isAvailableForRegistration(bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface;
+
+  /**
+   * Determines whether registration is open.
+   *
+   * This checks to make sure registrations are enabled in the settings, and
+   * ensures new registrations would occur within the open and close dates if
+   * those are set.
+   *
+   * Unlike the isAvailableForRegistration method, this method does not check
+   * if there is room for new registrations, and thereby avoids any cache
+   * dependencies on the list of registrations. This is better for performance
+   * and cacheability, allowing this method to be used for access control and
+   * in field formatters that appear on host entity pages. For best usability,
+   * the isAvailableForRegistration method is preferred in all other contexts,
+   * especially those where host entity capacity should be considered, e.g. the
+   * checking that takes place on registration forms.
+   *
+   * @param bool $return_as_object
+   *   (optional) Defaults to FALSE.
+   *
+   * @return bool|\Drupal\registration\RegistrationValidationResultInterface
+   *   Returns a boolean if $return_as_object is FALSE (this is the default),
+   *   and otherwise a RegistrationValidationResultInterface object. When an
+   *   object is returned, it contains any violations that prevent registration.
+   *
+   * @see ::isAvailableForRegistration()
+   */
+  public function isOpenForRegistration(bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface;
+
+  /**
    * Determines whether a host entity is configured for registration.
    *
    * A host entity is configured for registration if it has a registration
@@ -274,6 +379,31 @@ interface HostEntityInterface extends AccessibleInterface {
    *   TRUE if configured, FALSE otherwise.
    */
   public function isConfiguredForRegistration(): bool;
+
+  /**
+   * Determines if an existing registration can be edited by a given account.
+   *
+   * This checks to make sure registrations are enabled in the settings, and
+   * it is not after the close date if one is set, when a regular user account
+   * attempts to edit an existing registration.
+   *
+   * This method always returns TRUE, or a valid result object, for accounts
+   * that have administrative access to the registration, even if registration
+   * is disabled in the settings, or it is after the close date.
+   *
+   * @param \Drupal\registration\Entity\RegistrationInterface $registration
+   *   The registration to check.
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   (optional) The account. Defaults to the logged-in user if not set.
+   * @param bool $return_as_object
+   *   (optional) Defaults to FALSE.
+   *
+   * @return bool|\Drupal\registration\RegistrationValidationResultInterface
+   *   Returns a boolean if $return_as_object is FALSE (this is the default),
+   *   and otherwise a RegistrationValidationResultInterface object. When an
+   *   object is returned, it contains any violations that prevent editing.
+   */
+  public function isEditableRegistration(RegistrationInterface $registration, ?AccountInterface $account = NULL, bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface;
 
   /**
    * Determines whether new registrations are allowed.
@@ -295,6 +425,11 @@ interface HostEntityInterface extends AccessibleInterface {
    *
    * @return bool
    *   TRUE if new registrations are allowed, FALSE otherwise.
+   *
+   * @deprecated in registration:3.4.0 and is removed from registration:4.0.0.
+   *   Use isAvailableForRegistration() instead.
+   *
+   * @see https://www.drupal.org/node/3496339
    */
   public function isEnabledForRegistration(int $spaces = 1, ?RegistrationInterface $registration = NULL, array &$errors = []): bool;
 
@@ -312,6 +447,11 @@ interface HostEntityInterface extends AccessibleInterface {
    *
    * @return bool
    *   TRUE if the email address has already registered for the host entity.
+   *
+   * @deprecated in registration:3.1.5 and is removed from registration:4.0.0.
+   *   Use isRegistrant() instead.
+   *
+   * @see https://www.drupal.org/node/3465690
    */
   public function isEmailRegistered(string $email): bool;
 
@@ -329,6 +469,11 @@ interface HostEntityInterface extends AccessibleInterface {
    *
    * @return bool
    *   TRUE if the email registered for the host and is in a certain status.
+   *
+   * @deprecated in registration:3.1.5 and is removed from registration:4.0.0.
+   *   Use isRegistrant() instead.
+   *
+   * @see https://www.drupal.org/node/3465690
    */
   public function isEmailRegisteredInStates(string $email, array $states): bool;
 
@@ -343,6 +488,11 @@ interface HostEntityInterface extends AccessibleInterface {
    *
    * @return bool
    *   TRUE if the user has already registered for the host entity.
+   *
+   * @deprecated in registration:3.1.5 and is removed from registration:4.0.0.
+   *   Use isRegistrant() instead.
+   *
+   * @see https://www.drupal.org/node/3465690
    */
   public function isUserRegistered(AccountInterface $account): bool;
 
@@ -357,6 +507,11 @@ interface HostEntityInterface extends AccessibleInterface {
    *
    * @return bool
    *   TRUE if the user registered for the host and is in a certain status.
+   *
+   * @deprecated in registration:3.1.5 and is removed from registration:4.0.0.
+   *   Use isRegistrant() instead.
+   *
+   * @see https://www.drupal.org/node/3465690
    */
   public function isUserRegisteredInStates(AccountInterface $account, array $states): bool;
 
@@ -367,13 +522,13 @@ interface HostEntityInterface extends AccessibleInterface {
    *   (optional) The user account of the registrant.
    * @param string|null $email
    *   (optional) The email address of the registrant.
-   * @param array|null $states
+   * @param array $states
    *   (optional) A list of statuses to check. Defaults to active states.
    *
    * @return bool
    *   TRUE if the user registered for the host and is in a certain status.
    */
-  public function isRegistrant(?AccountInterface $account = NULL, $email = NULL, array $states = []): bool;
+  public function isRegistrant(?AccountInterface $account = NULL, ?string $email = NULL, array $states = []): bool;
 
   /**
    * Determines whether it is currently before the open date.
@@ -394,5 +549,23 @@ interface HostEntityInterface extends AccessibleInterface {
    *   TRUE if it is currently after the close date.
    */
   public function isAfterClose(): bool;
+
+  /**
+   * Validates an object.
+   *
+   * If the object is a registration, checks all aspects of the registration
+   * against the settings.
+   *
+   * @param mixed $value
+   *   The value to validate, e.g. an entity or other object. This is most often
+   *   a registration entity, but can be any value or object relevant to
+   *   registrations. If the value is not a registration entity, the calling
+   *   application must provide an event subscriber that provides the
+   *   validation.
+   *
+   * @return \Drupal\registration\RegistrationValidationResultInterface
+   *   The result of the validation check.
+   */
+  public function validate(mixed $value): RegistrationValidationResultInterface;
 
 }

@@ -155,8 +155,9 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
    * {@inheritdoc}
    */
   public function getHostEntity(?string $langcode = NULL): ?HostEntityInterface {
-    if (!isset($this->hostEntity)) {
+    if ($this->shouldBuildHostEntity()) {
       $this->hostEntity = NULL;
+      $this->get('host_entity')->reset();
       if (!$this->get('host_entity')->isEmpty()) {
         $entity = $this->get('host_entity')->first()->get('entity')->getValue();
         // Check if a specific language was requested. If not then default
@@ -166,7 +167,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
             ->getCurrentLanguage()
             ->getId();
         }
-        $this->hostEntity = \Drupal::entityTypeManager()
+        $this->hostEntity = $this->entityTypeManager()
           ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
           ->createHostEntity($entity, $langcode);
       }
@@ -360,6 +361,59 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   /**
    * {@inheritdoc}
    */
+  public function isNewToHost(): bool {
+    if (!$this->isNew()) {
+      $original = $this->entityTypeManager()->getStorage('registration')->loadUnchanged($this->id());
+      if ($original instanceof RegistrationInterface) {
+        $different_host_entity_type = $original->getHostEntityTypeId() !== $this->getHostEntityTypeId();
+        $different_host_id = $original->getHostEntityId() !== $this->getHostEntityId();
+        return $different_host_entity_type || $different_host_id;
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function requiresCapacityCheck(bool $checkCanceled = FALSE): bool {
+    $requires_check = TRUE;
+
+    // A check may not be needed for canceled registrations.
+    if (!$checkCanceled && $this->getState()->isCanceled()) {
+      $requires_check = FALSE;
+    }
+
+    // An existing registration must be checked if its host has changed,
+    // its state has changed, or the number of spaces reserved has increased.
+    elseif (!$this->isNewToHost()) {
+      $original = $this->entityTypeManager()->getStorage('registration')->loadUnchanged($this->id());
+      $status_changed = ($this->getState()->id() != $original->getState()->id());
+      $spaces_increased = ($this->getSpacesReserved() > $original->getSpacesReserved());
+      $requires_check = $status_changed || $spaces_increased;
+    }
+
+    return $requires_check;
+  }
+
+  /**
+   * Determines whether the host entity needs to be built.
+   *
+   * @return bool
+   *   TRUE if the host entity needs to be built, FALSE otherwise.
+   */
+  protected function shouldBuildHostEntity(): bool {
+    if (isset($this->hostEntity)) {
+      // Rebuild if there is a new host.
+      return ($this->hostEntity->id() != $this->getHostEntityId()) || ($this->hostEntity->getEntityTypeId() != $this->getHostEntityTypeId());
+    }
+    // Build if not set yet.
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
@@ -427,7 +481,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
     if (!$update) {
       $settings = NULL;
       $host_entity = $this->getHostEntity();
-      $entity_type_manager = \Drupal::entityTypeManager();
+      $entity_type_manager = $this->entityTypeManager();
       if ($langcode = $this->getLangcode()) {
         $settings = $entity_type_manager
           ->getStorage('registration_settings')
@@ -464,6 +518,24 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
       // Invalidate the registration user so the user registrations task
       // rebuilds as needed.
       $tags[] = 'registration.user:' . $user->id();
+    }
+    return $tags;
+  }
+
+  /**
+   * The list cache tags to invalidate for this entity.
+   *
+   * @return string[]
+   *   Set of list cache tags.
+   */
+  protected function getListCacheTagsToInvalidate() {
+    $tags = parent::getListCacheTagsToInvalidate();
+    if ($host_entity = $this->getHostEntity()) {
+      // Invalidate the host entity registration list when registrations are
+      // added, updated or deleted, so registration forms and other objects
+      // that depend on the host entity rebuild. This ensures that the forms
+      // and objects reflect the latest information about host entity capacity.
+      $tags[] = $host_entity->getRegistrationListCacheTag();
     }
     return $tags;
   }

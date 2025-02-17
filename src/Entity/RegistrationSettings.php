@@ -2,7 +2,6 @@
 
 namespace Drupal\registration\Entity;
 
-use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityMalformedException;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -54,6 +53,7 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
    *   The host entity.
    */
   public function getHostEntity(): ?HostEntityInterface {
+    $this->get('host_entity')->reset();
     if (!$this->get('host_entity')->isEmpty()) {
       if ($entity = $this->get('host_entity')->entity) {
         $handler = \Drupal::entityTypeManager()->getHandler($entity->getEntityTypeId(), 'registration_host_entity');
@@ -289,6 +289,28 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
   }
 
   /**
+   * The list cache tags to invalidate for this entity.
+   *
+   * @return string[]
+   *   Set of list cache tags.
+   *
+   * @see \Drupal\registration\HostEntity::getCacheTags()
+   */
+  protected function getListCacheTagsToInvalidate() {
+    $tags = parent::getListCacheTagsToInvalidate();
+    if ($host_entity = $this->getHostEntity()) {
+      // Invalidate the host entity registration settings list when settings
+      // are added, updated or deleted, so registration forms and other objects
+      // that depend on the settings rebuild. This list is specific to the
+      // host entity, and so improves cacheability compared to the standard
+      // registration settings list cache tag, which invalidates across all
+      // host entities.
+      $tags[] = $host_entity->getRegistrationSettingsListCacheTag();
+    }
+    return $tags;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type): array {
@@ -446,25 +468,6 @@ class RegistrationSettings extends ContentEntityBase implements HostEntityKeysIn
       ->setDisplayConfigurable('view', TRUE);
 
     return $fields;
-  }
-
-  /**
-   * Invalidates an entity's cache tag upon save.
-   *
-   * @param bool $update
-   *   TRUE if the entity has been updated, or FALSE if it has been inserted.
-   */
-  protected function invalidateTagsOnSave($update) {
-    parent::invalidateTagsOnSave($update);
-
-    // Invalid the host entity cache tag when adding new settings.
-    // Needed to rebuild registration related elements. After this,
-    // the settings entity is included in cacheability so rebuilds
-    // will happen through the default cache handling.
-    if (!$update) {
-      $host_entity_tag = $this->getHostEntityTypeId() . ':' . $this->getHostEntityId();
-      Cache::invalidateTags([$host_entity_tag]);
-    }
   }
 
 }

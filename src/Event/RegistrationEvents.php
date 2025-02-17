@@ -27,7 +27,10 @@ final class RegistrationEvents {
    *
    * @Event
    *
-   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   * @deprecated in registration:3.4.0 and is removed from registration:4.0.0.
+   *   Use REGISTRATION_ALTER_VALIDATION_RESULT instead.
+   *
+   * @see https://www.drupal.org/node/3496339
    */
   const REGISTRATION_ALTER_ENABLED = 'registration.alter.enabled';
 
@@ -77,6 +80,24 @@ final class RegistrationEvents {
    * @see \Drupal\registration\Event\RegistrationDataAlterEvent
    */
   const REGISTRATION_ALTER_USAGE = 'registration.alter.usage';
+
+  /**
+   * Name of the event fired to validate host entities against any value.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_HOST_VALIDATION = 'registration.alter.host.validate';
+
+  /**
+   * Name of the event fired to allow alter of registration validation results.
+   *
+   * @Event
+   *
+   * @see \Drupal\registration\Event\RegistrationDataAlterEvent
+   */
+  const REGISTRATION_ALTER_VALIDATION_RESULT = 'registration.alter.validation_result';
 
   /**
    * Name of the event fired to allow alter of the registration form.
@@ -245,5 +266,35 @@ final class RegistrationEvents {
    * @see \Drupal\registration\Event\RegistrationSettingsEvent
    */
   const REGISTRATION_SETTINGS_DELETE = 'registration.registration_settings.delete';
+
+  /**
+   * Name of the event fired when registration opens.
+   *
+   * Requires the registration_scheduled_action submodule to be enabled,
+   * the "Dispatch registration open event" to be scheduled, and a properly
+   * configured Cron task that runs at least once an hour.
+   *
+   * @Event
+   *
+   * @see https://www.drupal.org/node/3506953
+   * @see \Drupal\registration\Event\RegistrationSettingsEvent
+   * @see \Drupal\registration_scheduled_action\Plugin\Action\DispatchEventOnOpen
+   */
+  const REGISTRATION_SETTINGS_OPEN = 'registration.registration_settings.open';
+
+  /**
+   * Name of the event fired when registration closes.
+   *
+   * Requires the registration_scheduled_action submodule to be enabled,
+   * the "Dispatch registration close event" to be scheduled, and a properly
+   * configured Cron task that runs at least once an hour.
+   *
+   * @Event
+   *
+   * @see https://www.drupal.org/node/3506953
+   * @see \Drupal\registration\Event\RegistrationSettingsEvent
+   * @see \Drupal\registration_scheduled_action\Plugin\Action\DispatchEventOnClose
+   */
+  const REGISTRATION_SETTINGS_CLOSE = 'registration.registration_settings.close';
 
 }

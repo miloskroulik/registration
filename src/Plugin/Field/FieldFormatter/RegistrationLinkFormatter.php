@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
@@ -46,6 +47,7 @@ class RegistrationLinkFormatter extends FormatterBase {
     $options = parent::defaultSettings();
 
     $options['label'] = '';
+    $options['show_reason'] = FALSE;
     return $options;
   }
 
@@ -59,6 +61,12 @@ class RegistrationLinkFormatter extends FormatterBase {
       '#title' => $this->t('Label'),
       '#description' => $this->t("Optional label to use when displaying the registration title or link. Leave blank to use the parent event's label."),
       '#default_value' => $this->getSetting('label'),
+    ];
+    $form['show_reason'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show a reason when the link is hidden'),
+      '#description' => $this->t("Displays a short message when registration is not available and the link is hidden."),
+      '#default_value' => $this->getSetting('show_reason'),
     ];
 
     return $form;
@@ -77,6 +85,12 @@ class RegistrationLinkFormatter extends FormatterBase {
     else {
       $summary[] = $this->t('Registration label: Parent label');
     }
+    if ($show_reason = $this->getSetting('show_reason')) {
+      $summary[] = $this->t('Show reason when hidden: True');
+    }
+    else {
+      $summary[] = $this->t('Show reason when hidden: False');
+    }
     return $summary;
   }
 
@@ -85,38 +99,59 @@ class RegistrationLinkFormatter extends FormatterBase {
    */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
-    $cache_entities = [];
     if ($entity = $items->getEntity()) {
-      /** @var \Drupal\registration\HostEntityInterface $host_entity */
-      $host_entity = $this->entityTypeManager
-        ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
-        ->createHostEntity($entity, $langcode);
-      $settings = $host_entity->getSettings();
-      $cache_entities[] = $settings;
       if (isset($items, $items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
           $registration_type = $this->entityTypeManager
             ->getStorage('registration_type')
             ->load($id);
           if ($registration_type) {
-            $cache_entities[] = $registration_type;
-            if ($host_entity->isEnabledForRegistration()) {
-              $entity_type_id = $host_entity->getEntityTypeId();
-              $url = Url::fromRoute("entity.$entity_type_id.registration.register", [
-                $entity_type_id => $host_entity->id(),
-              ]);
-              $label = $this->getSetting('label') ?: $registration_type->label();
-              $elements[] = [
-                '#markup' => Link::fromTextAndUrl($label, $url)->toString(),
-              ];
+            // Check access.
+            $access_result = $this->entityTypeManager
+              ->getAccessControlHandler('registration')
+              ->createAccess($id, NULL, [], TRUE);
+            if ($access_result->isAllowed()) {
+              /** @var \Drupal\registration\HostEntityInterface $host_entity */
+              $host_entity = $this->entityTypeManager
+                ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
+                ->createHostEntity($entity, $langcode);
+
+              // Only show the link if the host entity is open for registration.
+              // For performance reasons, the isAvailableForRegistration
+              // method, which takes capacity into account, is not used here.
+              // That method has a dependency on when registrations are added,
+              // updated or deleted, causing this render array to be rebuilt
+              // more often than desired. The minor downside is the possibility
+              // that capacity has been reached - if that happens, the user may
+              // click on a link that takes them to a page indicating there is
+              // no more room, which is a minor UX consideration.
+              $validation_result = $host_entity->isOpenForRegistration(TRUE);
+              $validation_result->getCacheableMetadata()->applyTo($elements);
+
+              if ($validation_result->isValid()) {
+                $entity_type_id = $host_entity->getEntityTypeId();
+                $url = Url::fromRoute("entity.$entity_type_id.registration.register", [
+                  $entity_type_id => $host_entity->id(),
+                ]);
+                $label = $this->getSetting('label') ?: $registration_type->label();
+                $elements[] = [
+                  '#markup' => Link::fromTextAndUrl($label, $url)->toString(),
+                ];
+              }
+              elseif ($this->getSetting('show_reason')) {
+                $elements[] = [
+                  '#markup' => $validation_result->getReason(),
+                ];
+              }
             }
+
+            // Add the access result to cacheability.
+            $cacheability = CacheableMetadata::createFromRenderArray($elements);
+            $cacheability->addCacheableDependency($access_result);
+            $cacheability->applyTo($elements);
           }
         }
       }
-      $host_entity->addCacheableDependencies(
-        $elements,
-        $cache_entities
-      );
     }
     return $elements;
   }

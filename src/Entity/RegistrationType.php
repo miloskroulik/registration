@@ -3,6 +3,7 @@
 namespace Drupal\registration\Entity;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\workflows\StateInterface;
@@ -273,6 +274,48 @@ class RegistrationType extends ConfigEntityBundleBase implements RegistrationTyp
   public function setHeldExpirationState($state): RegistrationTypeInterface {
     $this->heldExpireState = $state;
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheContexts(): array {
+    $cache_contexts = parent::getCacheContexts();
+
+    // If this type has a workflow, it should be included in cacheability.
+    if ($workflow = $this->getWorkflow()) {
+      $cache_contexts = Cache::mergeContexts($cache_contexts, $workflow->getCacheContexts());
+    }
+
+    return $cache_contexts;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge(): int {
+    $cache_max_age = parent::getCacheMaxAge();
+
+    // If this type has a workflow, it should be included in cacheability.
+    if ($workflow = $this->getWorkflow()) {
+      $cache_max_age = Cache::mergeMaxAges($cache_max_age, $workflow->getCacheMaxAge());
+    }
+
+    return $cache_max_age;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags(): array {
+    $cache_tags = parent::getCacheTags();
+
+    // If this type has a workflow, it should be included in cacheability.
+    if ($workflow = $this->getWorkflow()) {
+      $cache_tags = Cache::mergeTags($cache_tags, $workflow->getCacheTags());
+    }
+
+    return $cache_tags;
   }
 
   /**

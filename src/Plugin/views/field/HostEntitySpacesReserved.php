@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Plugin\views\field;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
@@ -48,19 +49,22 @@ class HostEntitySpacesReserved extends FieldPluginBase {
    * {@inheritdoc}
    */
   public function render(ResultRow $values) {
+    $build = [];
     if ($entity = $this->getEntity($values)) {
       $handler = $this->entityTypeManager->getHandler($entity->getEntityTypeId(), 'registration_host_entity');
       $host_entity = $handler->createHostEntity($entity);
+      // Rebuild when the host entity changes.
+      $cacheability = CacheableMetadata::createFromObject($host_entity);
       if ($host_entity->isConfiguredForRegistration()) {
         $build = [
           '#markup' => $host_entity->getActiveSpacesReserved(),
         ];
-        $host_entity->addCacheableDependencies($build, [$host_entity->getSettings()]);
-        return $build;
+        // Rebuild when registrations are added or removed for this host entity.
+        $cacheability->addCacheTags([$host_entity->getRegistrationListCacheTag()]);
       }
+      $cacheability->applyTo($build);
     }
-
-    return NULL;
+    return $build;
   }
 
 }

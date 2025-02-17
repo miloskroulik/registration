@@ -39,6 +39,34 @@ class RegistrationLinkFormatterTest extends FormatterTestBase {
     ]);
     $output = $this->renderPlain($build);
     $this->assertEquals('<a href="/node/1/register">Register now</a>', $output);
+
+    // Disable registration.
+    $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
+    $host_entity = $handler->createHostEntity($node);
+    $settings = $host_entity->getSettings();
+    $settings->set('open', '2220-01-01T00:00:00');
+    $settings->save();
+
+    $build = $node->get('event_registration')->view([
+      'type' => 'registration_link',
+      'label' => 'hidden',
+      'settings' => [
+        'label' => 'Register now',
+      ],
+    ]);
+    $output = $this->renderPlain($build);
+    $this->assertEmpty($output);
+
+    $build = $node->get('event_registration')->view([
+      'type' => 'registration_link',
+      'label' => 'hidden',
+      'settings' => [
+        'label' => 'Register now',
+        'show_reason' => TRUE,
+      ],
+    ]);
+    $output = $this->renderPlain($build);
+    $this->assertEquals('Registration is not available: Not open yet.', $output);
   }
 
 }

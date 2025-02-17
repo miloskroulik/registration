@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\registration\Kernel;
 
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
@@ -20,10 +22,17 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
   use RegistrationCreationTrait;
 
   /**
+   * The configuration factory.
+   */
+  protected ConfigFactoryInterface $configFactory;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
+
+    $this->configFactory = $this->container->get('config.factory');
 
     $admin_user = $this->createUser();
     $this->setCurrentUser($admin_user);
@@ -314,13 +323,27 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $access_control_handler->resetCache();
     $this->assertTrue($registration->access('update', $account));
 
-    // Only administrators can edit registrations for disabled hosts.
+    // By default, regular users cannot update registrations for disabled hosts.
     $host_entity = $registration->getHostEntity();
     $settings = $host_entity->getSettings();
     $settings->set('status', FALSE);
     $settings->save();
     $access_control_handler->resetCache();
     $this->assertFalse($registration->access('update', $account));
+    $account = $this->createUser(['administer conference registration']);
+    $access_control_handler->resetCache();
+    $this->assertTrue($registration->access('update', $account));
+
+    // When the "prevent edit for disabled hosts" option is turned off, regular
+    // users can edit registrations for disabled hosts.
+    $account = $this->createUser(['update own conference registration']);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $global_settings = $this->configFactory->getEditable('registration.settings');
+    $global_settings->set('prevent_edit_disabled', FALSE);
+    $global_settings->save();
+    $access_control_handler->resetCache();
+    $this->assertTrue($registration->access('update', $account));
     $account = $this->createUser(['administer conference registration']);
     $access_control_handler->resetCache();
     $this->assertTrue($registration->access('update', $account));
@@ -349,7 +372,9 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
    */
   public function testRouteAccess() {
     $node = $this->createAndSaveNode();
-    $registration = $this->createAndSaveRegistration($node);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', 1);
+    $registration->save();
 
     $account = $this->createUser(['administer registration']);
     $this->assertTrue($registration->toUrl('collection')->access($account));
@@ -365,6 +390,382 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->toUrl('collection')->access($account));
     $this->assertFalse($registration->toUrl('edit-form')->access($account));
     $this->assertFalse($registration->toUrl('delete-form')->access($account));
+  }
+
+  /**
+   * Tests cacheability of registration access control.
+   */
+  public function testAccessCacheability() {
+    $node = $this->createAndSaveNode();
+
+    /** @var \Drupal\registration\HostEntityInterface $host_entity */
+    $host_entity = $this->entityTypeManager
+      ->getHandler($node->getEntityTypeId(), 'registration_host_entity')
+      ->createHostEntity($node);
+
+    // Access via "administer" is dependent only on permissions.
+    $account = $this->createUser(['administer registration']);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $access_result = $registration->access('view', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertNotContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertNotContains('node:1', $metadata->getCacheTags());
+    $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Access via "administer type" is dependent only on the registration and
+    // permissions.
+    $account = $this->createUser(['administer conference registration']);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $access_result = $registration->access('view', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertNotContains('node:1', $metadata->getCacheTags());
+    $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Access via "view any type" is dependent only on the registration and
+    // permissions.
+    $account = $this->createUser(['view any conference registration']);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $access_result = $registration->access('view', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertNotContains('node:1', $metadata->getCacheTags());
+    $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Access via "host" is dependent on the registration, host and permissions.
+    // The host includes its entity, settings, registration type and workflow.
+    $account = $this->createUser(['view host registration', 'bypass node access']);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $access_result = $registration->access('view', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Access via "own" is dependent on the registration, host and user.
+    // The host includes its entity, settings, registration type and workflow.
+    $account = $this->createUser(['view own registration']);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $access_result = $registration->access('view', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Access not granted is dependent on the registration, host and user,
+    // since all paths are checked trying to find an allowed result.
+    // The host includes its entity, settings, registration type and workflow.
+    $account = $this->createUser(['access registration overview']);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $access_result = $registration->access('view', $account, TRUE);
+    $this->assertFalse($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Access to manage registrations is dependent on the host and permissions.
+    // The host includes its entity, settings, registration type and workflow.
+    $account = $this->createUser(['manage conference registration', 'bypass node access']);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $host_entity = $registration->getHostEntity();
+    $access_result = $host_entity->access('manage registrations', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertNotContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Access to manage own registrations is dependent on the host and user.
+    // The host includes its entity, settings, registration type and workflow.
+    $account = $this->createUser([
+      'manage own conference registration',
+      'access content',
+      'edit own event content',
+    ]);
+    $node->set('uid', $account->id());
+    $node->save();
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $host_entity = $registration->getHostEntity();
+    $access_result = $host_entity->access('manage registrations', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertNotContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Access to manage registration settings is dependent on the host and
+    // permissions. The host includes its entity, settings, registration type
+    // and workflow.
+    $account = $this->createUser([
+      'manage conference registration',
+      'manage conference registration settings',
+      'bypass node access',
+    ]);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $host_entity = $registration->getHostEntity();
+    $access_result = $host_entity->access('manage settings', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertNotContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+    // Also check cacheability when access is not granted.
+    $account = $this->createUser([
+      'manage conference registration settings',
+      'bypass node access',
+    ]);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $host_entity = $registration->getHostEntity();
+    $access_result = $host_entity->access('manage settings', $account, TRUE);
+    $this->assertFalse($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertNotContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Access to manage own registration settings is dependent on the host and
+    // user. The host includes its entity, settings, registration type and
+    // workflow.
+    $account = $this->createUser([
+      'manage own conference registration',
+      'manage conference registration settings',
+      'access content',
+      'edit own event content',
+    ]);
+    $node->set('uid', $account->id());
+    $node->save();
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $host_entity = $registration->getHostEntity();
+    $access_result = $host_entity->access('manage settings', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertNotContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Access to manage registration broadcasts is dependent on the host and
+    // permissions. The host includes its entity, settings, registration type
+    // and workflow.
+    $account = $this->createUser([
+      'manage conference registration',
+      'manage conference registration broadcast',
+      'bypass node access',
+    ]);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $host_entity = $registration->getHostEntity();
+    $access_result = $host_entity->access('manage broadcast', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertNotContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Access to manage own registration broadcasts is dependent on the host
+    // and user. The host includes its entity, settings, registration type and
+    // workflow.
+    $account = $this->createUser([
+      'manage own conference registration',
+      'manage conference registration broadcast',
+      'access content',
+      'edit own event content',
+    ]);
+    $node->set('uid', $account->id());
+    $node->save();
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $host_entity = $registration->getHostEntity();
+    $access_result = $host_entity->access('manage broadcast', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertNotContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // When the host is not configured for registration, "host" access not
+    // granted is dependent on the registration, host and user. The host
+    // includes its entity, but no longer has a registration type, workflow or
+    // settings.
+    $account = $this->createUser(['view host registration', 'bypass node access']);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $node->set('event_registration', NULL);
+    $node->save();
+    $registration = $this->reloadEntity($registration);
+    $access_result = $registration->access('view', $account, TRUE);
+    $this->assertFalse($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertContains('node:1', $metadata->getCacheTags());
+    $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // When the host is deleted, "host" access not granted depends only on the
+    // registration and the user.
+    $account = $this->createUser(['view host registration', 'bypass node access']);
+    $registration = $this->createRegistration($node);
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $node->delete();
+    $registration = $this->reloadEntity($registration);
+    $access_result = $registration->access('view', $account, TRUE);
+    $this->assertFalse($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertNotContains('node:1', $metadata->getCacheTags());
+    $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // When the host is deleted, an administrator can still view the
+    // registration, and the access only depends on the permissions.
+    $account = $this->createUser(['administer registration']);
+    $access_result = $registration->access('view', $account, TRUE);
+    $this->assertTrue($access_result->isAllowed());
+    $metadata = CacheableMetadata::createFromObject($access_result);
+    $this->assertNotContains('registration:' . $registration->id(), $metadata->getCacheTags());
+    $this->assertNotContains('node:1', $metadata->getCacheTags());
+    $this->assertNotContains('config:registration.type.conference', $metadata->getCacheTags());
+    $this->assertNotContains('config:workflows.workflow.registration', $metadata->getCacheTags());
+    $this->assertNotContains('registration_settings:1', $metadata->getCacheTags());
+    $this->assertNotContains('registration_list', $metadata->getCacheTags());
+    $this->assertNotContains($host_entity->getRegistrationListCacheTag(), $metadata->getCacheTags());
+    $this->assertContains('user.permissions', $metadata->getCacheContexts());
+    $this->assertNotContains('user', $metadata->getCacheContexts());
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
   }
 
 }

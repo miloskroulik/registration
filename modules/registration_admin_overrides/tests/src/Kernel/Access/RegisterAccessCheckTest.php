@@ -2,23 +2,27 @@
 
 namespace Drupal\Tests\registration_admin_overrides\Kernel\Access;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration_admin_overrides\Kernel\RegistrationAdminOverridesKernelTestBase;
 use Drupal\registration\RegistrationManagerInterface;
-use Drupal\registration_admin_overrides\Access\RegisterAccessCheck;
+use Drupal\registration\Access\RegisterAccessCheck;
 use Drupal\registration_admin_overrides\RegistrationOverrideCheckerInterface;
 
 /**
  * Tests the "register" access check.
- *
- * @coversDefaultClass \Drupal\registration_admin_overrides\Access\RegisterAccessCheck
  *
  * @group registration
  */
 class RegisterAccessCheckTest extends RegistrationAdminOverridesKernelTestBase {
 
   use NodeCreationTrait;
+
+  /**
+   * The configuration factory.
+   */
+  protected ConfigFactoryInterface $configFactory;
 
   /**
    * The registration manager.
@@ -43,6 +47,7 @@ class RegisterAccessCheckTest extends RegistrationAdminOverridesKernelTestBase {
     $admin_user = $this->createUser();
     $this->setCurrentUser($admin_user);
 
+    $this->configFactory = $this->container->get('config.factory');
     $this->registrationManager = $this->container->get('registration.manager');
     $this->overrideChecker = $this->container->get('registration_admin_overrides.override_checker');
   }
@@ -52,7 +57,7 @@ class RegisterAccessCheckTest extends RegistrationAdminOverridesKernelTestBase {
    */
   public function testAccessRegistrationConfiguredNoOverrides() {
     // This is a regression test that runs the same tests as registration core.
-    $access_checker = new RegisterAccessCheck($this->entityTypeManager, $this->registrationManager, $this->overrideChecker);
+    $access_checker = new RegisterAccessCheck($this->configFactory, $this->entityTypeManager, $this->registrationManager);
 
     $node = $this->createAndSaveNode();
     $entity_type = $node->getEntityType();
@@ -131,7 +136,7 @@ class RegisterAccessCheckTest extends RegistrationAdminOverridesKernelTestBase {
    */
   public function testAccessRegistrationNotConfiguredNoOverrides() {
     // This is a regression test that runs the same tests as registration core.
-    $access_checker = new RegisterAccessCheck($this->entityTypeManager, $this->registrationManager, $this->overrideChecker);
+    $access_checker = new RegisterAccessCheck($this->configFactory, $this->entityTypeManager, $this->registrationManager);
 
     $node = $this->createNode();
     $node->set('event_registration', NULL);
@@ -178,7 +183,7 @@ class RegisterAccessCheckTest extends RegistrationAdminOverridesKernelTestBase {
    */
   public function testAccessRegistrationConfiguredWithOverrides() {
     $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
-    $access_checker = new RegisterAccessCheck($this->entityTypeManager, $this->registrationManager, $this->overrideChecker);
+    $access_checker = new RegisterAccessCheck($this->configFactory, $this->entityTypeManager, $this->registrationManager);
 
     $node = $this->createAndSaveNode();
     $entity_type = $node->getEntityType();
@@ -203,6 +208,7 @@ class RegisterAccessCheckTest extends RegistrationAdminOverridesKernelTestBase {
       'administer registration',
       'registration override status',
     ]);
+    $this->setCurrentUser($account);
     $access_result = $access_checker->access($account, $route_match);
     $this->assertTrue($access_result->isAllowed());
 

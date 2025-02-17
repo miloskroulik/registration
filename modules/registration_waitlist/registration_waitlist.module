@@ -135,14 +135,6 @@ function registration_waitlist_entity_type_build(array &$entity_types) {
 }
 
 /**
- * Implements hook_validation_constraint_alter().
- */
-function registration_waitlist_validation_constraint_alter(array &$definitions) {
-  // Override the registration constraint.
-  $definitions['RegistrationConstraint']['class'] = 'Drupal\registration_waitlist\Plugin\Validation\Constraint\RegistrationConstraint';
-}
-
-/**
  * Implements hook_field_widget_info_alter().
  */
 function registration_waitlist_field_widget_info_alter(array &$info) {

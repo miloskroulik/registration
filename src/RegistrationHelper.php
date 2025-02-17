@@ -2,6 +2,7 @@
 
 namespace Drupal\registration;
 
+use Drupal\registration\Entity\RegistrationInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Header\MailboxHeader;
 
@@ -59,6 +60,31 @@ class RegistrationHelper {
       $result[$field] = $value;
     }
     return $result;
+  }
+
+  /**
+   * Extracts a host entity and registration, if possible, from a variable.
+   *
+   * @param mixed $value
+   *   The variable.
+   *
+   * @return array
+   *   An array containing two elements, a host entity and a registration.
+   *   Either or both of the returned elements may be null.
+   */
+  public static function extractEntitiesFromValue(mixed $value): array {
+    $host_entity = NULL;
+    $registration = NULL;
+
+    if ($value instanceof HostEntityInterface) {
+      $host_entity = $value;
+    }
+    elseif ($value instanceof RegistrationInterface) {
+      $registration = $value;
+      $host_entity = $registration->getHostEntity();
+    }
+
+    return [$host_entity, $registration];
   }
 
   /**

@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\registration\Kernel;
 
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Tests\registration\Traits\NodeCreationTrait;
 use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Drupal\registration\HostEntity;
@@ -20,6 +22,20 @@ class HostEntityTest extends RegistrationKernelTestBase {
   use RegistrationCreationTrait;
 
   /**
+   * The configuration factory.
+   */
+  protected ConfigFactoryInterface $configFactory;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $this->configFactory = $this->container->get('config.factory');
+  }
+
+  /**
    * @covers ::bundle
    * @covers ::getEntity
    * @covers ::getEntityTypeId
@@ -30,6 +46,8 @@ class HostEntityTest extends RegistrationKernelTestBase {
    * @covers ::createRegistration
    * @covers ::generateSampleRegistration
    * @covers ::getActiveSpacesReserved
+   * @covers ::getCloseDate
+   * @covers ::getOpenDate
    * @covers ::getSpacesRemaining
    * @covers ::getDefaultSettings
    * @covers ::getRegistrationCount
@@ -37,7 +55,10 @@ class HostEntityTest extends RegistrationKernelTestBase {
    * @covers ::getRegistrationList
    * @covers ::getRegistrationTypeBundle
    * @covers ::hasRoom
+   * @covers ::isAvailableForRegistration
+   * @covers ::isOpenForRegistration
    * @covers ::isConfiguredForRegistration
+   * @covers ::isEditableRegistration
    * @covers ::isEnabledForRegistration
    * @covers ::isEmailRegistered
    * @covers ::isEmailRegisteredInStates
@@ -162,23 +183,43 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertFalse($host_entity->isUserRegisteredInStates($user, $states));
 
     // Out of room.
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
+
+    // But registration is still open.
+    $this->assertTrue($host_entity->isOpenForRegistration());
 
     // Add more capacity.
     $settings = $host_entity->getSettings();
     $settings->set('capacity', 10);
     $settings->save();
+    $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
+    $this->assertTrue($host_entity->isOpenForRegistration());
 
     // Reached capacity.
     $settings->set('capacity', 5);
     $settings->save();
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
+    $this->assertTrue($host_entity->isOpenForRegistration());
 
     // Unlimited capacity.
     $settings->set('capacity', 0);
     $settings->save();
+    $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
+    $this->assertTrue($host_entity->isOpenForRegistration());
+
+    // Get open and close dates.
+    $settings->set('open', '2004-01-28T00:00:00');
+    $settings->set('close', '2022-01-01T00:00:00');
+    $settings->save();
+    $this->assertSame('2004-01-28T00:00:00', $host_entity->getOpenDate()->format('Y-m-d\T00:00:00'));
+    $this->assertSame('2022-01-01T00:00:00', $host_entity->getCloseDate()->format('Y-m-d\T00:00:00'));
+    $settings->set('close', NULL);
+    $settings->set('open', NULL);
+    $settings->save();
 
     // Before open and after close.
     $this->assertFalse($host_entity->isBeforeOpen());
@@ -187,23 +228,119 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $settings->save();
     $this->assertTrue($host_entity->isBeforeOpen());
     $this->assertFalse($host_entity->isAfterClose());
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
+    $this->assertFalse($host_entity->isOpenForRegistration());
     $settings->set('open', NULL);
     $settings->set('close', '2020-01-01T00:00:00');
     $settings->save();
     $this->assertFalse($host_entity->isBeforeOpen());
     $this->assertTrue($host_entity->isAfterClose());
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
+    $this->assertFalse($host_entity->isOpenForRegistration());
+
+    // Check cacheability when there are no open or close dates.
+    $settings->set('close', NULL);
+    $settings->save();
+    $validation_result = $host_entity->isAvailableForRegistration(TRUE);
+    $metadata = $validation_result->getCacheableMetadata();
+    // When there are no open or close dates, the max age is permanent, meaning
+    // a cache clear would be required for the result to rebuild. A rebuild
+    // would also occur if a cache tag is invalidated.
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    // Check cacheability when the open date is in the future.
+    $settings->set('open', '2220-01-01T00:00:00');
+    $settings->save();
+    $validation_result = $host_entity->isAvailableForRegistration(TRUE);
+    $metadata = $validation_result->getCacheableMetadata();
+    // The open date is more than one year in the future.
+    $this->assertGreaterThan(60 * 60 * 24 * 365, $metadata->getCacheMaxAge());
+    // Merge a max age of one hour. This replaces the existing max age since it
+    // is smaller.
+    $metadata->addCacheableDependency((new CacheableMetadata())->setCacheMaxAge(3600));
+    $this->assertEquals(3600, $metadata->getCacheMaxAge());
+    // Merge a max age of two hours. This is ignored since a smaller max age
+    // is already set.
+    $metadata->addCacheableDependency((new CacheableMetadata())->setCacheMaxAge(7200));
+    $this->assertEquals(3600, $metadata->getCacheMaxAge());
+    // Merge a max age representing permanent cache. This is ignored since a
+    // max age that is not permanent is already set.
+    $metadata->addCacheableDependency((new CacheableMetadata())->setCacheMaxAge(-1));
+    $this->assertEquals(3600, $metadata->getCacheMaxAge());
+
+    // Check cacheability when the close date is in the future.
+    $settings->set('open', NULL);
+    $settings->set('close', '2220-01-01T00:00:00');
+    $settings->save();
+    $validation_result = $host_entity->isAvailableForRegistration(TRUE);
+    $metadata = $validation_result->getCacheableMetadata();
+    // The close date is more than one year in the future.
+    $this->assertGreaterThan(60 * 60 * 24 * 365, $metadata->getCacheMaxAge());
+
+    // Change settings so it is after the close date.
+    $settings->set('open', NULL);
+    $settings->set('close', '2020-01-01T00:00:00');
+    $settings->save();
+    $validation_result = $host_entity->isAvailableForRegistration(TRUE);
+    $metadata = $validation_result->getCacheableMetadata();
+    // Once the close date has passed, the max age is permanent, meaning
+    // a cache clear would be required for the result to rebuild. A rebuild
+    // would also occur if a cache tag is invalidated.
+    $this->assertEquals(-1, $metadata->getCacheMaxAge());
+
+    /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
+
+    // Reload the registration so the updated settings are reflected.
+    $registration = $this->reloadEntity($registration);
+
+    // An administrator can edit a registration after the close date.
+    $this->assertTrue($host_entity->isEditableRegistration($registration, $user));
+
+    // By default regular users cannot edit a registration after the close date.
+    $regular_user = $this->createUser(['update any conference registration']);
+    $this->assertFalse($host_entity->isEditableRegistration($registration, $regular_user));
+
+    // A regular user can edit a registration after the close date if the
+    // global settings are configured to allow it.
+    $global_settings = $this->configFactory->getEditable('registration.settings');
+    $global_settings->set('prevent_edit_disabled', FALSE);
+    $global_settings->save();
+    $this->assertTrue($host_entity->isEditableRegistration($registration, $regular_user));
+    $global_settings = $this->configFactory->getEditable('registration.settings');
+    $global_settings->set('prevent_edit_disabled', TRUE);
+    $global_settings->save();
+    $this->assertFalse($host_entity->isEditableRegistration($registration, $regular_user));
 
     $settings->set('open', NULL);
     $settings->set('close', NULL);
     $settings->save();
+    $this->assertFalse($host_entity->isBeforeOpen());
+    $this->assertFalse($host_entity->isAfterClose());
+    $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
+
+    // Reload the registration so the updated settings are reflected.
+    $registration = $this->reloadEntity($registration);
+
+    // A regular user can now edit the registration.
+    $this->assertTrue($host_entity->isEditableRegistration($registration, $regular_user));
 
     // Disable registration.
     $settings->set('status', FALSE);
     $settings->save();
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isEnabledForRegistration());
+
+    // Reload the registration so the updated settings are reflected.
+    $registration = $this->reloadEntity($registration);
+
+    // An administrator can edit a registration when registration is disabled.
+    $this->assertTrue($host_entity->isEditableRegistration($registration, $user));
+
+    // A regular user cannot edit a registration when registration is disabled.
+    $this->assertFalse($host_entity->isEditableRegistration($registration, $regular_user));
 
     // Not configured for registration.
     $node = $this->createNode();
@@ -211,11 +348,12 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $node->save();
     $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($node);
+    $this->assertFalse($host_entity->isAvailableForRegistration());
     $this->assertFalse($host_entity->isConfiguredForRegistration());
   }
 
   /**
-   * Test deprecation of 'host_entity' handler on registration entity.
+   * Tests deprecation of 'host_entity' handler on registration entity.
    *
    * @group legacy
    */

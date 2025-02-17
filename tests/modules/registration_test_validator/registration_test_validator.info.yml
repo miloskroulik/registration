@@ -1,0 +1,6 @@
+name: Registration Test Validator
+type: module
+description: 'Test module for Registration validation.'
+package: Testing
+dependencies:
+  - registration:registration

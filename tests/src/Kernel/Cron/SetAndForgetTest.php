@@ -16,6 +16,19 @@ class SetAndForgetTest extends CronTestBase {
   use NodeCreationTrait;
 
   /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $this->container
+      ->get('config.factory')
+      ->getEditable('registration.settings')
+      ->set('set_and_forget', TRUE)
+      ->save();
+  }
+
+  /**
    * @covers ::run
    */
   public function testSetAndForget() {

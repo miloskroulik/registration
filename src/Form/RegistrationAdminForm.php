@@ -11,6 +11,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Allows the site admin to configure global registration settings.
+ *
+ * @phpcs:disable Drupal.Semantics.FunctionT.WhiteSpace
  */
 class RegistrationAdminForm extends ConfigFormBase {
 
@@ -55,7 +57,14 @@ class RegistrationAdminForm extends ConfigFormBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Set and forget mode'),
       '#default_value' => $config->get('set_and_forget'),
-      '#description' => $this->t('Automatically maintains the <strong>Enable</strong> registrations checkbox on the per-entity Settings form based on the open and close dates on the Settings page. This is useful for displaying and removing Register links as soon as registration for a given event opens and closes. Requires a properly configured Cron task that runs at least once an hour. This mode is selected automatically by default, but you can disable it for backwards compatibility with the Drupal 7 version of the module. Sites that enable this may wish to hide the <strong>Enable</strong> field on the Registration settings <a href="/admin/structure/registration-settings/form-display">form display</a>. Note that registrations are still enabled and disabled properly without this, but users may receive messaging such as "Registrations are closed" on the Register page unless the site admin manually unchecks the Enable box on the Settings form at the appropriate time. With this mode set, links to the Register page are automatically removed once the close date is reached for a given event.'),
+      '#description' => $this->t('Automatically maintains the <strong>Enable</strong> registrations checkbox on the per-entity Settings form based on the open and close dates on the Settings page. This is useful for displaying and removing Register links as soon as registration for a given event opens and closes. Requires a properly configured Cron task that runs at least once an hour. This mode is selected automatically by default, but you can disable it for backwards compatibility with the Drupal 7 version of the module. Sites that enable this may wish to hide the <strong>Enable</strong> field on the Registration settings <a href="/admin/structure/registration-settings/form-display">form display</a>. Note that registrations are still enabled and disabled properly without this, but users may receive messaging such as "Registrations are closed" on the Register page unless the site admin manually unchecks the Enable box on the Settings form at the appropriate time. With this mode set, links to the Register page are automatically removed once the close date is reached for a given event.') . $this->t(' <strong>This feature is deprecated and will be removed in registration:4.0.0.</strong> See <a href="https://www.drupal.org/node/3506953" target="_blank">this change record</a> for information about the replacement.'),
+    ];
+
+    $form['lenient_access_check'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Disregard open and close dates in register access check'),
+      '#default_value' => $config->get('lenient_access_check'),
+      '#description' => $this->t('By default, access to the register route is disabled, and register links are hidden, if the host entity is not open for registration based on open and close dates in the host entity registration settings. This option causes the open and close dates to be ignored in the register access check, so that registration forms can be reached as long as the Enable box is checked in the host entity registration settings. This option is most useful for sites that place direct links to the registration page on other sites, since it is preferable to see a "registration is closed" message instead of an "access denied" message once registration has closed. Most sites can leave this option disabled. See <a href="https://www.drupal.org/node/3506982" target="_blank">this change record</a> for more information.'),
     ];
 
     $form['limit_field_values'] = [
@@ -100,6 +109,17 @@ class RegistrationAdminForm extends ConfigFormBase {
       '#title' => $this->t('Replace the "From" header'),
       '#default_value' => $config->get('replace_from_header'),
       '#description' => $this->t('Replaces any existing "From" header with a header derived from the host entity registration settings. For improved email deliverability, the default mail handler in Drupal core generates a "From" header using the site name and email address in Basic settings. Selecting this option will replace the header set by Drupal core or other modules, so use with caution.'),
+    ];
+
+    $form['existing_registration'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Existing registration handling'),
+    ];
+    $form['existing_registration']['prevent_edit_disabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Prevent edit of existing registrations when new registration is disabled'),
+      '#default_value' => $config->get('prevent_edit_disabled'),
+      '#description' => $this->t('Prevents editing of existing registrations if new registration is disabled for any reason, e.g. after the close date. This setting is ignored for administrators, who can always edit existing registrations. Note that only administrators can increase the number of spaces or change registration status or the registrant once new registration is disabled. This setting is only applicable to users who have permission to update registrations.'),
     ];
 
     $form['email_registrants'] = [
@@ -150,8 +170,10 @@ class RegistrationAdminForm extends ConfigFormBase {
     $this->config('registration.settings')
       ->set('set_and_forget', $form_state->getValue('set_and_forget'))
       ->set('broadcast_filter', $form_state->getValue('broadcast_filter'))
+      ->set('lenient_access_check', $form_state->getValue('lenient_access_check'))
       ->set('limit_field_values', $form_state->getValue('limit_field_values'))
       ->set('hide_filter', $form_state->getValue('hide_filter'))
+      ->set('prevent_edit_disabled', $form_state->getValue('prevent_edit_disabled'))
       ->set('queue_notifications', $form_state->getValue('queue_notifications'))
       ->set('html_email', $form_state->getValue('html_email'))
       ->set('replace_from_header', $form_state->getValue('replace_from_header'))

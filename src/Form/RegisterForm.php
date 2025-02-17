@@ -4,6 +4,8 @@ namespace Drupal\registration\Form;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
@@ -92,21 +94,31 @@ class RegisterForm extends ContentEntityForm {
     // Initialize host entity needed by the form.
     $this->setHostEntity($form_state);
 
-    // Set cache directives so the form rebuilds when needed.
-    $this->addCacheableDependencies($form, $form_state);
-
     /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
     $registration = $this->getEntity();
     $form_state->set('registration', $registration);
 
-    // Make sure registration is still allowed.
+    // Make sure registration is still allowed. Although access control often
+    // prevents access to the register route when registration would fail, the
+    // passing of time can make the access control cache "stale" if the close
+    // date is reached just prior to the form being displayed, and in other
+    // edge cases. The ability to register, or update an existing registration,
+    // is checked again here. If there are errors, registration is prevented by
+    // disabling the registration form. This keeps the user from wasting time
+    // filling out a form that would never succeed on submit.
     $host_entity = $form_state->get('host_entity');
-    $count = $registration->getSpacesReserved();
-    $errors = [];
-    if ($registration->isNew() && !$host_entity->isEnabledForRegistration($count, $registration, $errors)) {
-      foreach ($errors as $error) {
+    if ($registration->isNew()) {
+      $validation_result = $host_entity->isAvailableForRegistration(TRUE);
+    }
+    else {
+      $validation_result = $host_entity->isEditableRegistration($registration, NULL, TRUE);
+    }
+
+    // Display any errors.
+    if (!$validation_result->isValid()) {
+      foreach ($validation_result->getViolations() as $violation) {
         $form['notice'][] = [
-          '#markup' => '<p class="registration-error">' . $error . '</p>',
+          '#markup' => '<p class="registration-error">' . $violation->getMessage() . '</p>',
         ];
       }
     }
@@ -115,7 +127,7 @@ class RegisterForm extends ContentEntityForm {
     $form = parent::form($form, $form_state);
 
     // Alter the form.
-    self::alterRegisterForm($form, $form_state);
+    static::alterRegisterForm($form, $form_state);
 
     // If an admin is editing an existing registration use the advanced form.
     $admin_theme = $this->currentUser()->hasPermission('view the administration theme');
@@ -131,6 +143,24 @@ class RegisterForm extends ContentEntityForm {
         }
       }
     }
+
+    // Get the current form cacheability.
+    $form_metadata = CacheableMetadata::createFromRenderArray($form);
+    // Allow the form to be cached by default.
+    $form_metadata->setCacheMaxAge(Cache::PERMANENT);
+    // Add the cacheability of the validation result.
+    $form_metadata->addCacheableDependency($validation_result);
+
+    // The registrant options depend on user permissions or anonymous session.
+    if ($this->currentUser()->isAnonymous()) {
+      $form_metadata->addCacheContexts(['session']);
+    }
+    else {
+      $form_metadata->addCacheContexts(['user.permissions']);
+    }
+
+    // Apply the calculated cacheability to the form.
+    $form_metadata->applyTo($form);
 
     return $form;
   }
@@ -381,27 +411,10 @@ class RegisterForm extends ContentEntityForm {
     $host_entity = $form_state->get('host_entity');
     $settings = $host_entity->getSettings();
 
-    // Get the registrant options and give an error if there aren't any.
+    // Get the registrant options and the default option.
     $registrant_options = $registration_manager->getRegistrantOptions($registration, $settings);
-    if (empty($registrant_options)) {
-      $allow_multiple = $settings->getSetting('multiple_registrations');
-      if (!$allow_multiple && $registration->isNew() && $current_user->isAuthenticated() && $host_entity->isRegistrant($current_user)) {
-        $message = t('You are already registered for this event.');
-      }
-      else {
-        $message = t('No valid registration options exist. Registration permissions may need to be adjusted.');
-      }
-      $form['notice'][] = [
-        '#markup' => '<p class="registration-error">' . $message . '</p>',
-        '#weight' => -1,
-      ];
-    }
-
-    $default = NULL;
-    if (!$registration->isNew()) {
-      $default = $registration->getRegistrantType($current_user);
-    }
-    elseif (count($registrant_options) == 1) {
+    $default = $registration->getRegistrantType($current_user);
+    if (count($registrant_options) == 1) {
       $keys = array_keys($registrant_options);
       $default = reset($keys);
     }
@@ -517,7 +530,7 @@ class RegisterForm extends ContentEntityForm {
       /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
       $registration = $this->getEntity();
       $count = $registration->getSpacesReserved();
-      if (!$registration->isNew() || $host_entity->isEnabledForRegistration($count, $registration)) {
+      if (!$registration->isNew() || $host_entity->isAvailableForRegistration()) {
         // Override the button label for the Save button.
         $actions = parent::actions($form, $form_state);
         $actions['submit']['#value'] = $this->t('Save Registration');
@@ -540,21 +553,6 @@ class RegisterForm extends ContentEntityForm {
     }
 
     return $actions;
-  }
-
-  /**
-   * Adds cache directives to the form.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   */
-  protected function addCacheableDependencies(array &$form, FormStateInterface $form_state) {
-    $host_entity = $form_state->get('host_entity');
-    $settings = $form_state->get('settings');
-
-    $host_entity->addCacheableDependencies($form, [$settings]);
   }
 
   /**

@@ -2,6 +2,11 @@
 
 namespace Drupal\registration;
 
+use Drupal\Component\Datetime\DateTimePlus;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
+use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -29,11 +34,11 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  *
  * This is a pseudo-entity wrapper around a real entity.
  */
-class HostEntity implements HostEntityInterface {
-
-  use StringTranslationTrait;
+class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInterface {
 
   use DependencySerializationTrait;
+  use RefinableCacheableDependencyTrait;
+  use StringTranslationTrait;
 
   /**
    * The current user.
@@ -82,7 +87,21 @@ class HostEntity implements HostEntityInterface {
    *
    * @var \Drupal\registration\Entity\RegistrationSettings|null
    */
-  protected RegistrationSettings|NULL $settings;
+  protected ?RegistrationSettings $settings;
+
+  /**
+   * The registration validator.
+   *
+   * @var \Drupal\registration\RegistrationValidatorInterface
+   */
+  protected RegistrationValidatorInterface $validator;
+
+  /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected TimeInterface $time;
 
   /**
    * Creates a HostEntity object.
@@ -109,6 +128,9 @@ class HostEntity implements HostEntityInterface {
       }
     }
     $this->entity = $entity;
+
+    // Initialize cacheability with a dependency on the wrapped entity.
+    $this->addCacheableDependency($this->entity);
   }
 
   /**
@@ -181,8 +203,10 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function addCacheableDependencies(array &$build, array $other_entities = []) {
+    @trigger_error('HostEntity::addCacheableDependencies() is deprecated in registration:3.4.0 and is removed from registration:4.0.0. See https://www.drupal.org/node/3506325', E_USER_DEPRECATED);
+
     // Rebuild if the host entity is updated.
-    $this->renderer()->addCacheableDependency($build, $this->getEntity());
+    $this->renderer()->addCacheableDependency($build, $this);
 
     // Rebuild if other entities are updated.
     foreach ($other_entities as $entity) {
@@ -191,16 +215,16 @@ class HostEntity implements HostEntityInterface {
       }
     }
 
-    // Rebuild when registrations are added and deleted.
-    // @todo Make this more granular.
-    $build['#cache']['tags'][] = 'registration_list';
+    // Rebuild when registrations are added, updated or deleted for this host.
+    $tags = $build['#cache']['tags'];
+    $build['#cache']['tags'] = Cache::mergeTags($tags, [$this->getRegistrationListCacheTag()]);
 
-    // Rebuild per user or anonymous session.
+    // Rebuild per user permissions or anonymous session.
     if ($this->currentUser()->isAnonymous()) {
-      $build['#cache']['contexts'][] = 'session';
+      $build['#cache']['contexts'] = Cache::mergeContexts($build['#cache']['contexts'], ['session']);
     }
     else {
-      $build['#cache']['contexts'][] = 'user.permissions';
+      $build['#cache']['contexts'] = Cache::mergeContexts($build['#cache']['contexts'], ['user.permissions']);
     }
   }
 
@@ -273,6 +297,106 @@ class HostEntity implements HostEntityInterface {
     ]);
     $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_USAGE);
     return $event->getData() ?? 0;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheContexts(): array {
+    $cache_contexts = $this->cacheContexts;
+
+    // Add cache contexts for entities the host depends on.
+    if ($registration_type = $this->getRegistrationType()) {
+      $cache_contexts = Cache::mergeContexts($cache_contexts, $registration_type->getCacheContexts());
+    }
+    if ($field = $this->getRegistrationField()) {
+      $cache_contexts = Cache::mergeContexts($cache_contexts, $field->getCacheContexts());
+    }
+    if ($settings = $this->getSettings()) {
+      $cache_contexts = Cache::mergeContexts($cache_contexts, $settings->getCacheContexts());
+    }
+
+    return $cache_contexts;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge(): int {
+    $cache_max_age = $this->cacheMaxAge;
+
+    // Merge max-age for entities the host depends on.
+    if ($registration_type = $this->getRegistrationType()) {
+      $cache_max_age = Cache::mergeMaxAges($cache_max_age, $registration_type->getCacheMaxAge());
+    }
+    if ($field = $this->getRegistrationField()) {
+      $cache_max_age = Cache::mergeMaxAges($cache_max_age, $field->getCacheMaxAge());
+    }
+    if ($settings = $this->getSettings()) {
+      $cache_max_age = Cache::mergeMaxAges($cache_max_age, $settings->getCacheMaxAge());
+    }
+
+    // Set a cache expiration if applicable.
+    if ($max_age = $this->calculateMaxAge()) {
+      $cache_max_age = Cache::mergeMaxAges($cache_max_age, $max_age);
+    }
+
+    return $cache_max_age;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags(): array {
+    $cache_tags = $this->cacheTags;
+
+    // Add cache tags for entities the host depends on.
+    if ($registration_type = $this->getRegistrationType()) {
+      $cache_tags = Cache::mergeTags($cache_tags, $registration_type->getCacheTags());
+    }
+    if ($field = $this->getRegistrationField()) {
+      $cache_tags = Cache::mergeTags($cache_tags, $field->getCacheTags());
+    }
+
+    // If the host has saved settings, they should be included in cacheability.
+    if (($settings = $this->getSettings()) && !$settings->isNew()) {
+      $cache_tags = Cache::mergeTags($cache_tags, $settings->getCacheTags());
+    }
+    else {
+      // No settings, or they have not been saved yet. Add a dependency on the
+      // list, so that when settings are finally saved, anything dependent on
+      // this host entity will rebuild. Without this, changes to the settings
+      // will never be reflected in dependent objects.
+      $cache_tags = Cache::mergeTags($cache_tags, [$this->getRegistrationSettingsListCacheTag()]);
+    }
+
+    return $cache_tags;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCloseDate(): ?DateTimePlus {
+    $close = $this->getSetting('close');
+    if ($close) {
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      return DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $close, $storage_timezone);
+    }
+
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOpenDate(): ?DateTimePlus {
+    $open = $this->getSetting('open');
+    if ($open) {
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      return DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $open, $storage_timezone);
+    }
+
+    return NULL;
   }
 
   /**
@@ -376,7 +500,21 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRegistrationQuery(array $properties = [], ?AccountInterface $account = NULL, $email = NULL): QueryInterface {
+  public function getRegistrationListCacheTag(): string {
+    return 'registration_list.host_entity:' . $this->getEntityTypeId() . ':' . (string) $this->id();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRegistrationSettingsListCacheTag(): string {
+    return 'registration_settings_list.host_entity:' . $this->getEntityTypeId() . ':' . (string) $this->id();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRegistrationQuery(array $properties = [], ?AccountInterface $account = NULL, ?string $email = NULL): QueryInterface {
     $query = $this->entityTypeManager()->getStorage('registration')->getQuery()
       ->accessCheck(FALSE)
       ->condition('entity_type_id', $this->getEntityTypeId())
@@ -385,7 +523,7 @@ class HostEntity implements HostEntityInterface {
     // Add property conditions using same logic as
     // EntityStorageBase::loadByProperties().
     foreach ($properties as $name => $value) {
-      // Cast scalars to array so we can consistently use an IN condition.
+      // Cast scalars to array, so we can consistently use an IN condition.
       $query->condition($name, (array) $value, 'IN');
     }
 
@@ -500,6 +638,32 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function isAvailableForRegistration(bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface {
+    $validation_result = $this->validator()->execute('available_for_registration', [
+      'HostHasSettings',
+      'HostIsOpen',
+      'HostIsEnabled',
+      'HostHasRoom',
+      'HostAllowsRegistrant',
+    ], $this);
+    return $return_as_object ? $validation_result : $validation_result->isValid();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isOpenForRegistration(bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface {
+    $validation_result = $this->validator()->execute('open_for_registration', [
+      'HostHasSettings',
+      'HostIsOpen',
+      'HostIsEnabled',
+    ], $this);
+    return $return_as_object ? $validation_result : $validation_result->isValid();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isConfiguredForRegistration(): bool {
     return !is_null($this->getRegistrationTypeBundle());
   }
@@ -507,79 +671,37 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function isEditableRegistration(RegistrationInterface $registration, ?AccountInterface $account = NULL, bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface {
+    $validation_result = $this->validator()->execute('editable_registration', [
+      'HostHasSettings' => ['hostEntity' => $registration->getHostEntity()],
+      'RegistrationIsEditable' => ['account' => $account],
+    ], $registration);
+    return $return_as_object ? $validation_result : $validation_result->isValid();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isEnabledForRegistration(int $spaces = 1, ?RegistrationInterface $registration = NULL, array &$errors = []): bool {
-    $settings = $this->getSettings();
-    if (!$settings) {
-      $errors['settings'] = $this->t('Host entity settings not available for %label.', [
-        '%label' => $this->label(),
-      ]);
-      return FALSE;
-    }
-    $enabled = $settings->getSetting('status');
+    @trigger_error('HostEntity::isEnabledForRegistration() is deprecated in registration:3.4.0 and is removed from registration:4.0.0. See https://www.drupal.org/node/3496339', E_USER_DEPRECATED);
 
-    // Only explore other settings if main status is enabled.
-    if ($enabled) {
-      // Check maximum allowed spaces per registration.
-      $maximum_spaces = (int) $settings->getSetting('maximum_spaces');
-      if ($maximum_spaces && ($spaces > $maximum_spaces)) {
-        $enabled = FALSE;
-        $errors['maximum_spaces'] = $this->formatPlural($maximum_spaces,
-          'You may not register for more than 1 space.',
-          'You may not register for more than @count spaces.', [
-            '@count' => $maximum_spaces,
-          ]);
-      }
+    $validation_result = $this->validator()->execute('enabled_for_registration', [
+      'HostHasSettings' => ['hostEntity' => $this],
+      'HostIsOpen' => ['hostEntity' => $this],
+      'HostIsEnabled' => ['hostEntity' => $this],
+      'HostHasRoom' => ['hostEntity' => $this],
+      'RegistrationWithinMaximumSpaces' => ['spaces' => $spaces],
+    ], $registration ?? $this);
 
-      // Check capacity.
-      if (!$this->hasRoom($spaces, $registration)) {
-        $enabled = FALSE;
-        $errors['capacity'] = $this->t('Sorry, unable to register for %label due to: insufficient spaces remaining.', [
-          '%label' => $this->label(),
-        ]);
-      }
-
-      // Check open date.
-      if ($this->isBeforeOpen()) {
-        $enabled = FALSE;
-        $errors['open'] = $this->t('Registration for %label is not open yet.', [
-          '%label' => $this->label(),
-        ]);
-      }
-
-      // Check close date.
-      if ($this->isAfterClose()) {
-        $enabled = FALSE;
-        $errors['close'] = $this->t('Registration for %label is closed.', [
-          '%label' => $this->label(),
-        ]);
-      }
-    }
-    else {
-      $errors['status'] = $this->t('Registration for %label is disabled.', [
-        '%label' => $this->label(),
-      ]);
-    }
-
-    // Allow other modules to override the result.
-    $event = new RegistrationDataAlterEvent($enabled, [
-      'host_entity' => $this,
-      'settings' => $settings,
-      'spaces' => $spaces,
-      'registration' => $registration,
-      'errors' => $errors,
-    ]);
-    $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_ENABLED);
-    if ($event->hasErrors()) {
-      $errors = $event->getErrors();
-    }
-    return $event->getData() ?? FALSE;
+    $errors = $validation_result->getLegacyErrors();
+    return $validation_result->isValid();
   }
 
   /**
    * {@inheritdoc}
    */
   public function isEmailRegistered(string $email): bool {
-    @trigger_error('Calling HostEntity::isEmailRegistered() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
+    @trigger_error('HostEntity::isEmailRegistered() is deprecated in registration:3.1.5 and is removed from registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     $states = [];
 
     if ($registration_type = $this->getRegistrationType()) {
@@ -606,7 +728,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isEmailRegisteredInStates(string $email, array $states): bool {
-    @trigger_error('Calling HostEntity::isEmailRegisteredInStates() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
+    @trigger_error('HostEntity::isEmailRegisteredInStates() is deprecated in registration:3.1.5 and is removed from registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     // Ensure we have states before querying against them.
     if (empty($states)) {
       return FALSE;
@@ -627,7 +749,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isUserRegistered(AccountInterface $account): bool {
-    @trigger_error('Calling HostEntity::isUserRegistered() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
+    @trigger_error('HostEntity::isUserRegistered() is deprecated in registration:3.1.5 and is removed from registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     $states = [];
 
     if ($registration_type = $this->getRegistrationType()) {
@@ -654,7 +776,7 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isUserRegisteredInStates(AccountInterface $account, array $states): bool {
-    @trigger_error('Calling HostEntity::isUserRegisteredInStates() is deprecated in registration:3.1.5 and will be removed before registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
+    @trigger_error('HostEntity::isUserRegisteredInStates() is deprecated in registration:3.1.5 and is removed from registration:4.0.0. See https://www.drupal.org/node/3465690', E_USER_DEPRECATED);
     // Ensure we have states before querying against them.
     if (empty($states)) {
       return FALSE;
@@ -674,7 +796,7 @@ class HostEntity implements HostEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function isRegistrant(?AccountInterface $account = NULL, $email = NULL, array $states = []): bool {
+  public function isRegistrant(?AccountInterface $account = NULL, ?string $email = NULL, array $states = []): bool {
     if (!$account && !$email) {
       throw new \InvalidArgumentException("Either an account or an email must be passed to HostEntity::isRegistrant().");
     }
@@ -696,14 +818,11 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isBeforeOpen(): bool {
-    // Initialize the current time.
-    $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
-    $now = new DrupalDateTime('now', $storage_timezone);
-
     // Check open date.
-    $open = $this->getSetting('open');
+    $open = $this->getOpenDate();
     if ($open) {
-      $open = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $open, $storage_timezone);
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      $now = new DrupalDateTime('now', $storage_timezone);
     }
     return ($open && ($now < $open));
   }
@@ -712,16 +831,103 @@ class HostEntity implements HostEntityInterface {
    * {@inheritdoc}
    */
   public function isAfterClose(): bool {
-    // Initialize the current time.
-    $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
-    $now = new DrupalDateTime('now', $storage_timezone);
-
     // Check close date.
-    $close = $this->getSetting('close');
+    $close = $this->getCloseDate();
     if ($close) {
-      $close = DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $close, $storage_timezone);
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      $now = new DrupalDateTime('now', $storage_timezone);
     }
     return ($close && ($now >= $close));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validate(mixed $value): RegistrationValidationResultInterface {
+    // Validate a registration.
+    if ($value instanceof RegistrationInterface) {
+      // Setup configuration for those constraints that can take either a host
+      // entity or a registration as the value, and require the host entity to
+      // be passed as an option when the value is a registration.
+      $configuration = ['hostEntity' => $this];
+
+      // All registrations must have a host entity with settings.
+      $pipeline = [
+        'HostHasSettings' => $configuration,
+      ];
+
+      // Checks that apply to new registrations.
+      if ($value->isNewToHost()) {
+        $pipeline += [
+          'HostIsOpen' => $configuration,
+          'HostIsEnabled' => $configuration,
+          'HostHasRoom' => $configuration,
+        ];
+      }
+
+      // Checks that apply to all registrations.
+      $pipeline += [
+        'RegistrationIsEditable' => [],
+        'RegistrationWithinMaximumSpaces' => $configuration,
+        'RegistrationWithinCapacity' => [],
+        'RegistrationAllowsRegistrant' => [],
+        'RegistrationAllowsUpdate' => [],
+        'UniqueRegistrant' => [],
+      ];
+
+      $validation_result = $this->validator()->execute('validate_registration', $pipeline, $value);
+    }
+
+    // Dispatch an event so other objects can be validated.
+    $event = new RegistrationDataAlterEvent($validation_result ?? NULL, [
+      'host_entity' => $this,
+      'value' => $value,
+    ]);
+    $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_HOST_VALIDATION);
+
+    /** @var \Drupal\registration\RegistrationValidationResultInterface $validation_result */
+    $validation_result = $event->getData();
+
+    // An object other than a registration was validated, but an event
+    // subscriber to handle the validation was not provided.
+    if (!isset($validation_result)) {
+      throw new \InvalidArgumentException("Value could not be validated");
+    }
+
+    return $validation_result;
+  }
+
+  /**
+   * Calculates a max-age based on the host entity open or close dates.
+   *
+   * If registration for the host entity has closed, or the host entity does
+   * not have open or close dates, then NULL is returned.
+   *
+   * @return int|null
+   *   The calculated max age, if available.
+   */
+  protected function calculateMaxAge(): ?int {
+    $expiration = NULL;
+
+    // Expire this validation result on the open date if one exists and it's in
+    // the future.
+    if ($this->isBeforeOpen()) {
+      $expiration = $this->getOpenDate();
+    }
+
+    // Expire this validation result on the close date if one exists and it's in
+    // the future.
+    elseif (($close = $this->getCloseDate()) && !$this->isAfterClose()) {
+      $expiration = $close;
+    }
+
+    // If an open or close date in the future was found, calculate the amount
+    // of time before the relevant date, and use that as the max age.
+    if ($expiration) {
+      return $expiration->getTimestamp() - $this->time()->getCurrentTime();
+    }
+
+    return NULL;
   }
 
   /**
@@ -779,9 +985,6 @@ class HostEntity implements HostEntityInterface {
   /**
    * Determines if a registration needs a capacity check.
    *
-   * New registrations are always checked. Existing registrations are checked
-   * in cases when the spaces reserved or registration state have changed.
-   *
    * @param int $spaces
    *   The number of spaces requested.
    * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
@@ -791,27 +994,10 @@ class HostEntity implements HostEntityInterface {
    *   TRUE if a check is needed, FALSE otherwise.
    */
   protected function needsCapacityCheck(int $spaces, ?RegistrationInterface $registration): bool {
-    $needs_check = TRUE;
-    if ($registration && !$registration->isNew()) {
-      // The check can be skipped for an existing registration if it is canceled
-      // or in the process of being canceled.
-      if ($registration->getState()->isCanceled()) {
-        $needs_check = FALSE;
-      }
-      else {
-        // The check can be skipped for an existing registration if its spaces
-        // reserved and registration state fields are unchanged. Skipping the
-        // check in this case allows an existing registration to be editable
-        // even if the overall capacity has been exceeded by the actions of
-        // some other module.
-        $original = $this->entityTypeManager()->getStorage('registration')->loadUnchanged($registration->id());
-        // A reduction to spaces reserved should not trigger a capacity check.
-        $spaces_changed = ($spaces > $original->getSpacesReserved());
-        $status_changed = ($registration->getState()->id() != $original->getState()->id());
-        $needs_check = $spaces_changed || $status_changed;
-      }
+    if ($registration) {
+      return $registration->requiresCapacityCheck() || ($spaces > $registration->getSpacesReserved());
     }
-    return $needs_check;
+    return TRUE;
   }
 
   /**
@@ -825,6 +1011,32 @@ class HostEntity implements HostEntityInterface {
       $this->renderer = $this->container()->get('renderer');
     }
     return $this->renderer;
+  }
+
+  /**
+   * Returns the time service.
+   *
+   * @return \Drupal\Component\Datetime\TimeInterface
+   *   The time service.
+   */
+  protected function time(): TimeInterface {
+    if (!isset($this->time)) {
+      $this->time = $this->container()->get('datetime.time');
+    }
+    return $this->time;
+  }
+
+  /**
+   * Retrieves the registration validator.
+   *
+   * @return \Drupal\registration\RegistrationValidatorInterface
+   *   The registration validator.
+   */
+  protected function validator(): RegistrationValidatorInterface {
+    if (!isset($this->validator)) {
+      $this->validator = $this->container()->get('registration.validator');
+    }
+    return $this->validator;
   }
 
   /**

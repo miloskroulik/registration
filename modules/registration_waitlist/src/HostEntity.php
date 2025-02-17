@@ -70,9 +70,7 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
    */
   public function hasRoom(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool {
     if ($this->isWaitListEnabled()) {
-      // If wait list is enabled, assume there is room. The wait list is checked
-      // for room separately.
-      return TRUE;
+      return $this->hasRoomOffWaitList($spaces, $registration) || $this->hasRoomOnWaitList($spaces, $registration);
     }
     return parent::hasRoom($spaces, $registration);
   }
@@ -102,43 +100,6 @@ class HostEntity extends BaseHostEntity implements HostEntityInterface {
     }
     // Wait list is not enabled.
     return FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isEnabledForRegistration(int $spaces = 1, ?RegistrationInterface $registration = NULL, array &$errors = []): bool {
-    $settings = $this->getSettings();
-    $enabled = parent::isEnabledForRegistration($spaces, $registration, $errors);
-    $original_enabled = $enabled;
-    $original_errors = $errors;
-
-    // Check wait list capacity if relevant.
-    if ($this->isWaitListEnabled() && !$this->hasRoomOffWaitList()) {
-      if (!$this->hasRoomOnWaitList($spaces, $registration)) {
-        $enabled = FALSE;
-        $errors['waitlist_capacity'] = $this->t('Sorry, unable to register for %label because the wait list is full.', [
-          '%label' => $this->label(),
-        ]);
-      }
-    }
-
-    // Allow other modules to override the result.
-    $event = new RegistrationDataAlterEvent($enabled, [
-      'host_entity' => $this,
-      'settings' => $settings,
-      'spaces' => $spaces,
-      'registration' => $registration,
-      'errors' => $errors,
-      'waitlist' => TRUE,
-      'original_enabled' => $original_enabled,
-      'original_errors' => $original_errors,
-    ]);
-    $this->eventDispatcher()->dispatch($event, RegistrationEvents::REGISTRATION_ALTER_ENABLED);
-    if ($event->hasErrors()) {
-      $errors = $event->getErrors();
-    }
-    return $event->getData() ?? FALSE;
   }
 
   /**

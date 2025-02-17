@@ -60,6 +60,7 @@ class EmailRegistrantsAction extends ConfigurableEmailActionBase implements Quer
     // Allow the action to execute if there is at least one registrant.
     $entity = NULL;
     $result = NULL;
+    $host_entity = NULL;
     if ($object && ($host_entity = $this->getHostEntity($object))) {
       if ($entity = $host_entity->getEntity()) {
         $result = AccessResult::allowedIf(($host_entity->getRegistrationCount() > 0));
@@ -71,8 +72,8 @@ class EmailRegistrantsAction extends ConfigurableEmailActionBase implements Quer
     }
 
     // Recalculate this result if the host entity is updated.
-    if ($entity) {
-      $result->addCacheableDependency($entity);
+    if ($host_entity) {
+      $result->addCacheableDependency($host_entity);
     }
 
     return $return_as_object ? $result : $result->isAllowed();

@@ -2,7 +2,6 @@
 
 namespace Drupal\registration\Plugin\Action;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Action\ConfigurableActionBase;
 use Drupal\Core\Entity\DependencyTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -122,10 +121,7 @@ class RegistrationSetStateAction extends ConfigurableActionBase implements Conta
     $account = $this->prepareUser($account);
     /** @var \Drupal\registration\Entity\RegistrationInterface $object */
     $type = $object->getType()->id();
-    $access = $account->hasPermission("edit $type registration state");
-    $result = AccessResult::allowedIf($access)
-      ->cachePerPermissions()
-      ->andIf($object->access('update', $account, TRUE));
+    $result = $object->access('edit state', $account, TRUE);
 
     return $return_as_object ? $result : $result->isAllowed();
   }

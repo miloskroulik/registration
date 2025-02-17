@@ -15,6 +15,15 @@ class HostEntityFieldItemList extends FieldItemList {
   use ComputedItemListTrait;
 
   /**
+   * Resets the calculated state of the field.
+   */
+  public function reset(): void {
+    if (isset($this->list[0])) {
+      $this->list[0]->reset();
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function computeValue() {

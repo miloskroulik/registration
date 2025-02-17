@@ -53,6 +53,8 @@ function registration_cron() {
   \Drupal::service('registration.cron.send_reminders')->run();
   \Drupal::service('registration.cron.expire_held_registrations')->run();
 
+  // The "set and forget" functionality is deprecated.
+  // @see https://www.drupal.org/node/3506953
   $config = \Drupal::config('registration.settings');
   if ($config->get('set_and_forget')) {
     \Drupal::service('registration.cron.set_and_forget')->run();

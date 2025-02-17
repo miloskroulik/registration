@@ -20,6 +20,8 @@ To configure your scheduled actions, enable the module and then visit the admini
 
 For multilingual sites, you can specify the target language so that registrants using different languages to register can receive emails translated into their language, for example.
 
+Scheduled actions are configuration entities that should be exported so they are retained during deployments.
+
 CRON
 -------------
 

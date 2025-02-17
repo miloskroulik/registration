@@ -33,6 +33,9 @@ registration.settings:
     broadcast_filter:
       type: boolean
       label: 'Add a status filter to the Email registrants form'
+    lenient_access_check:
+      type: boolean
+      label: 'Disregard open and close dates in the register access check'
     limit_field_values:
       type: boolean
       label: 'Limit registration field values by role'
@@ -45,6 +48,9 @@ registration.settings:
     html_email:
       type: boolean
       label: 'Send email as HTML'
+    prevent_edit_disabled:
+      type: boolean
+      label: 'Prevent edit of existing registrations when new registration is disabled'
     replace_from_header:
       type: boolean
       label: 'Replace the "From" header'
@@ -63,6 +69,14 @@ field.formatter.settings.registration_host_entity:
       type: boolean
       label: 'Link'
 
+field.formatter.settings.registration_form:
+  type: mapping
+  label: 'Registration form format settings'
+  mapping:
+    show_reason:
+      type: boolean
+      label: 'Show reason when form is hidden'
+
 field.formatter.settings.registration_link:
   type: mapping
   label: 'Registration link format settings'
@@ -70,6 +84,9 @@ field.formatter.settings.registration_link:
     label:
       type: string
       label: 'Label'
+    show_reason:
+      type: boolean
+      label: 'Show reason when link is hidden'
 
 field.widget.settings.registration_type:
   type: mapping

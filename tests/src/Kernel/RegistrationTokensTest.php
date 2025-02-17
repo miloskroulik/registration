@@ -44,64 +44,17 @@ class RegistrationTokensTest extends RegistrationKernelTestBase {
     // Simple tokens.
     $test_data = [
       '[registration:id]' => '1',
+      '[registration:count]' => '1',
+      '[registration:label]' => 'Registration #1 for My event',
+      '[registration:mail]' => 'test@example.org',
+      '[registration:state]' => 'Pending',
+      '[registration:type]' => 'conference',
+      '[registration:type-name]' => 'Conference',
+
+      // Since the token module is not installed, field tokens will not resolve.
       '[registration:registration_id:value]' => '[registration:registration_id:value]',
-      '[registration:count]' => '1',
       '[registration:count:value]' => '[registration:count:value]',
-      '[registration:label]' => 'Registration #1 for My event',
-      '[registration:mail]' => 'test@example.org',
       '[registration:mail:value]' => '[registration:mail:value]',
-      '[registration:state]' => 'Pending',
-      '[registration:type]' => 'conference',
-      '[registration:type-name]' => 'Conference',
-    ];
-
-    $token_data = [
-      'registration' => $registration,
-    ];
-
-    foreach ($test_data as $token => $expected_value) {
-      $token_replaced = $this->tokenService->replace($token, $token_data);
-      $this->assertEquals($expected_value, $token_replaced);
-    }
-
-    // Chained host entity tokens.
-    $test_data = [
-      '[registration:entity]' => 'My event',
-      '[registration:entity:nid]' => '1',
-      '[registration:entity:title]' => 'My event',
-      '[registration:entity:type]' => 'event',
-      '[registration:entity:type-name]' => 'Event',
-    ];
-
-    foreach ($test_data as $token => $expected_value) {
-      $token_replaced = $this->tokenService->replace($token, $token_data);
-      $this->assertEquals($expected_value, $token_replaced);
-    }
-  }
-
-  /**
-   * Tests token generation and chaining.
-   */
-  public function testRegistrationTokensWithTokenModuleInstalled() {
-    $this->container->get('module_installer')->install(['token']);
-
-    $node = $this->createAndSaveNode();
-    $registration = $this->createRegistration($node);
-    $registration->set('anon_mail', 'test@example.org');
-    $registration->save();
-
-    // Simple tokens.
-    $test_data = [
-      '[registration:id]' => '1',
-      '[registration:registration_id:value]' => '1',
-      '[registration:count]' => '1',
-      '[registration:count:value]' => '1',
-      '[registration:label]' => 'Registration #1 for My event',
-      '[registration:mail]' => 'test@example.org',
-      '[registration:mail:value]' => 'test@example.org',
-      '[registration:state]' => 'Pending',
-      '[registration:type]' => 'conference',
-      '[registration:type-name]' => 'Conference',
     ];
 
     $token_data = [

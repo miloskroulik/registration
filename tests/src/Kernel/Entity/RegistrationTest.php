@@ -65,6 +65,7 @@ class RegistrationTest extends RegistrationKernelTestBase {
    * @covers ::isCanceled
    * @covers ::isComplete
    * @covers ::isHeld
+   * @covers ::requiresCapacityCheck
    */
   public function testRegistration() {
     $node = $this->createAndSaveNode();
@@ -97,6 +98,23 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $this->assertFalse($registration->isComplete());
     $this->assertNull($registration->getCompletedTime());
     $this->assertFalse($registration->isHeld());
+    $this->assertFalse($registration->requiresCapacityCheck());
+
+    $registration->set('state', 'canceled');
+    $this->assertFalse($registration->requiresCapacityCheck());
+    $this->assertTrue($registration->requiresCapacityCheck(TRUE));
+    $registration->save();
+    $this->assertFalse($registration->requiresCapacityCheck());
+    $this->assertFalse($registration->requiresCapacityCheck(TRUE));
+    $registration->set('state', 'pending');
+    $registration->save();
+    $registration->set('count', 2);
+    $this->assertTrue($registration->requiresCapacityCheck());
+    $this->assertTrue($registration->requiresCapacityCheck(TRUE));
+    $registration->save();
+    $this->assertFalse($registration->requiresCapacityCheck());
+    $this->assertFalse($registration->requiresCapacityCheck(TRUE));
+    $registration->set('count', 1);
 
     $registration->setCreatedTime(635879700);
     $registration->save();
@@ -134,6 +152,102 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $registration = $this->reloadEntity($registration);
     $this->assertNull($registration->getHostEntity());
     $this->assertNull($registration->getHostEntityTypeLabel());
+  }
+
+  /**
+   * @covers ::isNewToHost
+   */
+  public function testIsNewToHost(): void {
+    $node = $this->createAndSaveNode();
+    $node = $this->reloadEntity($node);
+    $node2 = $this->createAndSaveNode();
+
+    $storage = $this->entityTypeManager->getStorage('registration');
+    $registration = $storage->create(['type' => 'conference']);
+    $this->assertTrue($registration->isNewToHost());
+
+    $registration = $this->createRegistration($node);
+    $this->assertTrue($registration->isNewToHost());
+    $registration->set('entity_id', $node2->id());
+    $this->assertTrue($registration->isNewToHost());
+
+    $registration->save();
+    $this->assertFalse($registration->isNewToHost());
+    $registration->set('entity_id', $node->id());
+    $this->assertTrue($registration->isNewToHost());
+    $registration->set('entity_id', $node2->id());
+    $this->assertFalse($registration->isNewToHost());
+    $registration->set('entity_id', $node->id());
+    $registration->save();
+    $this->assertFalse($registration->isNewToHost());
+
+    $registration->set('entity_type_id', 'user');
+    $this->assertTrue($registration->isNewToHost());
+    $registration->set('entity_type_id', 'node');
+    $this->assertFalse($registration->isNewToHost());
+    $registration->set('entity_type_id', 'user');
+    $registration->save();
+    $this->assertFalse($registration->isNewToHost());
+  }
+
+  /**
+   * @covers ::getHostEntity
+   */
+  public function testGetHostEntity(): void {
+    $node = $this->createAndSaveNode();
+    $storage = $this->entityTypeManager->getStorage('registration');
+
+    /** @var \Drupal\registration\Entity\RegistrationInterface */
+    $registration = $storage->create([
+      'type' => 'conference',
+      'entity_id' => $node->id(),
+      'entity_type_id' => 'node',
+    ]);
+
+    $this->assertEquals($node->id(), $registration->getHostEntity()->id());
+    $this->assertSame('node', $registration->getHostEntity()->getEntityTypeId());
+
+    // The host updates after being changed.
+    $node2 = $this->createAndSaveNode();
+    $registration->set('entity_id', $node2->id());
+    $this->assertEquals($node2->id(), $registration->getHostEntity()->id());
+    $this->assertSame('node', $registration->getHostEntity()->getEntityTypeId());
+
+    // The host is still correct after the change is saved.
+    $registration->save();
+    $this->assertEquals($node2->id(), $registration->getHostEntity()->id());
+    $this->assertSame('node', $registration->getHostEntity()->getEntityTypeId());
+    $registration = $this->reloadEntity($registration);
+    $this->assertEquals($node2->id(), $registration->getHostEntity()->id());
+    $this->assertSame('node', $registration->getHostEntity()->getEntityTypeId());
+
+    // The host updates after being changed following a save.
+    $registration->set('entity_id', $node->id());
+    $this->assertEquals($node->id(), $registration->getHostEntity()->id());
+    $this->assertSame('node', $registration->getHostEntity()->getEntityTypeId());
+
+    // The host is null if set to an invalid entity type ID.
+    $registration->set('entity_type_id', 'cruft');
+    $this->assertNull($registration->getHostEntity());
+    $this->assertSame('cruft', $registration->getHostEntityTypeId());
+    $registration->save();
+    $this->assertSame('cruft', $registration->getHostEntityTypeId());
+    $this->assertNull($registration->getHostEntity());
+    $registration = $this->reloadEntity($registration);
+    $this->assertSame('cruft', $registration->getHostEntityTypeId());
+    $this->assertNull($registration->getHostEntity());
+
+    // The host is null if set to an invalid entity ID.
+    $registration->set('entity_type_id', 'node');
+    $registration->set('entity_id', 999);
+    $this->assertNull($registration->getHostEntity());
+    $this->assertEquals(999, $registration->getHostEntityId());
+    $registration->save();
+    $this->assertEquals(999, $registration->getHostEntityId());
+    $this->assertNull($registration->getHostEntity());
+    $registration = $this->reloadEntity($registration);
+    $this->assertEquals(999, $registration->getHostEntityId());
+    $this->assertNull($registration->getHostEntity());
   }
 
 }
