@@ -68,6 +68,7 @@ INCLUDED ADD-ON MODULES
 The Registration module includes the following submodules that can be enabled to provide additional functionality.
 
 1. Registration Administrative Overrides - allow system administrators to override limits within registration settings.
+1. Registration Change Host - allow the host entity for an existing registration to be changed.
 1. Registration Confirmation - send confirmation emails when registrations are completed.
 1. Registration Inline Entity Form - allow registration settings to be edited on the host entity edit form.
 1. Registration Purger - automatically delete registrations and registration settings for a host entity that is deleted.
@@ -103,15 +104,6 @@ Note that some listings, such as the Registration Summary at /admin/people/regis
 MAINTAINERS
 -----------
 
-Drupal 10 module:
-
  * John Oltman - [https://www.drupal.org/u/johnoltman](https://www.drupal.org/u/johnoltman)
-
-Drupal 7 module:
-
+ * Martin Anderson-Clutz - [https://www.drupal.org/u/mandclu](https://www.drupal.org/u/mandclu)
  * Lev Tsypin (levelos) - [https://www.drupal.org/u/levelos](https://www.drupal.org/u/levelos)
- * Jaymz Rhime (wxactly) - [https://www.drupal.org/u/wxactly](https://www.drupal.org/u/wxactly)
- * Gabriel Carleton-Barnes (gcb) - [https://www.drupal.org/u/gcb](https://www.drupal.org/u/gcb)
- * Greg Boggs - [https://www.drupal.org/u/greg-boggs](https://www.drupal.org/u/greg-boggs)
- * Neslee Canil Pinto - [https://www.drupal.org/u/neslee-canil-pinto](https://www.drupal.org/u/neslee-canil-pinto)
- * Brooke Mahoney (loopduplicate) - [https://www.drupal.org/u/loopduplicate](https://www.drupal.org/u/loopduplicate)

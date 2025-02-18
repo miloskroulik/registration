@@ -11,8 +11,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Allows the site admin to configure global registration settings.
- *
- * @phpcs:disable Drupal.Semantics.FunctionT.WhiteSpace
  */
 class RegistrationAdminForm extends ConfigFormBase {
 
@@ -57,14 +55,14 @@ class RegistrationAdminForm extends ConfigFormBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Set and forget mode'),
       '#default_value' => $config->get('set_and_forget'),
-      '#description' => $this->t('Automatically maintains the <strong>Enable</strong> registrations checkbox on the per-entity Settings form based on the open and close dates on the Settings page. This is useful for displaying and removing Register links as soon as registration for a given event opens and closes. Requires a properly configured Cron task that runs at least once an hour. This mode is selected automatically by default, but you can disable it for backwards compatibility with the Drupal 7 version of the module. Sites that enable this may wish to hide the <strong>Enable</strong> field on the Registration settings <a href="/admin/structure/registration-settings/form-display">form display</a>. Note that registrations are still enabled and disabled properly without this, but users may receive messaging such as "Registrations are closed" on the Register page unless the site admin manually unchecks the Enable box on the Settings form at the appropriate time. With this mode set, links to the Register page are automatically removed once the close date is reached for a given event.') . $this->t(' <strong>This feature is deprecated and will be removed in registration:4.0.0.</strong> See <a href="https://www.drupal.org/node/3506953" target="_blank">this change record</a> for information about the replacement.'),
+      '#description' => $this->t('Automatically maintains the <strong>Enable</strong> registrations checkbox on the per-entity Settings form based on the open and close dates on the Settings page. This is useful for displaying and removing Register links as soon as registration for a given event opens and closes. Requires a properly configured Cron task that runs at least once an hour. Sites that enable this may wish to hide the <strong>Enable</strong> field on the Registration settings <a href="/admin/structure/registration-settings/form-display">form display</a>. Note that registrations are still enabled and disabled properly without this, but users may receive messaging such as "Registrations are closed" on the Register page unless the site admin manually unchecks the Enable box on the Settings form at the appropriate time. With this mode set, links to the Register page are automatically removed once the close date is reached for a given event. <strong>This feature is deprecated and will be removed in registration:4.0.0 as it is obsolete.</strong> See <a href="https://www.drupal.org/node/3506953" target="_blank">this change record</a> for more information.'),
     ];
 
     $form['lenient_access_check'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Disregard open and close dates in register access check'),
       '#default_value' => $config->get('lenient_access_check'),
-      '#description' => $this->t('By default, access to the register route is disabled, and register links are hidden, if the host entity is not open for registration based on open and close dates in the host entity registration settings. This option causes the open and close dates to be ignored in the register access check, so that registration forms can be reached as long as the Enable box is checked in the host entity registration settings. This option is most useful for sites that place direct links to the registration page on other sites, since it is preferable to see a "registration is closed" message instead of an "access denied" message once registration has closed. Most sites can leave this option disabled. See <a href="https://www.drupal.org/node/3506982" target="_blank">this change record</a> for more information.'),
+      '#description' => $this->t('Allows the open and close dates to be ignored in the register access check, so that registration forms can be reached as long as the Enable box is checked in the host entity registration settings. This option is most useful for sites that place direct links to the registration page on other sites, since it is preferable to see a "registration is closed" message instead of an "access denied" message once registration has closed. Most sites can leave this option disabled. See <a href="https://www.drupal.org/node/3506982" target="_blank">this change record</a> for more information.'),
     ];
 
     $form['limit_field_values'] = [

@@ -162,6 +162,69 @@ class RegistrationSettingsEventTest extends EventTestBase {
     $settings = $this->reloadEntity($settings);
     $this->assertEquals(1, (int) $settings->getSetting('maximum_spaces'));
     $this->assertFalse((bool) $settings->getSetting('status'));
+
+    // Confirm that events are only fired for the appropriate settings
+    // dates and not all.
+    $node1 = $this->createAndSaveNode();
+    $node2 = $this->createAndSaveNode();
+    $node3 = $this->createAndSaveNode();
+
+    /** @var \Drupal\registration\HostEntityInterface $host_entity */
+    $host_entity1 = $this->entityTypeManager
+      ->getHandler($node->getEntityTypeId(), 'registration_host_entity')
+      ->createHostEntity($node1);
+    $host_entity2 = $this->entityTypeManager
+      ->getHandler($node->getEntityTypeId(), 'registration_host_entity')
+      ->createHostEntity($node2);
+    $host_entity3 = $this->entityTypeManager
+      ->getHandler($node->getEntityTypeId(), 'registration_host_entity')
+      ->createHostEntity($node3);
+
+    // An event should be fired for setting 1 but not 2 or 3.
+    $settings1 = $host_entity1->getSettings();
+    $settings1->set('maximum_spaces', 1);
+    $settings1->set('status', 0);
+    $now = new DrupalDateTime('now', $storage_timezone);
+    $now_date = $now->format($storage_format);
+    $settings1->set('open', $now_date);
+    $settings1->save();
+
+    $settings2 = $host_entity2->getSettings();
+    $settings2->set('maximum_spaces', 1);
+    $settings2->set('status', 0);
+    // Opens in 15 minutes.
+    $php_date_time = $now->getPhpDateTime();
+    $interval = new \DateInterval('PT15M');
+    $php_date_time->add($interval);
+    $date = DrupalDateTime::createFromDateTime($php_date_time);
+    $settings2->set('open', $date->format($storage_format));
+    $settings2->save();
+
+    $settings3 = $host_entity3->getSettings();
+    $settings3->set('maximum_spaces', 1);
+    $settings3->set('status', 0);
+    // Closed one hour ago.
+    // If the interval was 59 minutes ago an event would fire.
+    $php_date_time = $now->getPhpDateTime();
+    $interval = new \DateInterval('PT1H');
+    $php_date_time->sub($interval);
+    $date = DrupalDateTime::createFromDateTime($php_date_time);
+    $settings3->set('close', $date->format($storage_format));
+    $settings3->save();
+
+    $this->cron->run();
+
+    $settings1 = $this->reloadEntity($settings1);
+    $this->assertEquals(2, (int) $settings1->getSetting('maximum_spaces'));
+    $this->assertTrue((bool) $settings1->getSetting('status'));
+
+    $settings2 = $this->reloadEntity($settings2);
+    $this->assertEquals(1, (int) $settings2->getSetting('maximum_spaces'));
+    $this->assertFalse((bool) $settings2->getSetting('status'));
+
+    $settings3 = $this->reloadEntity($settings3);
+    $this->assertEquals(1, (int) $settings3->getSetting('maximum_spaces'));
+    $this->assertFalse((bool) $settings3->getSetting('status'));
   }
 
 }

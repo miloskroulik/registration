@@ -350,7 +350,8 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
   public function getCacheTags(): array {
     $cache_tags = $this->cacheTags;
 
-    // Add cache tags for entities the host depends on.
+    // Add cache tags for entities the host depends on. The dependency on the
+    // wrapped entity is handled in the constructor for this class.
     if ($registration_type = $this->getRegistrationType()) {
       $cache_tags = Cache::mergeTags($cache_tags, $registration_type->getCacheTags());
     }

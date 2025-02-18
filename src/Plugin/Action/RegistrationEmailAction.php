@@ -150,6 +150,10 @@ class RegistrationEmailAction extends EmailAction {
       $result = AccessResult::forbidden();
     }
 
+    // Recalculate this result if the registration is updated.
+    if ($object instanceof RegistrationInterface) {
+      $result->addCacheableDependency($object);
+    }
     // Recalculate this result if the host entity is updated.
     if ($host_entity) {
       $result->addCacheableDependency($host_entity);
