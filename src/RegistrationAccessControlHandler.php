@@ -26,10 +26,12 @@ class RegistrationAccessControlHandler extends EntityAccessControlHandler {
     // check the parent. Simply check it here and return the result.
     if ($operation == 'edit state') {
       $permissions = [
-        "administer registration",
-        "administer {$entity->bundle()} registration",
         "edit {$entity->bundle()} registration state",
       ];
+      if (!Settings::get('registration_disable_edit_state_by_administer_permission')) {
+        $permissions[] = "administer registration";
+        $permissions[] = "administer {$entity->bundle()} registration";
+      }
       $result = AccessResult::allowedIfHasPermissions($account, $permissions, 'OR')
         ->andIf($entity->access('update', $account, TRUE));
 

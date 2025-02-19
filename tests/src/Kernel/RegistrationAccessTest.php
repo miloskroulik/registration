@@ -352,6 +352,74 @@ class RegistrationAccessTest extends RegistrationKernelTestBase {
   }
 
   /**
+   * Tests "edit state" access for registrations.
+   */
+  public function testEditStateAccess() {
+    $node = $this->createAndSaveNode();
+    $registration = $this->createAndSaveRegistration($node);
+
+    $account = $this->createUser(['administer registration']);
+    $this->assertTrue($registration->access('edit state', $account));
+
+    $account = $this->createUser(['administer conference registration']);
+    $this->assertTrue($registration->access('edit state', $account));
+
+    $account = $this->createUser(['edit conference registration state']);
+    $this->assertFalse($registration->access('edit state', $account));
+
+    $account = $this->createUser([
+      'edit conference registration state',
+      'update any conference registration',
+    ]);
+    $this->assertTrue($registration->access('edit state', $account));
+
+    $account = $this->createUser(['update any conference registration']);
+    $this->assertFalse($registration->access('edit state', $account));
+
+    $account = $this->createUser(['access registration overview']);
+    $this->assertFalse($registration->access('edit state', $account));
+
+    // Test BC layer. Administrators cannot edit state without also having the
+    // "edit state" permission, when settings.php is configured in this way.
+    $settings = Settings::getInstance() ? Settings::getAll() : [];
+    $settings['registration_disable_edit_state_by_administer_permission'] = TRUE;
+    new Settings($settings);
+
+    $account = $this->createUser(['administer registration']);
+    $this->assertFalse($registration->access('edit state', $account));
+
+    $account = $this->createUser(['administer conference registration']);
+    $this->assertFalse($registration->access('edit state', $account));
+
+    $account = $this->createUser(['edit conference registration state']);
+    $this->assertFalse($registration->access('edit state', $account));
+
+    $account = $this->createUser([
+      'edit conference registration state',
+      'update any conference registration',
+    ]);
+    $this->assertTrue($registration->access('edit state', $account));
+
+    $account = $this->createUser(['update any conference registration']);
+    $this->assertFalse($registration->access('edit state', $account));
+
+    $account = $this->createUser(['access registration overview']);
+    $this->assertFalse($registration->access('edit state', $account));
+
+    $account = $this->createUser([
+      'administer registration',
+      'edit conference registration state',
+    ]);
+    $this->assertTrue($registration->access('edit state', $account));
+
+    $account = $this->createUser([
+      'administer conference registration',
+      'edit conference registration state',
+    ]);
+    $this->assertTrue($registration->access('edit state', $account));
+  }
+
+  /**
    * Tests route access for registrations.
    */
   public function testRouteAccess() {
