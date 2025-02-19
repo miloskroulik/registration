@@ -12,12 +12,7 @@ use Drupal\Tests\registration\Kernel\RegistrationKernelTestBase;
 abstract class RegistrationScheduledActionKernelTestBase extends RegistrationKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * Note that when a child class declares its own $modules list, that list
-   * doesn't override this one, it just extends it.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'dblog',
@@ -46,6 +41,7 @@ abstract class RegistrationScheduledActionKernelTestBase extends RegistrationKer
 
     $this->installConfig('filter');
     $this->installSchema('dblog', 'watchdog');
+    $this->installSchema('user', 'users_data');
 
     $this->cron = $this->container->get('cron');
     $this->keyValueFactory = $this->container->get('keyvalue.expirable');

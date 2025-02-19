@@ -9,7 +9,7 @@ use Drupal\Tests\registration\Traits\RegistrationCreationTrait;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 
 /**
- * Tests registration state transitions.
+ * Tests scheduled actions.
  *
  * @coversDefaultClass \Drupal\registration_scheduled_action\Cron\RegistrationSchedule
  *
