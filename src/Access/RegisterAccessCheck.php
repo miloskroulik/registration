@@ -134,7 +134,7 @@ class RegisterAccessCheck implements AccessInterface {
    *   TRUE if access is allowed, FALSE otherwise.
    */
   protected function isAllowedWithLenientAccessCheck(HostEntityInterface $host_entity): bool {
-    return (bool) $host_entity->getSetting('status') && $this->config->get('lenient_access_check');
+    return (bool) $this->config->get('lenient_access_check') && $host_entity->isConfiguredForRegistration() && (bool) $host_entity->getSetting('status');
   }
 
 }
