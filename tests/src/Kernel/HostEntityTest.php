@@ -55,6 +55,7 @@ class HostEntityTest extends RegistrationKernelTestBase {
    * @covers ::getRegistrationList
    * @covers ::getRegistrationTypeBundle
    * @covers ::hasRoom
+   * @covers ::hasRoomForRegistration
    * @covers ::isAvailableForRegistration
    * @covers ::isOpenForRegistration
    * @covers ::isConfiguredForRegistration
@@ -196,6 +197,13 @@ class HostEntityTest extends RegistrationKernelTestBase {
     $this->assertTrue($host_entity->isAvailableForRegistration());
     $this->assertTrue($host_entity->isEnabledForRegistration());
     $this->assertTrue($host_entity->isOpenForRegistration());
+
+    // Registering for more than one space.
+    $settings->set('maximum_spaces', 10);
+    $settings->save();
+    $this->assertTrue($host_entity->hasRoomForRegistration(5));
+    $this->assertFalse($host_entity->hasRoomForRegistration(6));
+    $this->assertTrue($host_entity->hasRoomForRegistration(5));
 
     // Reached capacity.
     $settings->set('capacity', 5);

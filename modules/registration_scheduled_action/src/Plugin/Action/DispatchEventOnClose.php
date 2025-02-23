@@ -20,7 +20,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * Provides an action to dispatch an event when registration closes.
+ * Provides an action to dispatch an event when the close date is reached.
+ *
+ * The event is dispatched regardless of the value of the "status" field.
  *
  * @Action(
  *   id = "dispatch_event_on_close_action",
@@ -114,7 +116,6 @@ class DispatchEventOnClose extends ConfigurableActionBase implements ContainerFa
    * {@inheritdoc}
    */
   public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
-    // Allow the action to execute if the host entity is after close.
     $result = NULL;
     $host_entity = NULL;
     if ($object && ($host_entity = $this->getHostEntity($object))) {

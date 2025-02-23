@@ -100,7 +100,7 @@ class RegistrationLinkFormatter extends FormatterBase {
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
     if ($entity = $items->getEntity()) {
-      if (isset($items, $items[0])) {
+      if (isset($items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
           $registration_type = $this->entityTypeManager
             ->getStorage('registration_type')

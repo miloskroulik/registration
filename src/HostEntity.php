@@ -639,6 +639,21 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
   /**
    * {@inheritdoc}
    */
+  public function hasRoomForRegistration(int $spaces = 1, bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface {
+    $configuration = ['spaces' => $spaces];
+    $validation_result = $this->validator()->execute('has_room_for_registration', [
+      'HostHasSettings' => [],
+      'HostIsOpen' => [],
+      'HostIsEnabled' => [],
+      'HostHasRoom' => $configuration,
+      'HostAllowsRegistrant' => [],
+    ], $this);
+    return $return_as_object ? $validation_result : $validation_result->isValid();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isAvailableForRegistration(bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface {
     $validation_result = $this->validator()->execute('available_for_registration', [
       'HostHasSettings',

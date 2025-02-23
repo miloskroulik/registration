@@ -28,6 +28,11 @@ class HostHasRoomConstraint extends RegistrationConstraintBase {
   public ?HostEntityInterface $hostEntity;
 
   /**
+   * The number of spaces passed as a constraint option.
+   */
+  public ?int $spaces;
+
+  /**
    * Would exceed event capacity.
    */
   public string $noRoomMessage = "Sorry, unable to register for %label due to: insufficient spaces remaining.";

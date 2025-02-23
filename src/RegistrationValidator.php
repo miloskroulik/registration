@@ -403,6 +403,7 @@ class RegistrationValidator implements RegistrationValidatorInterface {
     $availability_pipelines = [
       'available_for_registration',
       'enabled_for_registration',
+      'has_room_for_registration',
       'open_for_registration',
       'validate_registration',
     ];

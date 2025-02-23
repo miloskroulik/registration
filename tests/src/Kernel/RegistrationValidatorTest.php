@@ -225,7 +225,14 @@ class RegistrationValidatorTest extends RegistrationKernelTestBase {
     $this->assertTrue($validation_result->isValid());
     $this->assertTrue($validation_result->wasCached());
 
-    // Only availability checks are cached.
+    // Only basic availability checks are cached.
+    $settings->save();
+    $validation_result = $host_entity->hasRoomForRegistration(1, TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
+    $validation_result = $host_entity->hasRoomForRegistration(1, TRUE);
+    $this->assertTrue($validation_result->isValid());
+    $this->assertFalse($validation_result->wasCached());
     $registration = $this->createRegistration($node);
     $registration->set('author_uid', 1);
     $registration->set('user_uid', 1);

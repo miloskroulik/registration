@@ -316,6 +316,32 @@ interface HostEntityInterface extends AccessibleInterface {
   public function hasRoom(int $spaces = 1, ?RegistrationInterface $registration = NULL): bool;
 
   /**
+   * Determines whether a new registration with a given # of spaces is allowed.
+   *
+   * This is the same as the isAvailableForRegistration method, except it is
+   * not cached, and can check a varying number of spaces. The need to call
+   * this method should be rare, and the method is not used by the registration
+   * module itself. The use case is checking for a varying number of spaces
+   * outside the context of a registration form or saving a registration.
+   * The only known use case is the availability checker within the Commerce
+   * Registration contributed module, which needs to perform checking of the
+   * shopping cart.
+   *
+   * @param int $spaces
+   *   (optional) The number of spaces requested. Defaults to 1.
+   * @param bool $return_as_object
+   *   (optional) Defaults to FALSE.
+   *
+   * @return bool|\Drupal\registration\RegistrationValidationResultInterface
+   *   Returns a boolean if $return_as_object is FALSE (this is the default),
+   *   and otherwise a RegistrationValidationResultInterface object. When an
+   *   object is returned, it contains any violations that prevent registration.
+   *
+   * @see ::isAvailableForRegistration()
+   */
+  public function hasRoomForRegistration(int $spaces = 1, bool $return_as_object = FALSE): bool|RegistrationValidationResultInterface;
+
+  /**
    * Determines whether new registrations are allowed.
    *
    * This checks to make sure registrations are enabled in the settings, and

@@ -20,7 +20,19 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * Provides an action to dispatch an event when registration opens.
+ * Provides an action to dispatch an event when the open date is reached.
+ *
+ * The event is dispatched regardless of the value of the "status" field.
+ * Subscribers to the event can check if the host is open for registration
+ * if needed, using code as follows:
+ *
+ * @code
+ *   $settings = $event->getSettings();
+ *   $host_entity = $settings->getHostEntity();
+ *   if ($host_entity->isOpenForRegistration()) {
+ *     // Take some action for a newly opened event.
+ *   }
+ * @endcode
  *
  * @Action(
  *   id = "dispatch_event_on_open_action",
@@ -114,7 +126,6 @@ class DispatchEventOnOpen extends ConfigurableActionBase implements ContainerFac
    * {@inheritdoc}
    */
   public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
-    // Allow the action to execute if the host entity is open for registration.
     $result = NULL;
     $host_entity = NULL;
     if ($object && ($host_entity = $this->getHostEntity($object))) {

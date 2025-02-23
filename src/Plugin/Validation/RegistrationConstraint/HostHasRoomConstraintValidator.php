@@ -24,13 +24,14 @@ class HostHasRoomConstraintValidator extends ConstraintValidator {
   public function validate($value, Constraint $constraint) {
     /** @var HostHasRoomConstraint $constraint */
     $host_entity = $constraint->hostEntity ?? $value;
+    $spaces = $constraint->spaces ?? 1;
 
     if ($host_entity instanceof HostEntityInterface) {
       // Recheck when registrations are added, updated or deleted for this host.
       $list_cache_tag = $host_entity->getRegistrationListCacheTag();
       $this->context->getCacheableMetadata()->addCacheTags([$list_cache_tag]);
 
-      if (!$host_entity->hasRoom()) {
+      if (!$host_entity->hasRoom($spaces)) {
         $this->context
           ->buildViolation($constraint->noRoomMessage, [
             '%label' => $host_entity->label(),
