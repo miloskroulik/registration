@@ -7,6 +7,7 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityHandlerBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Site\Settings;
 
 /**
  * Defines a default implementation for a host access control handler.
@@ -348,6 +349,10 @@ class RegistrationHostAccessControlHandler extends EntityHandlerBase implements 
         'create ' . $type . ' registration other users',
         'create ' . $type . ' registration other anonymous',
       ];
+    }
+    $permissions[] = 'administer registration';
+    if (!Settings::get('registration_disable_create_by_administer_bundle_permission')) {
+      $permissions[] = 'administer ' . $type . ' registration';
     }
     return AccessResult::allowedIfHasPermissions($account, $permissions, 'OR');
   }

@@ -40,13 +40,7 @@ class RegistrationAdminTest extends RegistrationWaitListBrowserTestBase {
     $user->save();
 
     $account = $this->drupalCreateUser([
-      'access administration pages',
-      'access user profiles',
-      'administer blocks',
-      'administer registration',
-      'administer registration types',
-      'view the administration theme',
-      'create conference registration self',
+      'update any conference registration',
       'edit conference registration state',
     ]);
     $this->drupalLogin($account);
@@ -101,13 +95,8 @@ class RegistrationAdminTest extends RegistrationWaitListBrowserTestBase {
 
     // Registration is blocked because the host entity is at capacity.
     $account = $this->drupalCreateUser([
-      'access administration pages',
-      'access user profiles',
-      'administer blocks',
-      'administer registration',
-      'administer registration types',
-      'view the administration theme',
       'create conference registration self',
+      'update any conference registration',
       'edit conference registration state',
     ]);
     $this->drupalLogin($account);
@@ -150,15 +139,9 @@ class RegistrationAdminTest extends RegistrationWaitListBrowserTestBase {
     $registration_type->setThirdPartySetting('registration_admin_overrides', 'capacity', TRUE);
     $registration_type->save();
     $account = $this->drupalCreateUser([
-      'access administration pages',
-      'access user profiles',
-      'administer blocks',
       'administer registration',
-      'administer registration types',
-      'view the administration theme',
-      'create conference registration self',
-      'edit conference registration state',
       'registration override capacity',
+      'edit conference registration state',
     ]);
     $this->drupalLogin($account);
     $this->drupalGet('/registration/' . $registration->id() . '/edit');

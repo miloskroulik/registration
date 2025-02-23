@@ -63,7 +63,10 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     $this->drupalGet('user/' . $this->adminUser->id() . '/register');
     $this->assertSession()->buttonExists('Save Registration');
     $this->assertSession()->pageTextNotContains('insufficient spaces remaining');
-    $this->submitForm([], 'Save Registration');
+    $edit = [
+      'who_is_registering' => 'registration_registrant_type_me',
+    ];
+    $this->submitForm($edit, 'Save Registration');
     $this->assertSession()->pageTextContains('Registration has been saved.');
     $this->drupalLogout();
 
@@ -104,7 +107,10 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     $this->assertSession()->buttonExists('Save Registration');
     $this->assertSession()->pageTextNotContains('insufficient spaces remaining');
     $this->assertSession()->pageTextNotContains('is not open yet');
-    $this->submitForm([], 'Save Registration');
+    $edit = [
+      'who_is_registering' => 'registration_registrant_type_me',
+    ];
+    $this->submitForm($edit, 'Save Registration');
     $this->assertSession()->pageTextContains('Registration has been saved.');
     $this->drupalLogout();
 
@@ -146,7 +152,10 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     $this->assertSession()->buttonExists('Save Registration');
     $this->assertSession()->pageTextNotContains('insufficient spaces remaining');
     $this->assertSession()->pageTextNotContains('is closed');
-    $this->submitForm([], 'Save Registration');
+    $edit = [
+      'who_is_registering' => 'registration_registrant_type_me',
+    ];
+    $this->submitForm($edit, 'Save Registration');
     $this->assertSession()->pageTextContains('Registration has been saved.');
     $this->drupalLogout();
 
@@ -190,7 +199,10 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     $this->assertSession()->buttonExists('Save Registration');
     $this->assertSession()->pageTextContains('completing this registration form will place you on a waitlist');
     $this->assertSession()->pageTextNotContains('insufficient spaces remaining');
-    $this->submitForm([], 'Save Registration');
+    $edit = [
+      'who_is_registering' => 'registration_registrant_type_me',
+    ];
+    $this->submitForm($edit, 'Save Registration');
     $this->assertSession()->statusMessageExists('warning', 'Registration placed on the wait list.');
     $this->assertSession()->statusMessageNotExists('status', 'Registration has been saved.');
     $this->drupalLogout();
@@ -209,7 +221,10 @@ class RegisterTest extends RegistrationAdminOverridesBrowserTestBase {
     $this->assertSession()->buttonExists('Save Registration');
     $this->assertSession()->pageTextNotContains('completing this registration form will place you on a waitlist');
     $this->assertSession()->pageTextNotContains('insufficient spaces remaining');
-    $this->submitForm([], 'Save Registration');
+    $edit = [
+      'who_is_registering' => 'registration_registrant_type_me',
+    ];
+    $this->submitForm($edit, 'Save Registration');
     $this->assertSession()->statusMessageExists('status', 'Registration has been saved.');
     $this->assertSession()->statusMessageNotExists('warning', 'Registration placed on the wait list.');
     $this->drupalLogout();
