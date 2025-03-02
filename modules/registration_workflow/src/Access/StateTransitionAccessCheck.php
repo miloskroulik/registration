@@ -4,6 +4,8 @@ namespace Drupal\registration_workflow\Access;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Session\AccountInterface;
@@ -15,19 +17,25 @@ use Drupal\registration_workflow\StateTransitionValidationInterface;
 class StateTransitionAccessCheck implements AccessInterface {
 
   /**
+   * The configuration.
+   */
+  protected ImmutableConfig $config;
+
+  /**
    * The state transition validator.
-   *
-   * @var \Drupal\registration_workflow\StateTransitionValidationInterface
    */
   protected StateTransitionValidationInterface $transitionValidator;
 
   /**
    * StateTransitionAccessCheck constructor.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The configuration factory.
    * @param \Drupal\registration_workflow\StateTransitionValidationInterface $transition_validator
    *   The state transition validator.
    */
-  public function __construct(StateTransitionValidationInterface $transition_validator) {
+  public function __construct(ConfigFactoryInterface $config_factory, StateTransitionValidationInterface $transition_validator) {
+    $this->config = $config_factory->get('registration_workflow.settings');
     $this->transitionValidator = $transition_validator;
   }
 
@@ -46,9 +54,9 @@ class StateTransitionAccessCheck implements AccessInterface {
     $parameters = $route_match->getParameters();
     if ($parameters->has('registration') && $parameters->has('transition')) {
       /** @var \Drupal\registration\Entity\RegistrationInterface $registration */
-      $entity = $parameters->get('registration');
+      $registration = $parameters->get('registration');
       $transition = $parameters->get('transition');
-      $workflow = $entity->getWorkflow();
+      $workflow = $registration->getWorkflow();
 
       // Retrieving a transition could throw an exception, so must use a try
       // catch block here.
@@ -61,21 +69,29 @@ class StateTransitionAccessCheck implements AccessInterface {
         // state to the requested new state. The transition validator also
         // checks that the account has permission to perform the transition.
         $valid = $this->transitionValidator
-          ->isTransitionValid($workflow, $entity->getState(), $transition->to(), $entity, $account);
+          ->isTransitionValid($workflow, $registration->getState(), $transition->to(), $registration, $account);
+
+        // Require update access to the registration if this option is selected
+        // in registration workflow settings.
+        $require_update_access = (bool) $this->config->get('require_update_access');
+        $update_access = $require_update_access ? $registration->access('update', $account, TRUE) : AccessResult::allowed();
+
         return AccessResult::allowedIf($valid)
+          ->andIf($update_access)
           // Recalculate this result if the relevant entities are updated.
           ->cachePerPermissions()
+          ->addCacheableDependency($this->config)
           ->addCacheableDependency($workflow)
-          ->addCacheableDependency($entity);
+          ->addCacheableDependency($registration);
       }
 
       // Handle an invalid transition name.
-      catch (\Exception $e) {
+      catch (\Exception) {
         return AccessResult::forbidden("The transition does not exist in the registration workflow.")
           // Recalculate this result if the relevant entities are updated.
           ->cachePerPermissions()
           ->addCacheableDependency($workflow)
-          ->addCacheableDependency($entity);
+          ->addCacheableDependency($registration);
       }
     }
 

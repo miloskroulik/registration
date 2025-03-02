@@ -15,3 +15,13 @@ function registration_workflow_install() {
   $bins = Cache::getBins();
   $bins['render']->deleteAll();
 }
+
+/**
+ * Adds a setting to require update access to registrations.
+ */
+function registration_workflow_update_10001() {
+  \Drupal::service('config.factory')
+    ->getEditable('registration_workflow.settings')
+    ->set('require_update_access', FALSE)
+    ->save();
+}

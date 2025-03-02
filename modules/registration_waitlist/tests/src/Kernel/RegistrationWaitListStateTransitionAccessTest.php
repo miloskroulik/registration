@@ -36,9 +36,11 @@ class RegistrationWaitListStateTransitionAccessTest extends RegistrationWaitList
    * @covers ::access
    */
   public function testWaitlistStateTransitionAccess() {
+    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
+    $config_factory = $this->container->get('config.factory');
     /** @var \Drupal\registration_workflow\StateTransitionValidationInterface $validator */
     $validator = $this->container->get('registration_workflow.validation');
-    $access_checker = new StateTransitionAccessCheck($validator);
+    $access_checker = new StateTransitionAccessCheck($config_factory, $validator);
 
     $route = new Route('/registration/{registration}/transition/{transition}');
     $route

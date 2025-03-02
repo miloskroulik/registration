@@ -7,6 +7,7 @@ services:
   registration_workflow.state_transition_access_checker:
     class: Drupal\registration_workflow\Access\StateTransitionAccessCheck
     arguments: [
+      '@config.factory',
       '@registration_workflow.validation',
     ]
     tags:

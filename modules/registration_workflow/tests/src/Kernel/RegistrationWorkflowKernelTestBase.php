@@ -36,6 +36,8 @@ abstract class RegistrationWorkflowKernelTestBase extends RegistrationKernelTest
   protected function setUp(): void {
     parent::setUp();
 
+    $this->installConfig('registration_workflow');
+
     $storage = $this->entityTypeManager->getStorage('workflow');
     if ($workflow = $storage->load('registration')) {
       $workflow_type = $workflow->getTypePlugin();
