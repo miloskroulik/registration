@@ -403,6 +403,19 @@ class HostEntity implements RefinableCacheableDependencyInterface, HostEntityInt
   /**
    * {@inheritdoc}
    */
+  public function getReminderDate(): ?DateTimePlus {
+    $reminder_date = $this->getSetting('reminder_date');
+    if ($reminder_date) {
+      $storage_timezone = new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE);
+      return DrupalDateTime::createFromFormat(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $reminder_date, $storage_timezone);
+    }
+
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSpacesRemaining(?RegistrationInterface $registration = NULL): ?int {
     if ($capacity = $this->getSetting('capacity')) {
       // Allow other modules to alter the number of spaces remaining.

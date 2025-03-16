@@ -163,6 +163,14 @@ interface HostEntityInterface extends AccessibleInterface {
   public function getOpenDate(): ?DateTimePlus;
 
   /**
+   * Gets the reminder date.
+   *
+   * @return \Drupal\Component\Datetime\DateTimePlus|null
+   *   The reminder date, if one has been set in the host entity settings.
+   */
+  public function getReminderDate(): ?DateTimePlus;
+
+  /**
    * Gets the spaces remaining.
    *
    * @param \Drupal\registration\Entity\RegistrationInterface|null $registration
