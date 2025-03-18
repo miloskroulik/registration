@@ -127,7 +127,7 @@ class RegisterForm extends ContentEntityForm {
     $form = parent::form($form, $form_state);
 
     // Alter the form.
-    static::alterRegisterForm($form, $form_state);
+    self::alterRegisterForm($form, $form_state);
 
     // If an admin is editing an existing registration use the advanced form.
     $admin_theme = $this->currentUser()->hasPermission('view the administration theme');
