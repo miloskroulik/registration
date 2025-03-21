@@ -48,6 +48,7 @@ class RegistrationLinkFormatter extends FormatterBase {
 
     $options['label'] = '';
     $options['show_reason'] = FALSE;
+    $options['css_classes'] = '';
     return $options;
   }
 
@@ -67,6 +68,12 @@ class RegistrationLinkFormatter extends FormatterBase {
       '#title' => $this->t('Show a reason when the link is hidden'),
       '#description' => $this->t("Displays a short message when registration is not available and the link is hidden."),
       '#default_value' => $this->getSetting('show_reason'),
+    ];
+    $form['css_classes'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('CSS class name(s)'),
+      '#description' => $this->t("Separate multiple classes by spaces."),
+      '#default_value' => $this->getSetting('css_classes'),
     ];
 
     return $form;
@@ -90,6 +97,11 @@ class RegistrationLinkFormatter extends FormatterBase {
     }
     else {
       $summary[] = $this->t('Show reason when hidden: False');
+    }
+    if ($css_classes = $this->getSetting('css_classes')) {
+      $summary[] = $this->t('CSS class: @css_classes', [
+        '@css_classes' => $css_classes,
+      ]);
     }
     return $summary;
   }
@@ -134,9 +146,10 @@ class RegistrationLinkFormatter extends FormatterBase {
                   $entity_type_id => $host_entity->id(),
                 ]);
                 $label = $this->getSetting('label') ?: $registration_type->label();
-                $elements[] = [
-                  '#markup' => Link::fromTextAndUrl($label, $url)->toString(),
-                ];
+                $class[] = $this->getSetting('css_classes');
+                $link = Link::fromTextAndUrl($label, $url)->toRenderable();
+                $link['#attributes'] = ['class' => $class];
+                $elements[] = $link;
               }
               elseif ($this->getSetting('show_reason')) {
                 $elements[] = [

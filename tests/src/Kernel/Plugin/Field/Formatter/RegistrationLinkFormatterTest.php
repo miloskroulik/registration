@@ -40,6 +40,17 @@ class RegistrationLinkFormatterTest extends FormatterTestBase {
     $output = $this->renderPlain($build);
     $this->assertEquals('<a href="/node/1/register">Register now</a>', $output);
 
+    // Custom CSS classes.
+    $build = $node->get('event_registration')->view([
+      'type' => 'registration_link',
+      'label' => 'hidden',
+      'settings' => [
+        'css_classes' => 'example-class-1 example-class-2',
+      ],
+    ]);
+    $output = $this->renderPlain($build);
+    $this->assertEquals('<a href="/node/1/register" class="example-class-1 example-class-2">Conference</a>', $output);
+
     // Disable registration.
     $handler = $this->entityTypeManager->getHandler('node', 'registration_host_entity');
     $host_entity = $handler->createHostEntity($node);
