@@ -106,6 +106,8 @@ function registration_workflow_preprocess_registration(array &$variables) {
           '#attributes' => [
             'class' => [
               'button',
+              'button--registration-transition',
+              'button--registration-transition--' . $transition->id(),
             ],
           ],
         ];
