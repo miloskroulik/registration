@@ -271,4 +271,93 @@ class RegistrationWorkflowStateTransitionAccessTest extends RegistrationWorkflow
     $this->assertFalse($access_result->isAllowed());
   }
 
+  /**
+   * @covers ::checkAccess
+   */
+  public function testWorkflowStateTransitionOwnRegistrationAccess() {
+    // By default, users can complete their own registrations.
+    $node = $this->createAndSaveNode();
+    $registration = $this->createAndSaveRegistration($node);
+    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
+    $config_factory = $this->container->get('config.factory');
+    /** @var \Drupal\registration_workflow\StateTransitionValidationInterface $validator */
+    $validator = $this->container->get('registration_workflow.validation');
+    $access_checker = new StateTransitionAccessCheck($config_factory, $validator);
+
+    $route = new Route('/registration/{registration}/transition/{transition}');
+    $route
+      ->addDefaults([
+        '_form' => '\Drupal\registration_workflow\Form\StateTransitionForm',
+      ])
+      ->addRequirements([
+        '_state_transition_access_check' => 'TRUE',
+      ])
+      ->setOption('_admin_route', TRUE)
+      ->setOption('parameters', [
+        'registration' => ['type' => 'entity:registration'],
+      ]);
+
+    // Access to complete your own registration is allowed by default.
+    $account = $this->createUser([
+      'use registration complete transition',
+      'update any conference registration',
+    ]);
+    $registration->set('state', 'pending');
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $route_match = new RouteMatch('registration_workflow.transition', $route, [
+      'registration' => $registration,
+      'transition' => 'complete',
+    ]);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    // Prevent completion of own registrations.
+    $config_factory
+      ->getEditable('registration_workflow.settings')
+      ->set('prevent_complete_own', TRUE)
+      ->save();
+
+    $account = $this->createUser([
+      'use registration complete transition',
+      'update any conference registration',
+    ]);
+    $registration = $this->createAndSaveRegistration($node);
+    $registration->set('state', 'pending');
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $route_match = new RouteMatch('registration_workflow.transition', $route, [
+      'registration' => $registration,
+      'transition' => 'complete',
+    ]);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertFalse($access_result->isAllowed());
+
+    // Switch to a different registrant.
+    $registration->set('user_uid', 1);
+    $registration->save();
+    $route_match = new RouteMatch('registration_workflow.transition', $route, [
+      'registration' => $registration,
+      'transition' => 'complete',
+    ]);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+
+    // Hold transition is allowed for own registrations.
+    $account = $this->createUser([
+      'use registration hold transition',
+      'update any conference registration',
+    ]);
+    $registration = $this->createAndSaveRegistration($node);
+    $registration->set('state', 'pending');
+    $registration->set('user_uid', $account->id());
+    $registration->save();
+    $route_match = new RouteMatch('registration_workflow.transition', $route, [
+      'registration' => $registration,
+      'transition' => 'hold',
+    ]);
+    $access_result = $access_checker->access($account, $route_match);
+    $this->assertTrue($access_result->isAllowed());
+  }
+
 }

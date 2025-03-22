@@ -16,7 +16,7 @@ CONFIGURATION
 
 After enabling this module, permissions in the "Registration Workflow" section of the Permissions page should be set for the appropriate roles.
 
-By default, users need update access to the registration, plus the relevant permission for the transition, to access a transition for a given registration. To change this so only the transition permission is needed, visit the global registration settings page at /admin/structure/registration-settings, and update the appropriate field in the "Registration workflow" section of the page.
+By default, users need update access to the registration, plus the relevant permission for the transition, to access a transition for a given registration. To change this so only the transition permission is needed, visit the global registration settings page at /admin/structure/registration-settings, and update the appropriate field in the "Registration workflow" section of the page. You can also prevent users from completing their own registrations using the relevant field, if desired.
 
 Users with the appropriate permissions will see actions corresponding to the available transitions when viewing a registration or viewing a registration listing. Currently, permissions provided by this module only control workflow operations, and do not alter the states shown on the registration form.
 

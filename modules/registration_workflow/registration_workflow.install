@@ -25,3 +25,13 @@ function registration_workflow_update_10001() {
     ->set('require_update_access', FALSE)
     ->save();
 }
+
+/**
+ * Adds a setting to prevent completion of own registrations.
+ */
+function registration_workflow_update_10002() {
+  \Drupal::service('config.factory')
+    ->getEditable('registration_workflow.settings')
+    ->set('prevent_complete_own', FALSE)
+    ->save();
+}

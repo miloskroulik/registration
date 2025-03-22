@@ -10,6 +10,8 @@ use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\registration_workflow\StateTransitionValidationInterface;
+use Drupal\workflows\Transition;
+use Drupal\workflows\WorkflowInterface;
 
 /**
  * Checks access for the state transition route.
@@ -76,8 +78,24 @@ class StateTransitionAccessCheck implements AccessInterface {
         $require_update_access = (bool) $this->config->get('require_update_access');
         $update_access = $require_update_access ? $registration->access('update', $account, TRUE) : AccessResult::allowed();
 
+        // Prevent completion of own registrations if this option is selected
+        // in registration workflow settings.
+        $own_registration = $registration->getUser() && ($account->id() == $registration->getUserId());
+        if ($own_registration && $this->isCompleteTransition($valid, $workflow, $transition)) {
+          $prevent_complete_own = (bool) $this->config->get('prevent_complete_own');
+          $complete_own_access = $prevent_complete_own ? AccessResult::neutral() : AccessResult::allowed();
+          // "Own" access depends on the current user.
+          $complete_own_access->cachePerUser();
+          // Administrators can always complete their own registrations.
+          $complete_own_access = $complete_own_access->orIf($registration->access('administer', $account, TRUE));
+        }
+        else {
+          $complete_own_access = AccessResult::allowed();
+        }
+
         return AccessResult::allowedIf($valid)
           ->andIf($update_access)
+          ->andIf($complete_own_access)
           // Recalculate this result if the relevant entities are updated.
           ->cachePerPermissions()
           ->addCacheableDependency($this->config)
@@ -96,6 +114,32 @@ class StateTransitionAccessCheck implements AccessInterface {
     }
 
     return AccessResult::neutral();
+  }
+
+  /**
+   * Determines if a workflow transition completes a registration.
+   *
+   * @param bool $valid
+   *   Whether the transition is valid.
+   * @param \Drupal\workflows\WorkflowInterface $workflow
+   *   The workflow.
+   * @param \Drupal\workflows\Transition $transition
+   *   The transition.
+   *
+   * @return bool
+   *   TRUE if the transition would complete the registration, FALSE otherwise.
+   */
+  protected function isCompleteTransition(bool $valid, WorkflowInterface $workflow, Transition $transition) {
+    if ($valid) {
+      $configuration = $workflow->getTypePlugin()->getConfiguration();
+      if (!empty($configuration['complete_registration_state'])) {
+        $complete_state = $configuration['complete_registration_state'];
+        return ($transition->to()->id() == $complete_state);
+      }
+    }
+
+    // The transition is invalid or thw workflow does not have a complete state.
+    return FALSE;
   }
 
 }

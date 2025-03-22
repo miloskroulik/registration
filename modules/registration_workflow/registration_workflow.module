@@ -129,6 +129,12 @@ function registration_workflow_form_registration_admin_settings_alter(&$form, Fo
     '#default_value' => $config->get('require_update_access') ?? FALSE,
     '#description' => t('Requires that users have update access to the registration, plus the relevant workflow transition permission, to access a transition for a given registration. If this option is not set, only the workflow transition permission is needed.'),
   ];
+  $form['registration_workflow']['prevent_complete_own'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Prevent users from completing their own registrations'),
+    '#default_value' => $config->get('prevent_complete_own') ?? FALSE,
+    '#description' => t('Prevents workflow completion if the current user is also the registrant. This setting is ignored for administrators.'),
+  ];
   $form['#submit'][] = 'registration_workflow_form_registration_admin_settings_submit';
 }
 
@@ -139,5 +145,6 @@ function registration_workflow_form_registration_admin_settings_submit(&$form, F
   $config = \Drupal::service('config.factory')->getEditable('registration_workflow.settings');
   $config
     ->set('require_update_access', $form_state->getValue('require_update_access'))
+    ->set('prevent_complete_own', $form_state->getValue('prevent_complete_own'))
     ->save();
 }
