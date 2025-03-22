@@ -87,6 +87,9 @@ field.formatter.settings.registration_link:
     show_reason:
       type: boolean
       label: 'Show reason when link is hidden'
+    css_classes:
+      type: string
+      label: 'CSS classes'
 
 field.widget.settings.registration_type:
   type: mapping
