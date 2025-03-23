@@ -40,6 +40,8 @@ class RegistrationHeaderTest extends RegistrationKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->installConfig('filter');
+
     $admin_user = $this->createUser();
     $this->setCurrentUser($admin_user);
 

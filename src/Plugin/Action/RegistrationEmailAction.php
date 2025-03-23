@@ -6,6 +6,8 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Action\Plugin\Action\EmailAction;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\registration\Entity\RegistrationInterface;
@@ -34,6 +36,13 @@ class RegistrationEmailAction extends EmailAction {
   protected EventDispatcherInterface $dispatcher;
 
   /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected ModuleHandlerInterface $moduleHandler;
+
+  /**
    * The renderer.
    *
    * @var \Drupal\Core\Render\Renderer
@@ -47,6 +56,7 @@ class RegistrationEmailAction extends EmailAction {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->dispatcher = $container->get('event_dispatcher');
     $instance->logger = $container->get('registration.logger');
+    $instance->moduleHandler = $container->get('module_handler');
     $instance->renderer = $container->get('renderer');
     return $instance;
   }
@@ -57,7 +67,39 @@ class RegistrationEmailAction extends EmailAction {
   public function defaultConfiguration(): array {
     return [
       'log_message' => TRUE,
+      'message' => [
+        'value' => '',
+        'format' => filter_default_format(),
+      ],
     ] + parent::defaultConfiguration();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildConfigurationForm($form, $form_state);
+    $form['recipient']['#description'] = $this->t('Use the token [registration:mail] to send to the registrant of each selected registration.');
+    $form['message'] = [
+      '#type' => 'text_format',
+      '#title' => $this->t('Message'),
+      '#required' => TRUE,
+      '#description' => $this->t('Enter the message you want to send. Tokens are supported, e.g., [node:title].'),
+      '#default_value' => $this->configuration['message']['value'],
+      '#format' => $this->configuration['message']['format'],
+    ];
+    if ($this->moduleHandler->moduleExists('token')) {
+      $form['token_tree'] = [
+        '#theme' => 'token_tree_link',
+        '#token_types' => [
+          'registration',
+          'registration_settings',
+        ],
+        '#global_types' => FALSE,
+        '#weight' => 10,
+      ];
+    }
+    return $form;
   }
 
   /**
