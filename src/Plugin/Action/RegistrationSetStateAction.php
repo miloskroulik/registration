@@ -2,6 +2,7 @@
 
 namespace Drupal\registration\Plugin\Action;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Action\ConfigurableActionBase;
 use Drupal\Core\Entity\DependencyTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -118,10 +119,21 @@ class RegistrationSetStateAction extends ConfigurableActionBase implements Conta
    * {@inheritdoc}
    */
   public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
-    $account = $this->prepareUser($account);
+    $result = AccessResult::allowed();
+
     /** @var \Drupal\registration\Entity\RegistrationInterface $object */
-    $type = $object->getType()->id();
-    $result = $object->access('edit state', $account, TRUE);
+    $registration_state = $this->configuration['registration_state'];
+    if ($object->getState()->id() != $registration_state) {
+      // There must be a valid transition to the new state.
+      if (!$object->getState()->canTransitionTo($registration_state)) {
+        $result = AccessResult::forbidden("The registration cannot transition to the selected state.");
+      }
+      $result->addCacheableDependency($object->getWorkflow());
+    }
+
+    // The user must have permission to set state.
+    $account = $this->prepareUser($account);
+    $result = $result->andIf($object->access('edit state', $account, TRUE));
 
     return $return_as_object ? $result : $result->isAllowed();
   }

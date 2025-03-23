@@ -79,6 +79,22 @@ class RegistrationSetStateActionTest extends RegistrationKernelTestBase {
 
     $action->execute($registration);
     $this->assertEquals('complete', $registration->getState()->id());
+
+    // There must be a valid transition to the new state.
+    $action->setConfiguration([
+      'registration_state' => 'pending',
+    ]);
+    $account = $this->createUser(['administer registration']);
+    $this->assertFalse($action->access($registration, $account));
+    $action->execute($registration);
+    $this->assertEquals('complete', $registration->getState()->id());
+    $action->setConfiguration([
+      'registration_state' => 'canceled',
+    ]);
+    $account = $this->createUser(['administer registration']);
+    $this->assertTrue($action->access($registration, $account));
+    $action->execute($registration);
+    $this->assertEquals('canceled', $registration->getState()->id());
   }
 
 }
