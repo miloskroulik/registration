@@ -134,6 +134,16 @@ function registration_views_data_alter(array &$data) {
         'id' => 'host_entity_spaces_reserved',
       ],
     ];
+    $data[$table]['user_is_registered'] = [
+      'title' => t('User is registered'),
+      'help' => t('Whether the user is registered or not.'),
+      'field' => [
+        'id' => 'host_entity_user_is_registered',
+      ],
+      'filter' => [
+        'id' => 'host_entity_user_is_registered',
+      ],
+    ];
   }
 
   // Make views aware of additional custom field plugins.
