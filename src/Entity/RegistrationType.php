@@ -10,7 +10,7 @@ use Drupal\workflows\StateInterface;
 use Drupal\workflows\WorkflowInterface;
 
 /**
- * Defines the product type entity class.
+ * Defines the registration type entity class.
  *
  * @ConfigEntityType(
  *   id = "registration_type",
