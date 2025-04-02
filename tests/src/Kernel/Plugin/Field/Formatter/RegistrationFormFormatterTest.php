@@ -32,7 +32,17 @@ class RegistrationFormFormatterTest extends FormatterTestBase implements Service
    * @covers ::render
    */
   public function testRegistrationFormFormatter() {
-    $node = $this->createAndSaveNode();
+    // Cannot render the form for a new host entity.
+    $node = $this->createNode();
+    $build = $node->get('event_registration')->view([
+      'type' => 'registration_form',
+      'label' => 'hidden',
+    ]);
+    $output = $this->renderPlain($build);
+    $this->assertEquals('', $output);
+
+    // Save the host entity and render the form.
+    $node->save();
     $build = $node->get('event_registration')->view([
       'type' => 'registration_form',
       'label' => 'hidden',

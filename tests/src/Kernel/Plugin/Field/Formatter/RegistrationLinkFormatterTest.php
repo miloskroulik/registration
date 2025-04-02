@@ -19,9 +19,17 @@ class RegistrationLinkFormatterTest extends FormatterTestBase {
    * @covers ::render
    */
   public function testRegistrationLinkFormatter() {
-    $node = $this->createAndSaveNode();
+    // Cannot render a link for a new host entity.
+    $node = $this->createNode();
+    $build = $node->get('event_registration')->view([
+      'type' => 'registration_link',
+      'label' => 'hidden',
+    ]);
+    $output = $this->renderPlain($build);
+    $this->assertEquals('', $output);
 
-    // Default settings.
+    // Default settings for an existing node.
+    $node->save();
     $build = $node->get('event_registration')->view([
       'type' => 'registration_link',
       'label' => 'hidden',

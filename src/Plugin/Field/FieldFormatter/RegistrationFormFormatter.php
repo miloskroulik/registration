@@ -91,7 +91,7 @@ class RegistrationFormFormatter extends FormatterBase {
    */
   public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
-    if ($entity = $items->getEntity()) {
+    if (($entity = $items->getEntity()) && !$entity->isNew()) {
       if (isset($items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
           $registration_type = $this->entityTypeManager->getStorage('registration_type')->load($id);

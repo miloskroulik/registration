@@ -44,15 +44,18 @@ class RegistrationTypeFormatter extends FormatterBase {
     $elements = [];
     if ($entity = $items->getEntity()) {
       /** @var \Drupal\registration\HostEntityInterface $host_entity */
-      if (isset($items, $items[0])) {
+      if (isset($items[0])) {
         if ($id = $items[0]->getValue()['registration_type']) {
-          // Add a cache dependency on the host entity, this includes the
-          // registration type if it exists.
-          $host_entity = $this->entityTypeManager
-            ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
-            ->createHostEntity($entity, $langcode);
-          $cacheability = CacheableMetadata::createFromObject($host_entity);
-          $cacheability->applyTo($elements);
+          // Add the host entity to cacheability unless it is new. The host has
+          // a dependency on the registration type if it exists, and that gets
+          // picked up automatically through the createFromObject method.
+          if (!$entity->isNew()) {
+            $host_entity = $this->entityTypeManager
+              ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
+              ->createHostEntity($entity, $langcode);
+            $cacheability = CacheableMetadata::createFromObject($host_entity);
+            $cacheability->applyTo($elements);
+          }
 
           $registration_type = $this->entityTypeManager
             ->getStorage('registration_type')
@@ -61,6 +64,15 @@ class RegistrationTypeFormatter extends FormatterBase {
             $elements[] = [
               '#markup' => $registration_type->label(),
             ];
+            // Add the registration type to cacheability when the host entity is
+            // new, since a new host cannot be considered in cacheability yet,
+            // and we need the registration type to be included in cacheability
+            // at a minimum.
+            if ($entity->isNew()) {
+              $cacheability = CacheableMetadata::createFromRenderArray($elements);
+              $cacheability->addCacheableDependency($registration_type);
+              $cacheability->applyTo($elements);
+            }
           }
         }
       }

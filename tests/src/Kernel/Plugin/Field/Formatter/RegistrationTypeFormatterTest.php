@@ -19,7 +19,17 @@ class RegistrationTypeFormatterTest extends FormatterTestBase {
    * @covers ::render
    */
   public function testRegistrationTypeFormatter() {
-    $node = $this->createAndSaveNode();
+    // A new host entity.
+    $node = $this->createNode();
+    $build = $node->get('event_registration')->view([
+      'type' => 'registration_type',
+      'label' => 'hidden',
+    ]);
+    $output = $this->renderPlain($build);
+    $this->assertEquals('Conference', $output);
+
+    // An existing host entity.
+    $node->save();
     $build = $node->get('event_registration')->view([
       'type' => 'registration_type',
       'label' => 'hidden',
