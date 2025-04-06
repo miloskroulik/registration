@@ -69,7 +69,7 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $form = $this->entityFormBuilder->getForm($registration, 'register', [
       'host_entity' => $host_entity,
     ]);
-    $output = $this->renderPlain($form);
+    $output = $this->renderElement($form);
     $this->assertStringContainsString('<form class="registration-conference-register-form', $output);
     $this->assertStringContainsString('Save Registration', $output);
     $this->assertStringNotContainsString('Registration for <em class="placeholder">My event</em> is not open yet.', $output);
@@ -144,7 +144,7 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $form = $this->entityFormBuilder->getForm($registration, 'register', [
       'host_entity' => $host_entity,
     ]);
-    $output = $this->renderPlain($form);
+    $output = $this->renderElement($form);
     $this->assertStringContainsString('<form class="registration-conference-register-form', $output);
     $this->assertStringNotContainsString('Save Registration', $output);
     $this->assertStringContainsString('Registration for <em class="placeholder">My event</em> is not open yet.', $output);
@@ -178,7 +178,7 @@ class RegisterFormTest extends FormatterTestBase implements ServiceModifierInter
     $form = $this->entityFormBuilder->getForm($registration, 'register', [
       'host_entity' => $host_entity,
     ]);
-    $output = $this->renderPlain($form);
+    $output = $this->renderElement($form);
     $this->assertStringContainsString('<form class="registration-conference-register-form', $output);
     $this->assertStringContainsString('Save Registration', $output);
     $metadata = CacheableMetadata::createFromRenderArray($form);

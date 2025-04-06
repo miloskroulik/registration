@@ -27,7 +27,7 @@ class RegistrationStateFormatterTest extends FormatterTestBase {
       'type' => 'registration_state',
       'label' => 'hidden',
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('Pending', $output);
   }
 

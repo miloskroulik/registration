@@ -31,7 +31,7 @@ class RegistrationIdFormatterTest extends FormatterTestBase {
       'type' => 'registration_id',
       'label' => 'hidden',
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('<a href="/registration/1" hreflang="en">1</a>', $output);
   }
 

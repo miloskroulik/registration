@@ -34,24 +34,16 @@ abstract class FormatterTestBase extends RegistrationKernelTestBase {
   }
 
   /**
-   * Render a field.
+   * Render an element.
    *
    * @param array $build
-   *   The render array for the field.
+   *   The render array for the element.
    *
    * @return string
    *   The rendered output, with <div> tags removed to make assertions easier.
    */
-  protected function renderPlain(array $build): string {
-
-    if (version_compare(\Drupal::VERSION, '10.3', '>=')) {
-      $output = trim($this->container->get('renderer')->renderInIsolation($build));
-    }
-    else {
-      // @phpstan-ignore-next-line
-      $output = trim($this->container->get('renderer')->renderPlain($build));
-    }
-
+  protected function renderElement(array $build): string {
+    $output = trim($this->container->get('renderer')->renderInIsolation($build));
     return preg_replace("/<div>(.*?)<\/div>/", "$1", $output);
   }
 

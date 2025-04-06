@@ -190,13 +190,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
       '#text' => $data['message']['value'],
       '#format' => $data['message']['format'],
     ];
-    if (version_compare(\Drupal::VERSION, '10.3', '>=')) {
-      $message = $this->renderer->renderInIsolation($build);
-    }
-    else {
-      // @phpstan-ignore-next-line
-      $message = $this->renderer->renderPlain($build);
-    }
+    $message = $this->renderer->renderInIsolation($build);
     $params['message'] = new FormattableMarkup($message, []);
     $params['token_entities'] = [
       $host_entity->getEntityTypeId() => $host_entity->getEntity(),

@@ -37,7 +37,7 @@ class RegistrationHostEntityFormatterTest extends FormatterTestBase {
         'link' => FALSE,
       ],
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('My event', $output);
 
     // Host entity title, with link.
@@ -48,7 +48,7 @@ class RegistrationHostEntityFormatterTest extends FormatterTestBase {
         'link' => TRUE,
       ],
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('<a href="/node/1" hreflang="en">My event</a>', $output);
 
     $registration->set('entity_id', 999);
@@ -63,7 +63,7 @@ class RegistrationHostEntityFormatterTest extends FormatterTestBase {
         'link' => FALSE,
       ],
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEmpty($output);
   }
 

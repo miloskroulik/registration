@@ -38,7 +38,7 @@ class RegistrationFormFormatterTest extends FormatterTestBase implements Service
       'type' => 'registration_form',
       'label' => 'hidden',
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('', $output);
 
     // Save the host entity and render the form.
@@ -47,7 +47,7 @@ class RegistrationFormFormatterTest extends FormatterTestBase implements Service
       'type' => 'registration_form',
       'label' => 'hidden',
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertStringContainsString('<form class="registration-conference-register-form', $output);
 
     // Disable registration.
@@ -61,7 +61,7 @@ class RegistrationFormFormatterTest extends FormatterTestBase implements Service
       'type' => 'registration_form',
       'label' => 'hidden',
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEmpty($output);
 
     $build = $node->get('event_registration')->view([
@@ -71,7 +71,7 @@ class RegistrationFormFormatterTest extends FormatterTestBase implements Service
         'show_reason' => TRUE,
       ],
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('Registration is not available: Not open yet.', $output);
   }
 

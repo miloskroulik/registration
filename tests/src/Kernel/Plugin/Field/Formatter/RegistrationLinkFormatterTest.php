@@ -25,7 +25,7 @@ class RegistrationLinkFormatterTest extends FormatterTestBase {
       'type' => 'registration_link',
       'label' => 'hidden',
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('', $output);
 
     // Default settings for an existing node.
@@ -34,7 +34,7 @@ class RegistrationLinkFormatterTest extends FormatterTestBase {
       'type' => 'registration_link',
       'label' => 'hidden',
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('<a href="/node/1/register">Conference</a>', $output);
 
     // Custom link label.
@@ -45,7 +45,7 @@ class RegistrationLinkFormatterTest extends FormatterTestBase {
         'label' => 'Register now',
       ],
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('<a href="/node/1/register">Register now</a>', $output);
 
     // Custom CSS classes.
@@ -56,7 +56,7 @@ class RegistrationLinkFormatterTest extends FormatterTestBase {
         'css_classes' => 'example-class-1 example-class-2',
       ],
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('<a href="/node/1/register" class="example-class-1 example-class-2">Conference</a>', $output);
 
     // Disable registration.
@@ -73,7 +73,7 @@ class RegistrationLinkFormatterTest extends FormatterTestBase {
         'label' => 'Register now',
       ],
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEmpty($output);
 
     $build = $node->get('event_registration')->view([
@@ -84,7 +84,7 @@ class RegistrationLinkFormatterTest extends FormatterTestBase {
         'show_reason' => TRUE,
       ],
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('Registration is not available: Not open yet.', $output);
   }
 

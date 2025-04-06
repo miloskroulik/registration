@@ -25,7 +25,7 @@ class RegistrationTypeFormatterTest extends FormatterTestBase {
       'type' => 'registration_type',
       'label' => 'hidden',
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('Conference', $output);
 
     // An existing host entity.
@@ -34,7 +34,7 @@ class RegistrationTypeFormatterTest extends FormatterTestBase {
       'type' => 'registration_type',
       'label' => 'hidden',
     ]);
-    $output = $this->renderPlain($build);
+    $output = $this->renderElement($build);
     $this->assertEquals('Conference', $output);
   }
 
