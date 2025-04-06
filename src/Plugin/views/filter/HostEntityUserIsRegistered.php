@@ -28,17 +28,19 @@ class HostEntityUserIsRegistered extends BooleanOperator {
     if ($uid && ($entity_type = $this->view->getBaseEntityType())) {
       $this->ensureMyTable();
 
-      $entity_type_id = $entity_type->id();
-      $id_field = $entity_type->getKey('id');
-      $entity_id = $this->tableAlias . '.' . $id_field;
-      $states = implode("','", array_filter($this->options['registration_states']));
+      $id_field = $this->tableAlias . '.' . $entity_type->getKey('id');
 
-      $expression = "(SELECT 1 FROM registration WHERE entity_type_id = '$entity_type_id' AND entity_id = $entity_id AND user_uid = $uid AND state IN ('$states'))";
+      $expression = "(SELECT 1 FROM {registration} WHERE entity_type_id = :entity_type_id AND entity_id = $id_field AND user_uid = :uid AND state IN (:states[]))";
+      $args = [
+        ':entity_type_id' => $entity_type->id(),
+        ':states[]' => array_filter($this->options['registration_states']),
+        ':uid' => $uid,
+      ];
       if (!empty($this->value)) {
-        $this->query->addWhereExpression($this->options['group'], "EXISTS " . $expression);
+        $this->query->addWhereExpression($this->options['group'], "EXISTS " . $expression, $args);
       }
       else {
-        $this->query->addWhereExpression($this->options['group'], "NOT EXISTS " . $expression);
+        $this->query->addWhereExpression($this->options['group'], "NOT EXISTS " . $expression, $args);
       }
     }
   }
