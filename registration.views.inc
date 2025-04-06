@@ -119,6 +119,9 @@ function registration_views_data_alter(array &$data) {
       'field' => [
         'id' => 'host_entity_registration_count',
       ],
+      'filter' => [
+        'id' => 'host_entity_registration_count',
+      ],
     ];
     $data[$table]['spaces_remaining'] = [
       'title' => t('Spaces remaining'),
@@ -126,11 +129,17 @@ function registration_views_data_alter(array &$data) {
       'field' => [
         'id' => 'host_entity_spaces_remaining',
       ],
+      'filter' => [
+        'id' => 'host_entity_spaces_remaining',
+      ],
     ];
     $data[$table]['spaces_reserved'] = [
       'title' => t('Spaces reserved'),
       'help' => t('The number of spaces reserved by registrations.'),
       'field' => [
+        'id' => 'host_entity_spaces_reserved',
+      ],
+      'filter' => [
         'id' => 'host_entity_spaces_reserved',
       ],
     ];

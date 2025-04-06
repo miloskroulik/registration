@@ -30,6 +30,25 @@ views.field.host_entity_spaces_reserved:
   type: views_field
   label: 'Host entity spaces reserved'
 
+views.filter.host_entity_registration_count:
+  type: views_filter
+  label: 'Host entity registration count'
+views.filter_value.host_entity_registration_count:
+  type: views.filter_value.numeric
+  label: 'Host entity registration count'
+views.filter.host_entity_spaces_remaining:
+  type: views_filter
+  label: 'Host entity spaces remaining'
+views.filter_value.host_entity_spaces_remaining:
+  type: views.filter_value.numeric
+  label: 'Host entity spaces remaining'
+views.filter.host_entity_spaces_reserved:
+  type: views_filter
+  label: 'Host entity spaces reserved'
+views.filter_value.host_entity_spaces_reserved:
+  type: views.filter_value.numeric
+  label: 'Host entity spaces reserved'
+
 views.relationship.registration:
   type: views_relationship
   label: 'Registration'
