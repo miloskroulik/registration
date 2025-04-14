@@ -8,26 +8,26 @@ registration.type.*.third_party.registration_confirmation:
       type: mapping
       label: 'Registrant confirmation mail settings'
       mapping:
-        enable:
+        registrant_email_enable:
           label: 'Enable registrant confirmation email'
           type: boolean
-        subject:
+        registrant_email_subject:
           label: 'registrant Confirmation email subject'
           type: label
-        message:
+        registrant_email_message:
           label: 'Registrant confirmation email message'
           type: text_format
     admin_email:
       type: mapping
       label: 'Admin confirmation mail settings'
       mapping:
-        enable:
+        admin_email_enable:
           label: 'Enable admin confirmation email'
           type: boolean
-        subject:
+        admin_email_subject:
           label: 'Admin confirmation email subject'
           type: label
-        message:
+        admin_email_message:
           label: 'Admin confirmation email message'
           type: text_format
         send_registrant_confirmation_copy:

@@ -8,26 +8,26 @@ registration.type.*.third_party.registration_waitlist:
       type: mapping
       label: 'Registrant confirmation mail settings'
       mapping:
-        confirmation_email:
+        confirmation_registrant_email:
           label: 'Enable registrant confirmation email'
           type: boolean
-        confirmation_email_subject:
+        confirmation_registrant_email_subject:
           label: 'Registrant confirmation email subject'
           type: string
-        confirmation_email_message:
+        confirmation_registrant_email_message:
           label: 'Registrant confirmation email message'
           type: text_format
     admin_email:
       type: mapping
       label: 'Admin confirmation mail settings'
       mapping:
-        confirmation_email:
+        confirmation_admin_email:
           label: 'Enable admin confirmation email'
           type: boolean
-        confirmation_email_subject:
+        confirmation_admin_email_subject:
           label: 'Admin confirmation email subject'
           type: string
-        confirmation_email_message:
+        confirmation_admin_email_message:
           label: 'Admin confirmation email message'
           type: text_format
         send_registrant_confirmation_copy:
