@@ -16,6 +16,7 @@ function registration_confirmation_form_registration_type_form_alter(&$form, For
   $form['registration_confirmation'] = [
     '#type' => 'details',
     '#title' => t('Confirmation email settings'),
+    '#description' => t('This applies when a user is fully registered to the event.')
   ];
   $form['registration_confirmation']['registrant_email'] = [
     '#type' => 'details',
@@ -90,6 +91,8 @@ function registration_confirmation_form_registration_type_form_alter(&$form, For
     '#default_value' => $registration_type->getThirdPartySetting('registration_confirmation', 'admin_email_subject'),
     '#states' => [
       'required' => [
+        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE],
+        'and',
         ':input[name="registration_confirmation[admin_email][send_registrant_confirmation_copy]"]' => ['checked' => FALSE],
       ],
       'visible' => [
