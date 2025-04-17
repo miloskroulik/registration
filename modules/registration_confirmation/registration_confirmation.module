@@ -63,16 +63,39 @@ function registration_confirmation_form_registration_type_form_alter(&$form, For
     '#title' => t('Enable confirmation email for admin'),
     '#default_value' => $registration_type->getThirdPartySetting('registration_confirmation', 'admin_email_enable'),
   ];
+  $form['registration_confirmation']['admin_email']['admin_email_address'] = [
+    '#type' => 'email',
+    '#title' => t('Admin e-mail address'),
+    '#states' => [
+      'visible' => [
+        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE],
+      ],
+    ],
+    '#default_value' => $registration_type->getThirdPartySetting('registration_confirmation', 'admin_email_address'),
+  ];
+  $form['registration_confirmation']['admin_email']['send_registrant_confirmation_copy'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Send copy of registrant confirmation email'),
+    '#description' => 'Leave unchecked for custom message.',
+    '#states' => [
+      'visible' => [
+        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE],
+      ],
+    ],
+    '#default_value' => $registration_type->getThirdPartySetting('registration_confirmation', 'send_registrant_confirmation_copy'),
+  ];
   $form['registration_confirmation']['admin_email']['subject'] = [
     '#type' => 'textfield',
     '#title' => t('Subject'),
     '#default_value' => $registration_type->getThirdPartySetting('registration_confirmation', 'admin_email_subject'),
     '#states' => [
       'required' => [
-        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE],
+        ':input[name="registration_confirmation[admin_email][send_registrant_confirmation_copy]"]' => ['checked' => FALSE],
       ],
       'visible' => [
-        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE],
+        ':input[name="registration_confirmation[admin_email][send_registrant_confirmation_copy]"]' => ['checked' => FALSE],
+        'and',
+        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE]
       ],
     ],
   ];
@@ -85,14 +108,11 @@ function registration_confirmation_form_registration_type_form_alter(&$form, For
     '#format' => $message['format'] ?? filter_default_format(),
     '#states' => [
       'visible' => [
-        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE],
+        ':input[name="registration_confirmation[admin_email][send_registrant_confirmation_copy]"]' => ['checked' => FALSE],
+        'and',
+        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE]
       ],
     ],
-  ];
-  $form['registration_confirmation']['admin_email']['send_registrant_confirmation_copy'] = [
-    '#type' => 'checkbox',
-    '#title' => t('Send copy of registrant confirmation email to admin'),
-    '#default_value' => $registration_type->getThirdPartySetting('registration_confirmation', 'send_registrant_confirmation_copy'),
   ];
   if (\Drupal::moduleHandler()->moduleExists('token')) {
     $form['token_tree'] = [
@@ -137,6 +157,11 @@ function registration_confirmation_form_registration_type_submit(&$form, FormSta
     'registration_confirmation',
     'admin_email',
     'enable',
+  ]));
+  $registration_type->setThirdPartySetting('registration_confirmation', 'admin_email_address', $form_state->getValue([
+    'registration_confirmation',
+    'admin_email',
+    'admin_email_address',
   ]));
   $registration_type->setThirdPartySetting('registration_confirmation', 'admin_email_subject', $form_state->getValue([
     'registration_confirmation',

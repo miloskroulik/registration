@@ -24,6 +24,9 @@ registration.type.*.third_party.registration_confirmation:
         admin_email_enable:
           label: 'Enable admin confirmation email'
           type: boolean
+        admin_email_address:
+          label: 'Admin e-mail address'
+          type: email
         admin_email_subject:
           label: 'Admin confirmation email subject'
           type: label
