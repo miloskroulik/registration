@@ -8,7 +8,7 @@ registration.type.*.third_party.registration_waitlist:
       type: mapping
       label: 'Registrant confirmation mail settings'
       mapping:
-        confirmation_registrant_email:
+        confirmation_registrant_email_enable:
           label: 'Enable registrant confirmation email'
           type: boolean
         confirmation_registrant_email_subject:
@@ -21,9 +21,12 @@ registration.type.*.third_party.registration_waitlist:
       type: mapping
       label: 'Admin confirmation mail settings'
       mapping:
-        confirmation_admin_email:
+        confirmation_admin_email_enable:
           label: 'Enable admin confirmation email'
           type: boolean
+        admin_email_address:
+          label: 'Admin e-mail address'
+          type: email
         confirmation_admin_email_subject:
           label: 'Admin confirmation email subject'
           type: string
