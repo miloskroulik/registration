@@ -102,7 +102,7 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
       // is enabled for the registration type.
       $registration_type = $registration->getType();
       if ($registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_email')) {
-        $configuration['recipient'] = $registration->getEmail();
+        $configuration['recipient'] = $registration->getRegistrantEmail();
         $configuration['subject'] = $registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_email_subject');
         $configuration['message'] = $registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_email_message');
         $configuration['log_message'] = FALSE;

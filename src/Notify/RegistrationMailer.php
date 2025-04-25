@@ -135,7 +135,7 @@ class RegistrationMailer implements RegistrationMailerInterface {
     // a RegistrationInterface entity if the email has a single registration.
     $recipients = [];
     foreach ($registrations as $registration) {
-      $email = $registration->getEmail();
+      $email = $registration->getRegistrantEmail();
       if (isset($recipients[$email])) {
         if (is_array($recipients[$email])) {
           // Already multiple, append to the list.

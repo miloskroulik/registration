@@ -321,7 +321,7 @@ function registration_tokens($type, $tokens, array $data, array $options, Bubble
         case 'mail':
           // Defer to the token module when installed.
           if (!\Drupal::moduleHandler()->moduleExists('token')) {
-            $replacements[$original] = $registration->getEmail();
+            $replacements[$original] = $registration->getRegistrantEmail();
           }
           break;
 

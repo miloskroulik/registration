@@ -74,7 +74,7 @@ class RegistrationTest extends MigrateDrupal7TestBase {
     $this->assertEquals('tradeshow', $registration->getType()->id());
     $this->assertEquals('Trade show', $registration->getType()->label());
     $this->assertEquals('pending', $registration->getState()->id());
-    $this->assertEquals('test@example.org', $registration->getEmail());
+    $this->assertEquals('test@example.org', $registration->getRegistrantEmail());
     $this->assertEquals(1, $registration->getSpacesReserved());
     $this->assertEquals(1715360510, $registration->getCreatedTime());
     $this->assertEquals(1715382038, $registration->getChangedTime());

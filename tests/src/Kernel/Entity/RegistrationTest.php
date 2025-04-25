@@ -45,7 +45,7 @@ class RegistrationTest extends RegistrationKernelTestBase {
    * @covers ::getAnonymousEmail
    * @covers ::getAuthor
    * @covers ::getAuthorDisplayName
-   * @covers ::getEmail
+   * @covers ::getRegistrantEmail
    * @covers ::getHostEntity
    * @covers ::getHostEntityId
    * @covers ::getHostEntityTypeId
@@ -80,7 +80,7 @@ class RegistrationTest extends RegistrationKernelTestBase {
     $this->assertEquals('', $registration->getAnonymousEmail());
     $this->assertEquals($this->user, $registration->getAuthor());
     $this->assertEquals($this->user->getDisplayName(), $registration->getAuthorDisplayName());
-    $this->assertEquals($this->user->getEmail(), $registration->getEmail());
+    $this->assertEquals($this->user->getEmail(), $registration->getRegistrantEmail());
     $this->assertEquals($node, $registration->getHostEntity()->getEntity());
     $this->assertEquals($node->id(), $registration->getHostEntityId());
     $this->assertEquals($node->getEntityTypeId(), $registration->getHostEntityTypeId());
