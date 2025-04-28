@@ -101,7 +101,7 @@ function registration_waitlist_form_registration_type_form_alter(&$form, FormSta
         ':input[name="registration_waitlist[admin_email][enable]"]' => ['checked' => TRUE],
       ],
     ],
-    '#default_value' => $registration_type->getThirdPartySetting('registration_waitlist', 'send_registrant_confirmation_copy'),
+    '#default_value' => $registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_send_registrant_confirmation_copy'),
   ];
   $form['registration_waitlist']['admin_email']['subject'] = [
     '#type' => 'textfield',
