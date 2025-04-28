@@ -101,18 +101,9 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
       // Send a confirmation email for newly wait listed registrations if this
       // is enabled for the registration type.
       $registration_type = $registration->getType();
-      if ($registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_email')) {
-        $configuration['recipient'] = $registration->getRegistrantEmail();
-        $configuration['subject'] = $registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_email_subject');
-        $configuration['message'] = $registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_email_message');
-        $configuration['log_message'] = FALSE;
-        $action = $this->actionManager->createInstance('registration_send_email_action');
-        $action->setConfiguration($configuration);
-        if ($action->execute($registration)) {
-          $this->logger->info('Sent wait list confirmation email to %recipient', [
-            '%recipient' => $configuration['recipient'],
-          ]);
-        }
+      $confirmation_types = ['registrant', 'admin'];
+      foreach ($confirmation_types as $confirmation_type) {
+        $this->executeMailAction($registration_type, $registration, $confirmation_type);
       }
     }
 
@@ -127,6 +118,34 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
             $this->waitListManager->autoFill($host_entity);
           }
         }
+      }
+    }
+  }
+
+  /**
+   * @param \Drupal\registration\Entity\RegistrationTypeInterface $registration_type
+   * @param \Drupal\registration\Entity\RegistrationInterface $registration
+   *
+   * @return void
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   */
+  public function executeMailAction(\Drupal\registration\Entity\RegistrationTypeInterface $registration_type, \Drupal\registration\Entity\RegistrationInterface $registration, $confirmation_type): void {
+    // confirmation_registrant_email_enable
+    if ($registration_type->getThirdPartySetting('registration_waitlist', "confirmation_{$confirmation_type}_email_enable")) {
+      $configuration['recipient'] = $confirmation_type === 'registrant' ? $registration->getRegistrantEmail() : $registration_type->getThirdPartySetting('registration_waitlist', "confirmation_admin_email_address");
+      // Override subject and message if admin should just receive copy of registrant email.
+      if ($confirmation_type === 'admin' && $registration_type->getThirdPartySetting('registration_waitlist', 'confirmation_send_registrant_confirmation_copy')) {
+        $confirmation_type = 'registrant';
+      }
+      $configuration['subject'] = $registration_type->getThirdPartySetting('registration_waitlist', "confirmation_{$confirmation_type}_email_subject");
+      $configuration['message'] = $registration_type->getThirdPartySetting('registration_waitlist', "confirmation_{$confirmation_type}_email_message");
+      $configuration['log_message'] = FALSE;
+      $action = $this->actionManager->createInstance('registration_send_email_action');
+      $action->setConfiguration($configuration);
+      if ($action->execute($registration)) {
+        $this->logger->info('Sent wait list confirmation email to %recipient', [
+          '%recipient' => $configuration['recipient'],
+        ]);
       }
     }
   }

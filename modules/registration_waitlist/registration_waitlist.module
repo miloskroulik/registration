@@ -174,27 +174,27 @@ function registration_waitlist_form_registration_type_submit(&$form, FormStateIn
     'registrant_email',
     'message',
   ]));
-  $registration_type->setThirdPartySetting('registration_waitlist', 'admin_email_enable', $form_state->getValue([
+  $registration_type->setThirdPartySetting('registration_waitlist', 'confirmation_admin_email_enable', $form_state->getValue([
     'registration_waitlist',
     'admin_email',
     'enable',
   ]));
-  $registration_type->setThirdPartySetting('registration_waitlist', 'admin_email_address', $form_state->getValue([
+  $registration_type->setThirdPartySetting('registration_waitlist', 'confirmation_admin_email_address', $form_state->getValue([
     'registration_waitlist',
     'admin_email',
     'admin_email_address',
   ]));
-  $registration_type->setThirdPartySetting('registration_waitlist', 'admin_email_subject', $form_state->getValue([
+  $registration_type->setThirdPartySetting('registration_waitlist', 'confirmation_admin_email_subject', $form_state->getValue([
     'registration_waitlist',
     'admin_email',
     'subject',
   ]));
-  $registration_type->setThirdPartySetting('registration_waitlist', 'admin_email_message', $form_state->getValue([
+  $registration_type->setThirdPartySetting('registration_waitlist', 'confirmation_admin_email_message', $form_state->getValue([
     'registration_waitlist',
     'admin_email',
     'message',
   ]));
-  $registration_type->setThirdPartySetting('registration_waitlist', 'send_registrant_confirmation_copy', $form_state->getValue([
+  $registration_type->setThirdPartySetting('registration_waitlist', 'confirmation_send_registrant_confirmation_copy', $form_state->getValue([
     'registration_waitlist',
     'admin_email',
     'send_registrant_confirmation_copy',
