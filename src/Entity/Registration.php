@@ -144,7 +144,7 @@ class Registration extends ContentEntityBase implements HostEntityKeysInterface,
   /**
    * {@inheritdoc}
    */
-  public function getEmail(): string {
+  public function getRegistrantEmail(): string {
     if (!$this->get('mail')->isEmpty()) {
       return $this->get('mail')->first()->getValue()['value'];
     }

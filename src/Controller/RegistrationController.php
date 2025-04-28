@@ -325,7 +325,7 @@ class RegistrationController extends ControllerBase {
       $rows[] = [
         'data' => [
           ['data' => Link::fromTextAndUrl($registration->id(), $registration->toUrl())],
-          ['data' => $registration->getEmail()],
+          ['data' => $registration->getRegistrantEmail()],
           ['data' => $user],
           ['data' => $author],
           ['data' => $registration->getSpacesReserved()],

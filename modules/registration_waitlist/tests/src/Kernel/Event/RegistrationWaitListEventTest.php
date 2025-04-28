@@ -64,7 +64,7 @@ class RegistrationWaitListEventTest extends RegistrationWaitListKernelTestBase {
     /* @see \Drupal\registration_waitlist_test_event\EventSubscriber\RegistrationEventSubscriber */
 
     // Confirm that the auto fill events were dispatched.
-    $this->assertEquals('preautofill@example.org', $registration2->getEmail());
+    $this->assertEquals('preautofill@example.org', $registration2->getRegistrantEmail());
     $this->assertEquals('autofilled', $registration2->getLangcode());
   }
 

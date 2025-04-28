@@ -68,7 +68,7 @@ interface RegistrationInterface extends ContentEntityInterface, EntityChangedInt
    * @return string
    *   The registrant email address.
    */
-  public function getEmail(): string;
+  public function getRegistrantEmail(): string;
 
   /**
    * Gets the host entity.

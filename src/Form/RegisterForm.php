@@ -292,7 +292,7 @@ class RegisterForm extends ContentEntityForm {
         }
         else {
           $this->logger->info('@email registered for %label (ID #@id).', [
-            '@email' => $registration->getEmail(),
+            '@email' => $registration->getRegistrantEmail(),
             '%label' => $host_entity->label(),
             '@id' => $registration->id(),
           ]);

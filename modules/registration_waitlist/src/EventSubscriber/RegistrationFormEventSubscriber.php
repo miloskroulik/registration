@@ -97,7 +97,7 @@ class RegistrationFormEventSubscriber implements EventSubscriberInterface {
         }
         else {
           $this->logger()->notice('@email was placed on the wait list for %label (ID #@id).', [
-            '@email' => $registration->getEmail(),
+            '@email' => $registration->getRegistrantEmail(),
             '%label' => $host_entity->label(),
             '@id' => $registration->id(),
           ]);
