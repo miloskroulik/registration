@@ -39,7 +39,7 @@ function registration_waitlist_form_registration_type_form_alter(&$form, FormSta
   $form['registration_waitlist']['registrant_email'] = [
     '#type' => 'details',
     '#title' => t('Confirmation email for the registrant'),
-    '#open' => TRUE
+    '#open' => TRUE,
   ];
   $form['registration_waitlist']['registrant_email']['enable'] = [
     '#type' => 'checkbox',
@@ -75,7 +75,7 @@ function registration_waitlist_form_registration_type_form_alter(&$form, FormSta
   $form['registration_waitlist']['admin_email'] = [
     '#type' => 'details',
     '#title' => t('Confirmation email for the admin'),
-    '#open' => TRUE
+    '#open' => TRUE,
   ];
   $form['registration_waitlist']['admin_email']['enable'] = [
     '#type' => 'checkbox',
@@ -116,7 +116,7 @@ function registration_waitlist_form_registration_type_form_alter(&$form, FormSta
       'visible' => [
         ':input[name="registration_waitlist[admin_email][send_registrant_confirmation_copy]"]' => ['checked' => FALSE],
         'and',
-        ':input[name="registration_waitlist[admin_email][enable]"]' => ['checked' => TRUE]
+        ':input[name="registration_waitlist[admin_email][enable]"]' => ['checked' => TRUE],
       ],
     ],
   ];
@@ -131,7 +131,7 @@ function registration_waitlist_form_registration_type_form_alter(&$form, FormSta
       'visible' => [
         ':input[name="registration_waitlist[admin_email][send_registrant_confirmation_copy]"]' => ['checked' => FALSE],
         'and',
-        ':input[name="registration_waitlist[admin_email][enable]"]' => ['checked' => TRUE]
+        ':input[name="registration_waitlist[admin_email][enable]"]' => ['checked' => TRUE],
       ],
     ],
   ];

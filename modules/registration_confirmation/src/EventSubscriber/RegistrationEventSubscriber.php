@@ -2,6 +2,8 @@
 
 namespace Drupal\registration_confirmation\EventSubscriber;
 
+use Drupal\registration\Entity\RegistrationInterface;
+use Drupal\registration\Entity\RegistrationTypeInterface;
 use Drupal\Core\Action\ActionManager;
 use Drupal\registration\Event\RegistrationEvent;
 use Drupal\registration\Event\RegistrationEvents;
@@ -67,8 +69,7 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
    * @return void
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
-  public function executeMailAction(\Drupal\registration\Entity\RegistrationTypeInterface $registration_type, \Drupal\registration\Entity\RegistrationInterface $registration, $confirmation_type): void
-  {
+  public function executeMailAction(RegistrationTypeInterface $registration_type, RegistrationInterface $registration, $confirmation_type): void {
     if ($registration_type->getThirdPartySetting('registration_confirmation', "{$confirmation_type}_email_enable")) {
       $configuration['recipient'] = $confirmation_type === 'registrant' ? $registration->getRegistrantEmail() : $registration_type->getThirdPartySetting('registration_confirmation', "admin_email_address");
       // Override subject and message if admin should just receive copy of registrant email.

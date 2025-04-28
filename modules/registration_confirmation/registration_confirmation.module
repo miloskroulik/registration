@@ -16,12 +16,12 @@ function registration_confirmation_form_registration_type_form_alter(&$form, For
   $form['registration_confirmation'] = [
     '#type' => 'details',
     '#title' => t('Confirmation email settings'),
-    '#description' => t('This applies when a user is fully registered to the event.')
+    '#description' => t('This applies when a user is fully registered to the event.'),
   ];
   $form['registration_confirmation']['registrant_email'] = [
     '#type' => 'details',
     '#title' => t('Confirmation email for the registrant'),
-    '#open' => TRUE
+    '#open' => TRUE,
   ];
   $form['registration_confirmation']['registrant_email']['enable'] = [
     '#type' => 'checkbox',
@@ -57,7 +57,7 @@ function registration_confirmation_form_registration_type_form_alter(&$form, For
   $form['registration_confirmation']['admin_email'] = [
     '#type' => 'details',
     '#title' => t('Confirmation email for the admin'),
-    '#open' => TRUE
+    '#open' => TRUE,
   ];
   $form['registration_confirmation']['admin_email']['enable'] = [
     '#type' => 'checkbox',
@@ -98,7 +98,7 @@ function registration_confirmation_form_registration_type_form_alter(&$form, For
       'visible' => [
         ':input[name="registration_confirmation[admin_email][send_registrant_confirmation_copy]"]' => ['checked' => FALSE],
         'and',
-        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE]
+        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE],
       ],
     ],
   ];
@@ -113,7 +113,7 @@ function registration_confirmation_form_registration_type_form_alter(&$form, For
       'visible' => [
         ':input[name="registration_confirmation[admin_email][send_registrant_confirmation_copy]"]' => ['checked' => FALSE],
         'and',
-        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE]
+        ':input[name="registration_confirmation[admin_email][enable]"]' => ['checked' => TRUE],
       ],
     ],
   ];

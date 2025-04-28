@@ -2,6 +2,8 @@
 
 namespace Drupal\registration_waitlist\EventSubscriber;
 
+use Drupal\registration\Entity\RegistrationInterface;
+use Drupal\registration\Entity\RegistrationTypeInterface;
 use Drupal\Core\Action\ActionManager;
 use Drupal\registration\Event\RegistrationEvent;
 use Drupal\registration\Event\RegistrationEvents;
@@ -123,14 +125,17 @@ class RegistrationEventSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * Prepare email action based on the confirmation type and execute it.
+   *
    * @param \Drupal\registration\Entity\RegistrationTypeInterface $registration_type
    * @param \Drupal\registration\Entity\RegistrationInterface $registration
+   * @param string $confirmation_type
    *
    * @return void
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
-  public function executeMailAction(\Drupal\registration\Entity\RegistrationTypeInterface $registration_type, \Drupal\registration\Entity\RegistrationInterface $registration, $confirmation_type): void {
-    // confirmation_registrant_email_enable
+  public function executeMailAction(RegistrationTypeInterface $registration_type, RegistrationInterface $registration, $confirmation_type): void {
+    // confirmation_registrant_email_enable.
     if ($registration_type->getThirdPartySetting('registration_waitlist', "confirmation_{$confirmation_type}_email_enable")) {
       $configuration['recipient'] = $confirmation_type === 'registrant' ? $registration->getRegistrantEmail() : $registration_type->getThirdPartySetting('registration_waitlist', "confirmation_admin_email_address");
       // Override subject and message if admin should just receive copy of registrant email.
