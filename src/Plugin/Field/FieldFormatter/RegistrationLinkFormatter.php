@@ -127,7 +127,7 @@ class RegistrationLinkFormatter extends FormatterBase {
               $host_entity = $this->entityTypeManager
                 ->getHandler($entity->getEntityTypeId(), 'registration_host_entity')
                 ->createHostEntity($entity, $langcode);
-
+              $spaces_remaining = $host_entity->getSpacesRemaining();
               // Only show the link if the host entity is open for registration.
               // For performance reasons, the isAvailableForRegistration
               // method, which takes capacity into account, is not used here.
@@ -150,6 +150,13 @@ class RegistrationLinkFormatter extends FormatterBase {
                 $link = Link::fromTextAndUrl($label, $url)->toRenderable();
                 $link['#attributes'] = ['class' => $class];
                 $elements[] = $link;
+                $spaces_remaining_message = $spaces_remaining > 0 ? $this->formatPlural($spaces_remaining, 'There is 1 place left', 'There are @count places left') : $this->t('There are no places left. You can still sign up as a substitute.');
+                $elements[] = [
+                  '#type' => 'html_tag',
+                  '#tag' => 'div',
+                  '#value' => $spaces_remaining_message,
+                  '#attributes' => ['class' => 'mt-2'],
+                ];
               }
               elseif ($this->getSetting('show_reason')) {
                 $elements[] = [
