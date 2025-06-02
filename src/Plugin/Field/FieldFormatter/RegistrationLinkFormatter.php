@@ -150,6 +150,7 @@ class RegistrationLinkFormatter extends FormatterBase {
                 $link = Link::fromTextAndUrl($label, $url)->toRenderable();
                 $link['#attributes'] = ['class' => $class];
                 $elements[] = $link;
+                \Drupal::service('page_cache_kill_switch')->trigger();
                 $spaces_remaining_message = $spaces_remaining > 0 ? $this->formatPlural($spaces_remaining, 'There is 1 place left', 'There are @count places left') : $this->t('There are no places left. You can still sign up as a substitute.');
                 $elements[] = [
                   '#type' => 'html_tag',
